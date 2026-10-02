@@ -8,6 +8,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.print.PrintAttributes;
+import android.print.PrintManager;
 import android.provider.MediaStore;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
@@ -36,8 +38,9 @@ public class MainActivity extends Activity {
         super.onCreate(durum);
 
         FrameLayout kok = new FrameLayout(this);
-        kok.setBackgroundColor(getColor(R.color.marka));
+        kok.setBackgroundColor(getColor(R.color.zemin));
         web = new WebView(this);
+        web.setBackgroundColor(getColor(R.color.zemin));
         kok.addView(web, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
         setContentView(kok);
 
@@ -128,22 +131,31 @@ public class MainActivity extends Activity {
             runOnUiThread(() -> disariAc(Uri.parse(adres)));
         }
 
-        /** Yedeği İndirilenler/DN Muhasebe klasörüne yazar; başarılıysa konumu, değilse boş metin döner. */
+        /** Yazdırma ekranını açar; kullanıcı "PDF olarak kaydet" seçebilir. Sayfa yazdırılacak alanı önceden hazırlar. */
         @JavascriptInterface
-        public String yedekKaydet(String ad, String icerik) {
+        public void yazdir(String baslik) {
+            runOnUiThread(() -> {
+                PrintManager pm = (PrintManager) getSystemService(PRINT_SERVICE);
+                if (pm != null) pm.print(baslik, web.createPrintDocumentAdapter(baslik), new PrintAttributes.Builder().build());
+            });
+        }
+
+        /** Dosyayı İndirilenler/DN Muhasebe klasörüne yazar; başarılıysa konumu, değilse boş metin döner. */
+        @JavascriptInterface
+        public String dosyaKaydet(String ad, String icerik, String tur) {
             if (Build.VERSION.SDK_INT < 29) {
                 runOnUiThread(() -> {
                     Intent paylas = new Intent(Intent.ACTION_SEND);
                     paylas.setType("text/plain");
                     paylas.putExtra(Intent.EXTRA_SUBJECT, ad);
                     paylas.putExtra(Intent.EXTRA_TEXT, icerik);
-                    startActivity(Intent.createChooser(paylas, "Yedeği paylaş"));
+                    startActivity(Intent.createChooser(paylas, ad));
                 });
-                return "paylaşım ekranı açıldı";
+                return "paylaşım ekranı";
             }
             ContentValues d = new ContentValues();
             d.put(MediaStore.MediaColumns.DISPLAY_NAME, ad);
-            d.put(MediaStore.MediaColumns.MIME_TYPE, "application/json");
+            d.put(MediaStore.MediaColumns.MIME_TYPE, tur);
             d.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/DN Muhasebe");
             try {
                 Uri u = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, d);
@@ -152,7 +164,7 @@ public class MainActivity extends Activity {
                     if (o == null) return "";
                     o.write(icerik.getBytes(StandardCharsets.UTF_8));
                 }
-                return "İndirilenler/DN Muhasebe/" + ad;
+                return "İndirilenler/DN Muhasebe";
             } catch (Exception e) {
                 return "";
             }

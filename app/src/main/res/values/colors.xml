@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="marka">#0F2A44</color>
-    <color name="vurgu">#0E9F8E</color>
+    <color name="vurgu">#007AFF</color>
+    <!-- Uygulama zemini: iOS gruplu arka planıyla aynı, durum çubuğu da bu renkte -->
+    <color name="zemin">#F2F2F7</color>
 </resources>

@@ -3,11 +3,12 @@
     <!-- Açık tema: WebView'deki prefers-color-scheme bu temanın açık/koyu olmasına göre belirlenir. -->
     <style name="Tema" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:colorPrimary">@color/marka</item>
-        <item name="android:colorPrimaryDark">@color/marka</item>
+        <item name="android:colorPrimaryDark">@color/zemin</item>
         <item name="android:colorAccent">@color/vurgu</item>
-        <item name="android:statusBarColor">@color/marka</item>
-        <item name="android:navigationBarColor">@color/marka</item>
-        <item name="android:windowLightStatusBar">false</item>
-        <item name="android:windowBackground">@color/marka</item>
+        <item name="android:statusBarColor">@color/zemin</item>
+        <item name="android:navigationBarColor">@color/zemin</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowBackground">@color/zemin</item>
     </style>
 </resources>
