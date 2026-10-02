@@ -621,11 +621,13 @@ header .orta-baslik{font-family:var(--yazi-sayi);font-weight:560;font-size:19px;
 
 <script>
 'use strict';
-const VERSIYON = '0.9.1';
+const VERSIYON = '1.0.0';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
 const SIMGE = {
+  bulut:'<path d="M17.5 19a4.5 4.5 0 1 0-1.3-8.8A6 6 0 0 0 4.6 12.6 3.5 3.5 0 0 0 6.5 19z"/>',
+  zil:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
   kilit:'<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
   deney:'<path d="M9 3h6M10 3v6L4.5 18.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7 15h10"/>',
   ev:'<path d="M3 10.5 12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H4.5A1.5 1.5 0 0 1 3 20z"/>',
@@ -787,6 +789,7 @@ function kaydet() {
   if (h && (h.ad !== D.ad || h.profil !== D.profil)) { h.ad = D.ad; h.profil = D.profil; hesapKaydet(); }
   try { localStorage.setItem(veriAnahtari(), JSON.stringify(D)); }
   catch (e) { bildir('Kaydedilemedi. Depolama dolu olabilir.', true); }
+  if (window.bulutPlanla) bulutPlanla();
 }
 let D, ui;
 
@@ -3080,6 +3083,18 @@ function ayarlarEkrani() {
     <div class="grup"><label class="hucre kareli">${kare('kilit', 'indigo')}<div class="ic"><b>PIN kilidi</b><small>Açılışta ve 30 sn sonra dönüşte PIN sorar</small></div><span class="anahtar"><input type="checkbox" id="pinAnahtar" ${kilitAyar() ? 'checked' : ''}><span></span></span></label>
       ${kilitAyar() ? `<button class="hucre kareli" id="pinDegis">${kare('kilit', 'gri')}<div class="ic"><b>PIN'i değiştir</b></div>${CHEV}</button>` : ''}</div>
     <p class="dipnot">PIN tüm hesaplar için geçerlidir. Unutulursa kaldırılamaz; önce yedek alın.</p>
+    <div class="bolum">Bulut yedeği</div>
+    ${bulutVar() ? (() => { const k = bulutKonum(), d = bulutDurum();
+      return k ? `<div class="grup"><div class="hucre kareli">${kare('bulut', 'nane')}<div class="ic"><b>${esc(k.yer)}</b><small>${d.hata ? '<span class="gider">son deneme başarısız</span>' : d.zaman ? 'son yedek ' + esc(new Date(d.zaman).toLocaleString('tr-TR', {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'})) : 'henüz yazılmadı'}</small></div><span class="hap yesil">otomatik</span></div>
+          <button class="hucre kareli" id="bulutSimdi">${kare('yukle', 'mavi')}<div class="ic"><b>Şimdi yedekle</b><small>Tüm hesaplar tek dosyada</small></div>${CHEV}</button>
+          <button class="hucre kareli" id="bulutKaldir">${kare('cop', 'gri')}<div class="ic"><b>Otomatik yedeği kapat</b></div>${CHEV}</button></div>
+        <p class="dipnot">Her değişiklikten sonra yedek dosyası güncellenir. Yeni telefonda uygulamayı kurup "Yedekten geri yükle" ile bu dosyayı seçin; tüm hesaplar geri gelir.</p>`
+        : `<div class="grup"><button class="hucre kareli" id="bulutKur">${kare('bulut', 'nane')}<div class="ic"><b>Google Drive'a otomatik yedek</b><small>Telefon kaybolsa da verileriniz kaybolmaz</small></div>${CHEV}</button></div>
+        <p class="dipnot">Açılan pencerede sol üstteki menüden <b>Drive</b>'ı seçin, bir klasör seçip <b>Kaydet</b>'e basın. Bir kez yapılır.</p>`; })()
+      : '<p class="dipnot">Bulut yedeği Android uygulamasında çalışır.</p>'}
+    <div class="bolum">Bildirimler</div>
+    <div class="grup"><label class="hucre kareli">${kare('zil', 'turuncu')}<div class="ic"><b>Vade ve vergi hatırlatmaları</b><small>Her sabah 09.00'da, 3 gün önce ve son gün</small></div><span class="anahtar"><input type="checkbox" id="bildirimAnahtar" ${bildirimAcik() ? 'checked' : ''}><span></span></span></label>
+      ${bildirimVar() ? `<button class="hucre kareli" id="bildirimDene">${kare('zil', 'gri')}<div class="ic"><b>Deneme bildirimi gönder</b><small>${hatirlaticilar().length} hatırlatma planlandı</small></div>${CHEV}</button>` : ''}</div>
     <div class="bolum">Yedekleme</div>
     <div class="grup">
       <button class="hucre kareli" id="disaAktar">${kare('indir', 'mavi')}<div class="ic"><b>Yedeği kaydet ve paylaş</b><small>${D.sonYedek ? 'Son yedek ' + esc(tarihYaz(D.sonYedek.slice(0, 10), true)) : 'Henüz yedek alınmadı'}</small></div>${CHEV}</button>
@@ -3099,6 +3114,11 @@ function ayarlarEkrani() {
   });
   $('#pinAnahtar').onchange = async e => { e.target.checked = !e.target.checked; await (kilitAyar() ? pinKaldir() : pinKur()); ayarlarEkrani(); };
   if ($('#pinDegis')) $('#pinDegis').onclick = async () => { if (await pinKaldir()) { await pinKur(); ayarlarEkrani(); } };
+  if ($('#bulutKur')) $('#bulutKur').onclick = () => Android.yedekKonumSec();
+  if ($('#bulutSimdi')) $('#bulutSimdi').onclick = () => { const h = bulutYaz(); bildir(h ? 'Yedeklenemedi: ' + h : 'Yedeklendi', !!h); ayarlarEkrani(); };
+  if ($('#bulutKaldir')) $('#bulutKaldir').onclick = async () => { if (!await onay('Otomatik yedek kapatılsın mı?', 'Drive\'daki dosya silinmez, yalnızca güncellenmez.', 'Kapat')) return; Android.yedekKaldir(); ayarlarEkrani(); };
+  $('#bildirimAnahtar').onchange = e => { try { localStorage.setItem(BILDIRIM_ANAHTAR, e.target.checked ? 'acik' : 'kapali'); } catch (x) {} if (e.target.checked && window.Android && Android.bildirimIzni) Android.bildirimIzni(); hatirlaticiPlanla(); bildir(e.target.checked ? 'Hatırlatmalar açık' : 'Hatırlatmalar kapalı'); };
+  if ($('#bildirimDene')) $('#bildirimDene').onclick = () => { Android.bildirimDene('DN Muhasebe', 'Bildirimler çalışıyor. Vade ve vergi günlerinde sabah 09.00\'da hatırlatılacaksınız.'); };
   $('#disaAktar').onclick = yedekAl;
   $('#iceAktar').onclick = () => $('#dosya').click();
   $('#hepsiniSil').onclick = async () => {
@@ -3122,6 +3142,7 @@ $('#dosya').onchange = async e => {
   if (!f) return;
   try {
     const j = JSON.parse(await f.text());
+    if (j.tur === 'tum' && j.veriler && j.hesaplar) return tumYedektenYukle(j);
     const v = j.veri || j;
     if (!Array.isArray(v.islemler) || !Array.isArray(v.kisiler)) throw new Error('biçim');
     if (!await onay('Yedek geri yüklensin mi?', `Yedekte ${v.islemler.length} gelir-gider, ${v.kisiler.length} kişi, ${(v.faturalar || []).length} fatura var. Mevcut verilerin yerine geçer.`, 'Geri yükle')) return;
@@ -3277,10 +3298,95 @@ async function pinKaldir() {
   bildir('PIN kilidi kapatıldı');
   return true;
 }
-window.arkaPlan = () => { arkaPlanZaman = Date.now(); };
+window.arkaPlan = () => { arkaPlanZaman = Date.now(); if (bulutKirli) bulutYaz(); };
 window.onPlan = () => { if (arkaPlanZaman && Date.now() - arkaPlanZaman > 30000) kilitle(); arkaPlanZaman = 0; };
 document.addEventListener('visibilitychange', () => document.hidden ? window.arkaPlan() : window.onPlan());
 
+
+/* ================= Bulut yedeği (Google Drive) =================
+   Android'de kullanıcı bir kez yedek dosyası seçer (Drive, Dropbox ya da telefon klasörü). Her değişiklikten birkaç saniye
+   sonra ve uygulama arka plana geçince TÜM hesapların yedeği o dosyanın üzerine yazılır; dosyayı Drive uygulaması eşitler. */
+const BULUT_ANAHTAR = 'dnmuhasebe.bulut';
+const bulutVar = () => !!(window.Android && Android.yedekYaz);
+const bulutDurum = () => { try { return JSON.parse(localStorage.getItem(BULUT_ANAHTAR)) || {}; } catch (e) { return {}; } };
+const bulutKonum = () => { try { const k = bulutVar() && Android.yedekBilgi(); return k ? JSON.parse(k) : null; } catch (e) { return null; } };
+function tumYedek() {
+  const veriler = {};
+  for (const h of H.liste) { const v = h.id === H.aktif ? JSON.stringify(D) : localStorage.getItem(veriAnahtari(h.id)); if (v) veriler[h.id] = JSON.parse(v); }
+  return {uygulama: 'dn-muhasebe', tur: 'tum', surum: VERSIYON, tarih: new Date().toISOString(), hesaplar: H, veriler};
+}
+let bulutZamanlayici = 0, bulutKirli = false;
+function bulutYaz() {
+  clearTimeout(bulutZamanlayici); bulutKirli = false;
+  if (!bulutVar()) return null;
+  let hata = '';
+  try { hata = Android.yedekYaz(JSON.stringify(tumYedek())) || ''; } catch (e) { hata = String(e.message || e); }
+  if (hata === 'yedek dosyası seçilmedi') return null;
+  const d = {...bulutDurum(), ...(hata ? {hata, hataZaman: Date.now()} : {zaman: Date.now(), hata: ''})};
+  try { localStorage.setItem(BULUT_ANAHTAR, JSON.stringify(d)); } catch (e) {}
+  return hata;
+}
+window.bulutPlanla = () => {
+  if (!bulutVar()) return;
+  bulutKirli = true; clearTimeout(bulutZamanlayici);
+  bulutZamanlayici = setTimeout(bulutYaz, 4000);
+  hatirlaticiPlanla();
+};
+window.yedekKonumSecildi = k => {
+  const h = bulutYaz();
+  bildir(h ? 'Yedek dosyası seçildi ama yazılamadı: ' + h : `Yedek açıldı: ${k?.yer || 'seçilen konum'}`, !!h);
+  if (rota()[0] === 'ayarlar') ayarlarEkrani();
+};
+async function tumYedektenYukle(j) {
+  const n = Object.keys(j.veriler || {}).length;
+  if (!await onay('Tüm hesaplar geri yüklensin mi?', `Yedekte ${n} hesap var (${tarihYaz(String(j.tarih).slice(0, 10), true)}). Bu telefondaki tüm hesapların yerine geçer.`, 'Geri yükle')) return;
+  for (const h of H.liste) localStorage.removeItem(veriAnahtari(h.id));
+  for (const [id, v] of Object.entries(j.veriler)) localStorage.setItem(veriAnahtari(id), JSON.stringify(v));
+  H = j.hesaplar; if (!H.liste.some(h => h.id === H.aktif)) H.aktif = H.liste[0].id; hesapKaydet();
+  bildir('Yedek geri yüklendi'); setTimeout(() => location.reload(), 600);
+}
+
+/* ================= Bildirimler =================
+   Yaklaşan fatura vadeleri ve vergi günleri hesaplanıp Android'e verilir; telefon her sabah 09.00'da o günün bildirimlerini gösterir. */
+const BILDIRIM_ANAHTAR = 'dnmuhasebe.bildirim';
+const bildirimAcik = () => { try { return localStorage.getItem(BILDIRIM_ANAHTAR) !== 'kapali'; } catch (e) { return true; } };
+const bildirimVar = () => !!(window.Android && Android.hatirlaticiKur);
+function hatirlaticilar() {
+  const l = [], bugunT = bugun(), sinir = (() => { const d = tarihNesne(bugunT); d.setDate(d.getDate() + 70); return tarihStr(d); })();
+  const ekle = (gun, id, baslik, metin, yol) => { if (gun >= bugunT && gun <= sinir) l.push({gun, id, baslik, metin, yol}); };
+  const gunOnce = (t, n) => { const d = tarihNesne(t); d.setDate(d.getDate() - n); return tarihStr(d); };
+  const asil = D;
+  try {
+    for (const h of H.liste) {
+      const v = h.id === H.aktif ? asil : (() => { try { return duzelt(JSON.parse(localStorage.getItem(veriAnahtari(h.id)))); } catch (e) { return null; } })();
+      if (!v || !v.profil) continue;
+      D = v;
+      const hesap = H.liste.length > 1 ? ` · ${hesapAdi(h)}` : '';
+      if (modulAcik('fatura')) for (const f of D.faturalar) if (faturaliMi(f) && !f.odendi && f.vade) {
+        const alis = f.tur === 'alis', kalan = para(faturaKalan(f)), kim = faturaMusteri(f);
+        ekle(gunOnce(f.vade, 3), `f3-${f.id}`, alis ? 'Ödeme yaklaşıyor' : 'Tahsilat yaklaşıyor', `${kim} · ${f.no} · ${kalan} · 3 gün sonra${hesap}`, `${h.id}|fatura/${f.id}`);
+        ekle(f.vade, `f0-${f.id}`, alis ? 'Bugün ödenecek' : 'Bugün tahsil edilecek', `${kim} · ${f.no} · ${kalan}${hesap}`, `${h.id}|fatura/${f.id}`);
+      }
+      if (modulAcik('kdv')) for (let i = 0; i < 3; i++) for (const t of vergiTakvimi(ayKaydir(bugunT.slice(0, 7), i))) {
+        ekle(gunOnce(t.tarih, 3), `v3-${h.id}-${t.tarih}-${t.ad}`, t.ad, `3 gün sonra son gün · ${t.alt}${hesap}`, `${h.id}|kdv`);
+        ekle(t.tarih, `v0-${h.id}-${t.tarih}-${t.ad}`, t.ad, `Bugün son gün · ${t.alt}${hesap}`, `${h.id}|kdv`);
+      }
+    }
+  } finally { D = asil; }
+  return l.sort((a, b) => a.gun.localeCompare(b.gun));
+}
+let hatirlaticiZaman = 0;
+function hatirlaticiPlanla() {
+  if (!bildirimVar()) return;
+  clearTimeout(hatirlaticiZaman);
+  hatirlaticiZaman = setTimeout(() => { try { Android.hatirlaticiKur(JSON.stringify(bildirimAcik() ? hatirlaticilar() : [])); } catch (e) {} }, 1500);
+}
+/* Bildirime dokunulunca: "hesap|yol" biçiminde gelir; gerekirse hesaba geçip sayfayı açar */
+window.bildirimAc = hedef => {
+  const [id, yol] = String(hedef).split('|');
+  if (id && id !== H.aktif && H.liste.some(h => h.id === id)) { H.aktif = id; hesapKaydet(); D = yukle(); ui = uiBaslangic(); }
+  git(yol || 'panel', true);
+};
 /* ================= Başlat ================= */
 hesaplariYukle();
 D = yukle();
@@ -3290,6 +3396,7 @@ ui = uiBaslangic();
 if (!location.hash) history.replaceState(null, '', '#/panel');
 ciz();
 kilitle();
+hatirlaticiPlanla();
 </script>
 </body>
 </html>

@@ -31,6 +31,12 @@ Görsel dil "mürekkep ve kâğıt": sıcak kâğıt zemin, mürekkep laciverti,
 
 Veriler cihazda (localStorage) saklanır, internete gönderilmez. Her profil ayrı bir hesaptır: profil değiştirince o profilin hesabına geçilir, yoksa boş hesap açılır. Her hesabın verisi ayrı anahtarda tutulur (`dnmuhasebe.v1.<hesap>`), hesap listesi `dnmuhasebe.hesaplar` içindedir. Yedek yalnızca açık hesabı içerir. Ayarlar > Yedekleme ile JSON yedeği alınıp geri yüklenebilir; Android'de yedek `İndirilenler/DN Muhasebe` klasörüne yazılır.
 
+## Bulut yedeği ve bildirimler
+
+Ayarlar > Bulut yedeği'nden bir kez yedek dosyası seçilir (Android dosya seçicide Google Drive, Dropbox ya da telefon klasörü). Her değişiklikten birkaç saniye sonra ve uygulama arka plana geçince tüm hesapların yedeği bu dosyanın üzerine yazılır; Drive uygulaması dosyayı eşitler. Google hesabı ya da API anahtarı gerekmez. Yeni telefonda "Yedekten geri yükle" ile bu dosya seçilince tüm hesaplar geri gelir.
+
+Açık faturaların vadesinden 3 gün önce ve vade günü, vergi takvimindeki beyan ve ödeme günlerinden 3 gün önce ve son gün sabah 09.00'da telefon bildirimi gelir (`Hatirlatici.java`). Bildirime dokununca ilgili fatura ya da vergi ekranı açılır.
+
 ## Yeni modül eklemek
 
 `web/index.html` içinde `MODULLER` listesine bir kayıt ekleyin (`id`, `varsayilan` profiller, profile göre `ad`), `ciz()` içinde ekran fonksiyonunu bağlayın.
