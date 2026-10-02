@@ -7,9 +7,13 @@ Profil tabanlı, tek dosyalık muhasebe uygulaması. Tek kod; ekranlar ve modül
 | Bireysel | Özet, Gelir/Harcama, Bütçe, Raporlar (Borç/Alacak isteğe bağlı) |
 | Esnaf | Özet, Kasa, Veresiye, Stok, Raporlar |
 | Küçük işletme | Özet, Gelir/Gider, Veresiye, Stok, Fatura, Personel, Raporlar |
-| Şirket | Özet, Gelir/Gider, Cari, Stok, Fatura, Personel, KDV, Raporlar |
+| Şirket | Özet, Gelir/Gider, Cari, Stok, Fatura, Personel, Vergi, Raporlar |
 
 Her modül Ayarlar'dan profil bazında açılıp kapatılabilir. Modüller birbirine bağlıdır: kesilen fatura cariye borç yazar ve stoktan düşer, ödenince kasaya tahsilat girer; maaş ve stok hareketleri kasaya gider/gelir olarak işlenir.
+
+Personel modülü puantaj (takvim, rapor/izin/devamsızlık, fazla mesai), brüt ⇄ net bordro (2026 parametreleri: SGK, işsizlik, gelir vergisi dilimleri, damga, asgari ücret istisnası, işveren teşviki) ve yazdırılabilir bordro pusulası / icmal içerir. Vergi modülü dönemin KDV, muhtasar ve SGK yükünü, geçici ve yıllık gelir/kurumlar vergisi tahminini, stopaj ve vergi hesaplayıcılarını ve vergi takvimini gösterir. Bordro parametreleri `BORDRO` sabitinde yıl bazında tutulur.
+
+Raporlar PDF olarak yazdırılabilir veya CSV olarak paylaşılabilir.
 
 Arayüz iOS tarzındadır: büyük başlıklar, gruplu listeler, alt sekme çubuğu (Özet + ilk üç modül + Menü), alttan açılan form pencereleri.
 
@@ -25,4 +29,4 @@ Veriler cihazda (localStorage) saklanır, internete gönderilmez. Ayarlar > Yede
 
 ## Yeni modül eklemek
 
-`web/index.html` içinde `MODULLER` listesine bir kayıt ekleyin (`id`, `varsayilan` profiller, profile göre `ad`), `hazir: true` yapın ve `ciz()` içinde ekran fonksiyonunu bağlayın.
+`web/index.html` içinde `MODULLER` listesine bir kayıt ekleyin (`id`, `varsayilan` profiller, profile göre `ad`), `ciz()` içinde ekran fonksiyonunu bağlayın.

@@ -1,6 +1,7 @@
 package com.dnmarine.muhasebe;
 
 import android.app.Activity;
+import android.content.ClipData;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.graphics.Insets;
@@ -140,6 +141,31 @@ public class MainActivity extends Activity {
             });
         }
 
+        /** Dosyayı İndirilenler/DN Muhasebe klasörüne yazar ve paylaşım ekranını açar (WhatsApp, e-posta, Drive, Excel...). */
+        @JavascriptInterface
+        public String paylas(String ad, String icerik, String tur) {
+            Uri u = Build.VERSION.SDK_INT >= 29 ? indirilenlereYaz(ad, icerik, tur) : null;
+            runOnUiThread(() -> {
+                Intent p = new Intent(Intent.ACTION_SEND);
+                p.setType(tur);
+                p.putExtra(Intent.EXTRA_SUBJECT, ad);
+                if (u != null) {
+                    p.putExtra(Intent.EXTRA_STREAM, u);
+                    p.setClipData(ClipData.newRawUri(ad, u));
+                    p.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                } else {
+                    p.setType("text/plain");
+                    p.putExtra(Intent.EXTRA_TEXT, icerik);
+                }
+                try {
+                    startActivity(Intent.createChooser(p, ad));
+                } catch (Exception e) {
+                    Toast.makeText(MainActivity.this, "Paylaşılacak uygulama bulunamadı", Toast.LENGTH_SHORT).show();
+                }
+            });
+            return u != null ? "İndirilenler/DN Muhasebe" : "paylaşım ekranı";
+        }
+
         /** Dosyayı İndirilenler/DN Muhasebe klasörüne yazar; başarılıysa konumu, değilse boş metin döner. */
         @JavascriptInterface
         public String dosyaKaydet(String ad, String icerik, String tur) {
@@ -153,21 +179,27 @@ public class MainActivity extends Activity {
                 });
                 return "paylaşım ekranı";
             }
-            ContentValues d = new ContentValues();
-            d.put(MediaStore.MediaColumns.DISPLAY_NAME, ad);
-            d.put(MediaStore.MediaColumns.MIME_TYPE, tur);
-            d.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/DN Muhasebe");
-            try {
-                Uri u = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, d);
-                if (u == null) return "";
-                try (OutputStream o = getContentResolver().openOutputStream(u)) {
-                    if (o == null) return "";
-                    o.write(icerik.getBytes(StandardCharsets.UTF_8));
-                }
-                return "İndirilenler/DN Muhasebe";
-            } catch (Exception e) {
-                return "";
+            return indirilenlereYaz(ad, icerik, tur) != null ? "İndirilenler/DN Muhasebe" : "";
+        }
+    }
+
+    /** Android 10+ : İndirilenler/DN Muhasebe klasörüne yazar, dosyanın adresini döner. */
+    @android.annotation.TargetApi(29)
+    private Uri indirilenlereYaz(String ad, String icerik, String tur) {
+        ContentValues d = new ContentValues();
+        d.put(MediaStore.MediaColumns.DISPLAY_NAME, ad);
+        d.put(MediaStore.MediaColumns.MIME_TYPE, tur);
+        d.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/DN Muhasebe");
+        try {
+            Uri u = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, d);
+            if (u == null) return null;
+            try (OutputStream o = getContentResolver().openOutputStream(u)) {
+                if (o == null) return null;
+                o.write(icerik.getBytes(StandardCharsets.UTF_8));
             }
+            return u;
+        } catch (Exception e) {
+            return null;
         }
     }
 }

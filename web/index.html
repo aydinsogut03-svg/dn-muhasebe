@@ -260,13 +260,42 @@ a.kart:active{opacity:.7}
 .kagit .toplamlar{margin-left:auto;width:min(100%,260px)}
 .kagit .toplamlar div{display:flex;justify-content:space-between;padding:3px 0}
 .kagit .toplamlar .genel{font-weight:700;font-size:16px;border-top:2px solid #111;margin-top:4px;padding-top:7px}
+.kagit h4{margin:18px 0 2px;font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:#444}
+.kagit .kutular{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:8px 0}
+.kagit .kutular div{border:1px solid #ddd;border-radius:8px;padding:8px 10px}
+.kagit .kutular small{display:block;color:#666;font-size:11px}
+.kagit .kutular b{font-size:15px}
+.kagit tr.top td{font-weight:700;border-top:2px solid #111}
+.kagit.puantaj table{font-size:10px}
+.kagit.puantaj td,.kagit.puantaj th{padding:3px 1px;text-align:center;border:1px solid #ddd}
+.kagit.puantaj td:first-child{text-align:left;white-space:nowrap;padding-right:4px}
 #yazdirAlani{display:none}
 @media print{
   body>*:not(#yazdirAlani){display:none!important}
   #yazdirAlani{display:block!important}
   #yazdirAlani .kagit{box-shadow:none;padding:0;font-size:12pt}
   html,body{background:#fff}
+  @page{size:A4;margin:12mm}
+  .kagit h4,.kagit tr{break-inside:avoid}
 }
+
+/* Puantaj takvimi */
+.takvim-ust,.takvim{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.takvim-ust{font-size:12px;color:var(--ikincil);text-align:center;margin-bottom:6px;font-weight:600}
+.takvim{margin-bottom:14px}
+.takvim button{border:0;border-radius:10px;height:48px;width:100%;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:15px;font-weight:600;color:var(--yazi);background:var(--kart);box-shadow:var(--golge);padding:0;letter-spacing:0}
+.takvim button small{font-size:10px;font-weight:600;line-height:1}
+.takvim button:active{opacity:.6}
+.takvim-bos{visibility:hidden}
+.d-C small{color:var(--yesil-yazi)}
+.d-H,.d-T{background:var(--dolgu)!important;color:var(--ikincil)!important}
+.d-I{background:rgba(0,122,255,.14)!important}.d-I small{color:var(--mavi)}
+.d-R{background:rgba(255,149,0,.18)!important}.d-R small{color:var(--turuncu)}
+.d-U,.d-D{background:rgba(255,59,48,.14)!important}.d-U small,.d-D small{color:var(--kirmizi)}
+.d-Y{opacity:.35}
+.puan-lejant{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12.5px;color:var(--ikincil);margin:0 4px 18px}
+.puan-lejant b{font-weight:700;margin-right:3px}
+.satir-ozet{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
 
 /* Kalem düzenleyici */
 .kalem{background:var(--kart);border-radius:12px;margin-bottom:10px;overflow:hidden}
@@ -294,7 +323,7 @@ a.kart:active{opacity:.7}
 
 <script>
 'use strict';
-const VERSIYON = '0.2.0';
+const VERSIYON = '0.3.0';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -383,9 +412,9 @@ const MODULLER = [
   {id:'veresiye', simge:'defter', renk:'turuncu', varsayilan:['esnaf','kucuk','sirket'], ad:{bireysel:'Borç/Alacak', sirket:'Cari', _:'Veresiye'}, aciklama:'Kişi bazında borç ve tahsilat'},
   {id:'stok', simge:'kutu', renk:'kahve', varsayilan:['esnaf','kucuk','sirket'], ad:{_:'Stok'}, aciklama:'Ürünler, giriş-çıkış, kritik stok'},
   {id:'fatura', simge:'dosya', renk:'indigo', varsayilan:['kucuk','sirket'], ad:{_:'Fatura'}, aciklama:'Fatura ve teklif, yazdır ve paylaş'},
-  {id:'personel', simge:'kisiler', renk:'camgobegi', varsayilan:['kucuk','sirket'], ad:{_:'Personel'}, aciklama:'Çalışanlar, maaş, avans ve prim'},
+  {id:'personel', simge:'kisiler', renk:'camgobegi', varsayilan:['kucuk','sirket'], ad:{_:'Personel'}, aciklama:'Çalışanlar, puantaj, bordro, maaş ve avans'},
   {id:'butce', simge:'hedef', renk:'mor', varsayilan:['bireysel'], ad:{_:'Bütçe'}, aciklama:'Aylık limitler ve birikim hedefleri'},
-  {id:'kdv', simge:'yuzde', renk:'pembe', varsayilan:['sirket'], ad:{_:'KDV'}, aciklama:'KDV hesabı ve vergi takvimi'},
+  {id:'kdv', simge:'yuzde', renk:'pembe', varsayilan:['sirket'], ad:{_:'Vergi'}, aciklama:'KDV, muhtasar, SGK, gelir/kurumlar vergisi ve takvim'},
   {id:'rapor', simge:'grafik', renk:'nane', varsayilan:TUM, ad:{_:'Raporlar'}, aciklama:'Dönemsel gelir-gider analizi'}
 ];
 const modul = id => MODULLER.find(m => m.id === id);
@@ -406,7 +435,7 @@ const yeniDurum = () => ({
   butceler:{}, hedefler:[],
   urunler:[], stokHareket:[],
   faturalar:[],
-  personeller:[], personelOdeme:[],
+  personeller:[], personelOdeme:[], puantaj:{}, bordroAyar:{tesvik:2}, vergiAyar:{tur:''},
   sonYedek:null
 });
 function yukle() {
@@ -498,6 +527,109 @@ function dosyaKaydet(ad, icerik, tur) {
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   return 'İndirilenler';
+}
+
+/* Dosyayı kaydedip paylaşım ekranını açar (WhatsApp, e-posta, Drive, Excel). Tarayıcıda indirir. */
+function dosyaPaylas(ad, icerik, tur) {
+  if (window.Android && Android.paylas) return Android.paylas(ad, icerik, tur);
+  return dosyaKaydet(ad, icerik, tur);
+}
+/* Verilen kâğıdı yazdırma ekranına gönderir; telefonda "PDF olarak kaydet" seçilebilir. */
+function yazdir(ad, html) {
+  $('#yazdirAlani').innerHTML = html;
+  if (window.Android && Android.yazdir) Android.yazdir(ad);
+  else { const eski = document.title; document.title = ad; window.print(); document.title = eski; }
+}
+const csvYap = (baslik, satirlar) => '\ufeff' + [baslik, ...satirlar].map(r => r.map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(';')).join('\n');
+const csvTL = k => ((k || 0) / 100).toFixed(2).replace('.', ',');
+const firmaBaslik = (baslik, alt) => `<div class="ust"><div><h3>${esc(baslik)}</h3><div class="gri">${alt}</div></div>
+  <div style="text-align:right"><b>${esc(D.ad || '')}</b><div class="gri">${[D.firma.vd && 'V.D.: ' + D.firma.vd, D.firma.vno && 'V.No: ' + D.firma.vno, D.firma.tel].filter(Boolean).map(esc).join('<br>')}</div></div></div>`;
+
+/* ================= Bordro motoru (tutarlar kuruş) =================
+   Kaynak: 2026 bordro parametreleri (asgari ücret 33.030 TL brüt, SGK tavanı 9 kat, işveren %21,75). */
+const BORDRO = {
+  2025: {asgari: 2600550, tavanKat: 7.5, sgkIsci: 14, issizIsci: 1, sgkIsv: 20.75, issizIsv: 2, damga: .759,
+    ucret: [[15800000, 15], [33000000, 20], [120000000, 27], [430000000, 35], [Infinity, 40]],
+    diger: [[15800000, 15], [33000000, 20], [80000000, 27], [430000000, 35], [Infinity, 40]]},
+  2026: {asgari: 3303000, tavanKat: 9, sgkIsci: 14, issizIsci: 1, sgkIsv: 21.75, issizIsv: 2, damga: .759,
+    ucret: [[19000000, 15], [40000000, 20], [150000000, 27], [530000000, 35], [Infinity, 40]],
+    diger: [[19000000, 15], [40000000, 20], [100000000, 27], [530000000, 35], [Infinity, 40]]}
+};
+const bordroParam = yil => { const y = Object.keys(BORDRO).map(Number).filter(x => x <= yil); return BORDRO[y.length ? Math.max(...y) : 2025]; };
+function vergiDilim(matrah, dilimler) {
+  let v = 0, alt = 0;
+  for (const [ust, oran] of dilimler) {
+    if (matrah <= alt) break;
+    v += (Math.min(matrah, ust) - alt) * oran / 100;
+    alt = ust;
+  }
+  return Math.round(v);
+}
+const marjinalOran = (matrah, dilimler) => (dilimler.find(([ust]) => matrah <= ust) || dilimler[dilimler.length - 1])[1];
+/* Tek ayın bordrosu. kum: yılbaşından önceki ayların gelir vergisi matrahı toplamı; gun: SGK gün sayısı (eksik günler düşülmüş). */
+function bordroAy(brut, ay, kum = 0, gun = 30, tesvik = D.bordroAyar.tesvik) {
+  const P = bordroParam(+ay.slice(0, 4)), aySira = +ay.slice(5, 7);
+  const sgkMatrah = Math.min(brut, Math.round(P.asgari * P.tavanKat * gun / 30));
+  const sgkI = Math.round(sgkMatrah * P.sgkIsci / 100), issI = Math.round(sgkMatrah * P.issizIsci / 100);
+  const gvMatrah = brut - sgkI - issI;
+  const gvHam = vergiDilim(kum + gvMatrah, P.ucret) - vergiDilim(kum, P.ucret);
+  // Asgari ücret istisnası: asgari ücretin (gün oranında) vergisi herkesin vergisinden düşülür.
+  const au = Math.round(P.asgari * gun / 30), auMatrah = au - Math.round(au * (P.sgkIsci + P.issizIsci) / 100);
+  const auKum = (P.asgari - Math.round(P.asgari * (P.sgkIsci + P.issizIsci) / 100)) * (aySira - 1);
+  const gvIst = Math.min(gvHam, vergiDilim(auKum + auMatrah, P.ucret) - vergiDilim(auKum, P.ucret));
+  const dvHam = Math.round(brut * P.damga / 100), dvIst = Math.min(dvHam, Math.round(au * P.damga / 100));
+  const gv = gvHam - gvIst, dv = dvHam - dvIst;
+  const net = brut - sgkI - issI - gv - dv;
+  const isvSgk = Math.round(sgkMatrah * (P.sgkIsv - (tesvik || 0)) / 100), issV = Math.round(sgkMatrah * P.issizIsv / 100);
+  return {brut, gun, sgkMatrah, sgkI, issI, gvMatrah, kum, gvHam, gvIst, gv, dvHam, dvIst, dv, net, isvSgk, issV,
+    tesvikTutar: Math.round(sgkMatrah * (tesvik || 0) / 100), maliyet: brut + isvSgk + issV, oranIsv: P.sgkIsv - (tesvik || 0), marjinal: marjinalOran(kum + gvMatrah, P.ucret)};
+}
+/* Net ücreti verecek brütü bulur (ikili arama). */
+function nettenBrut(net, ay, kum = 0, gun = 30) {
+  if (!(net > 0)) return 0;
+  let a = net, b = net * 3;
+  for (let i = 0; i < 60 && b - a > 1; i++) { const m = Math.floor((a + b) / 2); bordroAy(m, ay, kum, gun).net < net ? a = m : b = m; }
+  return bordroAy(a, ay, kum, gun).net >= net ? a : b;
+}
+/* Personelin o ayki bordrosu: ücret tipi (net/brüt), yılbaşından birikmiş matrah ve puantaj birlikte. */
+function bordro(p, ay) {
+  const yil = ay.slice(0, 4), giris = p.iseGiris && p.iseGiris.slice(0, 4) === yil ? +p.iseGiris.slice(5, 7) : 1;
+  let kum = 0, b = null;
+  for (let m = giris; m <= +ay.slice(5, 7); m++) {
+    const a = `${yil}-${iki(m)}`, pu = puantajOzet(p, a);
+    const tamBrut = p.ucretTip === 'brut' ? (p.maas || 0) : nettenBrut(p.maas || 0, a, kum);
+    const gunluk = tamBrut / 30;
+    const brut = Math.round(gunluk * pu.gun + gunluk / 7.5 * 1.5 * pu.mesai);
+    b = bordroAy(brut, a, kum, pu.gun);
+    b.tamBrut = tamBrut; b.mesaiUcret = Math.round(gunluk / 7.5 * 1.5 * pu.mesai); b.puantaj = pu;
+    kum += b.gvMatrah;
+  }
+  return b || bordroAy(0, ay);
+}
+
+/* ================= Puantaj ================= */
+const PUANTAJ = {
+  C: {ad: 'Çalıştı', kisa: 'Ç'}, H: {ad: 'Hafta tatili', kisa: 'HT'}, T: {ad: 'Resmi tatil', kisa: 'RT'},
+  I: {ad: 'Yıllık izin', kisa: 'İ'}, R: {ad: 'Raporlu', kisa: 'R', eksik: true}, U: {ad: 'Ücretsiz izin', kisa: 'Üİ', eksik: true},
+  D: {ad: 'Devamsız', kisa: 'D', eksik: true}, Y: {ad: 'İşe başlamadı / ayrıldı', kisa: '–', eksik: true}
+};
+// Resmi tatiller (yarım günler hariç). Dini bayramlar yıllara göre eklenir.
+const RESMI_TATIL = ['01-01', '04-23', '05-01', '05-19', '07-15', '08-30', '10-29'];
+const DINI_TATIL = {2025: ['03-30', '03-31', '04-01', '06-06', '06-07', '06-08', '06-09'], 2026: ['03-20', '03-21', '03-22', '05-27', '05-28', '05-29', '05-30'], 2027: ['03-10', '03-11', '03-12', '05-16', '05-17', '05-18', '05-19']};
+const resmiTatilMi = t => RESMI_TATIL.includes(t.slice(5)) || (DINI_TATIL[t.slice(0, 4)] || []).includes(t.slice(5));
+function puantajGun(p, ay, g) {
+  const t = `${ay}-${iki(g)}`, k = D.puantaj[ay]?.[p.id]?.g?.[iki(g)];
+  if (k) return k;
+  if ((p.iseGiris && t < p.iseGiris) || (p.cikis && t > p.cikis)) return 'Y';
+  if (resmiTatilMi(t)) return 'T';
+  return tarihNesne(t).getDay() === 0 ? 'H' : 'C';
+}
+function puantajOzet(p, ay) {
+  const son = ayinSonGunu(ay), say = {};
+  for (let g = 1; g <= son; g++) { const k = puantajGun(p, ay, g); say[k] = (say[k] || 0) + 1; }
+  const eksik = Object.entries(say).filter(([k]) => PUANTAJ[k].eksik).reduce((s, [, v]) => s + v, 0);
+  // SGK'da ay 30 gün sayılır; eksik gün yoksa 30, varsa 30 - eksik.
+  return {say, eksik, gun: eksik >= son ? 0 : Math.max(0, 30 - eksik), mesai: D.puantaj[ay]?.[p.id]?.mesai || 0};
 }
 
 /* ================= Modal, eylem sayfası, onay ================= */
@@ -1538,10 +1670,7 @@ function faturaEkrani(id) {
   };
 }
 function faturaYazdir(f) {
-  $('#yazdirAlani').innerHTML = faturaKagit(f);
-  const ad = `${f.tur === 'teklif' ? 'Teklif' : 'Fatura'} ${f.no}`;
-  if (window.Android && Android.yazdir) Android.yazdir(ad);
-  else { const eski = document.title; document.title = ad; window.print(); document.title = eski; }
+  yazdir(`${f.tur === 'teklif' ? 'Teklif' : 'Fatura'} ${f.no}`, faturaKagit(f));
 }
 
 /* ================= Personel ================= */
@@ -1549,33 +1678,196 @@ const personel = id => D.personeller.find(p => p.id === id);
 const ODEME_TUR = {maas:'Maaş', avans:'Avans', prim:'Prim'};
 const maasOdendiMi = (pid, ay) => D.personelOdeme.some(o => o.personelId === pid && o.donem === ay && o.tur === 'maas');
 const avansToplam = (pid, ay) => D.personelOdeme.filter(o => o.personelId === pid && o.donem === ay && o.tur === 'avans').reduce((s, o) => s + o.tutar, 0);
+const aktifPersonel = ay => D.personeller.filter(p => p.aktif !== false || (p.cikis && p.cikis.slice(0, 7) >= ay)).filter(p => !p.iseGiris || p.iseGiris.slice(0, 7) <= ay).sort((a, b) => a.ad.localeCompare(b.ad, 'tr'));
+const ucretYazi = p => `${para(p.maas)} ${p.ucretTip === 'brut' ? 'brüt' : 'net'}`;
+function bordroToplam(ay) {
+  const t = {brut: 0, net: 0, sgkI: 0, issI: 0, gv: 0, dv: 0, isvSgk: 0, issV: 0, maliyet: 0, kisi: 0};
+  for (const p of aktifPersonel(ay)) { const b = bordro(p, ay); for (const k in t) if (k !== 'kisi') t[k] += b[k]; t.kisi++; }
+  t.sgk = t.sgkI + t.issI + t.isvSgk + t.issV; t.muhtasar = t.gv + t.dv;
+  return t;
+}
 function personelEkrani() {
-  let h = sayfa('Personel', {sag: artiBtn('ekleBtn', 'Yeni personel')});
-  const ay = ui.pAy;
+  const ay = ui.pAy, sekme = ui.pSekme;
+  let h = sayfa('Personel', {sag: sekme === 'liste' ? artiBtn('ekleBtn', 'Yeni personel') : sekme === 'puantaj' ? `<button class="nav-btn" id="puYaz">Yazdır</button>` : `<button class="nav-btn" id="hesapBtn">Hesapla</button>`});
+  h += `<div class="segment" id="pSek">${[['liste', 'Çalışanlar'], ['puantaj', 'Puantaj'], ['bordro', 'Bordro']].map(([v, a]) => `<button data-v="${v}" class="${sekme === v ? 'secili' : ''}">${a}</button>`).join('')}</div>` + ayBtnler;
+  if (sekme === 'puantaj') h += puantajListe(ay);
+  else if (sekme === 'bordro') h += bordroListe(ay);
+  else h += personelListe(ay);
+  $('#icerik').innerHTML = h;
+  ayBagla('pAy', personelEkrani);
+  $$('#pSek button').forEach(b => b.onclick = () => { ui.pSekme = b.dataset.v; personelEkrani(); });
+  if ($('#ekleBtn')) $('#ekleBtn').onclick = () => personelFormu();
+  if ($('#bosEkle')) $('#bosEkle').onclick = () => personelFormu();
+  if ($('#hesapBtn')) $('#hesapBtn').onclick = () => maasHesaplayici();
+  if ($('#puYaz')) $('#puYaz').onclick = () => yazdir(`Puantaj ${ayAdi(ay)}`, puantajKagit(ay));
+  if ($('#bYaz')) $('#bYaz').onclick = () => yazdir(`Bordro ${ayAdi(ay)}`, bordroIcmalKagit(ay));
+  $$('[data-p]').forEach(b => b.onclick = () => git('personel/' + b.dataset.p));
+  $$('[data-pu]').forEach(b => b.onclick = () => puantajFormu(personel(b.dataset.pu), ay));
+  $$('[data-bo]').forEach(b => b.onclick = () => bordroDetay(personel(b.dataset.bo), ay));
+  $$('#tesvik button').forEach(b => b.onclick = () => { D.bordroAyar.tesvik = +b.dataset.t; kaydet(); personelEkrani(); });
+  if ($('#topluOde')) $('#topluOde').onclick = async () => {
+    const bekleyen = aktifPersonel(ay).filter(p => p.aktif !== false && !maasOdendiMi(p.id, ay) && p.maas > 0);
+    const odenecek = p => Math.max(0, bordro(p, ay).net - avansToplam(p.id, ay));
+    const toplam = bekleyen.reduce((s, p) => s + odenecek(p), 0);
+    if (!await eylemSayfa(`${ayAdi(ay)} maaşları`, `${bekleyen.length} kişi · puantaj ve avanslar düşülmüş toplam ${para(toplam)}`, [{ad: 'Öde', deger: true}])) return;
+    for (const p of bekleyen) personelOdemeEkle(p, {tur: 'maas', tutar: odenecek(p), donem: ay, tarih: bugun(), odeme: 'havale', aciklama: ''}, true);
+    kaydet(); bildir('Maaşlar ödendi'); ciz();
+  };
+}
+function personelListe(ay) {
   const aktif = D.personeller.filter(p => p.aktif !== false).sort((a, b) => a.ad.localeCompare(b.ad, 'tr'));
   const pasif = D.personeller.filter(p => p.aktif === false);
   const odenen = D.personelOdeme.filter(o => o.donem === ay).reduce((s, o) => s + o.tutar, 0);
   const bekleyen = aktif.filter(p => !maasOdendiMi(p.id, ay) && p.maas > 0);
-  h += ayBtnler + `<div class="ikili"><div class="kart"><div class="k-ust">Aylık maaş yükü</div><div class="dev orta">${para(aktif.reduce((s, p) => s + (p.maas || 0), 0))}</div><div class="k-alt">${aktif.length} çalışan</div></div>
+  const t = bordroToplam(ay);
+  return `<div class="ikili"><div class="kart"><div class="k-ust">İşveren maliyeti</div><div class="dev orta">${para(t.maliyet)}</div><div class="k-alt">${t.kisi} çalışan · net ${kisaPara(t.net)}</div></div>
     <div class="kart"><div class="k-ust">Bu dönem ödenen</div><div class="dev orta">${para(odenen)}</div><div class="k-alt ${bekleyen.length ? 'turuncu' : ''}">${bekleyen.length ? bekleyen.length + ' maaş bekliyor' : 'Bekleyen maaş yok'}</div></div></div>
     ${bekleyen.length ? `<button class="btn" id="topluOde" style="margin-bottom:20px">${ikon('para')} ${bekleyen.length > 1 ? `Bekleyen ${bekleyen.length} maaşı öde` : `${esc(bekleyen[0].ad)} maaşını öde`}</button>` : ''}
     ${aktif.length ? `<div class="grup">${aktif.map(p => {
       const od = maasOdendiMi(p.id, ay);
-      return `<button class="hucre avatarli" data-p="${p.id}">${avatar(p.ad)}<div class="ic"><b>${esc(p.ad)}</b><small>${esc(p.gorev || 'Personel')} · ${para(p.maas)}</small></div>
+      return `<button class="hucre avatarli" data-p="${p.id}">${avatar(p.ad)}<div class="ic"><b>${esc(p.ad)}</b><small>${esc(p.gorev || 'Personel')} · ${ucretYazi(p)}</small></div>
         <span class="hap ${od ? 'yesil' : 'turuncu'}">${od ? 'ödendi' : 'bekliyor'}</span>${CHEV}</button>`; }).join('')}</div>`
-      : bosDurum('kisiler', 'camgobegi', 'Henüz personel yok', 'Çalışanlarınızı ekleyin, maaş ve avansları takip edin.', `<button class="btn kucuk" id="bosEkle">${ikon('arti')} Yeni personel</button>`)}
-    ${pasif.length ? `<div class="bolum">Ayrılanlar</div><div class="grup">${pasif.map(p => `<button class="hucre avatarli" data-p="${p.id}">${avatar(p.ad)}<div class="ic"><b class="soluk">${esc(p.ad)}</b><small>${esc(p.gorev || '')}</small></div>${CHEV}</button>`).join('')}</div>` : ''}`;
-  $('#icerik').innerHTML = h;
-  ayBagla('pAy', personelEkrani);
-  $('#ekleBtn').onclick = () => personelFormu();
-  if ($('#bosEkle')) $('#bosEkle').onclick = () => personelFormu();
-  $$('[data-p]').forEach(b => b.onclick = () => git('personel/' + b.dataset.p));
-  if ($('#topluOde')) $('#topluOde').onclick = async () => {
-    const toplam = bekleyen.reduce((s, p) => s + Math.max(0, p.maas - avansToplam(p.id, ay)), 0);
-    if (!await eylemSayfa(`${ayAdi(ay)} maaşları`, `${bekleyen.length} kişi · avanslar düşülmüş toplam ${para(toplam)}`, [{ad: 'Öde', deger: true}])) return;
-    for (const p of bekleyen) personelOdemeEkle(p, {tur: 'maas', tutar: Math.max(0, p.maas - avansToplam(p.id, ay)), donem: ay, tarih: bugun(), odeme: 'havale', aciklama: ''}, true);
-    kaydet(); bildir('Maaşlar ödendi'); ciz();
+      : bosDurum('kisiler', 'camgobegi', 'Henüz personel yok', 'Çalışanlarınızı ekleyin; maaş, puantaj ve bordroyu buradan yönetin.', `<button class="btn kucuk" id="bosEkle">${ikon('arti')} Yeni personel</button>`)}
+    ${pasif.length ? `<div class="bolum">Ayrılanlar</div><div class="grup">${pasif.map(p => `<button class="hucre avatarli" data-p="${p.id}">${avatar(p.ad)}<div class="ic"><b class="soluk">${esc(p.ad)}</b><small>${esc(p.gorev || '')}${p.cikis ? ' · çıkış ' + esc(tarihYaz(p.cikis, true)) : ''}</small></div>${CHEV}</button>`).join('')}</div>` : ''}`;
+}
+
+/* Puantaj sekmesi: her çalışanın ay özeti, dokununca takvim açılır */
+function puantajListe(ay) {
+  const liste = aktifPersonel(ay);
+  if (!liste.length) return bosDurum('takvim', 'camgobegi', 'Bu ay çalışan yok', 'Personel ekleyince puantaj burada tutulur.');
+  return `<div class="grup">${liste.map(p => {
+    const o = puantajOzet(p, ay), ek = Object.entries(o.say).filter(([k]) => !['C', 'H', 'T'].includes(k));
+    return `<button class="hucre avatarli" data-pu="${p.id}">${avatar(p.ad)}<div class="ic"><b>${esc(p.ad)}</b>
+      <small>${o.gun} gün SGK${o.mesai ? ` · ${sayiFmt(o.mesai)} saat mesai` : ''}</small>
+      ${ek.length ? `<div class="satir-ozet">${ek.map(([k, v]) => `<span class="hap ${PUANTAJ[k].eksik ? 'kirmizi' : 'mavi'}" style="margin:0">${v} ${esc(PUANTAJ[k].ad.toLocaleLowerCase('tr-TR'))}</span>`).join('')}</div>` : ''}</div>
+      <span class="hap ${o.eksik ? 'turuncu' : 'yesil'}">${o.eksik ? o.eksik + ' eksik' : 'tam'}</span>${CHEV}</button>`; }).join('')}</div>
+    <p class="dipnot">Pazar günleri hafta tatili, resmi tatiller otomatik işaretlenir. Raporlu, ücretsiz izin ve devamsız günler SGK gününden ve maaştan düşülür. Fazla mesai saat ücretinin 1,5 katıyla bordroya eklenir.</p>`;
+}
+function puantajFormu(p, ay) {
+  const kayit = () => ((D.puantaj[ay] ||= {})[p.id] ||= {g: {}, mesai: 0});
+  const govde = () => {
+    const ilk = (tarihNesne(ay + '-01').getDay() + 6) % 7, son = ayinSonGunu(ay), o = puantajOzet(p, ay);
+    return `<div class="takvim-ust">${['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'].map(g => `<span>${g}</span>`).join('')}</div>
+      <div class="takvim">${'<span class="takvim-bos"></span>'.repeat(ilk)}${[...Array(son)].map((_, i) => { const k = puantajGun(p, ay, i + 1);
+        return `<button data-g="${i + 1}" class="d-${k}">${i + 1}<small>${PUANTAJ[k].kisa}</small></button>`; }).join('')}</div>
+      <div class="puan-lejant">${Object.entries(PUANTAJ).filter(([k]) => k !== 'Y').map(([, v]) => `<span><b>${v.kisa}</b>${esc(v.ad)}</span>`).join('')}</div>
+      <div class="grup"><label class="f-satir"><span>Fazla mesai</span><input id="puMesai" inputmode="decimal" placeholder="0 saat" value="${o.mesai || ''}"></label>
+        <div class="hucre"><div class="ic"><b>SGK gün</b><small>${o.eksik ? o.eksik + ' eksik gün düşüldü' : 'Eksik gün yok'}</small></div><span class="deger">${o.gun}</span></div></div>
+      <div class="grup"><button class="hucre" id="puTum">Hafta içi tüm günleri "Çalıştı" yap</button></div>`;
   };
+  const m = modal(`${p.ad} · ${ayAdi(ay).split(' ')[0]}`, '<div id="puGovde"></div>', {kaydet: () => {
+    const s = sayiOku($('#puMesai', m).value || '0');
+    kayit().mesai = s > 0 ? s : 0;
+    kaydet(); bildir('Puantaj kaydedildi'); setTimeout(ciz, 10);
+  }, tam: true});
+  const bagla = () => {
+    $('#puGovde', m).innerHTML = govde();
+    $$('[data-g]', m).forEach(b => b.onclick = async () => {
+      const g = +b.dataset.g, simdiki = puantajGun(p, ay, g);
+      const s = await eylemSayfa(`${g} ${ayAdi(ay)}`, `Şu an: ${PUANTAJ[simdiki].ad}`, Object.entries(PUANTAJ).filter(([k]) => k !== simdiki).map(([k, v]) => ({ad: v.ad, deger: k})));
+      if (!s) return;
+      const mesai = $('#puMesai', m).value;
+      kayit().g[iki(g)] = s; kaydet(); bagla(); $('#puMesai', m).value = mesai;
+    });
+    $('#puTum', m).onclick = () => {
+      const k = kayit(), mesai = $('#puMesai', m).value;
+      for (const g of Object.keys(k.g)) { const t = `${ay}-${g}`; if (tarihNesne(t).getDay() !== 0 && !resmiTatilMi(t)) delete k.g[g]; }
+      kaydet(); bagla(); $('#puMesai', m).value = mesai;
+    };
+  };
+  bagla();
+}
+function puantajKagit(ay) {
+  const son = ayinSonGunu(ay), liste = aktifPersonel(ay);
+  return `<div class="kagit puantaj">${firmaBaslik('PUANTAJ', esc(ayAdi(ay)))}
+    <table><thead><tr><th>Personel</th>${[...Array(son)].map((_, i) => `<th>${i + 1}</th>`).join('')}<th>Gün</th><th>FM</th></tr></thead><tbody>
+    ${liste.map(p => { const o = puantajOzet(p, ay); return `<tr><td>${esc(p.ad)}</td>${[...Array(son)].map((_, i) => `<td>${PUANTAJ[puantajGun(p, ay, i + 1)].kisa}</td>`).join('')}<td><b>${o.gun}</b></td><td>${o.mesai || ''}</td></tr>`; }).join('')}
+    </tbody></table>
+    <div class="gri">${Object.values(PUANTAJ).map(v => `${v.kisa}: ${esc(v.ad)}`).join(' · ')} · FM: fazla mesai (saat)</div></div>`;
+}
+
+/* Bordro sekmesi: toplamlar, teşvik seçimi, kişi bazında brüt-net-maliyet */
+function bordroListe(ay) {
+  const liste = aktifPersonel(ay);
+  if (!liste.length) return bosDurum('para', 'camgobegi', 'Bu ay çalışan yok', 'Personel ekleyince bordro otomatik hesaplanır.');
+  const t = bordroToplam(ay);
+  return `<div class="kart"><div class="kart-ust">${kare('para', 'camgobegi')}<span style="text-transform:capitalize">${esc(ayAdi(ay))} bordrosu</span></div>
+      <div class="ozet"><div><small>Brüt</small><b>${kisaPara(t.brut)}</b></div><div><small>Net</small><b class="gelir">${kisaPara(t.net)}</b></div><div><small>Maliyet</small><b>${kisaPara(t.maliyet)}</b></div></div></div>
+    <div class="grup">
+      <div class="hucre"><div class="ic"><b>SGK primleri</b><small>İşçi ${para(t.sgkI + t.issI)} + işveren ${para(t.isvSgk + t.issV)}</small></div><span class="deger">${para(t.sgk)}</span></div>
+      <div class="hucre"><div class="ic"><b>Muhtasar (gelir + damga vergisi)</b><small>GV ${para(t.gv)} · DV ${para(t.dv)}</small></div><span class="deger">${para(t.muhtasar)}</span></div>
+    </div>
+    <div class="bolum">SGK işveren teşviki</div>
+    <div class="segment" id="tesvik">${[[0, 'Yok'], [2, '2 puan'], [5, '5 puan (imalat)']].map(([v, a]) => `<button data-t="${v}" class="${D.bordroAyar.tesvik === v ? 'secili' : ''}">${a}</button>`).join('')}</div>
+    <div class="bolum">Çalışanlar</div>
+    <div class="grup">${liste.map(p => { const b = bordro(p, ay);
+      return `<button class="hucre avatarli" data-bo="${p.id}">${avatar(p.ad)}<div class="ic"><b>${esc(p.ad)}</b><small>Brüt ${para(b.brut)} · ${b.gun} gün</small></div>
+        <div style="text-align:right"><span class="tutar">${para(b.net)}</span><small class="soluk" style="display:block;font-size:12px">maliyet ${kisaPara(b.maliyet)}</small></div>${CHEV}</button>`; }).join('')}</div>
+    <button class="btn renkli" id="bYaz" style="margin-bottom:12px">${ikon('yazici')} Bordro icmalini yazdır / PDF</button>
+    <p class="dipnot">${esc(ay.slice(0, 4))} parametreleri: asgari ücret ${para(bordroParam(+ay.slice(0, 4)).asgari)} brüt, SGK işçi %15, işveren %${String(bordroParam(+ay.slice(0, 4)).sgkIsv - D.bordroAyar.tesvik).replace('.', ',')} + işsizlik %2, damga binde 7,59, asgari ücret vergi istisnası uygulanır. Hesap bilgi amaçlıdır; resmi bordro için mali müşavirinize danışın.</p>`;
+}
+const bordroSatirlari = b => [
+  ['Brüt ücret', b.brut, 'k'], b.mesaiUcret ? ['Fazla mesai (dahil)', b.mesaiUcret] : null,
+  ['SGK işçi payı %14', -b.sgkI], ['İşsizlik işçi payı %1', -b.issI],
+  ['Gelir vergisi', -b.gvHam], b.gvIst ? ['Asgari ücret GV istisnası', b.gvIst] : null,
+  ['Damga vergisi', -b.dvHam], b.dvIst ? ['Asgari ücret DV istisnası', b.dvIst] : null,
+  ['Net ödenecek', b.net, 'n']
+].filter(Boolean);
+function bordroDetay(p, ay) {
+  const b = bordro(p, ay), av = avansToplam(p.id, ay);
+  const m = modal(`${p.ad} · ${ayAdi(ay).split(' ')[0]}`, `
+    <div class="tutar-kutu"><small>Net ödenecek</small><div class="dev gelir">${para(b.net)}</div><div class="soluk" style="font-size:14px">Brüt ${para(b.brut)} · ${b.gun} gün</div></div>
+    <div class="grup">${bordroSatirlari(b).map(([a, v, s]) => `<div class="hucre"><div class="ic"><b ${s ? 'class="k"' : ''}>${esc(a)}</b></div><span class="${s ? 'tutar' : 'deger'} ${v < 0 ? 'gider' : ''}">${v < 0 ? '−' + para(-v) : para(v)}</span></div>`).join('')}</div>
+    ${av ? `<p class="dipnot">Bu dönem ${para(av)} avans verildi; maaş ödemesinde ${para(Math.max(0, b.net - av))} önerilir.</p>` : ''}
+    <div class="bolum">İşveren maliyeti</div>
+    <div class="grup">
+      <div class="hucre"><div class="ic"><b>SGK işveren payı %${String(b.oranIsv).replace('.', ',')}</b>${b.tesvikTutar ? `<small>Teşvik ${para(b.tesvikTutar)} düşüldü</small>` : ''}</div><span class="deger">${para(b.isvSgk)}</span></div>
+      <div class="hucre"><div class="ic"><b>İşsizlik işveren payı %2</b></div><span class="deger">${para(b.issV)}</span></div>
+      <div class="hucre"><div class="ic"><b class="k">Toplam maliyet</b></div><span class="tutar">${para(b.maliyet)}</span></div>
+    </div>
+    <div class="grup">
+      <div class="hucre"><div class="ic"><b>Kümülatif vergi matrahı</b><small>Bu ay dahil · dilim %${b.marjinal}</small></div><span class="deger">${para(b.kum + b.gvMatrah)}</span></div>
+    </div>
+    <button class="btn" id="bdYaz">${ikon('yazici')} Bordro pusulası yazdır / PDF</button>`);
+  $('#bdYaz', m).onclick = () => yazdir(`Bordro ${p.ad} ${ayAdi(ay)}`, bordroPusula(p, ay, b));
+}
+function bordroPusula(p, ay, b = bordro(p, ay)) {
+  return `<div class="kagit">${firmaBaslik('ÜCRET BORDROSU', esc(ayAdi(ay)))}
+    <div class="gri">Personel</div><b>${esc(p.ad)}</b><div class="gri">${[p.gorev, p.tc && 'TC: ' + p.tc, p.iseGiris && 'İşe giriş: ' + tarihYaz(p.iseGiris, true), p.iban && 'IBAN: ' + p.iban].filter(Boolean).map(esc).join(' · ')}</div>
+    <div class="kutular"><div><small>SGK gün</small><b>${b.gun}</b></div><div><small>Fazla mesai</small><b>${sayiFmt(b.puantaj?.mesai || 0)} saat</b></div><div><small>Kümülatif matrah</small><b>${para(b.kum + b.gvMatrah)}</b></div></div>
+    <table><tbody>${bordroSatirlari(b).map(([a, v, s]) => `<tr ${s === 'n' ? 'class="top"' : ''}><td>${esc(a)}</td><td class="sg">${v < 0 ? '−' + para(-v) : para(v)}</td></tr>`).join('')}</tbody></table>
+    <h4>İşveren</h4>
+    <table><tbody><tr><td>SGK işveren payı %${String(b.oranIsv).replace('.', ',')}</td><td class="sg">${para(b.isvSgk)}</td></tr><tr><td>İşsizlik işveren payı %2</td><td class="sg">${para(b.issV)}</td></tr>
+      <tr class="top"><td>Toplam işveren maliyeti</td><td class="sg">${para(b.maliyet)}</td></tr></tbody></table>
+    <div style="display:flex;justify-content:space-between;margin-top:40px" class="gri"><span>İşveren imza</span><span>Personel imza</span></div></div>`;
+}
+function bordroIcmalKagit(ay) {
+  const liste = aktifPersonel(ay), t = bordroToplam(ay);
+  const sat = (ad, b) => `<td>${ad}</td><td class="sg">${b.gun}</td><td class="sg">${para(b.brut)}</td><td class="sg">${para(b.sgkI + b.issI)}</td><td class="sg">${para(b.gv)}</td><td class="sg">${para(b.dv)}</td><td class="sg">${para(b.net)}</td><td class="sg">${para(b.isvSgk + b.issV)}</td><td class="sg">${para(b.maliyet)}</td>`;
+  return `<div class="kagit">${firmaBaslik('BORDRO İCMALİ', esc(ayAdi(ay)))}
+    <table style="font-size:11px"><thead><tr><th>Personel</th><th class="sg">Gün</th><th class="sg">Brüt</th><th class="sg">SGK+İşs.</th><th class="sg">GV</th><th class="sg">DV</th><th class="sg">Net</th><th class="sg">İşveren</th><th class="sg">Maliyet</th></tr></thead><tbody>
+    ${liste.map(p => `<tr>${sat(esc(p.ad), bordro(p, ay))}</tr>`).join('')}
+    <tr class="top">${sat('Toplam', {...t, gun: ''})}</tr></tbody></table>
+    <div class="kutular"><div><small>Ödenecek SGK primi</small><b>${para(t.sgk)}</b></div><div><small>Muhtasar (GV+DV)</small><b>${para(t.muhtasar)}</b></div><div><small>Net maaşlar</small><b>${para(t.net)}</b></div></div></div>`;
+}
+/* Brüt ⇄ net maaş hesaplayıcı */
+function maasHesaplayici() {
+  let tip = 'brut';
+  const m = modal('Maaş hesaplayıcı', `
+    <div class="segment" id="mhTip"><button data-t="brut" class="secili">Brütten nete</button><button data-t="net">Netten brüte</button></div>
+    <div class="tutar-kutu"><small id="mhEt">Brüt maaş</small><input id="mhTutar" class="tutar-giris" inputmode="decimal" placeholder="0 ₺"></div>
+    <div class="grup"><label class="f-satir"><span>Ay</span><input type="month" id="mhAy" value="${ui.pAy}"></label></div>
+    <div id="mhSonuc"></div>
+    <p class="dipnot">Ocaktan bu aya kadar her ay aynı ücretin ödendiği varsayılır; vergi dilimi yıl içinde yükseldikçe net düşer.</p>`);
+  const hesap = () => {
+    const t = tutarOku($('#mhTutar', m).value) || 0, ay = $('#mhAy', m).value || ui.pAy;
+    const b = bordro({ad: '', maas: t, ucretTip: tip}, ay);
+    $('#mhSonuc', m).innerHTML = t ? `<div class="grup">${bordroSatirlari(b).map(([a, v, s]) => `<div class="hucre"><div class="ic"><b ${s ? 'class="k"' : ''}>${esc(a)}</b></div><span class="${s ? 'tutar' : 'deger'} ${v < 0 ? 'gider' : ''}">${v < 0 ? '−' + para(-v) : para(v)}</span></div>`).join('')}
+      <div class="hucre"><div class="ic"><b>İşveren maliyeti</b><small>SGK %${String(b.oranIsv).replace('.', ',')} + işsizlik %2</small></div><span class="tutar">${para(b.maliyet)}</span></div></div>` : '';
+  };
+  $('#mhTutar', m).oninput = hesap; $('#mhAy', m).onchange = hesap;
+  $$('#mhTip button', m).forEach(b => b.onclick = () => { tip = b.dataset.t; $('#mhEt', m).textContent = tip === 'brut' ? 'Brüt maaş' : 'Net maaş'; $$('#mhTip button', m).forEach(x => x.classList.toggle('secili', x === b)); hesap(); });
+  setTimeout(() => $('#mhTutar', m).focus(), 320);
 }
 function personelOdemeEkle(p, o, kasaya) {
   const kayit = {id: kimlik(), personelId: p.id, olusturma: Date.now(), ...o};
@@ -1589,17 +1881,21 @@ function personelOdemeEkle(p, o, kasaya) {
 }
 function personelFormu(p) {
   const yeni = !p;
-  const x = p || {ad: '', gorev: '', maas: 0, iseGiris: bugun(), tel: '', tc: '', iban: '', aktif: true};
+  const x = p || {ad: '', gorev: '', maas: 0, ucretTip: 'net', iseGiris: bugun(), cikis: '', tel: '', tc: '', iban: '', aktif: true};
+  const tip0 = x.ucretTip || 'net';
   const m = modal(yeni ? 'Yeni personel' : 'Personeli düzenle', `
     <div class="grup">
       <label class="f-satir sol"><input type="text" id="pAd" value="${esc(x.ad)}" placeholder="Ad soyad" autocomplete="off"></label>
       <label class="f-satir sol"><input type="text" id="pGorev" value="${esc(x.gorev)}" placeholder="Görev"></label>
       <label class="f-satir sol"><input type="tel" id="pTel" value="${esc(x.tel)}" placeholder="Telefon"></label>
     </div>
+    <div class="segment">${[['net', 'Net ücret'], ['brut', 'Brüt ücret']].map(([v, a]) => `<label><input type="radio" name="pTip" value="${v}" ${tip0 === v ? 'checked' : ''}><span>${a}</span></label>`).join('')}</div>
     <div class="grup">
-      <label class="f-satir"><span>Net maaş</span><input id="pMaas" inputmode="decimal" placeholder="0 ₺" value="${tutarYaz(x.maas)}"></label>
+      <label class="f-satir"><span id="pMaasEt">Aylık ${tip0 === 'brut' ? 'brüt' : 'net'}</span><input id="pMaas" inputmode="decimal" placeholder="0 ₺" value="${tutarYaz(x.maas)}"></label>
+      <div class="hucre"><div class="ic"><small id="pKarsi"></small></div></div>
       <label class="f-satir"><span>İşe giriş</span><input type="date" id="pGiris" value="${x.iseGiris || ''}"></label>
-      ${yeni ? '' : `<label class="f-satir"><span style="flex:1">Çalışıyor</span>${anahtar('pAktif', x.aktif !== false)}</label>`}
+      ${yeni ? '' : `<label class="f-satir"><span style="flex:1">Çalışıyor</span>${anahtar('pAktif', x.aktif !== false)}</label>
+      <label class="f-satir"><span>İşten çıkış</span><input type="date" id="pCikis" value="${x.cikis || ''}"></label>`}
     </div>
     <div class="grup">
       <label class="f-satir sol"><input type="text" id="pTc" value="${esc(x.tc)}" placeholder="TC kimlik no"></label>
@@ -1608,18 +1904,28 @@ function personelFormu(p) {
     ${yeni ? '' : `<div class="grup"><button class="hucre tehlike" id="pSil">Personeli sil</button></div>`}`, {kaydet: () => {
       const ad = $('#pAd', m).value.trim();
       if (!ad) { bildir('Ad girin', true); return false; }
+      const cikis = yeni ? '' : $('#pCikis', m).value;
       const kayit = {...x, ad, gorev: $('#pGorev', m).value.trim(), tel: $('#pTel', m).value.trim(), tc: $('#pTc', m).value.trim(), iban: $('#pIban', m).value.trim(),
-        maas: tutarOku($('#pMaas', m).value) || 0, iseGiris: $('#pGiris', m).value, aktif: yeni ? true : $('#pAktif', m).checked};
+        maas: tutarOku($('#pMaas', m).value) || 0, ucretTip: $('input[name=pTip]:checked', m).value, iseGiris: $('#pGiris', m).value, cikis,
+        aktif: yeni ? true : ($('#pAktif', m).checked && !(cikis && cikis <= bugun()))};
       if (yeni) { kayit.id = kimlik(); kayit.olusturma = Date.now(); D.personeller.push(kayit); }
       else D.personeller[D.personeller.findIndex(y => y.id === x.id)] = kayit;
       kaydet(); bildir('Kaydedildi');
       setTimeout(() => { if (yeni) git('personel/' + kayit.id); else ciz(); }, 10);
     }, kaydetAd: yeni ? 'Ekle' : 'Kaydet'});
+  const karsi = () => {
+    const tip = $('input[name=pTip]:checked', m).value, t = tutarOku($('#pMaas', m).value) || 0;
+    $('#pMaasEt', m).textContent = 'Aylık ' + (tip === 'brut' ? 'brüt' : 'net');
+    const b = bordroAy(tip === 'brut' ? t : nettenBrut(t, bugun().slice(0, 7)), bugun().slice(0, 7));
+    $('#pKarsi', m).textContent = t ? (tip === 'brut' ? `Bu ay net ≈ ${para(b.net)}` : `Bu ay brüt ≈ ${para(b.brut)}`) + ` · işveren maliyeti ≈ ${para(b.maliyet)}` : 'Net anlaşılan çalışanda vergi dilimi artışını işveren üstlenir.';
+  };
+  $('#pMaas', m).oninput = karsi; $$('input[name=pTip]', m).forEach(r => r.onchange = karsi); karsi();
   if (yeni) setTimeout(() => $('#pAd', m).focus(), 320);
   if (!yeni) $('#pSil', m).onclick = async () => {
-    if (!await onay(`${x.ad} silinsin mi?`, 'Ödeme geçmişi silinir, kasadaki giderler kalır. Ayrılan çalışan için "Çalışıyor" anahtarını kapatmanız önerilir.')) return;
+    if (!await onay(`${x.ad} silinsin mi?`, 'Ödeme ve puantaj geçmişi silinir, kasadaki giderler kalır. Ayrılan çalışan için çıkış tarihi girmeniz önerilir.')) return;
     for (const o of D.personelOdeme.filter(o => o.personelId === x.id)) for (const i of D.islemler) if (i.kaynak?.id === o.id) delete i.kaynak;
     D.personelOdeme = D.personelOdeme.filter(o => o.personelId !== x.id);
+    for (const a in D.puantaj) delete D.puantaj[a][x.id];
     D.personeller = D.personeller.filter(y => y.id !== x.id);
     kaydet(); bildir('Silindi'); git('personel', true);
   };
@@ -1630,15 +1936,19 @@ function personelDetay(id) {
   const ay = ui.pAy;
   let h = sayfa(p.ad, {geri: 'personel', geriAd: 'Personel', sag: `<button class="nav-btn" id="pDuzenle">Düzenle</button>`});
   const od = D.personelOdeme.filter(o => o.personelId === id).sort((a, b) => b.tarih.localeCompare(a.tarih) || (b.olusturma || 0) - (a.olusturma || 0));
-  const yil = bugun().slice(0, 4);
-  const avans = avansToplam(id, ay), odendi = maasOdendiMi(id, ay);
+  const yil = ay.slice(0, 4);
+  const avans = avansToplam(id, ay), odendi = maasOdendiMi(id, ay), b = bordro(p, ay), pu = b.puantaj || puantajOzet(p, ay);
   h += `<div class="kart" style="text-align:center">${avatar(p.ad, 'buyuk')}
-      <div class="k-ust">${esc(p.gorev || 'Personel')}${p.aktif === false ? ' · ayrıldı' : ''}</div><div class="dev">${para(p.maas)}</div><div class="k-alt">net maaş</div></div>
-    <div class="btn-izgara"><button data-o="maas">${ikon('para')}Maaş öde</button><button data-o="avans">${ikon('giris')}Avans</button><button data-o="prim">${ikon('arti')}Prim</button>${p.tel ? `<button id="pAra">${ikon('tel')}Ara</button>` : ''}</div>
+      <div class="k-ust">${esc(p.gorev || 'Personel')}${p.aktif === false ? ' · ayrıldı' : ''}</div><div class="dev">${para(b.net)}</div><div class="k-alt">${esc(ayAdi(ay))} net · brüt ${para(b.brut)}</div></div>
+    <div class="btn-izgara"><button data-o="maas">${ikon('para')}Maaş öde</button><button data-o="avans">${ikon('giris')}Avans</button><button data-o="prim">${ikon('arti')}Prim</button><button id="pPuantaj">${ikon('takvim')}Puantaj</button><button id="pBordro">${ikon('dosya')}Bordro</button>${p.tel ? `<button id="pAra">${ikon('tel')}Ara</button>` : ''}</div>
+    ${ayBtnler}
     <div class="grup">
-      <div class="hucre"><div class="ic"><b><span style="text-transform:capitalize">${esc(ayAdi(ay))}</span> maaşı</b></div><span class="hap ${odendi ? 'yesil' : 'turuncu'}">${odendi ? 'ödendi' : 'bekliyor'}</span></div>
+      <div class="hucre"><div class="ic"><b>Maaş durumu</b></div><span class="hap ${odendi ? 'yesil' : 'turuncu'}">${odendi ? 'ödendi' : 'bekliyor'}</span></div>
+      <div class="hucre"><div class="ic"><b>Puantaj</b><small>${pu.eksik ? pu.eksik + ' eksik gün' : 'Eksik gün yok'}${pu.mesai ? ` · ${sayiFmt(pu.mesai)} saat mesai` : ''}</small></div><span class="deger">${pu.gun} gün</span></div>
+      <div class="hucre"><div class="ic"><b>İşveren maliyeti</b></div><span class="deger">${para(b.maliyet)}</span></div>
       ${avans ? `<div class="hucre"><div class="ic"><b>Bu dönem avans</b></div><span class="deger">${para(avans)}</span></div>` : ''}
       <div class="hucre"><div class="ic"><b>${yil} toplam ödeme</b></div><span class="deger">${para(od.filter(o => o.donem.startsWith(yil)).reduce((s, o) => s + o.tutar, 0))}</span></div>
+      <div class="hucre"><div class="ic"><b>Anlaşılan ücret</b></div><span class="deger">${ucretYazi(p)}</span></div>
       ${p.iseGiris ? `<div class="hucre"><div class="ic"><b>İşe giriş</b></div><span class="deger">${esc(tarihYaz(p.iseGiris, true))}</span></div>` : ''}
       ${p.iban ? `<div class="hucre"><div class="ic"><b>IBAN</b><small>${esc(p.iban)}</small></div></div>` : ''}
     </div>
@@ -1647,7 +1957,10 @@ function personelDetay(id) {
         <div class="ic"><b>${ODEME_TUR[o.tur]} · <span style="text-transform:capitalize">${esc(ayAdi(o.donem))}</span>${o.islemId ? '<span class="hap yesil">kasada</span>' : ''}</b><small>${esc([tarihYaz(o.tarih, true), o.aciklama].filter(Boolean).join(' · '))}</small></div>
         <span class="tutar">${para(o.tutar)}</span></button>`).join('')}</div>` : bosDurum('para', 'camgobegi', 'Ödeme yok', 'Maaş, avans veya prim ödemesi ekleyin.')}`;
   $('#icerik').innerHTML = h;
+  ayBagla('pAy', () => personelDetay(id));
   $('#pDuzenle').onclick = () => personelFormu(p);
+  $('#pPuantaj').onclick = () => puantajFormu(p, ay);
+  $('#pBordro').onclick = () => bordroDetay(p, ay);
   if ($('#pAra')) $('#pAra').onclick = () => disariAc('tel:' + p.tel.replace(/[^\d+]/g, ''));
   $$('[data-o]').forEach(b => b.onclick = () => personelOdemeFormu(p, b.dataset.o));
   $$('[data-od]').forEach(b => b.onclick = async () => {
@@ -1659,12 +1972,12 @@ function personelDetay(id) {
   });
 }
 function personelOdemeFormu(p, tur) {
-  const ay = ui.pAy, av = avansToplam(p.id, ay);
-  const oneri = tur === 'maas' ? Math.max(0, (p.maas || 0) - av) : 0;
+  const ay = ui.pAy, av = avansToplam(p.id, ay), b = tur === 'maas' ? bordro(p, ay) : null;
+  const oneri = b ? Math.max(0, b.net - av) : 0;
   const kasa = modulAcik('kasa');
   const m = modal(`${ODEME_TUR[tur]} · ${p.ad}`, `
     <div class="tutar-kutu"><small>Tutar</small><input id="oTutar" class="tutar-giris" inputmode="decimal" placeholder="0 ₺" value="${tutarYaz(oneri)}" autocomplete="off">
-      ${tur === 'maas' && av ? `<div class="soluk" style="font-size:13px">Bu dönemki ${para(av)} avans düşüldü</div>` : ''}</div>
+      ${b ? `<div class="soluk" style="font-size:13px">Bordro neti ${para(b.net)}${b.puantaj?.eksik ? ` (${b.puantaj.eksik} eksik gün)` : ''}${av ? ` − ${para(av)} avans` : ''}</div>` : ''}</div>
     <div class="grup">
       <label class="f-satir"><span>Dönem</span><input type="month" id="oDonem" value="${ay}"></label>
       <label class="f-satir"><span>Ödeme tarihi</span><input type="date" id="oTarih" value="${bugun()}"></label>
@@ -1818,12 +2131,61 @@ function vergiTakvimi(ay) {
   if (m === 5 || m === 11) l.push({tarih: son, ad: 'Emlak vergisi', alt: m === 5 ? '1. taksit' : '2. taksit'});
   return l.sort((a, b) => a.tarih.localeCompare(b.tarih));
 }
+const vergiTuru = () => D.vergiAyar.tur || (D.profil === 'sirket' ? 'kurum' : 'sahis');
+/* Dönem kârı: KDV hariç gelir - KDV hariç gider (kasa kayıtlarından) */
+function donemKar(bas, son) {
+  let gelir = 0, gider = 0;
+  for (const i of D.islemler) if (i.tarih >= bas && i.tarih <= son) { const t = i.tutar - (i.kdv || 0); i.tur === 'gelir' ? gelir += t : gider += t; }
+  return {gelir, gider, kar: gelir - gider};
+}
+function geciciVergiler(yil) {
+  const kurum = vergiTuru() === 'kurum', oran = kurum ? 25 : 15;
+  let odenen = 0;
+  return [3, 6, 9].map((m, i) => {
+    const k = donemKar(`${yil}-01-01`, `${yil}-${iki(m)}-${ayinSonGunu(`${yil}-${iki(m)}`)}`);
+    const hesap = Math.max(0, Math.round(k.kar * oran / 100)), odenecek = Math.max(0, hesap - odenen);
+    odenen += odenecek;
+    return {donem: i + 1, son: `${yil}-${iki(m)}`, kar: k.kar, oran, hesap, odenecek, vade: `${yil}-${iki(m + 2)}-17`};
+  });
+}
 function kdvEkrani() {
-  const ay = ui.kAy;
-  let h = sayfa('KDV');
-  const k = kdvAy(ay), devreden = kdvDevir(ay);
-  const fark = k.hesaplanan - k.indirilecek - devreden;
-  h += ayBtnler + `<div class="kart" style="text-align:center"><div class="k-ust">${fark >= 0 ? 'Ödenecek KDV' : 'Sonraki aya devreden KDV'}</div>
+  const ay = ui.kAy, sekme = ui.vSekme;
+  let h = sayfa('Vergi');
+  h += `<div class="segment" id="vSek">${[['ozet', 'Bu ay'], ['kdv', 'KDV'], ['gelir', vergiTuru() === 'kurum' ? 'Kurumlar V.' : 'Gelir V.'], ['arac', 'Araçlar']].map(([v, a]) => `<button data-v="${v}" class="${sekme === v ? 'secili' : ''}">${a}</button>`).join('')}</div>`;
+  if (sekme !== 'arac') h += ayBtnler;
+  h += sekme === 'kdv' ? kdvBolum(ay) : sekme === 'gelir' ? gelirVergisiBolum(ay) : sekme === 'arac' ? vergiAraclari() : vergiOzet(ay);
+  $('#icerik').innerHTML = h;
+  if (sekme !== 'arac') ayBagla('kAy', kdvEkrani);
+  $$('#vSek button').forEach(b => b.onclick = () => { ui.vSekme = b.dataset.v; kdvEkrani(); });
+  $$('#vTur button').forEach(b => b.onclick = () => { D.vergiAyar.tur = b.dataset.t; kaydet(); kdvEkrani(); });
+  $$('[data-git]').forEach(b => b.onclick = () => { ui.vSekme = b.dataset.git; kdvEkrani(); });
+  if (sekme === 'arac') vergiAraclariBagla();
+}
+/* Seçilen ayın faaliyetinden doğan ve ertesi ay ödenecek yükümlülükler */
+function vergiOzet(ay) {
+  const k = kdvAy(ay), fark = k.hesaplanan - k.indirilecek - kdvDevir(ay), sonraki = ayKaydir(ay, 1);
+  const kalemler = [{ad: 'KDV', alt: fark >= 0 ? `Hesaplanan ${para(k.hesaplanan)}` : `${para(-fark)} sonraki aya devreder`, tutar: Math.max(0, fark), vade: `${sonraki}-28`, git: 'kdv'}];
+  if (modulAcik('personel') && D.personeller.length) {
+    const t = bordroToplam(ay);
+    kalemler.push({ad: 'Muhtasar (ücret stopajı)', alt: `GV ${para(t.gv)} + DV ${para(t.dv)}`, tutar: t.muhtasar, vade: `${sonraki}-26`});
+    kalemler.push({ad: 'SGK primleri', alt: `İşçi ${para(t.sgkI + t.issI)} + işveren ${para(t.isvSgk + t.issV)}`, tutar: t.sgk, vade: `${sonraki}-${iki(ayinSonGunu(sonraki))}`});
+  }
+  const m = +ay.slice(5, 7);
+  if ([3, 6, 9].includes(m)) { const g = geciciVergiler(ay.slice(0, 4))[m / 3 - 1]; kalemler.push({ad: `${g.donem}. dönem geçici vergi`, alt: `Kümülatif kâr ${para(g.kar)} × %${g.oran}`, tutar: g.odenecek, vade: g.vade, git: 'gelir'}); }
+  const top = kalemler.reduce((s, x) => s + x.tutar, 0);
+  return `<div class="kart" style="text-align:center"><div class="k-ust"><span style="text-transform:capitalize">${esc(ayAdi(ay))}</span> dönemi için ödenecek</div>
+      <div class="dev ${top ? 'gider' : ''}">${para(top)}</div><div class="k-alt">Tahmini · ödemeler ${esc(ayAdi(sonraki))} ayında</div></div>
+    <div class="grup">${kalemler.map(x => `<${x.git ? `button data-git="${x.git}"` : 'div'} class="hucre"><div class="ic"><b>${esc(x.ad)}</b><small>${esc(x.alt)} · son gün ${esc(tarihYaz(x.vade, true))}</small></div><span class="tutar">${para(x.tutar)}</span>${x.git ? CHEV : ''}</${x.git ? 'button' : 'div'}>`).join('')}</div>
+    ${modulAcik('personel') ? '' : '<p class="dipnot">Personel modülünü açarsanız muhtasar ve SGK primleri bordrodan otomatik eklenir.</p>'}
+    <div class="bolum">Bu ayın vergi takvimi</div>
+    <div class="grup">${vergiTakvimi(ay).map(v => { const g = gunFark(v.tarih); return `<div class="hucre kareli">${kare('takvim', g < 0 ? 'gri' : g <= 7 ? 'kirmizi' : 'pembe')}
+      <div class="ic"><b ${g < 0 ? 'class="soluk"' : ''}>${esc(v.ad)}</b><small>${esc(tarihYaz(v.tarih))} · ${esc(v.alt)}</small></div>
+      <span class="deger" style="font-size:14px">${g < 0 ? 'geçti' : g === 0 ? 'bugün' : g + ' gün'}</span></div>`; }).join('')}</div>
+    <p class="dipnot">Tutarlar kayıtlarınızdan hesaplanan tahminlerdir. Tarihler hafta sonu ve tatillerde kayabilir. Kesin beyan için mali müşavirinize danışın.</p>`;
+}
+function kdvBolum(ay) {
+  const k = kdvAy(ay), devreden = kdvDevir(ay), fark = k.hesaplanan - k.indirilecek - devreden;
+  return `<div class="kart" style="text-align:center"><div class="k-ust">${fark >= 0 ? 'Ödenecek KDV' : 'Sonraki aya devreden KDV'}</div>
       <div class="dev ${fark > 0 ? 'gider' : 'gelir'}">${para(Math.abs(fark))}</div><div class="k-alt">Beyan son günü ${esc(tarihYaz(ayKaydir(ay, 1) + '-28', true))}</div></div>
     <div class="grup">
       <div class="hucre"><div class="ic"><b>Satış faturaları</b></div><span class="deger">${para(k.satisF)}</span></div>
@@ -1832,31 +2194,65 @@ function kdvEkrani() {
       <div class="hucre"><div class="ic"><b>İndirilecek KDV</b><small>Giderlerdeki KDV</small></div><span class="deger">−${para(k.indirilecek)}</span></div>
       <div class="hucre"><div class="ic"><b>Önceki aydan devreden</b></div><span class="deger">−${para(devreden)}</span></div>
     </div>
-    <p class="dipnot">Gelir ve gider kayıtlarında KDV oranı seçildiğinde burada otomatik hesaplanır. Kesin beyan için mali müşavirinize danışın.</p>
-    <div class="bolum">KDV hesaplayıcı</div>
+    <p class="dipnot">Gelir ve gider kayıtlarında KDV oranı seçildiğinde burada otomatik hesaplanır.</p>`;
+}
+function gelirVergisiBolum(ay) {
+  const yil = ay.slice(0, 4), kurum = vergiTuru() === 'kurum';
+  const g = geciciVergiler(yil), yk = donemKar(`${yil}-01-01`, `${yil}-12-31`), P = bordroParam(+yil);
+  const yillik = Math.max(0, kurum ? Math.round(yk.kar * .25) : vergiDilim(yk.kar, P.diger)), gecici = g.reduce((s, x) => s + x.odenecek, 0);
+  return `<div class="segment" id="vTur"><button data-t="sahis" class="${kurum ? '' : 'secili'}">Şahıs (gelir vergisi)</button><button data-t="kurum" class="${kurum ? 'secili' : ''}">Şirket (kurumlar)</button></div>
+    <div class="kart"><div class="kart-ust">${kare('yuzde', 'pembe')}${esc(yil)} tahmini ${kurum ? 'kurumlar' : 'gelir'} vergisi</div>
+      <div class="ozet"><div><small>Gelir</small><b>${kisaPara(yk.gelir)}</b></div><div><small>Gider</small><b>${kisaPara(yk.gider)}</b></div><div><small>Kâr</small><b class="${yk.kar < 0 ? 'gider' : ''}">${kisaPara(yk.kar)}</b></div></div></div>
+    <div class="grup">
+      <div class="hucre"><div class="ic"><b class="k">Yıllık vergi</b><small>${kurum ? '%25 kurumlar vergisi' : `Dilimli tarife · marjinal %${marjinalOran(Math.max(0, yk.kar), P.diger)}`}</small></div><span class="tutar">${para(yillik)}</span></div>
+      <div class="hucre"><div class="ic"><b>Ödenen geçici vergiler</b></div><span class="deger">−${para(gecici)}</span></div>
+      <div class="hucre"><div class="ic"><b>${yillik >= gecici ? 'Yıllık beyanda ödenecek' : 'Mahsup / iade'}</b><small>${kurum ? `Nisan ${+yil + 1}` : `Mart ${+yil + 1}`} beyannamesi</small></div><span class="tutar ${yillik >= gecici ? 'gider' : 'gelir'}">${para(Math.abs(yillik - gecici))}</span></div>
+    </div>
+    <div class="bolum">Geçici vergi</div>
+    <div class="grup">${g.map(x => `<div class="hucre"><div class="ic"><b>${x.donem}. dönem (Ocak–${esc(ayKisa(x.son))})</b><small>Kâr ${para(x.kar)} × %${x.oran} · son gün ${esc(tarihYaz(x.vade, true))}</small></div><span class="deger">${para(x.odenecek)}</span></div>`).join('')}</div>
+    <p class="dipnot">Kâr, kasadaki KDV hariç gelir ve giderlerden hesaplanır; amortisman, kanunen kabul edilmeyen giderler, istisnalar ve indirimler dikkate alınmaz. ${kurum ? '' : 'Esnaf muafiyeti, basit usul ve genç girişimci istisnası varsa vergi daha düşük olur. '}Bilgi amaçlıdır.</p>`;
+}
+function vergiAraclari() {
+  return `<div class="bolum">KDV hesaplayıcı</div>
     <div class="tutar-kutu" style="padding-bottom:14px"><input id="hTutar" class="tutar-giris" inputmode="decimal" placeholder="0 ₺" style="font-size:30px"></div>
     <div class="segment" id="hOran">${KDV_ORAN.slice(1).map(o => `<button data-o="${o}" class="${o === 20 ? 'secili' : ''}">%${o}</button>`).join('')}</div>
     <div class="segment" id="hTip"><button data-t="haric" class="secili">KDV hariç</button><button data-t="dahil">KDV dahil</button></div>
     <div class="grup" id="hSonuc"></div>
-    <div class="bolum">Vergi takvimi</div>
-    <div class="grup">${vergiTakvimi(ay).map(v => { const g = gunFark(v.tarih); return `<div class="hucre kareli">${kare('takvim', g < 0 ? 'gri' : g <= 7 ? 'kirmizi' : 'pembe')}
-      <div class="ic"><b ${g < 0 ? 'class="soluk"' : ''}>${esc(v.ad)}</b><small>${esc(tarihYaz(v.tarih))} · ${esc(v.alt)}</small></div>
-      <span class="deger" style="font-size:14px">${g < 0 ? 'geçti' : g === 0 ? 'bugün' : g + ' gün'}</span></div>`; }).join('')}</div>
-    <p class="dipnot">Tarihler genel bilgidir; hafta sonu, resmi tatil ve mevzuat değişikliklerinde kayabilir.</p>`;
-  $('#icerik').innerHTML = h;
-  ayBagla('kAy', kdvEkrani);
-  let oran = 20, tip = 'haric';
-  const hesap = () => {
-    const t = tutarOku($('#hTutar').value) || 0;
-    const matrah = tip === 'haric' ? t : Math.round(t / (1 + oran / 100)), kdv = tip === 'haric' ? Math.round(t * oran / 100) : t - matrah;
-    $('#hSonuc').innerHTML = `<div class="hucre"><div class="ic"><b>Matrah</b></div><span class="deger">${para(matrah)}</span></div>
-      <div class="hucre"><div class="ic"><b>KDV %${oran}</b></div><span class="deger">${para(kdv)}</span></div>
-      <div class="hucre"><div class="ic"><b class="k">Toplam</b></div><span class="tutar">${para(matrah + kdv)}</span></div>`;
+    <div class="bolum">Stopaj hesaplayıcı</div>
+    <div class="tutar-kutu" style="padding-bottom:14px"><input id="sTutar" class="tutar-giris" inputmode="decimal" placeholder="0 ₺" style="font-size:30px"></div>
+    <div class="segment" id="sTur"><button data-t="smm" class="secili">Serbest meslek</button><button data-t="kira">İşyeri kirası</button></div>
+    <div class="segment" id="sTip"><button data-t="brut" class="secili">Brüt tutar</button><button data-t="net">Elde kalacak net</button></div>
+    <div class="grup" id="sSonuc"></div>
+    <div class="bolum">Gelir vergisi hesaplayıcı</div>
+    <div class="tutar-kutu" style="padding-bottom:14px"><small>Yıllık matrah</small><input id="gTutar" class="tutar-giris" inputmode="decimal" placeholder="0 ₺" style="font-size:30px"></div>
+    <div class="segment" id="gTur"><button data-t="diger" class="secili">Ticari / serbest kazanç</button><button data-t="ucret">Ücret</button></div>
+    <div class="grup" id="gSonuc"></div>
+    ${modulAcik('personel') ? `<div class="grup"><button class="hucre kareli" id="mhAc">${kare('para', 'camgobegi')}<div class="ic"><b>Maaş hesaplayıcı</b><small>Brüt ⇄ net, işveren maliyeti</small></div>${CHEV}</button></div>` : ''}
+    <p class="dipnot">${bugun().slice(0, 4)} tarifesi kullanılır. Bilgi amaçlıdır.</p>`;
+}
+function vergiAraclariBagla() {
+  const satir = (a, v, kalin) => `<div class="hucre"><div class="ic"><b ${kalin ? 'class="k"' : ''}>${esc(a)}</b></div><span class="${kalin ? 'tutar' : 'deger'}">${v}</span></div>`;
+  const secim = (id, fn) => $$(`#${id} button`).forEach(b => b.onclick = () => { $$(`#${id} button`).forEach(x => x.classList.toggle('secili', x === b)); fn(); });
+  const sec = id => $(`#${id} .secili`).dataset;
+  const kdv = () => {
+    const t = tutarOku($('#hTutar').value) || 0, oran = +sec('hOran').o, haric = sec('hTip').t === 'haric';
+    const matrah = haric ? t : Math.round(t / (1 + oran / 100)), k = haric ? Math.round(t * oran / 100) : t - matrah;
+    $('#hSonuc').innerHTML = satir('Matrah', para(matrah)) + satir(`KDV %${oran}`, para(k)) + satir('Toplam', para(matrah + k), 1);
   };
-  $('#hTutar').oninput = hesap;
-  $$('#hOran button').forEach(b => b.onclick = () => { oran = +b.dataset.o; $$('#hOran button').forEach(x => x.classList.toggle('secili', x === b)); hesap(); });
-  $$('#hTip button').forEach(b => b.onclick = () => { tip = b.dataset.t; $$('#hTip button').forEach(x => x.classList.toggle('secili', x === b)); hesap(); });
-  hesap();
+  const stopaj = () => {
+    const t = tutarOku($('#sTutar').value) || 0, smm = sec('sTur').t === 'smm', brut = sec('sTip').t === 'brut' ? t : Math.round(t / .8);
+    const st = Math.round(brut * .2), kdvT = smm ? Math.round(brut * .2) : 0;
+    $('#sSonuc').innerHTML = satir('Brüt', para(brut)) + satir('Gelir vergisi stopajı %20', '−' + para(st)) + (smm ? satir('KDV %20', para(kdvT)) : '') +
+      satir(smm ? 'Tahsil edilecek' : 'Ev sahibine ödenecek', para(brut - st + kdvT), 1) + satir('Muhtasar ile yatırılacak', para(st));
+  };
+  const gv = () => {
+    const t = tutarOku($('#gTutar').value) || 0, d = bordroParam(+bugun().slice(0, 4))[sec('gTur').t], v = vergiDilim(t, d);
+    $('#gSonuc').innerHTML = satir('Vergi', para(v), 1) + satir('Ortalama oran', t ? '%' + (v / t * 100).toFixed(1).replace('.', ',') : '–') + satir('Marjinal dilim', '%' + marjinalOran(t, d)) + satir('Vergi sonrası', para(t - v));
+  };
+  $('#hTutar').oninput = kdv; secim('hOran', kdv); secim('hTip', kdv); kdv();
+  $('#sTutar').oninput = stopaj; secim('sTur', stopaj); secim('sTip', stopaj); stopaj();
+  $('#gTutar').oninput = gv; secim('gTur', gv); gv();
+  if ($('#mhAc')) $('#mhAc').onclick = maasHesaplayici;
 }
 
 /* ================= Raporlar ================= */
@@ -1920,14 +2316,43 @@ function raporEkrani() {
   $('#icerik').innerHTML = h;
   kisiTiklari();
   $$('#dSec button').forEach(b => b.onclick = () => { ui.rDonem = b.dataset.v; raporEkrani(); });
-  $('#csvBtn').onclick = () => {
+  $('#csvBtn').onclick = async () => {
+    const s = await eylemSayfa('Raporu dışa aktar', `${ad} · ${liste.length} kayıt`, [{ad: 'PDF rapor (yazdır / kaydet)', deger: 'pdf'}, {ad: 'Excel tablosu (CSV) paylaş', deger: 'csv'}]);
+    if (s === 'pdf') return yazdir(`DN Muhasebe rapor ${ad}`, raporKagit(bas, son, ad, liste));
+    if (s !== 'csv') return;
     if (!liste.length) return bildir('Bu dönemde dışa aktarılacak kayıt yok', true);
-    const hucre = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
-    const tl = k => (k / 100).toFixed(2).replace('.', ',');
-    const csv = '﻿' + ['Tarih;Tür;Kategori;Açıklama;Ödeme;Tutar;KDV'].concat([...liste].sort((a, b) => a.tarih.localeCompare(b.tarih)).map(i =>
-      [i.tarih, i.tur === 'gelir' ? 'Gelir' : 'Gider', i.kategori, i.aciklama, odemeAdi[i.odeme] || '', tl((i.tur === 'gelir' ? 1 : -1) * i.tutar), tl(i.kdv || 0)].map(hucre).join(';'))).join('\n');
-    try { bildir('Kaydedildi: ' + dosyaKaydet(`dn-muhasebe-${bas}_${son}.csv`, csv, 'text/csv')); } catch (e) { bildir('Kaydedilemedi', true); }
+    const csv = csvYap(['Tarih', 'Tür', 'Kategori', 'Açıklama', 'Ödeme', 'Tutar', 'KDV'], [...liste].sort((a, b) => a.tarih.localeCompare(b.tarih)).map(i =>
+      [i.tarih, i.tur === 'gelir' ? 'Gelir' : 'Gider', i.kategori, i.aciklama, odemeAdi[i.odeme] || '', csvTL((i.tur === 'gelir' ? 1 : -1) * i.tutar), csvTL(i.kdv)]));
+    try { bildir('Kaydedildi: ' + dosyaPaylas(`dn-muhasebe-${bas}_${son}.csv`, csv, 'text/csv')); } catch (e) { bildir('Kaydedilemedi', true); }
   };
+}
+/* Yazdırılabilir dönem raporu (PDF) */
+function raporKagit(bas, son, ad, liste) {
+  const o = aralikToplam(bas, son);
+  const dag = tur => {
+    const g = {};
+    for (const i of liste) if (i.tur === tur) g[i.kategori] = (g[i.kategori] || 0) + i.tutar;
+    const s = Object.entries(g).sort((a, b) => b[1] - a[1]), top = s.reduce((a, [, v]) => a + v, 0);
+    return s.length ? `<h4>${tur === 'gelir' ? 'Gelir' : 'Gider'} dağılımı</h4><table><tbody>${s.map(([k, v]) => `<tr><td>${esc(k)}</td><td class="sg">%${Math.round(v / top * 100)}</td><td class="sg">${para(v)}</td></tr>`).join('')}<tr class="top"><td>Toplam</td><td></td><td class="sg">${para(top)}</td></tr></tbody></table>` : '';
+  };
+  const aylar = [];
+  for (let a = bas.slice(0, 7); a <= son.slice(0, 7); a = ayKaydir(a, 1)) aylar.push(a);
+  const ekler = [];
+  if (modulAcik('veresiye')) { const t = D.kisiler.reduce((s, k) => s + Math.max(0, kisiBakiye(k.id)), 0); if (t) ekler.push([T().alacakToplam + ' (bugün)', para(t)]); }
+  if (modulAcik('fatura')) { const f = D.faturalar.filter(x => x.tur === 'fatura' && x.durum === 'gonderildi' && x.tarih >= bas && x.tarih <= son); if (f.length) ekler.push([`Kesilen faturalar (${f.length})`, para(f.reduce((s, x) => s + faturaHesap(x).toplam, 0))]); }
+  if (modulAcik('personel')) { const p = D.personelOdeme.filter(x => x.tarih >= bas && x.tarih <= son); if (p.length) ekler.push([`Personel ödemeleri (${p.length})`, para(p.reduce((s, x) => s + x.tutar, 0))]); }
+  if (modulAcik('stok') && D.urunler.length) ekler.push(['Stok değeri (bugün, alış fiyatıyla)', para(stokDegeri())]);
+  if (modulAcik('kdv')) { let h = 0, i = 0; for (const a of aylar) { const k = kdvAy(a); h += k.hesaplanan; i += k.indirilecek; } if (h || i) ekler.push(['Hesaplanan / indirilecek KDV', `${para(h)} / ${para(i)}`]); }
+  return `<div class="kagit">${firmaBaslik('GELİR - GİDER RAPORU', `<span style="text-transform:capitalize">${esc(ad)}</span><br>${esc(tarihYaz(bas, true))} – ${esc(tarihYaz(son, true))}<br>Hazırlanma: ${esc(tarihYaz(bugun(), true))}`)}
+    <div class="kutular"><div><small>Gelir</small><b>${para(o.gelir)}</b></div><div><small>Gider</small><b>${para(o.gider)}</b></div><div><small>Net ${o.net < 0 ? 'zarar' : 'kâr'}</small><b>${para(o.net)}</b></div><div><small>Kayıt</small><b>${liste.length}</b></div></div>
+    ${aylar.length > 1 ? `<h4>Aylık özet</h4><table><thead><tr><th>Ay</th><th class="sg">Gelir</th><th class="sg">Gider</th><th class="sg">Net</th></tr></thead><tbody>
+      ${aylar.map(a => { const t = ayToplam(a); return `<tr><td style="text-transform:capitalize">${esc(ayAdi(a))}</td><td class="sg">${para(t.gelir)}</td><td class="sg">${para(t.gider)}</td><td class="sg">${para(t.net)}</td></tr>`; }).join('')}</tbody></table>` : ''}
+    ${dag('gelir')}${dag('gider')}
+    ${ekler.length ? `<h4>Diğer</h4><table><tbody>${ekler.map(([a, v]) => `<tr><td>${esc(a)}</td><td class="sg">${v}</td></tr>`).join('')}</tbody></table>` : ''}
+    <h4>Kayıtlar</h4>
+    ${liste.length ? `<table style="font-size:11px"><thead><tr><th>Tarih</th><th>Kategori</th><th>Açıklama</th><th>Ödeme</th><th class="sg">Tutar</th></tr></thead><tbody>
+      ${[...liste].sort((a, b) => a.tarih.localeCompare(b.tarih)).map(i => `<tr><td style="white-space:nowrap">${esc(tarihYaz(i.tarih, true))}</td><td>${esc(i.kategori)}</td><td>${esc(i.aciklama || '')}</td><td>${esc(odemeAdi[i.odeme] || '')}</td><td class="sg" style="color:${i.tur === 'gelir' ? '#1e7b34' : '#c62828'}">${i.tur === 'gelir' ? '' : '−'}${para(i.tutar)}</td></tr>`).join('')}</tbody></table>` : '<div class="gri">Bu dönemde kayıt yok.</div>'}
+  </div>`;
 }
 
 /* ================= Ayarlar ================= */
@@ -1949,7 +2374,7 @@ function ayarlarEkrani() {
     <p class="dipnot">Kapalı modülün verisi silinmez. İlk üç açık modül alt çubukta, diğerleri Menü'de görünür.</p>
     <div class="bolum">Yedekleme</div>
     <div class="grup">
-      <button class="hucre kareli" id="disaAktar">${kare('indir', 'mavi')}<div class="ic"><b>Yedeği kaydet</b><small>${D.sonYedek ? 'Son yedek ' + esc(tarihYaz(D.sonYedek.slice(0, 10), true)) : 'Henüz yedek alınmadı'}</small></div>${CHEV}</button>
+      <button class="hucre kareli" id="disaAktar">${kare('indir', 'mavi')}<div class="ic"><b>Yedeği kaydet ve paylaş</b><small>${D.sonYedek ? 'Son yedek ' + esc(tarihYaz(D.sonYedek.slice(0, 10), true)) : 'Henüz yedek alınmadı'}</small></div>${CHEV}</button>
       <button class="hucre kareli" id="iceAktar">${kare('yukle', 'yesil')}<div class="ic"><b>Yedekten geri yükle</b><small>Mevcut verilerin yerine geçer</small></div>${CHEV}</button>
     </div>
     <p class="dipnot">Veriler yalnızca bu cihazda saklanır. Telefonu değiştirmeden veya uygulamayı silmeden önce yedek alın.</p>
@@ -1975,7 +2400,7 @@ function yedekAl() {
   const simdi = new Date();
   const ad = `dn-muhasebe-yedek-${bugun()}-${iki(simdi.getHours())}${iki(simdi.getMinutes())}.json`;
   try {
-    const yer = dosyaKaydet(ad, JSON.stringify({uygulama: 'dn-muhasebe', surum: VERSIYON, tarih: simdi.toISOString(), veri: D}), 'application/json');
+    const yer = dosyaPaylas(ad, JSON.stringify({uygulama: 'dn-muhasebe', surum: VERSIYON, tarih: simdi.toISOString(), veri: D}), 'application/json');
     D.sonYedek = simdi.toISOString(); kaydet();
     bildir('Yedek kaydedildi: ' + yer);
     if (rota()[0] === 'ayarlar') ayarlarEkrani();
@@ -1998,7 +2423,7 @@ $('#dosya').onchange = async e => {
 /* ================= Başlat ================= */
 D = yukle();
 const buAy = bugun().slice(0, 7);
-ui = {ay: buAy, pAy: buAy, bAy: buAy, kAy: buAy, rDonem: 'bu-ay', kasaTur: 'hepsi', kasaAra: '', kisiAra: '', urunAra: '', stokFiltre: 'hepsi', faturaAra: '', faturaFiltre: 'hepsi'};
+ui = {ay: buAy, pAy: buAy, pSekme: 'liste', vSekme: 'ozet', bAy: buAy, kAy: buAy, rDonem: 'bu-ay', kasaTur: 'hepsi', kasaAra: '', kisiAra: '', urunAra: '', stokFiltre: 'hepsi', faturaAra: '', faturaFiltre: 'hepsi'};
 if (!location.hash) history.replaceState(null, '', '#/panel');
 ciz();
 </script>
