@@ -434,7 +434,7 @@ svg.kucuk-simge{width:16px;height:16px;color:var(--ikincil)}
 
 <script>
 'use strict';
-const VERSIYON = '0.6.0';
+const VERSIYON = '0.6.1';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -986,17 +986,31 @@ function profilEkrani(ilk) {
     h = `<div class="karsilama"><div class="logo">DN</div><h2>${H.liste.length > 1 ? 'Yeni hesap' : 'DN Muhasebe'}</h2><p>Bu hesap için profil seçin. Ekranlar ve modüller buna göre açılır.</p></div>
       <div class="grup"><label class="f-satir sol"><input type="text" id="adGiris" value="${esc(D.ad)}" placeholder="Adınız veya işletme adı (isteğe bağlı)"></label></div>`;
   } else {
-    h = sayfa('Profil', {geri: 'ayarlar', geriAd: 'Ayarlar'}) + `<p class="dipnot" style="margin:-6px 4px 18px">Profil değişince verileriniz silinmez. Yalnızca açık modüller, başlıklar ve kategori önerileri değişir.</p>`;
+    h = sayfa('Profil', {geri: 'ayarlar', geriAd: 'Ayarlar'}) + `<p class="dipnot" style="margin:-6px 4px 18px">Her profilin verisi ayrıdır. Başka profil seçince o profilin hesabına geçilir; yoksa boş bir hesap açılır. Bu hesabın kayıtları burada kalır.</p>`;
   }
   h += Object.entries(PROFILLER).map(([id, p]) => {
     const mods = MODULLER.filter(m => !m.zorunlu && m.varsayilan.includes(id)).map(m => `<span>${esc(modulAdi(m, id))}</span>`).join('');
+    const not = ilk ? '' : D.profil === id ? ' <span class="hap mavi">açık</span>' : profilHesabi(id) ? ` <span class="hap">${esc(hesapAdi(profilHesabi(id)))}</span>` : (hesapBosMu() ? '' : ' <span class="hap">yeni hesap</span>');
     return `<button class="profil-kart ${D.profil === id ? 'secili' : ''}" data-p="${id}">${kare(p.simge, p.renk)}
-      <div style="flex:1;min-width:0"><b>${esc(p.ad)}</b><small>${esc(p.aciklama)}</small><div class="etiketler">${mods}</div></div></button>`;
+      <div style="flex:1;min-width:0"><b>${esc(p.ad)}${not}</b><small>${esc(p.aciklama)}</small><div class="etiketler">${mods}</div></div></button>`;
   }).join('');
   $('#icerik').innerHTML = h;
   $$('.profil-kart').forEach(b => b.onclick = () => {
+    const yeni = b.dataset.p;
+    if (!ilk) {
+      // Profil = ayrı hesap: dolu bir hesabın profili değiştirilmez, o profilin hesabına geçilir.
+      if (yeni === D.profil) return git('panel', true);
+      const var_ = profilHesabi(yeni);
+      if (var_) return hesabaGec(var_.id);
+      if (!hesapBosMu()) {
+        const id = 'h' + kimlik();
+        localStorage.setItem(veriAnahtari(id), JSON.stringify({...yeniDurum(), profil: yeni}));
+        H.liste.push({id, ad: '', profil: yeni});
+        return hesabaGec(id);
+      }
+    }
     if (ilk) { D.ad = $('#adGiris').value.trim(); if (hx) delete hx.onceki; }
-    D.profil = b.dataset.p;
+    D.profil = yeni;
     kaydet();
     bildir(`${PROFILLER[D.profil].ad} profili seçildi`);
     git('panel', true);
@@ -1005,6 +1019,8 @@ function profilEkrani(ilk) {
 
 /* ================= Hesaplar ================= */
 const hesapAdi = h => h.ad || (h.profil ? PROFILLER[h.profil].ad + ' hesabı' : 'Yeni hesap');
+const profilHesabi = p => H.liste.find(h => h.profil === p && h.id !== H.aktif);
+const hesapBosMu = () => !['islemler', 'kisiler', 'hareketler', 'urunler', 'faturalar', 'personeller'].some(k => D[k].length);
 function hesabaGec(id) {
   H.aktif = id; hesapKaydet();
   D = yukle(); ui = uiBaslangic();
