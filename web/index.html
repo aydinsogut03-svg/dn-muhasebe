@@ -422,6 +422,22 @@ header .nav-btn.geri span{display:none}
 .yeni-satir button:active{opacity:.6}
 .vade{font-size:12px;font-weight:600}
 svg.kucuk-simge{width:16px;height:16px;color:var(--ikincil)}
+
+/* PIN kilidi */
+#kilitEkran{position:fixed;inset:0;z-index:90;background:var(--marka,#12355b);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:env(safe-area-inset-top) 24px env(safe-area-inset-bottom)}
+#kilitEkran .logo{box-shadow:none;width:56px;height:56px;border-radius:14px;background:rgba(255,255,255,.12);display:grid;place-items:center;font-weight:700;font-size:20px}
+#kilitEkran h3{margin:0;font-size:17px;font-weight:600}
+#kilitEkran p{margin:-10px 0 0;font-size:13px;opacity:.7;min-height:18px;text-align:center}
+.pin-nokta{display:flex;gap:16px;margin:4px 0 10px}
+.pin-nokta i{width:13px;height:13px;border-radius:50%;border:1.5px solid rgba(255,255,255,.8)}
+.pin-nokta i.dolu{background:#fff}
+.pin-nokta.salla{animation:salla .35s}
+@keyframes salla{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+.tus-takim{display:grid;grid-template-columns:repeat(3,72px);gap:14px}
+.tus-takim button{height:72px;border-radius:50%;border:0;background:rgba(255,255,255,.1);color:#fff;font-size:26px;font-weight:400;font-family:inherit}
+.tus-takim button:active{background:rgba(255,255,255,.25)}
+.tus-takim button.bos{background:none;font-size:14px}
+.tus-takim button.bos:empty{visibility:hidden}
 </style>
 </head>
 <body>
@@ -434,11 +450,13 @@ svg.kucuk-simge{width:16px;height:16px;color:var(--ikincil)}
 
 <script>
 'use strict';
-const VERSIYON = '0.6.1';
+const VERSIYON = '0.7.0';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
 const SIMGE = {
+  kilit:'<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  deney:'<path d="M9 3h6M10 3v6L4.5 18.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7 15h10"/>',
   ev:'<path d="M3 10.5 12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H4.5A1.5 1.5 0 0 1 3 20z"/>',
   cuzdan:'<rect x="2" y="5" width="20" height="15" rx="2.5"/><path d="M2 10h20"/><path d="M16 15h2"/>',
   defter:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M9 7h7M9 11h5"/>',
@@ -846,6 +864,8 @@ const DETAYLI = ['veresiye', 'stok', 'fatura', 'personel'];
 
 /* Android geri tuşu: true dönerse uygulama kapanmaz */
 window.geriTusu = function () {
+  const ke = $('#kilitEkran');
+  if (ke) { if (kilitli) return false; $('[data-x=iptal]', ke).click(); return true; }
   if (kapat() || cekmeceKapat()) return true;
   const [s = 'panel', p1] = rota();
   if (!D.profil) return false;
@@ -985,6 +1005,7 @@ function profilEkrani(ilk) {
     if (geriDon) $('#geriBtn').onclick = () => { H.liste = H.liste.filter(x => x.id !== hx.id); localStorage.removeItem(veriAnahtari(hx.id)); hesabaGec(hx.onceki); };
     h = `<div class="karsilama"><div class="logo">DN</div><h2>${H.liste.length > 1 ? 'Yeni hesap' : 'DN Muhasebe'}</h2><p>Bu hesap için profil seçin. Ekranlar ve modüller buna göre açılır.</p></div>
       <div class="grup"><label class="f-satir sol"><input type="text" id="adGiris" value="${esc(D.ad)}" placeholder="Adınız veya işletme adı (isteğe bağlı)"></label></div>`;
+    if (H.liste.length === 1) h += `<div class="grup"><button class="hucre kareli" id="ornekDene">${kare('deney', 'mor')}<div class="ic"><b>Önce örnek verilerle deneyin</b><small>Dolu bir örnek hesap açılır, sonra kendi hesabınızı açarsınız</small></div>${CHEV}</button></div><div class="bolum">ya da profil seçin</div>`;
   } else {
     h = sayfa('Profil', {geri: 'ayarlar', geriAd: 'Ayarlar'}) + `<p class="dipnot" style="margin:-6px 4px 18px">Her profilin verisi ayrıdır. Başka profil seçince o profilin hesabına geçilir; yoksa boş bir hesap açılır. Bu hesabın kayıtları burada kalır.</p>`;
   }
@@ -995,6 +1016,7 @@ function profilEkrani(ilk) {
       <div style="flex:1;min-width:0"><b>${esc(p.ad)}${not}</b><small>${esc(p.aciklama)}</small><div class="etiketler">${mods}</div></div></button>`;
   }).join('');
   $('#icerik').innerHTML = h;
+  if ($('#ornekDene')) $('#ornekDene').onclick = ornekSor;
   $$('.profil-kart').forEach(b => b.onclick = () => {
     const yeni = b.dataset.p;
     if (!ilk) {
@@ -1018,6 +1040,10 @@ function profilEkrani(ilk) {
 }
 
 /* ================= Hesaplar ================= */
+async function ornekSor() {
+  const p = await eylemSayfa('Örnek hesap', 'Hangi profil için örnek veri yüklensin?', Object.entries(PROFILLER).map(([id, x]) => ({ad: x.ad, deger: id})));
+  if (p) ornekHesapAc(p);
+}
 const hesapAdi = h => h.ad || (h.profil ? PROFILLER[h.profil].ad + ' hesabı' : 'Yeni hesap');
 const profilHesabi = p => H.liste.find(h => h.profil === p && h.id !== H.aktif);
 const hesapBosMu = () => !['islemler', 'kisiler', 'hareketler', 'urunler', 'faturalar', 'personeller'].some(k => D[k].length);
@@ -1038,11 +1064,13 @@ function hesaplarEkrani() {
   h += `<div class="grup">${H.liste.map(x => { const p = x.profil && PROFILLER[x.profil];
     return `<button class="hucre kareli" data-h="${x.id}">${kare(p ? p.simge : 'kisi', p ? p.renk : 'gri')}<div class="ic"><b>${esc(hesapAdi(x))}</b><small>${p ? esc(p.ad) + ' profili' : 'Profil seçilmedi'}</small></div>
       ${x.id === H.aktif ? '<span class="hap mavi">açık</span>' : CHEV}</button>`; }).join('')}
-    <button class="hucre eylem kareli" id="hEkle">${kare('arti', 'mavi')}<div class="ic"><b>Yeni hesap ekle</b></div></button></div>
+    <button class="hucre eylem kareli" id="hEkle">${kare('arti', 'mavi')}<div class="ic"><b>Yeni hesap ekle</b></div></button>
+    <button class="hucre kareli" id="hOrnek">${kare('deney', 'mor')}<div class="ic"><b>Örnek verilerle dene</b><small>Ayrı bir örnek hesap açar, gerçek hesaplarınıza dokunmaz</small></div>${CHEV}</button></div>
     <p class="dipnot">Örneğin kişisel harcamalarınız için Bireysel, şirketiniz için Şirket hesabı açın. Kayıtlar, cariler, faturalar ve personel hesaplar arasında karışmaz.</p>
     ${H.liste.length > 1 ? `<div class="grup"><button class="hucre kareli" id="hTasi">${kare('donustur', 'turuncu')}<div class="ic"><b>Kayıtları başka hesaba taşı</b><small>Yanlış hesaba girilmiş kayıtları ayırın</small></div>${CHEV}</button></div>` : ''}`;
   $('#icerik').innerHTML = h;
   $('#hEkle').onclick = hesapEkle;
+  $('#hOrnek').onclick = ornekSor;
   if ($('#hTasi')) $('#hTasi').onclick = kayitTasi;
   $$('[data-h]').forEach(b => b.onclick = async () => {
     const x = H.liste.find(y => y.id === b.dataset.h);
@@ -2724,6 +2752,10 @@ function ayarlarEkrani() {
     <div class="grup">${MODULLER.map(m => `<div class="hucre kareli">${kare(m.simge, m.renk)}<div class="ic"><b>${esc(modulAdi(m))}</b><small>${esc(m.aciklama)}</small></div>
       ${m.zorunlu ? '<span class="deger" style="font-size:14px">Her zaman</span>' : `<label class="anahtar"><input type="checkbox" data-mod="${m.id}" ${modulAcik(m.id) ? 'checked' : ''}><span></span></label>`}</div>`).join('')}</div>
     <p class="dipnot">Kapalı modülün verisi silinmez. Açık modüller soldaki menüde görünür.</p>
+    <div class="bolum">Güvenlik</div>
+    <div class="grup"><label class="hucre kareli">${kare('kilit', 'indigo')}<div class="ic"><b>PIN kilidi</b><small>Açılışta ve 30 sn sonra dönüşte PIN sorar</small></div><span class="anahtar"><input type="checkbox" id="pinAnahtar" ${kilitAyar() ? 'checked' : ''}><span></span></span></label>
+      ${kilitAyar() ? `<button class="hucre kareli" id="pinDegis">${kare('kilit', 'gri')}<div class="ic"><b>PIN'i değiştir</b></div>${CHEV}</button>` : ''}</div>
+    <p class="dipnot">PIN tüm hesaplar için geçerlidir. Unutulursa kaldırılamaz; önce yedek alın.</p>
     <div class="bolum">Yedekleme</div>
     <div class="grup">
       <button class="hucre kareli" id="disaAktar">${kare('indir', 'mavi')}<div class="ic"><b>Yedeği kaydet ve paylaş</b><small>${D.sonYedek ? 'Son yedek ' + esc(tarihYaz(D.sonYedek.slice(0, 10), true)) : 'Henüz yedek alınmadı'}</small></div>${CHEV}</button>
@@ -2741,6 +2773,8 @@ function ayarlarEkrani() {
     kaydet(); menuCiz('menu');
     bildir(`${modulAdi(c.dataset.mod)} ${c.checked ? 'açıldı' : 'kapatıldı'}`);
   });
+  $('#pinAnahtar').onchange = async e => { e.target.checked = !e.target.checked; await (kilitAyar() ? pinKaldir() : pinKur()); ayarlarEkrani(); };
+  if ($('#pinDegis')) $('#pinDegis').onclick = async () => { if (await pinKaldir()) { await pinKur(); ayarlarEkrani(); } };
   $('#disaAktar').onclick = yedekAl;
   $('#iceAktar').onclick = () => $('#dosya').click();
   $('#hepsiniSil').onclick = async () => {
@@ -2772,6 +2806,155 @@ $('#dosya').onchange = async e => {
   } catch (err) { bildir('Dosya okunamadı. DN Muhasebe yedeği seçin.', true); }
 };
 
+
+/* ================= Örnek veri ================= */
+/* Seçilen profil için ayrı bir "Örnek" hesabı açar ve gerçekçi kayıtlarla doldurur. Gerçek hesaplara dokunmaz. */
+function ornekHesapAc(profil) {
+  const id = 'h' + kimlik();
+  H.liste.push({id, ad: 'Örnek ' + PROFILLER[profil].ad.toLocaleLowerCase('tr'), profil, ornek: true});
+  localStorage.setItem(veriAnahtari(id), JSON.stringify({...yeniDurum(), profil, ad: 'Örnek ' + PROFILLER[profil].ad.toLocaleLowerCase('tr')}));
+  H.aktif = id; hesapKaydet();
+  D = yukle(); ui = uiBaslangic();
+  ornekDoldur();
+  kaydet();
+  cekmeceKapat();
+  git('panel', true);
+  bildir('Örnek hesap açıldı. Gerçek hesaplarınız etkilenmez');
+}
+function ornekDoldur() {
+  const ay = i => ayKaydir(buAy, -i), gun = (i, g) => `${ay(i)}-${iki(Math.min(g, i === 0 ? +bugun().slice(8) : 28))}`;
+  const tl = n => Math.round(n * 100);
+  const ekle = (tur, tutar, i, g, kategori, aciklama = '', odeme = 'nakit') => islemOlustur({tur, tutar: tl(tutar), tarih: gun(i, g), kategori, aciklama, odeme});
+  if (D.profil === 'bireysel') {
+    D.ad = 'Örnek bireysel';
+    for (let i = 5; i >= 0; i--) {
+      ekle('gelir', 62000, i, 1, 'Maaş', 'Aylık maaş', 'havale');
+      ekle('gider', 18000, i, 3, 'Kira', 'Ev kirası', 'havale');
+      ekle('gider', 6200 + i * 350, i, 6, 'Market', 'Haftalık alışveriş', 'kart');
+      ekle('gider', 2400 + i * 120, i, 10, 'Faturalar', 'Elektrik, su, doğalgaz', 'kart');
+      ekle('gider', 3500, i, 14, 'Yakıt', '', 'kart');
+      ekle('gider', 1800 + (i % 3) * 900, i, 20, 'Eğlence', 'Sinema, yemek', 'kart');
+      if (i % 2 === 0) ekle('gelir', 7500, i, 22, 'Ek gelir', 'Serbest iş');
+    }
+    D.butceler = {Market: tl(8000), Eğlence: tl(3000), Yakıt: tl(4000), Faturalar: tl(3500)};
+    return;
+  }
+  const sirket = D.profil === 'sirket' || D.profil === 'kucuk', esnaf = D.profil === 'esnaf';
+  D.ad = esnaf ? 'Örnek Bakkal' : 'Örnek Teknik Ltd.';
+  if (sirket) Object.assign(D.firma, {adres: 'Tuzla / İstanbul', vd: 'Tuzla', vno: '1234567890', tel: '0216 000 00 00', eposta: 'info@ornek.com.tr', iban: 'TR00 0000 0000 0000 0000 0000 00'});
+  const k = (ad, tel = '') => { const x = {id: kimlik(), ad, tel, olusturma: Date.now()}; D.kisiler.push(x); return x; };
+  const u = (ad, birim, alis, satis, bas, kritik) => {
+    const x = {id: kimlik(), ad, birim, alis: tl(alis), satis: tl(satis), kritik, kdvOran: 20, olusturma: Date.now()}; D.urunler.push(x);
+    D.stokHareket.push({id: kimlik(), urunId: x.id, tur: 'giris', miktar: bas, birimFiyat: x.alis, tarih: gun(5, 1), aciklama: 'Açılış stoğu', olusturma: Date.now()});
+    return x;
+  };
+  if (esnaf) {
+    const m1 = k('Ahmet Yılmaz', '05320000001'), m2 = k('Ayşe Demir', '05320000002'), m3 = k('Kahveci Mehmet');
+    u('Ekmek', 'adet', 7, 10, 40, 15); u('Süt 1 L', 'adet', 28, 38, 24, 10); u('Yumurta 30\'lu', 'paket', 120, 160, 6, 8); u('Çay 1 kg', 'paket', 210, 275, 12, 4);
+    for (let i = 5; i >= 0; i--) {
+      for (const g of [3, 10, 17, 24]) ekle('gelir', 9500 + g * 80 + i * 300, i, g, 'Satış', 'Günlük satış');
+      ekle('gider', 15000, i, 2, 'Kira', 'Dükkan kirası', 'havale');
+      ekle('gider', 21000 + i * 500, i, 5, 'Mal alımı', 'Toptancı', 'havale');
+      ekle('gider', 3200, i, 12, 'Faturalar', 'Elektrik', 'kart');
+    }
+    const hr = (kisi, tur, tutar, i, g, aciklama) => D.hareketler.push({id: kimlik(), kisiId: kisi.id, tur, tutar: tl(tutar), tarih: gun(i, g), aciklama, olusturma: Date.now()});
+    hr(m1, 'borc', 1250, 1, 8, 'Market alışverişi'); hr(m1, 'tahsilat', 800, 0, 2, 'Ödeme'); hr(m1, 'borc', 640, 0, 5, 'Market alışverişi');
+    hr(m2, 'borc', 2100, 2, 15, 'Aylık hesap'); hr(m2, 'tahsilat', 2100, 1, 3, 'Ödeme'); hr(m2, 'borc', 1850, 0, 4, 'Aylık hesap');
+    hr(m3, 'borc', 3400, 1, 20, 'Çay, şeker');
+    return;
+  }
+  const c1 = k('Deniz Yapı A.Ş.', '02160000001'), c2 = k('Mavi Liman Ltd.', '02320000002'), c3 = k('Kuzey Enerji A.Ş.'), t1 = k('Filtre Tedarik Ltd.'), t2 = k('Yağ Dünyası');
+  const y = u('Yağ filtresi', 'adet', 400, 650, 30, 8), m = u('Motor yağı 20 L', 'bidon', 2400, 3300, 12, 4), r = u('Rulman 6205', 'adet', 180, 320, 40, 10);
+  const fat = (tur, kisi, i, g, kalemler, odendi, no) => {
+    const f = {id: kimlik(), tur, no: no || sonrakiNo(tur), tarih: gun(i, g), vade: tur === 'teklif' ? '' : gun(Math.max(i - 1, 0), g), kisiId: kisi.id, musteriAd: '', kalemler: kalemler.map(([ad, miktar, fiyat, urunId]) => ({ad, miktar, birim: 'adet', fiyat: tl(fiyat), kdv: 20, ...(urunId ? {urunId} : {})})), not: '', durum: 'gonderildi', odendi, odemeTarihi: odendi ? gun(Math.max(i - 1, 0), 5) : '', odemeSekli: 'havale', cariyeIsle: true, stokDus: true, olusturma: Date.now()};
+    D.faturalar.push(f); faturaTuret(f); return f;
+  };
+  fat('fatura', c1, 5, 8, [['Jeneratör bakımı', 1, 28000], ['Yağ filtresi', 4, 650, y.id]], true);
+  fat('fatura', c2, 4, 12, [['Tekne motor revizyonu', 1, 64000], ['Motor yağı 20 L', 2, 3300, m.id]], true);
+  fat('fatura', c3, 3, 6, [['Periyodik bakım', 3, 9500], ['Rulman 6205', 6, 320, r.id]], true);
+  fat('fatura', c1, 2, 18, [['Arıza müdahalesi', 1, 17500]], true);
+  fat('fatura', c2, 1, 9, [['Jeneratör bakımı', 2, 28000], ['Yağ filtresi', 8, 650, y.id]], true);
+  fat('fatura', c3, 0, 3, [['Pompa değişimi', 1, 42000], ['Rulman 6205', 4, 320, r.id]], false);
+  fat('fatura', c1, 0, 5, [['Periyodik bakım', 1, 9500], ['Motor yağı 20 L', 1, 3300, m.id]], false);
+  fat('alis', t1, 4, 4, [['Yağ filtresi', 20, 400, y.id], ['Rulman 6205', 20, 180, r.id]], true, 'FT-2041');
+  fat('alis', t2, 2, 3, [['Motor yağı 20 L', 8, 2400, m.id]], true, 'YD-778');
+  fat('alis', t1, 0, 2, [['Yağ filtresi', 15, 400, y.id]], false, 'FT-2207');
+  fat('teklif', c2, 0, 4, [['Yıllık bakım anlaşması', 12, 8500]], false);
+  for (let i = 5; i >= 0; i--) {
+    ekle('gider', 30000, i, 1, 'Kira', 'Atölye kirası', 'havale');
+    ekle('gider', 4200 + i * 150, i, 11, 'Faturalar', 'Elektrik, internet', 'kart');
+    ekle('gider', 6500, i, 15, 'Yakıt', 'Servis aracı', 'kart');
+    if (i % 2) ekle('gelir', 12000, i, 21, 'Hizmet geliri', 'Faturasız acil servis');
+  }
+  D.personeller.push({id: kimlik(), ad: 'Berat Usta', gorev: 'Teknisyen', maas: tl(40000), ucretTip: 'net', iseGiris: gun(5, 1).slice(0, 8) + '01', cikis: '', aktif: true, olusturma: Date.now()},
+    {id: kimlik(), ad: 'Selin Kaya', gorev: 'Ön muhasebe', maas: tl(36000), ucretTip: 'net', iseGiris: '2024-09-01', cikis: '', aktif: true, olusturma: Date.now()});
+}
+
+/* ================= PIN kilidi ================= */
+/* PIN cihazda özetlenmiş olarak tutulur (dnmuhasebe.kilit). Uygulama açılışta ve arka plandan 30 sn sonra dönüşte kilitlenir. */
+const KILIT_ANAHTAR = 'dnmuhasebe.kilit';
+const pinOzet = (pin, tuz) => { let a = 0x811c9dc5, b = 0x1505; for (const c of tuz + ':' + pin + ':dn') { a = Math.imul(a ^ c.charCodeAt(0), 16777619) >>> 0; b = (Math.imul(b, 33) + c.charCodeAt(0)) >>> 0; } return a.toString(36) + b.toString(36); };
+const kilitAyar = () => { try { return JSON.parse(localStorage.getItem(KILIT_ANAHTAR)); } catch (e) { return null; } };
+let kilitli = false, arkaPlanZaman = 0;
+/* Tuş takımlı tam ekran PIN girişi. iptal verilirse vazgeçilebilir; Promise girilen 4 haneyi döndürür. */
+function pinEkrani(baslik, {iptal = false, alt = '', kontrol} = {}) {
+  return new Promise(coz => {
+    const el = document.createElement('div'); el.id = 'kilitEkran';
+    el.innerHTML = `<div class="logo">DN</div><h3>${esc(baslik)}</h3><p id="pinAlt">${esc(alt)}</p><div class="pin-nokta">${'<i></i>'.repeat(4)}</div>
+      <div class="tus-takim">${[1,2,3,4,5,6,7,8,9].map(n => `<button data-n="${n}">${n}</button>`).join('')}<button class="bos" data-x="iptal">${iptal ? 'Vazgeç' : ''}</button><button data-n="0">0</button><button class="bos" data-x="sil">Sil</button></div>`;
+    document.body.appendChild(el);
+    let pin = '';
+    const nokta = $('.pin-nokta', el);
+    const goster = () => $$('i', nokta).forEach((i, k) => i.classList.toggle('dolu', k < pin.length));
+    const bitir = v => { el.remove(); document.removeEventListener('keydown', el._tus); coz(v); };
+    const bas = n => {
+      if (pin.length >= 4) return;
+      pin += n; goster();
+      if (pin.length === 4) setTimeout(() => {
+        if (!kontrol || kontrol(pin)) return bitir(pin);
+        nokta.classList.add('salla'); $('#pinAlt', el).textContent = 'PIN yanlış';
+        if (navigator.vibrate) navigator.vibrate(120);
+        setTimeout(() => { nokta.classList.remove('salla'); pin = ''; goster(); }, 380);
+      }, 120);
+    };
+    $$('[data-n]', el).forEach(b => b.onclick = () => bas(b.dataset.n));
+    $('[data-x=sil]', el).onclick = () => { pin = pin.slice(0, -1); goster(); };
+    $('[data-x=iptal]', el).onclick = () => { if (iptal) bitir(null); };
+    el._tus = e => { if (/^\d$/.test(e.key)) bas(e.key); else if (e.key === 'Backspace') { pin = pin.slice(0, -1); goster(); } };
+    document.addEventListener('keydown', el._tus);
+  });
+}
+async function kilitle() {
+  const k = kilitAyar();
+  if (!k || kilitli) return;
+  kilitli = true;
+  document.activeElement?.blur();
+  await pinEkrani('PIN girin', {alt: 'DN Muhasebe kilitli', kontrol: p => pinOzet(p, k.t) === k.o});
+  kilitli = false;
+}
+async function pinKur() {
+  const p1 = await pinEkrani('Yeni PIN', {iptal: true, alt: '4 haneli bir PIN belirleyin'});
+  if (!p1) return false;
+  const p2 = await pinEkrani('PIN\'i tekrar girin', {iptal: true, kontrol: p => p === p1});
+  if (!p2) return false;
+  const t = kimlik();
+  localStorage.setItem(KILIT_ANAHTAR, JSON.stringify({t, o: pinOzet(p2, t)}));
+  bildir('PIN kilidi açıldı');
+  return true;
+}
+async function pinKaldir() {
+  const k = kilitAyar();
+  if (!k) return;
+  const p = await pinEkrani('Mevcut PIN', {iptal: true, kontrol: p => pinOzet(p, k.t) === k.o});
+  if (!p) return false;
+  localStorage.removeItem(KILIT_ANAHTAR);
+  bildir('PIN kilidi kapatıldı');
+  return true;
+}
+window.arkaPlan = () => { arkaPlanZaman = Date.now(); };
+window.onPlan = () => { if (arkaPlanZaman && Date.now() - arkaPlanZaman > 30000) kilitle(); arkaPlanZaman = 0; };
+document.addEventListener('visibilitychange', () => document.hidden ? window.arkaPlan() : window.onPlan());
+
 /* ================= Başlat ================= */
 hesaplariYukle();
 D = yukle();
@@ -2780,6 +2963,7 @@ const uiBaslangic = () => ({ay: buAy, pAy: buAy, pSekme: 'liste', vSekme: 'ozet'
 ui = uiBaslangic();
 if (!location.hash) history.replaceState(null, '', '#/panel');
 ciz();
+kilitle();
 </script>
 </body>
 </html>

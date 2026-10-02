@@ -32,3 +32,7 @@ Veriler cihazda (localStorage) saklanır, internete gönderilmez. Her profil ayr
 ## Yeni modül eklemek
 
 `web/index.html` içinde `MODULLER` listesine bir kayıt ekleyin (`id`, `varsayilan` profiller, profile göre `ad`), `ciz()` içinde ekran fonksiyonunu bağlayın.
+
+## Örnek veri ve PIN kilidi
+
+Hesaplar ekranındaki (ve ilk açılıştaki) "Örnek verilerle dene" seçilen profil için ayrı bir örnek hesap açıp son 6 ayı kayıt, cari, fatura, stok ve personelle doldurur; gerçek hesaplara dokunmaz. Ayarlar > Güvenlik'ten 4 haneli PIN kilidi açılabilir: uygulama açılışta ve arka planda 30 saniyeden uzun kaldıktan sonra PIN sorar.

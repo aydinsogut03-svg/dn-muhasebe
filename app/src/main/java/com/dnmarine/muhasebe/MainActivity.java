@@ -111,6 +111,19 @@ public class MainActivity extends Activity {
         super.onActivityResult(istek, sonuc, veri);
     }
 
+    // Sayfaya arka plana gidip dönüldüğünü bildirir (PIN kilidi için).
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (web != null) web.evaluateJavascript("window.arkaPlan && window.arkaPlan()", null);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (web != null) web.evaluateJavascript("window.onPlan && window.onPlan()", null);
+    }
+
     // Geri tuşunu önce sayfaya sor: açık pencereyi kapatır ya da özete döner; sayfa "false" derse uygulama kapanır.
     @Override
     @SuppressWarnings("deprecation")
