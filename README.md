@@ -13,9 +13,11 @@ Her modül Ayarlar'dan profil bazında açılıp kapatılabilir. Modüller birbi
 
 Personel modülü puantaj (takvim, rapor/izin/devamsızlık, fazla mesai), brüt ⇄ net bordro (2026 parametreleri: SGK, işsizlik, gelir vergisi dilimleri, damga, asgari ücret istisnası, işveren teşviki) ve yazdırılabilir bordro pusulası / icmal içerir. Vergi modülü dönemin KDV, muhtasar ve SGK yükünü, geçici ve yıllık gelir/kurumlar vergisi tahminini, stopaj ve vergi hesaplayıcılarını ve vergi takvimini gösterir. Bordro parametreleri `BORDRO` sabitinde yıl bazında tutulur.
 
+Fatura modülünde satış faturası, alınan (alış) fatura ve teklif vardır; e-Fatura/e-Arşiv entegrasyonu yoktur. KDV ve gelir/kurumlar vergisi tahmini kesilen ve alınan faturalardan, faturasız kasa kayıtlarıyla birlikte hesaplanır.
+
 Raporlar PDF olarak yazdırılabilir veya CSV olarak paylaşılabilir.
 
-Arayüz iOS tarzındadır: büyük başlıklar, gruplu listeler, alt sekme çubuğu (Özet + ilk üç modül + Menü), alttan açılan form pencereleri.
+Arayüz iOS tarzındadır: büyük başlıklar, gruplu listeler, soldan açılan menü (kenardan kaydırarak da açılır; geniş ekranda sabit kenar çubuğu), alttan açılan form pencereleri.
 
 ## Dosyalar
 
