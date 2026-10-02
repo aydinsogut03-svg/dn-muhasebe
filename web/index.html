@@ -578,6 +578,19 @@ header .orta-baslik{font-family:var(--yazi-sayi);font-weight:560;font-size:19px;
 .tutar-giris{font-weight:500}
 .bildirim{border-radius:16px;background:rgba(22,33,58,.94)}
 /* Hareket: sayfa girişi, basma, grafik büyümesi */
+
+/* Formlar: tam ekran ayrı sayfa (arkadaki ekranla karışmaz) */
+.perde.sayfa-perde{align-items:stretch;background:transparent!important}
+.sayfa-modal{width:100%;max-width:none;height:100%;max-height:none;border-radius:0;transform:translateX(100%);transition:transform .32s var(--egri);box-shadow:-20px 0 40px -20px rgba(0,0,0,.35)}
+.perde.acik .sayfa-modal{transform:none}
+.sayfa-modal .modal-ust{display:flex;align-items:center;gap:6px;min-height:52px;padding:env(safe-area-inset-top) 8px 0 4px;color:#fff;
+  background:linear-gradient(165deg,#1c2a48 0%,var(--marka) 55%,var(--marka2) 100%);box-shadow:inset 0 -1px 0 rgba(210,173,102,.32)}
+@media (prefers-color-scheme:dark){.sayfa-modal .modal-ust{background:linear-gradient(165deg,#151c2c,#0c1019 70%)}}
+.sayfa-modal .modal-ust .nav-btn{color:#fff;padding:8px}
+.sayfa-modal .modal-ust b{flex:1;text-align:left;max-width:none;font-size:18px;color:#fff}
+.sayfa-modal .modal-govde{padding:16px 16px 24px;background:var(--bg) radial-gradient(700px 300px at 110% -10%,rgba(168,130,61,.07),transparent 60%) no-repeat}
+.modal-alt{flex:none;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:var(--kart);border-top:1px solid var(--kenar);box-shadow:0 -10px 24px -18px rgba(0,0,0,.35)}
+.modal-alt .btn{min-height:48px;font-size:15.5px;border-radius:14px}
 @media (prefers-reduced-motion:no-preference){
   #icerik>*{animation:belir .38s var(--egri) both}
   #icerik>*:nth-child(2){animation-delay:.025s}#icerik>*:nth-child(3){animation-delay:.05s}#icerik>*:nth-child(4){animation-delay:.075s}
@@ -608,7 +621,7 @@ header .orta-baslik{font-family:var(--yazi-sayi);font-weight:560;font-size:19px;
 
 <script>
 'use strict';
-const VERSIYON = '0.9.0';
+const VERSIYON = '0.9.1';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -976,11 +989,11 @@ function kapat() {
 }
 /* iOS tarzı form penceresi: Vazgeç | Başlık | Kaydet */
 function modal(baslik, govde, {kaydet: kaydetFn, kaydetAd = 'Kaydet', tam = false, solAd = 'Vazgeç'} = {}) {
-  const el = perdeAc(`<div class="modal ${tam ? 'tam' : ''}" role="dialog" aria-modal="true">
-    <div class="tutamak"></div>
-    <div class="modal-ust"><div><button class="nav-btn" data-sol>${esc(solAd)}</button></div><b>${esc(baslik)}</b>
-      <div class="sag">${kaydetFn ? `<button class="nav-btn kalin" data-sag>${esc(kaydetAd)}</button>` : ''}</div></div>
-    <div class="modal-govde">${govde}</div></div>`);
+  // Formlar ayrı, tam ekran bir sayfa olarak sağdan açılır; kaydet düğmesi altta sabittir.
+  const el = perdeAc(`<div class="modal sayfa-modal" role="dialog" aria-modal="true">
+    <div class="modal-ust"><button class="nav-btn geri" data-sol aria-label="${esc(solAd)}">${ikon('geri')}</button><b>${esc(baslik)}</b><div class="sag"></div></div>
+    <div class="modal-govde">${govde}</div>
+    ${kaydetFn ? `<div class="modal-alt"><button class="btn" data-sag>${esc(kaydetAd)}</button></div>` : ''}</div>`, 'sayfa-perde');
   const m = $('.modal', el);
   $('[data-sol]', m).onclick = () => kapat();
   if (kaydetFn) $('[data-sag]', m).onclick = () => { if (kaydetFn(m) !== false) kapat(); };
