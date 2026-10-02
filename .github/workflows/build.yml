@@ -34,9 +34,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          SURUM=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
           cp app/build/outputs/apk/debug/app-debug.apk dn-muhasebe.apk
+          cp app/build/outputs/apk/debug/app-debug.apk "dn-muhasebe-$SURUM.apk"
           gh release delete son-surum --cleanup-tag --yes || true
-          gh release create son-surum dn-muhasebe.apk web/index.html \
-            --title "Son sürüm (debug)" \
-            --notes "main dalının son hali: ${GITHUB_SHA::7}. Telefona kurmak için dn-muhasebe.apk dosyasını indir. index.html tarayıcıda da açılır." \
+          gh release create son-surum dn-muhasebe.apk "dn-muhasebe-$SURUM.apk" web/index.html \
+            --title "Son sürüm $SURUM (debug)" \
+            --notes "Sürüm $SURUM, main dalı ${GITHUB_SHA::7}. Telefona kurmak için dn-muhasebe-$SURUM.apk dosyasını indir (adında sürüm olduğu için telefon eski indirmeyi kullanmaz). index.html tarayıcıda da açılır." \
             --prerelease --target "$GITHUB_SHA"

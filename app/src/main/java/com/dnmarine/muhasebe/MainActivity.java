@@ -59,6 +59,9 @@ public class MainActivity extends Activity {
         ayar.setDomStorageEnabled(true);
         ayar.setAllowFileAccess(true);
         ayar.setTextZoom(100);
+        // Uygulama dosyaları APK içinde; güncellemeden sonra eski sayfanın önbellekten gelmemesi için önbellek kullanılmaz.
+        ayar.setCacheMode(WebSettings.LOAD_NO_CACHE);
+        web.clearCache(true);
 
         web.addJavascriptInterface(new Kopru(), "Android");
         web.setWebViewClient(new WebViewClient() {

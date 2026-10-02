@@ -5,9 +5,9 @@
         <item name="android:colorPrimary">@color/marka</item>
         <item name="android:colorPrimaryDark">@color/zemin</item>
         <item name="android:colorAccent">@color/vurgu</item>
-        <item name="android:statusBarColor">@color/zemin</item>
+        <item name="android:statusBarColor">@color/marka</item>
         <item name="android:navigationBarColor">@color/zemin</item>
-        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">true</item>
         <item name="android:windowBackground">@color/zemin</item>
     </style>
