@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Lacivert üst çubuk ve menü; durum çubuğu da bu renkte -->
-    <color name="marka">#12355B</color>
-    <color name="vurgu">#1F7AE0</color>
-    <color name="zemin">#F3F5F8</color>
+    <!-- Mürekkep üst çubuk ve menü; durum çubuğu da bu renkte -->
+    <color name="marka">#1C2A48</color>
+    <color name="vurgu">#A8823D</color>
+    <color name="zemin">#F4F0E8</color>
 </resources>
