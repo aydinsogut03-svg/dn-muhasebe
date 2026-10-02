@@ -1,0 +1,42 @@
+name: APK derle
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Debug APK derle
+        run: ./gradlew assembleDebug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dn-muhasebe-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+
+      - name: APK'yı "Son sürüm" sayfasına koy
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk dn-muhasebe.apk
+          gh release delete son-surum --cleanup-tag --yes || true
+          gh release create son-surum dn-muhasebe.apk web/index.html \
+            --title "Son sürüm (debug)" \
+            --notes "main dalının son hali: ${GITHUB_SHA::7}. Telefona kurmak için dn-muhasebe.apk dosyasını indir. index.html tarayıcıda da açılır." \
+            --prerelease --target "$GITHUB_SHA"

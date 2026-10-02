@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Açık tema: WebView'deki prefers-color-scheme bu temanın açık/koyu olmasına göre belirlenir. -->
+    <style name="Tema" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:colorPrimary">@color/marka</item>
+        <item name="android:colorPrimaryDark">@color/marka</item>
+        <item name="android:colorAccent">@color/vurgu</item>
+        <item name="android:statusBarColor">@color/marka</item>
+        <item name="android:navigationBarColor">@color/marka</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowBackground">@color/marka</item>
+    </style>
+</resources>

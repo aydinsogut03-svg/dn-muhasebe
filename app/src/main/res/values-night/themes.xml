@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Tema" parent="android:Theme.Material.NoActionBar">
+        <item name="android:colorPrimary">@color/marka</item>
+        <item name="android:colorPrimaryDark">@color/marka</item>
+        <item name="android:colorAccent">@color/vurgu</item>
+        <item name="android:statusBarColor">@color/marka</item>
+        <item name="android:navigationBarColor">@color/marka</item>
+        <item name="android:windowBackground">@color/marka</item>
+    </style>
+</resources>
