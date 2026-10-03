@@ -19,7 +19,7 @@ Faturalara kısmi tahsilat/ödeme girilebilir; fatura ekranı tahsil edilen, kal
 
 Raporlar PDF olarak yazdırılabilir veya CSV olarak paylaşılabilir.
 
-Görsel dil "mürekkep ve kâğıt": sıcak kâğıt zemin, mürekkep laciverti, pirinç vurgu; rakamlar Fraunces, arayüz Manrope yazı tipiyle (ikisi de SIL OFL, çevrimdışı çalışmak için `index.html` içine gömülü). Arayüz: büyük başlıklar, gruplu listeler, soldan açılan menü (kenardan kaydırarak da açılır; geniş ekranda sabit kenar çubuğu), alttan açılan form pencereleri.
+Görsel dil "mürekkep ve kâğıt": sıcak kâğıt zemin, mürekkep laciverti, pirinç vurgu; tek yazı tipi Manrope (SIL OFL, çevrimdışı çalışmak için `index.html` içine gömülü). Arayüz: büyük başlıklar, gruplu listeler, soldan açılan menü (kenardan kaydırarak da açılır; geniş ekranda sabit kenar çubuğu), alttan açılan form pencereleri.
 
 ## Dosyalar
 
