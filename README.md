@@ -27,6 +27,10 @@ Müşterinin tekne ve makineleri (ana makine, jeneratör, şanzıman, pervane/ş
 
 Müşteri ve teknisyen imzası telefonda parmakla alınır. "Servis formu" düğmesi fiyatsız, yasal bilgilendirmeli A4 servis formunu PDF olarak verir (DN Marine logosu gömülüdür; Ayarlar > Servis formu'ndan başka logo yüklenebilir, garanti süresi ve yetkili mahkeme oradan girilir). "Faturala" servisten taslak fatura oluşturur: parçalar satış fiyatıyla, işçilik ayarlardaki saat ücretiyle gelir; stok servisten düştüğü için fatura stok düşmez. Sonraki bakım tarihi yaklaşan makineler servis ekranında ve özette görünür.
 
+## Banka ve kasa
+
+Kasa, banka hesapları, kredi kartları ve POS hesapları ayrı hesaplar olarak tanımlanır (açılış bakiyesi ve tarihi; kartta limit, kesim ve son ödeme günü). Gelir/gider, fatura tahsilatı/ödemesi, cari tahsilatı ve personel ödemesi formlarında ödeme şekli yerine hesap seçilir. Hesap seçilmemiş eski kayıtlar ödeme şekline göre varsayılan hesaba sayılır (nakit → kasa, havale → banka, kartla gelir → POS, kartla gider → kredi kartı). Hesaplar arası aktarım ve kart borcu ödemesi virman olarak girilir; gelir/gider sayılmaz. Her hesabın hareketleri yürüyen bakiyeyle listelenir ve PDF ekstresi alınır. Kart son ödeme gününe 7 gün kala özet ekranında hatırlatılır.
+
 ## Dosyalar
 
 - `web/index.html`: uygulamanın tamamı (HTML + CSS + JS). Tarayıcıda doğrudan açılabilir.

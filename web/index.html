@@ -680,7 +680,7 @@ header .orta-baslik{font-size:17px}
 
 <script>
 'use strict';
-const VERSIYON = '1.1.0';
+const VERSIYON = '1.2.0';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -786,6 +786,7 @@ const TUM = ['bireysel','esnaf','kucuk','sirket'];
 const MODULLER = [
   {id:'panel', zorunlu:true, simge:'ev', renk:'mavi', varsayilan:TUM, ad:{_:'Özet'}, aciklama:'Günün ve ayın özeti'},
   {id:'servis', simge:'alet', renk:'mor', varsayilan:['kucuk','sirket'], ad:{_:'Servis'}, aciklama:'İş emri, tekne ve makineler, parça, işçilik, servis formu'},
+  {id:'banka', simge:'banka', renk:'mavi', varsayilan:['kucuk','sirket'], ad:{_:'Banka ve kasa'}, aciklama:'Kasa, banka hesapları, kredi kartları, POS, virman ve ekstre'},
   {id:'kasa', simge:'cuzdan', renk:'yesil', varsayilan:TUM, ad:{bireysel:'Gelir/Harcama', esnaf:'Kasa', _:'Gelir/Gider'}, aciklama:'Gelir ve gider kayıtları'},
   {id:'veresiye', simge:'defter', renk:'turuncu', varsayilan:['esnaf','kucuk','sirket'], ad:{bireysel:'Borç/Alacak', sirket:'Cari', _:'Veresiye'}, aciklama:'Kişi bazında borç ve tahsilat'},
   {id:'stok', simge:'kutu', renk:'kahve', varsayilan:['esnaf','kucuk','sirket'], ad:{_:'Stok'}, aciklama:'Ürünler, giriş-çıkış, kritik stok'},
@@ -813,6 +814,7 @@ const yeniDurum = () => ({
   butceler:{}, hedefler:[],
   urunler:[], stokHareket:[],
   faturalar:[],
+  finansHesap:[], virmanlar:[], finansAyar:{varsayilan:{}},
   ekipmanlar:[], servisler:[], servisAyar:{saatUcret:0, garantiAy:'', garantiSaat:'', mahkeme:''},
   personeller:[], personelOdeme:[], puantaj:{}, bordroAyar:{tesvik:2}, vergiAyar:{tur:''},
   sonYedek:null
@@ -840,6 +842,7 @@ function duzelt(d) {
   for (const k in y) if (d[k] === undefined || (d[k] === null && y[k] !== null)) d[k] = y[k];
   d.firma = {...y.firma, ...d.firma};
   d.servisAyar = {...y.servisAyar, ...d.servisAyar};
+  d.finansAyar = {...y.finansAyar, ...d.finansAyar}; d.finansAyar.varsayilan ||= {};
   // 0.8.0: faturalarda kısmi ödeme; eski "ödendi" bilgisi tek ödemeye dönüşür.
   for (const f of d.faturalar) if (!Array.isArray(f.odemeler))
     f.odemeler = f.odendi ? [{id: kimlik(), tarih: f.odemeTarihi || f.tarih, tutar: faturaHesap(f).toplam, odeme: f.odemeSekli || 'havale'}] : [];
@@ -1099,7 +1102,7 @@ function git(yol, degistir) {
   if (degistir) location.replace(u); else location.hash = u;
 }
 window.addEventListener('hashchange', ciz);
-const DETAYLI = ['servis', 'veresiye', 'stok', 'fatura', 'personel'];
+const DETAYLI = ['banka', 'servis', 'veresiye', 'stok', 'fatura', 'personel'];
 
 /* Android geri tuşu: true dönerse uygulama kapanmaz */
 window.geriTusu = function () {
@@ -1129,14 +1132,15 @@ function kaydirma() { $('#ust').classList.toggle('kaydi', window.scrollY > 30); 
 window.addEventListener('scroll', kaydirma, {passive: true});
 
 /* Soldan açılan menü: profil başlığı, açık modüller (küçük rozetlerle), ayarlar */
-const SEKME_SIRA = ['servis','kasa','veresiye','fatura','stok','personel','butce','kdv','rapor'];
-const MENU_GRUP = [['Servis', ['servis']], ['Satış ve cari', ['fatura', 'veresiye']], ['Nakit', ['kasa', 'butce']], ['Stok', ['stok']], ['Çalışanlar', ['personel']], ['Vergi ve rapor', ['kdv', 'rapor']]];
+const SEKME_SIRA = ['servis','banka','kasa','veresiye','fatura','stok','personel','butce','kdv','rapor'];
+const MENU_GRUP = [['Servis', ['servis']], ['Satış ve cari', ['fatura', 'veresiye']], ['Nakit', ['banka', 'kasa', 'butce']], ['Stok', ['stok']], ['Çalışanlar', ['personel']], ['Vergi ve rapor', ['kdv', 'rapor']]];
 const cekmeceAc = () => document.body.classList.add('cekmece-acik');
 const cekmeceKapat = () => { const a = document.body.classList.contains('cekmece-acik'); document.body.classList.remove('cekmece-acik'); return a; };
 function rozet(id) {
   const ay = bugun().slice(0, 7);
   if (id === 'veresiye') { const t = D.kisiler.reduce((s, k) => s + Math.max(0, kisiBakiye(k.id)), 0); return t ? `<span class="rozet">${kisaPara(t)}</span>` : ''; }
   if (id === 'fatura') { const n = D.faturalar.filter(f => faturaliMi(f) && !f.odendi && f.vade && f.vade < bugun()).length; return n ? `<span class="rozet uyar">${n}</span>` : ''; }
+  if (id === 'banka') { const n = aktifHesaplar().filter(h => h.tur === 'kart' && hesapBakiye(h) < 0 && kartSonOdeme(h) && gunFark(kartSonOdeme(h)) <= 3).length; if (n) return `<span class="rozet uyar">${n}</span>`; const o = finansOzet(); return D.finansHesap.length ? `<span class="rozet">${kisaPara(o.varlik)}</span>` : ''; }
   if (id === 'servis') { const n = D.servisler.filter(servisAcikMi).length; return n ? `<span class="rozet">${n} açık</span>` : ''; }
   if (id === 'stok') { const n = D.urunler.filter(u => u.kritik > 0 && urunMiktar(u.id) <= u.kritik).length; return n ? `<span class="rozet uyar">${n}</span>` : ''; }
   if (id === 'personel') { const n = D.personeller.filter(p => p.aktif !== false && p.maas > 0 && !maasOdendiMi(p.id, ay)).length; return n ? `<span class="rozet">${n} bekliyor</span>` : ''; }
@@ -1191,7 +1195,7 @@ function ciz() {
   if (s === 'ayarlar') { menuCiz('menu'); ayarlarEkrani(); return kaydirma(); }
   if (!modulAcik(s)) return git('panel', true);
   menuCiz(s);
-  const ekran = {panel: panelEkrani, servis: p1 ? () => servisEkrani1(p1) : servisEkrani, kasa: kasaEkrani, veresiye: p1 ? () => kisiEkrani(p1) : veresiyeEkrani,
+  const ekran = {panel: panelEkrani, servis: p1 ? () => servisEkrani1(p1) : servisEkrani, banka: p1 ? () => finansHesapEkrani(p1) : bankaEkrani, kasa: kasaEkrani, veresiye: p1 ? () => kisiEkrani(p1) : veresiyeEkrani,
     stok: p1 ? () => urunEkrani(p1) : stokEkrani, fatura: p1 ? () => faturaEkrani(p1) : faturaListeEkrani,
     personel: p1 ? () => personelDetay(p1) : personelEkrani, butce: butceEkrani, kdv: kdvEkrani, rapor: raporEkrani}[s];
   ekran();
@@ -1297,7 +1301,7 @@ async function ornekSor() {
 }
 const hesapAdi = h => h.ad || (h.profil ? PROFILLER[h.profil].ad + ' hesabı' : 'Yeni hesap');
 const profilHesabi = p => H.liste.find(h => h.profil === p && h.id !== H.aktif);
-const hesapBosMu = () => !['islemler', 'kisiler', 'hareketler', 'urunler', 'faturalar', 'personeller', 'servisler'].some(k => D[k].length);
+const hesapBosMu = () => !['islemler', 'kisiler', 'hareketler', 'urunler', 'faturalar', 'personeller', 'servisler', 'finansHesap'].some(k => D[k].length);
 function hesabaGec(id) {
   H.aktif = id; hesapKaydet();
   D = yukle(); ui = uiBaslangic();
@@ -1506,6 +1510,10 @@ function panelEkrani() {
 
   // Uyarılar: kritik stok, sıradaki vergi
   const uy = [];
+  if (ac('banka')) for (const k of aktifHesaplar().filter(h => h.tur === 'kart')) {
+    const borc = -hesapBakiye(k), so = kartSonOdeme(k), g = so ? gunFark(so) : null;
+    if (borc > 0 && g !== null && g <= 7) uy.push(`<a class="hucre kareli" href="#/banka/${k.id}">${kare('kart', 'turuncu')}<div class="ic"><b>${esc(k.ad)} son ödeme</b><small>${esc(tarihYaz(so))} · borç ${para(borc)}</small></div><span class="deger vade ${g <= 3 ? 'gider' : ''}">${g === 0 ? 'bugün' : g + ' gün'}</span></a>`);
+  }
   if (ac('servis')) {
     const ac2 = D.servisler.filter(servisAcikMi);
     if (ac2.length) uy.push(`<a class="hucre kareli" href="#/servis">${kare('alet', 'mor')}<div class="ic"><b>${ac2.length} açık iş emri</b><small>${esc(ac2.slice(0, 3).map(servisMusteri).join(', '))}</small></div>${CHEV}</a>`);
@@ -1543,7 +1551,7 @@ const islemSirala = (a, b) => b.tarih.localeCompare(a.tarih) || (b.olusturma || 
 function islemSatiri(i, tarihli) {
   const g = i.tur === 'gelir', kat = i.kategori || (g ? T().gelir : T().gider);
   const baslik = i.aciklama || kat;
-  const alt = [tarihli ? tarihYaz(i.tarih) : '', i.aciklama ? kat : '', odemeAdi[i.odeme], i.kaynak || i.hareketId ? 'otomatik' : ''].filter(Boolean).join(' · ');
+  const alt = [tarihli ? tarihYaz(i.tarih) : '', i.aciklama ? kat : '', islemHesapAd(i), i.kaynak || i.hareketId ? 'otomatik' : ''].filter(Boolean).join(' · ');
   const [sm, rk] = kategoriSimge(kat, i.tur);
   return `<button class="hucre kareli islem" data-islem="${i.id}">${kare(sm, rk)}
     <div class="ic"><b>${esc(baslik)}</b><small>${esc(alt) || '&nbsp;'}</small></div>
@@ -1621,7 +1629,7 @@ function otomatikKayitBilgi(baslik, ust, alt, bilgi, metin) {
   if (bilgi) $('#kaynagaGit', m).onclick = () => { kapat(); git(bilgi.yol); };
 }
 
-function islemFormu(islem, varsayilanTur) {
+function islemFormu(islem, varsayilanTur, hesapId) {
   const t = T();
   if (islem && (islem.kaynak || islem.hareketId)) {
     let bilgi = kaynakBilgi(islem.kaynak);
@@ -1631,7 +1639,7 @@ function islemFormu(islem, varsayilanTur) {
       'Bu kayıt başka bir modülden otomatik oluştu. Değiştirmek veya silmek için kaynağındaki kaydı kullanın.');
   }
   const yeni = !islem;
-  const i = islem ? {...islem} : {tur: varsayilanTur || 'gider', tutar: 0, kategori: '', tarih: bugun(), aciklama: '', odeme: 'nakit', kdvOran: 0};
+  const i = islem ? {...islem} : {tur: varsayilanTur || 'gider', tutar: 0, kategori: '', tarih: bugun(), aciklama: '', odeme: hesapId ? HESAP_TUR[finansHesap(hesapId).tur].odeme : 'nakit', hesapId: hesapId || null, kdvOran: 0};
   const kdvAcik = modulAcik('kdv');
   const m = modal(yeni ? 'Yeni kayıt' : 'Kaydı düzenle', `
     <div class="segment">
@@ -1646,8 +1654,7 @@ function islemFormu(islem, varsayilanTur) {
       <label class="f-satir"><span>Tarih</span><input type="date" id="fTarih" value="${i.tarih}"></label>
       <label class="f-satir sol"><input type="text" id="fAcik" value="${esc(i.aciklama)}" placeholder="Açıklama (isteğe bağlı)"></label>
     </div>
-    <div class="bolum">Ödeme şekli</div>
-    <div class="segment">${Object.entries(odemeAdi).map(([v, a]) => `<label><input type="radio" name="odeme" value="${v}" ${i.odeme === v ? 'checked' : ''}><span>${a}</span></label>`).join('')}</div>
+    ${odemeAlani('odeme', i.odeme, i.hesapId || (islem && D.finansHesap.length ? islemHesapId(islem) : null), i.tur)}
     ${kdvAcik ? `<div class="bolum">KDV oranı (tutara dahil)</div><div class="segment">${KDV_ORAN.map(o => `<label><input type="radio" name="kdv" value="${o}" ${(i.kdvOran || 0) === o ? 'checked' : ''}><span>${o ? '%' + o : 'Yok'}</span></label>`).join('')}</div>` : ''}
     ${yeni ? '' : `<div class="grup"><button class="hucre tehlike" id="fSil">Kaydı sil</button></div>`}`, {kaydet: kaydetIslem, kaydetAd: yeni ? 'Ekle' : 'Kaydet'});
   const cipCiz = () => {
@@ -1660,6 +1667,7 @@ function islemFormu(islem, varsayilanTur) {
   $$('input[name=tur]', m).forEach(r => r.onchange = () => {
     $('#fKat', m).value = '';
     $('#fTutar', m).className = 'tutar-giris ' + (r.value === 'gelir' ? 'gelir' : 'gider');
+    const hs = $('[data-hesap=odeme]', m)?.closest('label')?.querySelector('span'); if (hs) hs.textContent = r.value === 'gelir' ? 'Giren hesap' : 'Çıkan hesap';
     cipCiz();
   });
   $('#fKat', m).oninput = cipCiz;
@@ -1670,7 +1678,7 @@ function islemFormu(islem, varsayilanTur) {
     const kdvOran = kdvAcik ? +$('input[name=kdv]:checked', m).value : (i.kdvOran || 0);
     const kayit = {...i, tutar, tur: $('input[name=tur]:checked', m).value,
       kategori: $('#fKat', m).value.trim() || 'Diğer', tarih: $('#fTarih', m).value || bugun(),
-      odeme: $('input[name=odeme]:checked', m).value, aciklama: $('#fAcik', m).value.trim(),
+      ...odemeOku('odeme', m), aciklama: $('#fAcik', m).value.trim(),
       kdvOran, kdv: kdvAyir(tutar, kdvOran)};
     if (yeni) { kayit.id = kimlik(); kayit.olusturma = Date.now(); D.islemler.push(kayit); }
     else D.islemler[D.islemler.findIndex(x => x.id === i.id)] = kayit;
@@ -1839,7 +1847,8 @@ function hareketFormu(k, h, varsayilanTur) {
       <label class="f-satir"><span>Tarih</span><input type="date" id="hTarih" value="${x.tarih}"></label>
       <label class="f-satir sol"><input type="text" id="hAcik" value="${esc(x.aciklama)}" placeholder="Açıklama (örn. ekmek, süt)"></label>
     </div>
-    ${kasa ? `<div class="grup" id="hKasaSatir"><label class="f-satir"><span style="flex:1">${esc(modulAdi('kasa'))} ekranına gelir yaz</span>${anahtar('hKasa', yeni || x.islemId)}</label></div>` : ''}
+    ${kasa ? `<div id="hKasaSatir"><div class="grup"><label class="f-satir"><span style="flex:1">${esc(modulAdi('kasa'))} ekranına gelir yaz</span>${anahtar('hKasa', yeni || x.islemId)}</label></div>
+      ${hesapAcikMi() ? odemeAlani('hOdeme', 'nakit', x.islemId ? D.islemler.find(i => i.id === x.islemId)?.hesapId : null, 'gelir', false) : ''}</div>` : ''}
     ${yeni ? '' : `<div class="grup"><button class="hucre tehlike" id="hSil">Hareketi sil</button></div>`}`, {kaydet: kaydetH, kaydetAd: yeni ? 'Ekle' : 'Kaydet'});
   const kasaGoster = () => { const r = $('#hKasaSatir', m); if (r) r.classList.toggle('gizli', $('input[name=htur]:checked', m).value !== 'tahsilat'); };
   kasaGoster();
@@ -1852,7 +1861,7 @@ function hareketFormu(k, h, varsayilanTur) {
     if (yeni) { kayit.id = kimlik(); kayit.olusturma = Date.now(); }
     const kasayaIsle = kasa && kayit.tur === 'tahsilat' && $('#hKasa', m)?.checked;
     if (kasayaIsle) {
-      const veri = {tur: 'gelir', tutar, kategori: 'Tahsilat', tarih: kayit.tarih, aciklama: [k.ad, kayit.aciklama].filter(Boolean).join(' · '), hareketId: kayit.id};
+      const veri = {tur: 'gelir', tutar, kategori: 'Tahsilat', tarih: kayit.tarih, ...($('[data-hesap=hOdeme]', m) ? odemeOku('hOdeme', m) : {}), aciklama: [k.ad, kayit.aciklama].filter(Boolean).join(' · '), hareketId: kayit.id};
       const mevcut = kayit.islemId && D.islemler.find(i => i.id === kayit.islemId);
       if (mevcut) Object.assign(mevcut, veri); else kayit.islemId = islemOlustur(veri).id;
     } else if (kayit.islemId && (kasa || kayit.tur !== 'tahsilat')) {
@@ -2243,7 +2252,7 @@ function odemeTuret(f, cari, ad, kaynak) {
     const aciklama = `${ad} ${f.odemeler.length > 1 ? (n + 1) + '. ödeme' : 'ödemesi'}`;
     if (cari) { hr = {id: kimlik(), kisiId: f.kisiId, tur: alis ? 'odeme' : 'tahsilat', tutar: o.tutar, tarih: o.tarih, aciklama, kaynak, olusturma: Date.now() + 1 + n}; D.hareketler.push(hr); }
     if (modulAcik('kasa')) {
-      const i = islemOlustur({tur: alis ? 'gider' : 'gelir', tutar: o.tutar, kategori: alis ? kategoriBul(T().giderKat, /mal|alım|hammadde/i, 'Diğer') : cari ? 'Tahsilat' : 'Satış', tarih: o.tarih, odeme: o.odeme || 'havale',
+      const i = islemOlustur({tur: alis ? 'gider' : 'gelir', tutar: o.tutar, kategori: alis ? kategoriBul(T().giderKat, /mal|alım|hammadde/i, 'Diğer') : cari ? 'Tahsilat' : 'Satış', tarih: o.tarih, odeme: o.odeme || 'havale', hesapId: o.hesapId || null,
         aciklama: `${ad} · ${faturaMusteri(f)}`, kdvOran: 0, kdv: 0, kaynak, ...(hr ? {hareketId: hr.id} : {})});
       if (hr) hr.islemId = i.id;
     }
@@ -2265,14 +2274,13 @@ function odemeFormu(f) {
     <p class="dipnot" style="margin:0 4px 12px">${esc(faturaMusteri(f))} · ${esc(f.no)} · kalan <b>${para(kalan)}</b></p>
     <div class="tutar-kutu"><small>Tutar</small><input id="oTutar" class="tutar-giris" inputmode="decimal" value="${tutarYaz(kalan)}" autocomplete="off"></div>
     <div class="grup"><label class="f-satir"><span>Tarih</span><input type="date" id="oTarih" value="${bugun()}"></label></div>
-    <div class="bolum">Ödeme şekli</div>
-    <div class="segment">${Object.entries(odemeAdi).map(([v, a]) => `<label><input type="radio" name="oOdeme" value="${v}" ${v === 'havale' ? 'checked' : ''}><span>${a}</span></label>`).join('')}</div>
+    ${odemeAlani('oOdeme', 'havale', null, alis ? 'gider' : 'gelir')}
     <p class="dipnot">${modulAcik('kasa') ? (alis ? 'Kasaya gider, cariye ödeme olarak işlenir.' : 'Kasaya gelir, cariye tahsilat olarak işlenir.') : 'Faturanın kalan tutarından düşülür.'} Kısmi tutar girebilirsiniz.</p>`,
     {kaydet: () => {
       const tutar = tutarOku($('#oTutar', m).value);
       if (!(tutar > 0)) { bildir('Geçerli bir tutar girin', true); return false; }
       if (tutar > kalan) { bildir('Tutar kalan borçtan büyük olamaz: ' + para(kalan), true); return false; }
-      f.odemeler.push({id: kimlik(), tarih: $('#oTarih', m).value || bugun(), tutar, odeme: $('input[name=oOdeme]:checked', m).value});
+      f.odemeler.push({id: kimlik(), tarih: $('#oTarih', m).value || bugun(), tutar, ...odemeOku('oOdeme', m)});
       faturaTuret(f); kaydet();
       bildir(f.odendi ? (alis ? 'Fatura tamamen ödendi' : 'Fatura tamamen tahsil edildi') : `Kalan ${para(faturaKalan(f))}`);
       setTimeout(ciz, 10);
@@ -2287,19 +2295,18 @@ function cariTahsilat(k) {
   const m = modal('Tahsilat', `
     <div class="tutar-kutu"><small>Alınan tutar</small><input id="cTutar" class="tutar-giris" inputmode="decimal" value="${tutarYaz(topKalan)}" autocomplete="off"></div>
     <div class="grup"><label class="f-satir"><span>Tarih</span><input type="date" id="cTarih" value="${bugun()}"></label></div>
-    <div class="bolum">Ödeme şekli</div>
-    <div class="segment">${Object.entries(odemeAdi).map(([v, a]) => `<label><input type="radio" name="cOdeme" value="${v}" ${v === 'havale' ? 'checked' : ''}><span>${a}</span></label>`).join('')}</div>
+    ${odemeAlani('cOdeme', 'havale', null, 'gelir')}
     <div class="bolum">Faturalara dağılım</div><div class="grup" id="cDagilim"></div>
     <p class="dipnot">Tutar en eski vadeli faturadan başlayarak kapatılır. Artan kısım cariye serbest tahsilat olarak yazılır.</p>`,
     {kaydet: () => {
       const tutar = tutarOku($('#cTutar', m).value);
       if (!(tutar > 0)) { bildir('Geçerli bir tutar girin', true); return false; }
-      const tarih = $('#cTarih', m).value || bugun(), odeme = $('input[name=cOdeme]:checked', m).value;
+      const tarih = $('#cTarih', m).value || bugun(), {odeme, hesapId} = odemeOku('cOdeme', m);
       let kal = tutar, n = 0;
-      for (const f of acik) { if (!kal) break; const p = Math.min(kal, faturaKalan(f)); f.odemeler.push({id: kimlik(), tarih, tutar: p, odeme}); faturaTuret(f); kal -= p; n++; }
+      for (const f of acik) { if (!kal) break; const p = Math.min(kal, faturaKalan(f)); f.odemeler.push({id: kimlik(), tarih, tutar: p, odeme, hesapId}); faturaTuret(f); kal -= p; n++; }
       if (kal > 0) {
         const hr = {id: kimlik(), kisiId: k.id, tur: 'tahsilat', tutar: kal, tarih, aciklama: 'Fazla tahsilat', olusturma: Date.now()};
-        if (modulAcik('kasa')) hr.islemId = islemOlustur({tur: 'gelir', tutar: kal, kategori: 'Tahsilat', tarih, odeme, aciklama: k.ad + ' · fazla tahsilat', hareketId: hr.id}).id;
+        if (modulAcik('kasa')) hr.islemId = islemOlustur({tur: 'gelir', tutar: kal, kategori: 'Tahsilat', tarih, odeme, hesapId, aciklama: k.ad + ' · fazla tahsilat', hareketId: hr.id}).id;
         D.hareketler.push(hr);
       }
       kaydet(); bildir(`${para(tutar)} tahsil edildi · ${n} fatura`); setTimeout(ciz, 10);
@@ -2417,6 +2424,233 @@ function faturaEkrani(id) {
 }
 function faturaYazdir(f) {
   yazdir(`${faturaTurAd(f)} ${f.no}`, faturaKagit(f));
+}
+
+/* ================= Banka, kasa ve kartlar =================
+   Her gelir/gider kaydı bir hesaba işlenir (hesapId). Hesap seçilmemiş eski kayıtlar ödeme şekline göre
+   varsayılan hesaba sayılır: nakit → kasa, havale → banka, kartla gelir → POS, kartla gider → kredi kartı.
+   Hesaplar arası para aktarımı (virman, kart borcu ödemesi) gelir/gider değildir, ayrı tutulur. */
+const HESAP_TUR = {
+  kasa: {ad: 'Nakit kasa', cogul: 'Kasalar', simge: 'para', renk: 'yesil', odeme: 'nakit'},
+  banka: {ad: 'Banka hesabı', cogul: 'Banka hesapları', simge: 'banka', renk: 'mavi', odeme: 'havale'},
+  kart: {ad: 'Kredi kartı', cogul: 'Kredi kartları', simge: 'kart', renk: 'turuncu', odeme: 'kart'},
+  pos: {ad: 'POS / sanal POS', cogul: 'POS hesapları', simge: 'kart', renk: 'nane', odeme: 'kart'}
+};
+const finansHesap = id => D.finansHesap.find(h => h.id === id);
+const aktifHesaplar = () => D.finansHesap.filter(h => h.aktif !== false);
+const hesapAcikMi = () => modulAcik('banka') && aktifHesaplar().length > 0;
+function varsayilanHesapId(odeme = 'nakit', tur = 'gider') {
+  const tip = odeme === 'nakit' ? 'kasa' : odeme === 'havale' ? 'banka' : tur === 'gelir' ? 'pos' : 'kart';
+  const l = aktifHesaplar(), v = D.finansAyar.varsayilan[tip];
+  if (v && l.some(h => h.id === v)) return v;
+  return (l.find(h => h.tur === tip) || (tip === 'pos' && l.find(h => h.tur === 'banka')) || (tip === 'kart' && l.find(h => h.tur === 'banka')) || l.find(h => h.tur !== 'kart') || l[0] || {}).id || null;
+}
+const islemHesapId = i => i.hesapId || (D.finansHesap.length ? varsayilanHesapId(i.odeme || 'nakit', i.tur) : null);
+const finHesapAdi = id => { const h = finansHesap(id); return h ? h.ad : ''; };
+function hesapHareketleri(h) {
+  const l = [], bas = h.acilisTarih || '';
+  for (const i of D.islemler) if (i.tarih >= bas && islemHesapId(i) === h.id)
+    l.push({tarih: i.tarih, olusturma: i.olusturma || 0, tutar: i.tur === 'gelir' ? i.tutar : -i.tutar, ad: i.aciklama || i.kategori, alt: i.kategori, islem: i});
+  for (const v of D.virmanlar) {
+    if (v.kaynak === h.id && v.tarih >= bas) l.push({tarih: v.tarih, olusturma: v.olusturma || 0, tutar: -v.tutar, ad: (finansHesap(v.hedef)?.tur === 'kart' ? 'Kart ödemesi · ' : 'Virman → ') + finHesapAdi(v.hedef), alt: v.aciklama, virman: v});
+    if (v.hedef === h.id && v.tarih >= bas) l.push({tarih: v.tarih, olusturma: v.olusturma || 0, tutar: v.tutar, ad: (h.tur === 'kart' ? 'Kart ödemesi · ' : 'Virman ← ') + finHesapAdi(v.kaynak), alt: v.aciklama, virman: v});
+  }
+  return l.sort((a, b) => a.tarih.localeCompare(b.tarih) || a.olusturma - b.olusturma);
+}
+const hesapBakiye = h => (h.acilis || 0) + hesapHareketleri(h).reduce((s, x) => s + x.tutar, 0);
+function finansOzet() {
+  let varlik = 0, kartBorc = 0;
+  for (const h of aktifHesaplar()) { const b = hesapBakiye(h); if (h.tur === 'kart') kartBorc += -b; else varlik += b; }
+  return {varlik, kartBorc, net: varlik - kartBorc};
+}
+/* Kredi kartının bir sonraki son ödeme tarihi */
+function kartSonOdeme(h) {
+  if (!h.sonOdemeGunu) return null;
+  const b = bugun(), ay = b.slice(0, 7);
+  for (const a of [ay, ayKaydir(ay, 1)]) { const t = `${a}-${iki(Math.min(h.sonOdemeGunu, ayinSonGunu(a)))}`; if (t >= b) return t; }
+  return null;
+}
+/* Formlarda ödeme alanı: hesap varsa hesap seçimi, yoksa eski nakit/kart/havale seçimi */
+function odemeAlani(ad, odeme = 'havale', hesapId = null, tur = 'gider', baslik = true) {
+  if (!hesapAcikMi()) return `${baslik ? '<div class="bolum">Ödeme şekli</div>' : ''}<div class="segment">${Object.entries(odemeAdi).map(([v, a]) => `<label><input type="radio" name="${ad}" value="${v}" ${v === odeme ? 'checked' : ''}><span>${a}</span></label>`).join('')}</div>`;
+  const sec = (hesapId && finansHesap(hesapId)) ? hesapId : varsayilanHesapId(odeme, tur);
+  const l = D.finansHesap.filter(h => h.aktif !== false || h.id === sec);
+  return `${baslik ? '<div class="bolum">Hesap</div>' : ''}<div class="grup"><label class="f-satir"><span>${tur === 'gelir' ? 'Giren hesap' : 'Çıkan hesap'}</span><select data-hesap="${ad}">${Object.entries(HESAP_TUR).map(([t, ht]) => {
+    const g = l.filter(h => h.tur === t); return g.length ? `<optgroup label="${esc(ht.cogul)}">${g.map(h => `<option value="${h.id}" ${h.id === sec ? 'selected' : ''}>${esc(h.ad)}</option>`).join('')}</optgroup>` : ''; }).join('')}</select></label></div>`;
+}
+function odemeOku(ad, m) {
+  const s = $(`[data-hesap="${ad}"]`, m);
+  if (s) { const h = finansHesap(s.value); return {hesapId: h.id, odeme: HESAP_TUR[h.tur].odeme}; }
+  return {odeme: $(`input[name="${ad}"]:checked`, m)?.value || 'nakit', hesapId: null};
+}
+const islemHesapAd = i => D.finansHesap.length && modulAcik('banka') ? finHesapAdi(islemHesapId(i)) : odemeAdi[i.odeme];
+
+function hesapSatiri(h) {
+  const b = hesapBakiye(h), ht = HESAP_TUR[h.tur], kart = h.tur === 'kart';
+  const so = kart && -b > 0 && kartSonOdeme(h), g = so ? gunFark(so) : null;
+  const alt = kart ? (so ? `Son ödeme ${tarihYaz(so)}${g <= 3 ? ` · ${g === 0 ? 'bugün' : g + ' gün'}` : ''}` : h.limit ? `Limit ${kisaPara(h.limit)}` : ht.ad) : [h.banka, h.iban ? '…' + h.iban.replace(/\s/g, '').slice(-4) : ''].filter(Boolean).join(' · ') || ht.ad;
+  return `<button class="hucre kareli" data-fhesap="${h.id}">${kare(ht.simge, h.aktif === false ? 'gri' : ht.renk)}<div class="ic"><b>${esc(h.ad)}${h.aktif === false ? '<span class="hap">kapalı</span>' : ''}</b><small class="${g !== null && g <= 3 ? 'gider' : ''}">${esc(alt)}</small></div>
+    <span class="tutar ${kart ? (b < 0 ? 'gider' : '') : b < 0 ? 'gider' : ''}">${kart ? para(Math.max(0, -b)) : para(b)}<small>${kart ? 'borç' : ''}</small></span>${CHEV}</button>`;
+}
+function bankaEkrani() {
+  let h = sayfa(modulAdi('banka'), {sag: artiBtn('ekleBtn', 'Yeni hesap')});
+  const o = finansOzet(), l = D.finansHesap;
+  h += `<div class="kart"><div class="k-ust">Kasa ve bankalardaki para</div><div class="dev">${para(o.varlik)}</div>
+      <div class="fo-alt" style="margin-top:10px"><div><small>Kredi kartı borcu</small><b class="${o.kartBorc > 0 ? 'gider' : ''}">${para(o.kartBorc)}</b></div><div style="text-align:right"><small>Net</small><b>${para(o.net)}</b></div></div></div>
+    ${l.length ? `<div class="btn-izgara"><button id="bVirman">${ikon('donustur')}Virman</button>${l.some(x => x.tur === 'kart' && x.aktif !== false) ? `<button id="bKartOde">${ikon('kart')}Kart öde</button>` : ''}<button id="bYeni">${ikon('arti')}Hesap ekle</button></div>` : ''}
+    ${Object.entries(HESAP_TUR).map(([t, ht]) => { const g = l.filter(x => x.tur === t).sort((a, b) => (a.aktif === false) - (b.aktif === false) || a.ad.localeCompare(b.ad, 'tr')); return g.length ? `<div class="bolum">${esc(ht.cogul)}</div><div class="grup">${g.map(hesapSatiri).join('')}</div>` : ''; }).join('')}
+    ${l.length ? '<p class="dipnot">Gelir ve gider kayıtları seçilen hesaba işlenir. Hesap seçilmemiş eski kayıtlar ödeme şekline göre varsayılan hesaba sayılır.</p>'
+      : bosDurum('banka', 'mavi', 'Henüz hesap yok', 'Kasanızı, banka hesaplarınızı, kredi kartlarınızı ve POS hesabınızı ekleyin; her tahsilat ve ödeme ilgili hesaba işlensin.', `<button class="btn kucuk" id="bosEkle">${ikon('arti')} Hesap ekle</button>`)}`;
+  $('#icerik').innerHTML = h;
+  $('#ekleBtn').onclick = () => finansHesapFormu();
+  for (const id of ['bYeni', 'bosEkle']) if ($('#' + id)) $('#' + id).onclick = () => finansHesapFormu();
+  if ($('#bVirman')) $('#bVirman').onclick = () => virmanFormu();
+  if ($('#bKartOde')) $('#bKartOde').onclick = () => { const k = aktifHesaplar().filter(x => x.tur === 'kart').sort((a, b) => hesapBakiye(a) - hesapBakiye(b))[0]; virmanFormu(null, {hedef: k.id}); };
+  $$('[data-fhesap]').forEach(b => b.onclick = () => git('banka/' + b.dataset.fhesap));
+}
+function finansHesapFormu(h, varsayilanTur) {
+  const yeni = !h;
+  const x = h ? {...h} : {tur: varsayilanTur || (D.finansHesap.some(y => y.tur === 'kasa') ? 'banka' : 'kasa'), ad: '', banka: '', sube: '', iban: '', acilis: 0, acilisTarih: bugun(), limit: 0, kesimGunu: '', sonOdemeGunu: '', aktif: true};
+  const m = modal(yeni ? 'Yeni hesap' : 'Hesabı düzenle', `
+    <div class="segment" id="fhTur">${Object.entries(HESAP_TUR).map(([t, ht]) => `<label><input type="radio" name="fhTur" value="${t}" ${x.tur === t ? 'checked' : ''}><span>${esc({kasa: 'Kasa', banka: 'Banka', kart: 'Kart', pos: 'POS'}[t])}</span></label>`).join('')}</div>
+    <div class="grup">
+      <label class="f-satir sol"><input type="text" id="fhAd" value="${esc(x.ad)}" placeholder="Hesap adı (ör. İş Bankası TL, Merkez kasa)"></label>
+      <label class="f-satir sol" data-tip="banka kart pos"><input type="text" id="fhBanka" value="${esc(x.banka)}" placeholder="Banka"></label>
+      <label class="f-satir sol" data-tip="banka"><input type="text" id="fhSube" value="${esc(x.sube)}" placeholder="Şube"></label>
+      <label class="f-satir sol" data-tip="banka pos"><input type="text" id="fhIban" value="${esc(x.iban)}" placeholder="IBAN / hesap no"></label>
+      <label class="f-satir sol" data-tip="kart"><input type="text" id="fhKartNo" value="${esc(x.kartNo)}" placeholder="Kartın son 4 hanesi" inputmode="numeric" maxlength="4"></label>
+    </div>
+    <div class="grup">
+      <label class="f-satir"><span id="fhAcilisAd">Açılış bakiyesi</span><input id="fhAcilis" inputmode="decimal" placeholder="0 ₺" value="${tutarYaz(Math.abs(x.acilis || 0))}"></label>
+      <label class="f-satir"><span>Açılış tarihi</span><input type="date" id="fhAcilisTarih" value="${x.acilisTarih || ''}"></label>
+      <label class="f-satir" data-tip="kart"><span>Kart limiti</span><input id="fhLimit" inputmode="decimal" placeholder="0 ₺" value="${tutarYaz(x.limit)}"></label>
+      <label class="f-satir" data-tip="kart"><span>Hesap kesim günü</span><input id="fhKesim" inputmode="numeric" placeholder="ör. 15" value="${esc(x.kesimGunu)}"></label>
+      <label class="f-satir" data-tip="kart"><span>Son ödeme günü</span><input id="fhSonOdeme" inputmode="numeric" placeholder="ör. 25" value="${esc(x.sonOdemeGunu)}"></label>
+    </div>
+    <p class="dipnot" id="fhNot"></p>
+    <div class="grup">
+      <label class="f-satir"><span style="flex:1" id="fhVarsAd">Varsayılan hesap</span>${anahtar('fhVars', yeni ? !aktifHesaplar().some(y => y.tur === x.tur) : D.finansAyar.varsayilan[x.tur] === x.id)}</label>
+      ${yeni ? '' : `<label class="f-satir"><span style="flex:1">Hesap kullanımda</span>${anahtar('fhAktif', x.aktif !== false)}</label>`}
+    </div>
+    ${yeni ? '' : `<div class="grup"><button class="hucre tehlike" id="fhSil">Hesabı sil</button></div>`}`, {kaydet: () => {
+      const tur = $('input[name=fhTur]:checked', m).value;
+      const ad = $('#fhAd', m).value.trim() || ({kasa: 'Kasa', banka: $('#fhBanka', m).value.trim() || 'Banka', kart: ($('#fhBanka', m).value.trim() + ' kredi kartı').trim(), pos: 'POS'})[tur];
+      const acilis = tutarOku($('#fhAcilis', m).value) || 0;
+      const kayit = {...x, tur, ad, banka: $('#fhBanka', m).value.trim(), sube: $('#fhSube', m).value.trim(), iban: $('#fhIban', m).value.trim(), kartNo: $('#fhKartNo', m).value.trim(),
+        acilis: tur === 'kart' ? -acilis : acilis, acilisTarih: $('#fhAcilisTarih', m).value || '', limit: tutarOku($('#fhLimit', m).value) || 0,
+        kesimGunu: Math.min(31, parseInt($('#fhKesim', m).value) || 0) || '', sonOdemeGunu: Math.min(31, parseInt($('#fhSonOdeme', m).value) || 0) || '',
+        aktif: yeni ? true : $('#fhAktif', m).checked};
+      if (yeni) { kayit.id = kimlik(); kayit.olusturma = Date.now(); D.finansHesap.push(kayit); }
+      else D.finansHesap[D.finansHesap.findIndex(y => y.id === x.id)] = kayit;
+      if ($('#fhVars', m).checked) D.finansAyar.varsayilan[tur] = kayit.id;
+      else if (D.finansAyar.varsayilan[tur] === kayit.id) delete D.finansAyar.varsayilan[tur];
+      kaydet(); bildir('Kaydedildi');
+      setTimeout(() => yeni ? git('banka/' + kayit.id) : ciz(), 10);
+    }, kaydetAd: yeni ? 'Ekle' : 'Kaydet'});
+  const turGoster = () => {
+    const t = $('input[name=fhTur]:checked', m).value;
+    $$('[data-tip]', m).forEach(el => el.classList.toggle('gizli', !el.dataset.tip.split(' ').includes(t)));
+    $('#fhAcilisAd', m).textContent = t === 'kart' ? 'Güncel kart borcu' : 'Açılış bakiyesi';
+    $('#fhVarsAd', m).textContent = {kasa: 'Nakit işlemlerde varsayılan', banka: 'Havale/EFT işlemlerinde varsayılan', kart: 'Kartla ödemelerde varsayılan', pos: 'Kartla tahsilatlarda varsayılan'}[t];
+    $('#fhNot', m).textContent = t === 'kart' ? 'Kartla yapılan harcamalar borcu artırır; bankadan kart ödemesi virman olarak girilir ve borcu azaltır. Son ödeme gününden önce özet ekranında hatırlatılır.'
+      : 'Açılış tarihinden önceki gelir/gider kayıtları bu hesaba sayılmaz; bakiye açılış bakiyesinden başlar.';
+  };
+  turGoster();
+  $$('input[name=fhTur]', m).forEach(r => r.onchange = turGoster);
+  if (yeni) setTimeout(() => $('#fhAd', m).focus(), 320);
+  if (!yeni) $('#fhSil', m).onclick = async () => {
+    const n = D.islemler.filter(i => i.hesapId === x.id).length, v = D.virmanlar.filter(y => y.kaynak === x.id || y.hedef === x.id).length;
+    if (!await onay(`${x.ad} silinsin mi?`, `${n} gelir/gider kaydı silinmez, hesap bağlantısı kalkar. ${v ? v + ' virman kaydı silinir.' : ''} Kullanmayacaksanız silmek yerine "Hesap kullanımda" anahtarını kapatabilirsiniz.`)) return;
+    for (const i of D.islemler) if (i.hesapId === x.id) delete i.hesapId;
+    for (const f of D.faturalar) for (const o of f.odemeler || []) if (o.hesapId === x.id) delete o.hesapId;
+    for (const o of D.personelOdeme) if (o.hesapId === x.id) delete o.hesapId;
+    D.virmanlar = D.virmanlar.filter(y => y.kaynak !== x.id && y.hedef !== x.id);
+    D.finansHesap = D.finansHesap.filter(y => y.id !== x.id);
+    for (const t in D.finansAyar.varsayilan) if (D.finansAyar.varsayilan[t] === x.id) delete D.finansAyar.varsayilan[t];
+    kaydet(); bildir('Silindi'); git('banka', true);
+  };
+}
+function virmanFormu(v, on = {}) {
+  const yeni = !v, l = D.finansHesap.filter(h => h.aktif !== false || (v && (h.id === v.kaynak || h.id === v.hedef)));
+  if (l.length < 2) { bildir('Virman için en az iki hesap gerekli', true); return; }
+  const x = v ? {...v} : {kaynak: on.kaynak || (l.find(h => h.tur === 'banka') || l.find(h => h.tur !== 'kart') || l[0]).id, hedef: on.hedef || '', tutar: 0, tarih: bugun(), aciklama: ''};
+  if (!x.hedef) x.hedef = (l.find(h => h.id !== x.kaynak && h.tur !== 'kart') || l.find(h => h.id !== x.kaynak)).id;
+  if (yeni && on.hedef && finansHesap(on.hedef)?.tur === 'kart') x.tutar = Math.max(0, -hesapBakiye(finansHesap(on.hedef)));
+  const sec = (id, deger) => `<select id="${id}">${l.map(h => `<option value="${h.id}" ${h.id === deger ? 'selected' : ''}>${esc(h.ad)} · ${para(h.tur === 'kart' ? -hesapBakiye(h) : hesapBakiye(h))}${h.tur === 'kart' ? ' borç' : ''}</option>`).join('')}</select>`;
+  const m = modal(yeni ? (finansHesap(x.hedef)?.tur === 'kart' && on.hedef ? 'Kart borcu öde' : 'Virman') : 'Virmanı düzenle', `
+    <div class="tutar-kutu"><small>Tutar</small><input id="vTutar" class="tutar-giris" inputmode="decimal" placeholder="0 ₺" value="${tutarYaz(x.tutar)}" autocomplete="off"></div>
+    <div class="grup">
+      <label class="f-satir"><span>Çıkan hesap</span>${sec('vKaynak', x.kaynak)}</label>
+      <label class="f-satir"><span>Giren hesap</span>${sec('vHedef', x.hedef)}</label>
+      <label class="f-satir"><span>Tarih</span><input type="date" id="vTarih" value="${x.tarih}"></label>
+      <label class="f-satir sol"><input type="text" id="vAcik" value="${esc(x.aciklama)}" placeholder="Açıklama (isteğe bağlı)"></label>
+    </div>
+    <p class="dipnot">Virman gelir ya da gider değildir; yalnızca hesap bakiyelerini değiştirir. Kredi kartına yapılan virman kart borcunu azaltır.</p>
+    ${yeni ? '' : `<div class="grup"><button class="hucre tehlike" id="vSil">Virmanı sil</button></div>`}`, {kaydet: () => {
+      const tutar = tutarOku($('#vTutar', m).value);
+      if (!(tutar > 0)) { bildir('Geçerli bir tutar girin', true); return false; }
+      const kaynak = $('#vKaynak', m).value, hedef = $('#vHedef', m).value;
+      if (kaynak === hedef) { bildir('Çıkan ve giren hesap aynı olamaz', true); return false; }
+      const kayit = {...x, tutar, kaynak, hedef, tarih: $('#vTarih', m).value || bugun(), aciklama: $('#vAcik', m).value.trim()};
+      if (yeni) { kayit.id = kimlik(); kayit.olusturma = Date.now(); D.virmanlar.push(kayit); }
+      else D.virmanlar[D.virmanlar.findIndex(y => y.id === x.id)] = kayit;
+      kaydet(); bildir(yeni ? 'Virman kaydedildi' : 'Güncellendi'); setTimeout(ciz, 10);
+    }, kaydetAd: yeni ? 'Aktar' : 'Kaydet'});
+  if (yeni && !x.tutar) setTimeout(() => $('#vTutar', m).focus(), 320);
+  if (!yeni) $('#vSil', m).onclick = async () => {
+    if (!await onay('Virman silinsin mi?', `${para(x.tutar)} · ${finHesapAdi(x.kaynak)} → ${finHesapAdi(x.hedef)}`)) return;
+    D.virmanlar = D.virmanlar.filter(y => y.id !== x.id); kaydet(); bildir('Silindi'); kapat(); setTimeout(ciz, 10);
+  };
+}
+function finansHesapEkrani(id) {
+  const fh = finansHesap(id);
+  if (!fh) return git('banka', true);
+  const ht = HESAP_TUR[fh.tur], kart = fh.tur === 'kart', b = hesapBakiye(fh);
+  let h = sayfa(fh.ad, {geri: 'banka', geriAd: modulAdi('banka'), sag: `<button class="nav-btn" id="fhDuzenle">Düzenle</button>`});
+  const har = hesapHareketleri(fh), ay = bugun().slice(0, 7);
+  let kal = fh.acilis || 0;
+  const satirlar = har.map(x => { kal += x.tutar; return {...x, kal}; }).reverse();
+  const buAy = har.filter(x => x.tarih.startsWith(ay)), giren = buAy.filter(x => x.tutar > 0).reduce((s, x) => s + x.tutar, 0), cikan = buAy.filter(x => x.tutar < 0).reduce((s, x) => s - x.tutar, 0);
+  const so = kart && kartSonOdeme(fh), g = so ? gunFark(so) : null;
+  h += `<div class="kart" style="text-align:center">${kare(ht.simge, ht.renk, 'buyuk')}
+      <div class="k-ust" style="margin-top:8px">${kart ? 'Güncel kart borcu' : 'Bakiye'}</div>
+      <div class="dev ${kart ? (-b > 0 ? 'gider' : '') : b < 0 ? 'gider' : ''}">${para(kart ? Math.max(0, -b) : b)}</div>
+      ${kart && fh.limit ? `<div class="k-alt">Kullanılabilir limit ${para(fh.limit + b)}</div>` : ''}
+      ${so && -b > 0 ? `<div class="k-alt ${g <= 3 ? 'gider' : ''}">Son ödeme ${esc(tarihYaz(so, true))} · ${g === 0 ? 'bugün' : g + ' gün kaldı'}</div>` : ''}
+      <div class="fo-alt" style="margin-top:12px;text-align:left"><div><small>Bu ay giren</small><b class="gelir">${para(giren)}</b></div><div style="text-align:right"><small>Bu ay çıkan</small><b>${para(cikan)}</b></div></div></div>
+    <div class="btn-izgara"><button id="fhGelir">${ikon('arti')}${kart ? 'İade' : 'Para girişi'}</button><button id="fhGider">${ikon('eksi')}${kart ? 'Harcama' : 'Para çıkışı'}</button>
+      ${aktifHesaplar().length > 1 ? `<button id="fhVirman">${ikon('donustur')}${kart ? 'Borç öde' : 'Virman'}</button>` : ''}<button id="fhEkstre">${ikon('yazici')}Ekstre</button></div>
+    <div class="grup">
+      <div class="hucre"><div class="ic"><b>Tür</b></div><span class="deger">${esc(ht.ad)}</span></div>
+      ${fh.banka ? `<div class="hucre"><div class="ic"><b>Banka</b></div><span class="deger">${esc([fh.banka, fh.sube].filter(Boolean).join(' · '))}</span></div>` : ''}
+      ${fh.iban ? `<button class="hucre" id="fhIban"><div class="ic"><b>IBAN</b><small>${esc(fh.iban)}</small></div><span class="deger">Kopyala</span></button>` : ''}
+      ${kart && fh.kartNo ? `<div class="hucre"><div class="ic"><b>Kart</b></div><span class="deger">•••• ${esc(fh.kartNo)}</span></div>` : ''}
+      ${kart && fh.kesimGunu ? `<div class="hucre"><div class="ic"><b>Kesim / son ödeme</b></div><span class="deger">Her ayın ${fh.kesimGunu}. / ${fh.sonOdemeGunu || '—'}. günü</span></div>` : ''}
+      <div class="hucre"><div class="ic"><b>${kart ? 'Açılış borcu' : 'Açılış bakiyesi'}</b><small>${fh.acilisTarih ? esc(tarihYaz(fh.acilisTarih, true)) : 'tüm kayıtlar'}</small></div><span class="deger">${para(Math.abs(fh.acilis || 0))}</span></div>
+    </div>
+    <div class="bolum">Hareketler</div>
+    ${satirlar.length ? `<div class="grup">${satirlar.slice(0, 150).map(x => `<button class="hucre kareli" ${x.islem ? `data-islem="${x.islem.id}"` : `data-virman="${x.virman.id}"`}>${x.virman ? kare('donustur', 'mavi') : kare(...kategoriSimge(x.islem.kategori, x.islem.tur))}
+        <div class="ic"><b>${esc(x.ad)}</b><small>${esc([tarihYaz(x.tarih, true), x.virman ? x.alt : x.islem.aciklama ? x.alt : ''].filter(Boolean).join(' · '))}</small></div>
+        <span class="tutar ${x.tutar > 0 ? 'gelir' : ''}">${x.tutar > 0 ? '+' : '−'}${para(Math.abs(x.tutar))}<small>${para(kart ? -x.kal : x.kal)}</small></span></button>`).join('')}</div>`
+      : bosDurum(ht.simge, ht.renk, 'Hareket yok', 'Bu hesaba işlenen gelir, gider ve virmanlar burada görünür.')}`;
+  $('#icerik').innerHTML = h;
+  $('#fhDuzenle').onclick = () => finansHesapFormu(fh);
+  $('#fhGelir').onclick = () => islemFormu(null, 'gelir', fh.id);
+  $('#fhGider').onclick = () => islemFormu(null, 'gider', fh.id);
+  if ($('#fhVirman')) $('#fhVirman').onclick = () => virmanFormu(null, kart ? {hedef: fh.id} : {kaynak: fh.id});
+  if ($('#fhIban')) $('#fhIban').onclick = () => { try { navigator.clipboard.writeText(fh.iban.replace(/\s/g, '')); bildir('IBAN kopyalandı'); } catch (e) {} };
+  $('#fhEkstre').onclick = () => yazdir(`${fh.ad} ekstre`, hesapEkstreKagit(fh));
+  islemTiklari();
+  $$('[data-virman]').forEach(btn => btn.onclick = () => virmanFormu(D.virmanlar.find(v => v.id === btn.dataset.virman)));
+}
+function hesapEkstreKagit(fh) {
+  const kart = fh.tur === 'kart';
+  let kal = fh.acilis || 0, gi = 0, ci = 0;
+  const satir = hesapHareketleri(fh).map(x => { kal += x.tutar; x.tutar > 0 ? gi += x.tutar : ci -= x.tutar;
+    return `<tr><td style="white-space:nowrap">${esc(tarihYaz(x.tarih, true))}</td><td>${esc(x.ad)}${x.alt && x.alt !== x.ad ? ' · ' + esc(x.alt) : ''}</td><td class="sg">${x.tutar > 0 ? para(x.tutar) : ''}</td><td class="sg">${x.tutar < 0 ? para(-x.tutar) : ''}</td><td class="sg">${para(kart ? -kal : kal)}</td></tr>`; }).join('');
+  return `<div class="kagit">${firmaBaslik(kart ? 'KREDİ KARTI EKSTRESİ' : 'HESAP EKSTRESİ', `${esc(fh.ad)}${fh.iban ? '<br>' + esc(fh.iban) : ''}<br>Hazırlanma: ${esc(tarihYaz(bugun(), true))}`)}
+    <div class="kutular"><div><small>${kart ? 'Açılış borcu' : 'Açılış'}</small><b>${para(Math.abs(fh.acilis || 0))}</b></div><div><small>Giren</small><b>${para(gi)}</b></div><div><small>Çıkan</small><b>${para(ci)}</b></div><div><small>${kart ? 'Güncel borç' : 'Bakiye'}</small><b>${para(kart ? -kal : kal)}</b></div></div>
+    <table style="font-size:11px"><thead><tr><th>Tarih</th><th>Açıklama</th><th class="sg">Giren</th><th class="sg">Çıkan</th><th class="sg">${kart ? 'Borç' : 'Bakiye'}</th></tr></thead><tbody>${satir || '<tr><td colspan="5">Hareket yok</td></tr>'}</tbody></table></div>`;
 }
 
 /* ================= Servis / İş emri =================
@@ -3074,7 +3308,7 @@ function maasHesaplayici() {
 function personelOdemeEkle(p, o, kasaya) {
   const kayit = {id: kimlik(), personelId: p.id, olusturma: Date.now(), ...o};
   if (kasaya && modulAcik('kasa') && kayit.tutar > 0) {
-    kayit.islemId = islemOlustur({tur: 'gider', tutar: kayit.tutar, tarih: kayit.tarih, odeme: kayit.odeme || 'havale',
+    kayit.islemId = islemOlustur({tur: 'gider', tutar: kayit.tutar, tarih: kayit.tarih, odeme: kayit.odeme || 'havale', hesapId: kayit.hesapId || null,
       kategori: kategoriBul(T().giderKat, /personel|maaş/i, 'Personel'),
       aciklama: `${p.ad} · ${ODEME_TUR[kayit.tur]} ${ayKisa(kayit.donem)}${kayit.aciklama ? ' · ' + kayit.aciklama : ''}`,
       kaynak: {tip: 'personel', id: kayit.id, ust: p.id}}).id;
@@ -3185,11 +3419,11 @@ function personelOdemeFormu(p, tur) {
       <label class="f-satir"><span>Ödeme tarihi</span><input type="date" id="oTarih" value="${bugun()}"></label>
       <label class="f-satir sol"><input type="text" id="oAcik" placeholder="Açıklama (isteğe bağlı)"></label>
     </div>
-    <div class="segment">${Object.entries(odemeAdi).map(([v, a]) => `<label><input type="radio" name="oOdeme" value="${v}" ${v === 'havale' ? 'checked' : ''}><span>${a}</span></label>`).join('')}</div>
+    ${odemeAlani('oOdeme', 'havale', null, 'gider', false)}
     ${kasa ? `<div class="grup"><label class="f-satir"><span style="flex:1">Kasaya gider yaz</span>${anahtar('oKasa', true)}</label></div>` : ''}`, {kaydet: () => {
       const tutar = tutarOku($('#oTutar', m).value);
       if (!(tutar > 0)) { bildir('Geçerli bir tutar girin', true); return false; }
-      personelOdemeEkle(p, {tur, tutar, donem: $('#oDonem', m).value || ay, tarih: $('#oTarih', m).value || bugun(), odeme: $('input[name=oOdeme]:checked', m).value, aciklama: $('#oAcik', m).value.trim()}, kasa && $('#oKasa', m).checked);
+      personelOdemeEkle(p, {tur, tutar, donem: $('#oDonem', m).value || ay, tarih: $('#oTarih', m).value || bugun(), ...odemeOku('oOdeme', m), aciklama: $('#oAcik', m).value.trim()}, kasa && $('#oKasa', m).checked);
       kaydet(); bildir(ODEME_TUR[tur] + ' kaydedildi');
       setTimeout(ciz, 10);
     }, kaydetAd: 'Öde'});
@@ -3799,6 +4033,14 @@ function ornekDoldur() {
     sv({tarih: bugun(), kisiId: c1.id, ekipmanId: e2.id, tekne: e2.tekne, liman: e2.liman, servisYeri: 'Ataköy Marina', calismaSaati: 1880, turler: ['ariza', 'acil'],
       sikayet: 'Jeneratör yük altında stop ediyor, düşük yağ basıncı alarmı.', islemler: 'Yağ basınç sensörü arızalı bulundu. Yeni sensör sipariş edildi.',
       iscilik: [{teknisyen: 'Berat Usta', tarih: bugun(), is: 'Arıza tespiti', bas: '10:00', bit: '12:00', sure: 2}], teslim: 'parca', durum: 'parca'});
+  }
+  {
+    const hk = (tur, ad, o) => { const x = {id: kimlik(), tur, ad, banka: '', sube: '', iban: '', acilis: 0, acilisTarih: gun(5, 1), limit: 0, kesimGunu: '', sonOdemeGunu: '', aktif: true, olusturma: Date.now(), ...o}; D.finansHesap.push(x); D.finansAyar.varsayilan[tur] = x.id; return x; };
+    const ks = hk('kasa', 'Merkez kasa', {acilis: tl(25000)}), bn = hk('banka', 'İş Bankası TL', {banka: 'İş Bankası', sube: 'Tuzla', iban: 'TR00 0006 4000 0000 0000 0000 00', acilis: tl(180000)});
+    const kk = hk('kart', 'Şirket kartı', {banka: 'Garanti BBVA', kartNo: '4821', limit: tl(150000), kesimGunu: 18, sonOdemeGunu: +bugun().slice(8) <= 25 ? Math.min(28, +bugun().slice(8) + 4) : 28});
+    hk('pos', 'Atölye POS', {banka: 'İş Bankası'});
+    for (let i = 4; i >= 1; i--) D.virmanlar.push({id: kimlik(), kaynak: bn.id, hedef: kk.id, tutar: tl(10500), tarih: gun(i, 27), aciklama: 'Kart ekstre ödemesi', olusturma: Date.now()});
+    D.virmanlar.push({id: kimlik(), kaynak: ks.id, hedef: bn.id, tutar: tl(15000), tarih: gun(1, 20), aciklama: 'Kasadan bankaya', olusturma: Date.now()});
   }
   D.personeller.push({id: kimlik(), ad: 'Berat Usta', gorev: 'Teknisyen', maas: tl(40000), ucretTip: 'net', iseGiris: gun(5, 1).slice(0, 8) + '01', cikis: '', aktif: true, olusturma: Date.now()},
     {id: kimlik(), ad: 'Selin Kaya', gorev: 'Ön muhasebe', maas: tl(36000), ucretTip: 'net', iseGiris: '2024-09-01', cikis: '', aktif: true, olusturma: Date.now()});
