@@ -35,6 +35,10 @@ Kasa, banka hesapları, kredi kartları ve POS hesapları ayrı hesaplar olarak 
 
 Ürün kartında parça no (OEM), marka, grup, muadil parça noları, uyumlu motor, raf yeri, barkod, tedarikçi, kritik seviye ve sipariş miktarı tutulur; arama bunların hepsinde çalışır. Stok değeri fiyatlı girişlerden hesaplanan ağırlıklı ortalama maliyetle bulunur. Sayım ekranı sayılan miktarla kayıt arasındaki farkı sayım hareketi olarak yazar. Stok listesi (raf ve değerle) ve kritik seviyedeki ürünler için tedarikçili sipariş listesi PDF alınır; ürün ekranından o ürünle alış faturası açılır.
 
+## Detaylı cari
+
+Şirket ve küçük işletme profillerinde cari müşteri, tedarikçi ya da ikisi olarak işaretlenir; liste türe göre süzülür, alacak ve borç toplamları ayrı görünür. Cari kartında vergi dairesi, adres, ikinci telefon, e-posta, IBAN, birden fazla yetkili kişi (görev, telefon, e-posta), vade günü, risk limiti ve iskonto tutulur. Vade günü faturaların vade tarihini doldurur; risk limiti aşılınca fatura keserken uyarı verilir. Cari ekranında bu yılki satış/alış, son tahsilat, risk kullanımı, tekne ve makineler, servis geçmişi, faturalar ve hareketler birlikte görünür.
+
 ## Dosyalar
 
 - `web/index.html`: uygulamanın tamamı (HTML + CSS + JS). Tarayıcıda doğrudan açılabilir.
