@@ -1149,7 +1149,7 @@ select.secim{height:38px;border:1px solid var(--kenar);border-radius:var(--r,6px
 
 <script>
 'use strict';
-const VERSIYON = '2.6.0';
+const VERSIYON = '2.6.1';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -5878,7 +5878,7 @@ function ortakKurFormu() {
       if (ortakDurum.hata) throw new Error(ortakDurum.hata);
       kapat(); bildir('Ortak veritabanı kuruldu');
       ciz();
-      setTimeout(() => baglantiKoduGoster(), 350);
+      if (o.p !== ORTAK_VARSAYILAN.p) setTimeout(() => baglantiKoduGoster(), 350);
     } catch (x) {
       const g = ortak(); if (g && g.kurulum) ortakYaz(null);
       hata(x.message); calisiyor = false; b.disabled = false; b.textContent = 'Kur ve verileri yükle';
@@ -5894,7 +5894,7 @@ function baglantiKoduGoster() {
   modal('Bağlantı kodu', `<p class="dipnot" style="margin-top:0">Diğer cihazda PowerServ+ > Ayarlar > Ortak veritabanı > <b>Mevcut firmaya bağlan</b> deyip bu kodu yapıştırın. Giriş için o kişiyi önce <b>Kullanıcılar</b>'dan ekleyin.</p>
     <div class="grup"><textarea class="kod-alan" readonly rows="4">${esc(k)}</textarea></div>
     <button class="btn" id="bkKopya">Kodu kopyala</button>
-    <p class="dipnot">Kod tek başına giriş sağlamaz; e-posta ve şifre de gerekir.</p>`);
+    <p class="dipnot" style="margin-top:14px">Kod tek başına giriş sağlamaz; e-posta ve şifre de gerekir.</p>`);
   $('#bkKopya').onclick = () => metinKopyala(k, 'Bağlantı kodu kopyalandı');
 }
 function ortakKatilFormu() {
@@ -5957,7 +5957,7 @@ function ortakAyarHtml() {
       <div class="hucre kareli">${kare('kisi', 'mavi')}<div class="ic"><b>${esc(s?.ad || s?.eposta || '')}</b><small>${esc(s?.eposta || '')} · ${esc(o.firmaAd || o.f)}</small></div><span class="hap mavi">${esc(ROLLER[r]?.ad || '')}</span></div>
       <button class="hucre kareli" id="ortakSimdi">${kare('donustur', 'nane')}<div class="ic"><b>Şimdi eşitle</b><small class="ortak-durum">${esc(ortakDurumMetni())}</small></div>${CHEV}</button>
       ${r === 'yonetici' ? `<button class="hucre kareli" id="ortakKullanici">${kare('kisiler', 'indigo')}<div class="ic"><b>Kullanıcılar ve yetkiler</b><small>Kullanıcı ekle, rol ver, erişimi kapat</small></div>${CHEV}</button>
-      <button class="hucre kareli" id="ortakKod">${kare('kilit', 'mor')}<div class="ic"><b>Bağlantı kodu</b><small>Yeni cihazı firmaya bağlamak için</small></div>${CHEV}</button>` : ''}
+      ${o.p === ORTAK_VARSAYILAN.p ? '' : `<button class="hucre kareli" id="ortakKod">${kare('kilit', 'mor')}<div class="ic"><b>Bağlantı kodu</b><small>Yeni cihazı firmaya bağlamak için</small></div>${CHEV}</button>`}` : ''}
       ${r === 'yonetici' || r === 'muhasebe' ? `<button class="hucre kareli" id="ortakLog">${kare('liste', 'turuncu')}<div class="ic"><b>İşlem kaydı</b><small>Kim, ne zaman, neyi değiştirdi</small></div>${CHEV}</button>` : ''}
       ${r === 'yonetici' ? `<button class="hucre kareli" id="ortakKural">${kare('dosya', 'gri')}<div class="ic"><b>Güvenlik kuralları</b><small>Firebase'e yapıştırılacak metin</small></div>${CHEV}</button>` : ''}
       <button class="hucre kareli" id="ortakCikis">${kare('cikis', 'gri')}<div class="ic"><b>Oturumu kapat</b></div>${CHEV}</button>
@@ -5978,10 +5978,10 @@ function ortakAyarBagla() {
 async function kullanicilarEkrani() {
   if (ortakRol() !== 'yonetici') return git('ayarlar', true);
   const o = ortak();
-  $('#icerik').innerHTML = sayfa('Kullanıcılar', {geri: 'ayarlar', geriAd: 'Ayarlar'}) + `<div class="yan-arac"><button id="kYeni">${ikon('arti')}Kullanıcı ekle</button><button id="kKod">${ikon('kilit')}Bağlantı kodu</button></div><div id="kListe"><p class="soluk">Yükleniyor…</p></div>`;
+  $('#icerik').innerHTML = sayfa('Kullanıcılar', {geri: 'ayarlar', geriAd: 'Ayarlar'}) + `<div class="yan-arac"><button id="kYeni">${ikon('arti')}Kullanıcı ekle</button>${o.p === ORTAK_VARSAYILAN.p ? '' : `<button id="kKod">${ikon('kilit')}Bağlantı kodu</button>`}</div><div id="kListe"><p class="soluk">Yükleniyor…</p></div>`;
   yanDuzen();
   $('#kYeni').onclick = () => kullaniciFormu(null, o);
-  $('#kKod').onclick = baglantiKoduGoster;
+  if ($('#kKod')) $('#kKod').onclick = baglantiKoduGoster;
   let l;
   try { const r = await ortakIstek(o, 'GET', fsUrl(o, '/uyeler') + '?pageSize=300'); l = (r?.documents || []).map(fsOku); }
   catch (e) { if ($('#kListe')) $('#kListe').innerHTML = `<p class="gider">${esc(e.message)}</p>`; return; }
