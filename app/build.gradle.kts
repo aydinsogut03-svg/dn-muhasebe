@@ -10,8 +10,8 @@ android {
         applicationId = "com.dnmarine.muhasebe"
         minSdk = 26
         targetSdk = 35
-        versionCode = 21
-        versionName = "2.2.0"
+        versionCode = 22
+        versionName = "2.3.0"
     }
 
     // Sabit debug anahtarı: her CI derlemesi aynı imzayı taşır, yeni APK eskisinin üzerine kurulur (veriler korunur).
