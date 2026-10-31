@@ -59,7 +59,7 @@ Raporlar ekranında dört sekme vardır. Gelir-gider: dönem özeti, 12 aylık g
 
 Veriler cihazda (localStorage) saklanır; ortak veritabanı kurulmadıkça internete gönderilmez. Her profil ayrı bir hesaptır: profil değiştirince o profilin hesabına geçilir, yoksa boş hesap açılır. Her hesabın verisi ayrı anahtarda tutulur (`dnmuhasebe.v1.<hesap>`), hesap listesi `dnmuhasebe.hesaplar` içindedir. Yedek yalnızca açık hesabı içerir. Ayarlar > Yedekleme ile JSON yedeği alınıp geri yüklenebilir; Android'de yedek `İndirilenler/PowerServ+` klasörüne yazılır.
 
-## Ortak veritabanı (2.6)
+## Ortak veritabanı (2.6, 2.7)
 
 Masaüstü ve telefonlar aynı firmaya bağlanıp aynı veriyi kullanır. Altyapı ücretsiz başlayan bir Firebase projesidir (Authentication + Firestore); uygulama Firebase'in REST uç noktalarıyla konuşur, ek kütüphane yüklemez.
 
@@ -67,6 +67,13 @@ Masaüstü ve telefonlar aynı firmaya bağlanıp aynı veriyi kullanır. Altyap
 - **Kullanıcılar ve yetkiler:** her kullanıcı kendi e-posta ve şifresiyle girer. Roller: Yönetici (her şey ve kullanıcı yönetimi), Muhasebe (tüm modüller), Servis (servis, stok, cari, fatura/teklif), İzleyici (yalnızca görüntüler). Yetkiler hem uygulamada hem `firestore.rules` güvenlik kurallarında uygulanır.
 - **İşlem kaydı:** her ekleme, değişiklik ve silme kim/ne zaman/hangi kayıt olarak `log` altına yazılır; kurallar gereği silinemez ve değiştirilemez. Ayarlar > Ortak veritabanı > İşlem kaydı (Yönetici ve Muhasebe).
 - **Belge kilidi:** bir kaydın düzenleme formu açılınca kayıt 3 dakika kilitlenir (form açık kaldıkça uzar). Aynı kaydı açan diğer kullanıcı formu salt okunur görür.
+
+### Güvenlik (2.7)
+
+- **Gizli bölüm:** gelir/gider, banka ve kasa, virman, personel, bordro, vergi, bütçe ve finans ayarları `firmalar/{firma}/ozel/` altında durur. Servis rolü bu bölümü hiç indiremez (kural düzeyinde okuma yasağı); yalnız Yönetici ve Muhasebe yazar, İzleyici okur. Servisin gördüğü kayıtlar (servis, tekne/makine, ürün, stok, cari, fatura/teklif, firma bilgileri) `kayit/` altında kalır. 2.6'dan güncellenen ilk Yönetici/Muhasebe cihazı eski kopyaları boşaltıp gizli bölüme taşır.
+- **Kurallar:** her kayıtta yalnız bilinen alanlar kabul edilir, `u` alanı oturumdaki kullanıcı ve `z` sunucu saati olmak zorundadır, kayıt boyutu 900 KB ile sınırlıdır, rol adı dört rolden biri olmalıdır, firma sahibi değiştirilemez, başkasının süren belge kilidi ezilemez. `firestore.rules` 56 emülatör testiyle doğrulanır.
+- **Ekran kilidi:** varsayılan 15 dakika hareketsizlikte (5/15/30/60 dk ya da kapalı) ekran kilitlenir ve hesap şifresi sorulur. Şifre saklanmaz; cihazda yalnız tuzlanmış PBKDF2-SHA256 özeti (150.000 tur) tutulur, böylece kilit internetsiz de açılır. Kilit sayfa yenilense de sürer; 5 yanlış denemede oturum kapanır.
+- **Şifre ve giriş:** yeni şifreler en az 8 karakter, harf ve rakam içermelidir; geçici şifreler kriptografik rastgele üretilir. 5 yanlış girişten sonra 60 sn (her 5 denemede ikiye katlanarak en çok 15 dk) beklenir. Her giriş, cihaz türüyle birlikte işlem kaydına yazılır.
 
 Kurulum: Firebase konsolunda proje açılır, Authentication'da E-posta/Şifre girişi etkinleştirilir, Firestore veritabanı oluşturulur ve Kurallar sekmesine `firestore.rules` içeriği yapıştırılır. Proje ayarlarından Web uygulaması eklenip `firebaseConfig` kopyalanır. PowerServ+ > Ayarlar > Ortak veritabanı > Ortak veritabanını kur ekranına yapıştırılır; bu cihazın verisi yüklenir ve kuran kişi yönetici olur. Diğer cihazlar Kullanıcılar ekranından eklenir ve Bağlantı kodu ile "Mevcut firmaya bağlan" der (karşılama ekranında da vardır); firma verisi o cihazda yeni bir hesap olarak açılır.
 
