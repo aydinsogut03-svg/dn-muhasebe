@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#16213a" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0c1019" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f2f3f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1b1c20" media="(prefers-color-scheme: dark)">
 <title>PowerServ+</title>
 <style id="yazitipleri">
 /* Manrope (SIL Open Font License). Uygulama çevrimdışı çalıştığı için gömülüdür. */
@@ -697,6 +697,186 @@ body.profilde main{max-width:560px}
   main{padding-left:10px;padding-right:10px}
   .buyuk-baslik{font-size:22px}
 }
+
+/* ================= Tema 2.2: iOS tarzı yumuşak görünüm =================
+   Açık zemin, beyaz kartlar, buzlu cam üst çubuk, dolu renkli simgeler ve belirgin rozetler.
+   Koyu modda saf siyah yok: yumuşak gri yüzeyler. */
+:root{
+  --bg:#f2f3f7;--kart:#fff;--kart2:#f7f8fb;--kenar:rgba(60,60,67,.1);--ayirici:rgba(60,60,67,.12);--dolgu:rgba(118,118,128,.12);--dolgu2:rgba(118,118,128,.22);
+  --yazi:#1c1c1e;--ikincil:#6b6b72;--ucuncul:#aeaeb4;
+  --marka:#0a6cff;--marka2:#5a5cf0;--altin:#0a6cff;--altin2:#0a6cff;
+  --mavi:#0a6cff;--yesil:#2fb858;--yesil-yazi:#1f8a3e;--kirmizi:#f2453d;--turuncu:#f08a00;--sari:#e6b000;
+  --mor:#a24fd8;--pembe:#f0447a;--indigo:#5a5cf0;--camgobegi:#25a8e0;--nane:#11b5a4;--kahve:#a2845e;--gri:#8e8e93;
+  --yazi-ui:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",Roboto,"Manrope","Helvetica Neue",sans-serif;
+  --yazi-sayi:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI Variable Display","Segoe UI",Roboto,"Manrope",sans-serif;
+  --golge:0 1px 2px rgba(20,20,40,.04),0 6px 20px -10px rgba(20,20,40,.12);
+  --golge-derin:0 2px 6px rgba(10,60,160,.12),0 18px 40px -18px rgba(10,60,160,.45);
+  --egri:cubic-bezier(.32,.72,0,1);--yay:cubic-bezier(.34,1.36,.64,1);
+  --cam:rgba(247,248,251,.78);
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#1b1c20;--kart:#26272c;--kart2:#2e2f35;--kenar:rgba(255,255,255,.08);--ayirici:rgba(255,255,255,.09);--dolgu:rgba(255,255,255,.08);--dolgu2:rgba(255,255,255,.16);
+  --yazi:#f2f2f5;--ikincil:#a4a4ad;--ucuncul:#6a6a73;
+  --marka:#3d8bff;--marka2:#6e70ff;--altin:#5aa0ff;--altin2:#5aa0ff;
+  --mavi:#5aa0ff;--yesil:#3dd068;--yesil-yazi:#4ade7a;--kirmizi:#ff6961;--turuncu:#ffaa33;--sari:#ffd43b;
+  --mor:#c77dff;--pembe:#ff6b9a;--indigo:#8b8dff;--camgobegi:#5ccbf5;--nane:#3ddcc8;--kahve:#c8a77e;--gri:#a4a4ad;
+  --golge:0 1px 2px rgba(0,0,0,.25),0 10px 24px -14px rgba(0,0,0,.55);
+  --cam:rgba(38,39,44,.78);
+}}
+html,body{font-family:var(--yazi-ui);font-size:15px;word-spacing:0;font-feature-settings:normal;letter-spacing:-.005em}
+body{background:var(--bg)}
+::selection{background:color-mix(in srgb,var(--mavi) 25%,transparent)}
+html{scroll-behavior:smooth}
+
+/* Üst çubuk: buzlu cam, koyu yazı, mavi düğmeler */
+header,header.kaydi{background:var(--cam);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);color:var(--yazi);box-shadow:0 .5px 0 var(--ayirici);transition:box-shadow .25s,background .25s}
+header.kaydi{box-shadow:0 .5px 0 var(--ayirici),0 8px 24px -16px rgba(0,0,0,.18)}
+header .nav-btn,.sayfa-modal .modal-ust .nav-btn{color:var(--mavi)}
+header .orta-baslik{color:var(--yazi);font-weight:700;font-size:17px}
+.nav-btn{border-radius:12px;transition:background .2s,opacity .2s}
+@media (hover:hover){.nav-btn:hover{background:var(--dolgu)}}
+
+/* Kenar menü: açık, simgeler iOS Ayarlar gibi dolu renkli kare */
+#cekmece{background:var(--kart2);color:var(--yazi)}
+@media (min-width:960px){body:not(.profilde) #cekmece{border-right:.5px solid var(--ayirici);background:var(--cam);-webkit-backdrop-filter:saturate(180%) blur(24px);backdrop-filter:saturate(180%) blur(24px)}}
+.c-ust{color:var(--yazi);border-bottom:.5px solid var(--ayirici)}
+.c-ust small,.c-alt{color:var(--ikincil)}
+.c-ust .chev{color:var(--ucuncul)}
+.c-ust .kare[class*=r-]{background:linear-gradient(160deg,#3d8bff,#5a5cf0);color:#fff}
+.c-hesaplar button{background:var(--dolgu);color:var(--yazi)}
+.c-baslik{color:var(--ikincil);font-size:12.5px;font-weight:600;margin:18px 22px 6px}
+.c-liste{padding:0 10px;gap:1px}
+.c-liste a{color:var(--yazi);border-radius:11px;min-height:40px;font-weight:500;transition:background .2s,color .2s}
+@media (hover:hover){.c-liste a:hover{background:var(--dolgu)}}
+.c-liste a:active{background:var(--dolgu2)}
+.c-liste .kare[class*=r-]{width:28px;height:28px;border-radius:8px;color:#fff;background:var(--c);box-shadow:inset 0 0 0 .5px rgba(0,0,0,.06)}
+.c-liste .kare svg{width:16px;height:16px;stroke-width:2.2}
+.c-liste .rozet{color:var(--ikincil)}
+.c-liste .rozet.uyar{background:var(--kirmizi);color:#fff;box-shadow:0 2px 6px -2px color-mix(in srgb,var(--kirmizi) 70%,transparent)}
+.c-liste a.secili{background:color-mix(in srgb,var(--mavi) 13%,transparent);color:var(--mavi);font-weight:650}
+.c-liste a.secili .kare[class*=r-]{color:#fff}
+.c-liste a.secili::before{display:none}
+@media (prefers-color-scheme:dark){.c-liste a.secili{background:color-mix(in srgb,var(--mavi) 22%,transparent)}}
+
+/* Kartlar ve gruplar: kenarlıksız, yumuşak gölge, geniş köşe */
+.grup,.kart,.metrik,.tutar-kutu,.btn-izgara button,.profil-kart,.yeni-satir button{border:0;box-shadow:var(--golge)}
+.grup,.kart,.metrik{border-radius:18px}
+.tutar-kutu{border-radius:18px}
+.hucre+.hucre::before{left:var(--girinti)}
+.hucre{transition:background .2s}
+@media (hover:hover){button.hucre:hover,a.hucre:hover{background:color-mix(in srgb,var(--dolgu) 60%,transparent)}}
+.bolum{font-size:13px;font-weight:600;color:var(--ikincil);margin:22px 16px 7px}
+.bolum a,.bolum>button{color:var(--mavi);font-weight:600}
+.kart-ust .sagda a.mavi{color:var(--mavi)!important}
+.dipnot{margin-left:16px;margin-right:16px}
+
+/* Simge kareleri: dolu renk, beyaz simge (koyu zeminde kaybolmaz) */
+@supports (background:color-mix(in srgb,red 10%,transparent)){
+  .kare[class*=r-]{background:linear-gradient(160deg,color-mix(in srgb,var(--c) 82%,#fff),var(--c));color:#fff;box-shadow:0 3px 8px -4px color-mix(in srgb,var(--c) 70%,transparent)}
+  .r-yesil.kare{color:#fff}
+  .avatar[class*=r-]{background:color-mix(in srgb,var(--c) 16%,var(--kart));color:var(--c);box-shadow:none;font-weight:700}
+  .r-yesil.avatar{color:var(--yesil-yazi)}
+  /* Rozetler: daha dolgun ton ve kalın yazı */
+  .hap{background:var(--dolgu2);color:var(--yazi)}
+  .hap.yesil{background:color-mix(in srgb,var(--yesil) 20%,transparent);color:var(--yesil-yazi)}
+  .hap.kirmizi{background:color-mix(in srgb,var(--kirmizi) 18%,transparent);color:var(--kirmizi)}
+  .hap.turuncu{background:color-mix(in srgb,var(--turuncu) 20%,transparent);color:color-mix(in srgb,var(--turuncu) 80%,#000)}
+  .hap.mavi{background:color-mix(in srgb,var(--mavi) 17%,transparent);color:var(--mavi)}
+  @media (prefers-color-scheme:dark){.hap.turuncu{color:var(--turuncu)}}
+}
+.kare{border-radius:9px}
+.hap{font-weight:700;font-size:11.5px;padding:2px 8px}
+.bos-cizim{color:var(--c,var(--mavi))}
+
+/* Sekmeler: iOS bölümlü kontrol */
+.segment{background:var(--dolgu);border:0;border-radius:11px;padding:3px;gap:2px}
+.segment button,.segment label{border-radius:8px;padding:6px 6px;color:var(--yazi);font-weight:550;transition:background .25s var(--egri),box-shadow .25s,color .2s}
+.segment label span{margin:-6px;padding:6px;border-radius:8px;transition:background .25s var(--egri),box-shadow .25s}
+.segment .secili,.segment input:checked+span{background:var(--kart)!important;box-shadow:0 3px 8px rgba(0,0,0,.1),0 1px 1px rgba(0,0,0,.05)!important;color:var(--yazi);font-weight:700}
+@media (prefers-color-scheme:dark){.segment .secili,.segment input:checked+span{background:#55565e!important}}
+
+/* Düğmeler */
+.btn{border-radius:14px;font-weight:650;transition:transform .18s var(--egri),filter .2s,box-shadow .2s}
+.btn:not(.renkli):not(.yesil-acik):not(.kirmizi-acik){background:linear-gradient(180deg,color-mix(in srgb,var(--mavi) 88%,#fff),var(--mavi));color:#fff;box-shadow:0 8px 18px -10px color-mix(in srgb,var(--mavi) 85%,transparent)}
+.btn.yesil-acik{background:linear-gradient(180deg,color-mix(in srgb,var(--yesil) 88%,#fff),var(--yesil));color:#fff;box-shadow:0 8px 18px -10px color-mix(in srgb,var(--yesil) 85%,transparent)}
+.btn.renkli{background:color-mix(in srgb,var(--mavi) 12%,var(--kart));color:var(--mavi);border:0;box-shadow:none}
+.btn.kirmizi-acik{background:color-mix(in srgb,var(--kirmizi) 12%,var(--kart));color:var(--kirmizi);border:0;box-shadow:none}
+@media (hover:hover){.btn:hover{filter:brightness(1.05)}}
+.btn-izgara button{border-radius:16px;color:var(--yazi);font-weight:600;transition:transform .18s var(--egri),box-shadow .2s}
+.btn-izgara button svg{color:var(--mavi)}
+@media (hover:hover){.btn-izgara button:hover,.yeni-satir button:hover,a.kart:hover,.metrik:hover{box-shadow:0 2px 4px rgba(20,20,40,.05),0 14px 28px -14px rgba(20,20,40,.22)}}
+.yeni-satir button{color:var(--yazi);font-weight:600}
+.yeni-satir button svg{color:var(--c,var(--mavi))}
+.cip{border:0;background:var(--kart);box-shadow:var(--golge);transition:background .2s,color .2s}
+.cip.secili{background:var(--mavi);color:#fff}
+.arama{background:var(--dolgu);border:0;box-shadow:none;border-radius:12px;height:38px}
+.ay-secici button{background:var(--dolgu);border:0;box-shadow:none;color:var(--mavi)}
+.anahtar span:before{transition:transform .3s var(--yay)}
+.anahtar span{transition:background .25s}
+.f-satir input,.f-satir select,.f-satir textarea{transition:color .2s}
+.grup:focus-within{box-shadow:var(--golge),0 0 0 3px color-mix(in srgb,var(--mavi) 22%,transparent)}
+.ilerleme i,.cubuk i,.fo-cubuk i{transition:width .6s var(--egri)}
+.fo-cubuk i{background:linear-gradient(90deg,var(--yesil),color-mix(in srgb,var(--yesil) 70%,#fff))}
+
+/* Metrik kutuları: renkli simge, renkli üst çizgi yerine yumuşak ışık */
+.metrik{padding:14px 15px 13px}
+.metrik .ust{color:var(--ikincil)}
+.metrik .ust svg{width:16px;height:16px}
+@supports (background:color-mix(in srgb,red 10%,transparent)){.metrik{background:radial-gradient(160px 100px at 105% -10%,color-mix(in srgb,var(--c,var(--mavi)) 16%,transparent),transparent 70%),var(--kart)}}
+
+/* Özet kartı: koyu lacivert yerine canlı mavi geçiş */
+.kahraman{color:#fff;background:radial-gradient(280px 180px at 100% 0%,rgba(255,255,255,.28),transparent 70%),linear-gradient(140deg,#2f8cff 0%,#3d6dff 50%,#6a5cf0 100%);box-shadow:var(--golge-derin);border-radius:22px}
+@media (prefers-color-scheme:dark){.kahraman{background:radial-gradient(280px 180px at 100% 0%,rgba(255,255,255,.18),transparent 70%),linear-gradient(140deg,#2a6fe0,#4b4bd1)}}
+.kahraman::after{box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+.kahraman .k-ust{color:rgba(255,255,255,.8)}
+.kahraman .k-ust b,.kahraman .k-satir b{color:#fff}
+.kahraman .k-surum{color:rgba(255,255,255,.75)}
+.kahraman .k-etiket{color:rgba(255,255,255,.9)}
+.kahraman .k-tutar.eksi{color:#ffd1cc}
+.kahraman .k-satir{color:rgba(255,255,255,.85)}
+.kahraman .k-satir i{box-shadow:0 0 0 2px rgba(255,255,255,.35)}
+.kahraman .k-satir span:first-child i{background:#7cf5a4!important}.kahraman .k-satir span+span i{background:#ffb0a3!important}
+@media (prefers-color-scheme:dark){.avatar[class*=r-]{background:color-mix(in srgb,var(--c) 30%,var(--kart))}}
+.kahraman path.cizgi{stroke:#fff;stroke-width:2}
+.kahraman stop{stop-color:#fff}
+
+/* Tam ekran formlar: buzlu cam üst çubuk */
+.sayfa-modal .modal-ust{background:var(--cam);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);color:var(--yazi);box-shadow:0 .5px 0 var(--ayirici)}
+.sayfa-modal .modal-ust b{color:var(--yazi)}
+.sayfa-modal .modal-govde{background:var(--bg)}
+.modal-alt{background:var(--cam);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--ayirici);box-shadow:none}
+.modal{background:var(--bg)}
+.modal:not(.sayfa-modal){border-radius:20px 20px 0 0}
+.eylem .grup,.eylem button.iptal{border-radius:16px}
+
+/* Kilit ve karşılama: aydınlık */
+#kilitEkran{background:radial-gradient(420px 300px at 50% 12%,rgba(255,255,255,.35),transparent 70%),linear-gradient(160deg,#3b8dff,#5a5cf0 70%,#7b5cf0)}
+#kilitEkran .logo,.karsilama .logo,.logo{color:#fff;background:linear-gradient(160deg,#3d9bff,#5a5cf0);box-shadow:0 12px 28px -12px rgba(60,90,240,.6),inset 0 0 0 1px rgba(255,255,255,.25)}
+.tus-takim button{background:rgba(255,255,255,.2);transition:background .15s,transform .15s var(--egri)}
+.tus-takim button:active{background:rgba(255,255,255,.4);transform:scale(.94)}
+.adim{color:var(--mavi)}
+
+/* Bildirim: buzlu cam kart */
+.bildirim{background:var(--cam);color:var(--yazi);-webkit-backdrop-filter:saturate(180%) blur(24px);backdrop-filter:saturate(180%) blur(24px);box-shadow:0 10px 30px -10px rgba(0,0,0,.3),0 0 0 .5px var(--ayirici);border-radius:18px;transition:opacity .3s var(--egri),transform .45s var(--yay)}
+
+/* Geçişler: iOS eğrisi, yaylanan pencere, yumuşak perde */
+.perde{transition:background .35s var(--egri),-webkit-backdrop-filter .35s,backdrop-filter .35s}
+.perde.acik{background:rgba(20,20,30,.28)}
+.perde.acik:not(.sayfa-perde){-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.modal{transition:transform .45s var(--egri)}
+.sayfa-modal{transition:transform .45s var(--egri),opacity .3s;box-shadow:-24px 0 48px -24px rgba(0,0,0,.25)}
+.eylem{transition:transform .42s var(--egri)}
+#cekmece{transition:transform .42s var(--egri)}
+#cekmecePerde{transition:opacity .35s var(--egri)}
+body.cekmece-acik #cekmecePerde{-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+@media (prefers-reduced-motion:no-preference){
+  #icerik>*{animation:belir .5s var(--egri) both}
+  @keyframes belir{from{opacity:0;transform:translateY(10px) scale(.995)}}
+  .hucre:active,.metrik:active,.btn:active,.btn-izgara button:active,.yeni-satir button:active,.profil-kart:active,a.kart:active,.cip:active{transform:scale(.97)}
+  .hizli button:active{transform:scale(.94)}
+  .perde.acik .eylem .grup{animation:yukari .45s var(--egri) both}
+  @keyframes yukari{from{transform:translateY(16px)}}
+}
 </style>
 </head>
 <body>
@@ -709,7 +889,7 @@ body.profilde main{max-width:560px}
 
 <script>
 'use strict';
-const VERSIYON = '2.1.0';
+const VERSIYON = '2.2.0';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -4171,8 +4351,9 @@ function ayarlarEkrani() {
       ${m.zorunlu ? '<span class="deger" style="font-size:14px">Her zaman</span>' : `<label class="anahtar"><input type="checkbox" data-mod="${m.id}" ${modulAcik(m.id) ? 'checked' : ''}><span></span></label>`}</div>`).join('')}</div>
     <p class="dipnot">Kapalı modülün verisi silinmez. Açık modüller soldaki menüde görünür.</p>
     <div class="bolum">Görünüm</div>
+    <div class="segment" id="temaSec">${[['acik', 'Açık'], ['koyu', 'Koyu'], ['sistem', 'Sisteme göre']].map(([v, a]) => `<button data-v="${v}" class="${temaTercih() === v ? 'secili' : ''}">${a}</button>`).join('')}</div>
     <div class="segment" id="olcekSec">${[['oto', 'Otomatik'], ['0.9', '%90'], ['1', '%100'], ['1.15', '%115'], ['1.3', '%130']].map(([v, a]) => `<button data-v="${v}" class="${olcekTercih() === v ? 'secili' : ''}">${a}</button>`).join('')}</div>
-    <p class="dipnot">Otomatik, ekran boyutuna göre yazıları ve düğmeleri büyütür ya da küçültür. Tarayıcıda Ctrl + / Ctrl − de çalışır.</p>
+    <p class="dipnot">Tema varsayılan olarak açıktır; koyu temada da yüzeyler gri tonda kalır. Ölçek Otomatik iken ekran boyutuna göre yazıları ve düğmeleri büyütür ya da küçültür. Tarayıcıda Ctrl + / Ctrl − de çalışır.</p>
     <div class="bolum">Güvenlik</div>
     <div class="grup"><label class="hucre kareli">${kare('kilit', 'indigo')}<div class="ic"><b>PIN kilidi</b><small>Açılışta ve 30 sn sonra dönüşte PIN sorar</small></div><span class="anahtar"><input type="checkbox" id="pinAnahtar" ${kilitAyar() ? 'checked' : ''}><span></span></span></label>
       ${kilitAyar() ? `<button class="hucre kareli" id="pinDegis">${kare('kilit', 'gri')}<div class="ic"><b>PIN'i değiştir</b></div>${CHEV}</button>` : ''}</div>
@@ -4200,6 +4381,7 @@ function ayarlarEkrani() {
   $('#icerik').innerHTML = h;
   yuzenEtiket($('#icerik'));
   $('#profilDegis').onclick = () => git('hesaplar');
+  $$('#temaSec button').forEach(b => b.onclick = () => { try { localStorage.setItem(TEMA_ANAHTAR, b.dataset.v); } catch (e) {} temaUygula(); ayarlarEkrani(); });
   $$('#olcekSec button').forEach(b => b.onclick = () => { try { localStorage.setItem(OLCEK_ANAHTAR, b.dataset.v); } catch (e) {} olcekUygula(); ayarlarEkrani(); });
   $$('[data-ayar]').forEach(i => i.onchange = () => { D[i.dataset.ayar] = i.value.trim(); kaydet(); bildir('Kaydedildi'); });
   $$('[data-firma]').forEach(i => i.onchange = () => { D.firma[i.dataset.firma] = i.value.trim(); kaydet(); bildir('Kaydedildi'); });
@@ -4533,6 +4715,24 @@ function olcekHesapla() {
   const w = window.innerWidth;
   return w < 360 ? .9 : w < 1440 ? 1 : w < 1700 ? 1.08 : w < 2200 ? 1.15 : 1.3;
 }
+/* Tema: açık (varsayılan), koyu ya da sistem. Koyu kurallar CSS'te prefers-color-scheme ile yazılı;
+   tercihe göre o medya koşulları açılır/kapanır. */
+const TEMA_ANAHTAR = 'powerserv.tema';
+const temaTercih = () => { try { return localStorage.getItem(TEMA_ANAHTAR) || 'acik'; } catch (e) { return 'acik'; } };
+function temaUygula() {
+  const t = temaTercih(), kosul = t === 'koyu' ? 'all' : t === 'acik' ? 'not all' : '(prefers-color-scheme: dark)';
+  const gez = kurallar => { for (const r of kurallar) {
+    if (r.media && r.cssRules) { if (r.__koyu === undefined) r.__koyu = /prefers-color-scheme:\s*dark/.test(r.media.mediaText); if (r.__koyu) r.media.mediaText = kosul; }
+    if (r.cssRules) gez(r.cssRules);
+  } };
+  for (const ss of document.styleSheets) { try { gez(ss.cssRules); } catch (e) {} }
+  const koyu = t === 'koyu' || (t === 'sistem' && matchMedia('(prefers-color-scheme: dark)').matches);
+  document.documentElement.style.colorScheme = koyu ? 'dark' : 'light';
+  document.querySelectorAll('meta[name=theme-color]').forEach(m => { m.removeAttribute('media'); m.content = koyu ? '#1b1c20' : '#f2f3f7'; });
+  try { if (window.Android && Android.tema) Android.tema(koyu); } catch (e) {}
+}
+temaUygula();
+try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (temaTercih() === 'sistem') temaUygula(); }); } catch (e) {}
 function olcekUygula() { document.documentElement.style.zoom = olcekHesapla() === 1 ? '' : String(olcekHesapla()); }
 window.addEventListener('resize', olcekUygula);
 window.addEventListener('beforeprint', () => { document.documentElement.style.zoom = ''; });

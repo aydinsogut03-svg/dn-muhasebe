@@ -16,7 +16,7 @@ Raporlar PDF olarak yazdırılabilir veya CSV olarak paylaşılabilir.
 
 Uygulamanın Android paket kimliği (`com.dnmarine.muhasebe`) ve veri anahtarları eski adla kalır; böylece güncellemede mevcut veriler korunur.
 
-Görsel dil "mürekkep ve kâğıt": sıcak kâğıt zemin, mürekkep laciverti, pirinç vurgu; tek yazı tipi Manrope (SIL OFL, çevrimdışı çalışmak için `index.html` içine gömülü). Arayüz: büyük başlıklar, gruplu listeler, soldan açılan menü (kenardan kaydırarak da açılır; geniş ekranda sabit kenar çubuğu), alttan açılan form pencereleri.
+Görsel dil iOS tarzı yumuşak görünüm (2.2): açık zemin, beyaz kartlar, buzlu cam üst çubuk ve kenar menü, dolu renkli simge kareleri, belirgin rozetler, iOS eğrisiyle kayan sayfa ve pencere geçişleri. Tema Ayarlar > Görünüm'den seçilir (Açık varsayılan, Koyu, Sisteme göre); koyu temada da yüzeyler saf siyah değil, gri tondadır. Yazı tipi cihazın sistem yazısıdır (iPhone/Mac'te SF, Windows'ta Segoe UI, Android'de Roboto); Manrope yedek olarak gömülüdür. Arayüz: gruplu listeler, soldan açılan menü (kenardan kaydırarak da açılır; geniş ekranda sabit kenar çubuğu), tam ekran form sayfaları.
 
 ## Servis modülü
 

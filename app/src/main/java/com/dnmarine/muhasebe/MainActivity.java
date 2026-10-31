@@ -225,6 +225,22 @@ public class MainActivity extends Activity {
 
     /** Sayfadaki JavaScript'in "Android" adıyla çağırdığı yöntemler. */
     private class Kopru {
+        /** Sayfanın teması değişince durum ve gezinme çubuğunu aynı renge boyar. */
+        @JavascriptInterface
+        public void tema(boolean koyu) {
+            runOnUiThread(() -> {
+                int renk = koyu ? 0xFF1B1C20 : 0xFFF2F3F7;
+                getWindow().setStatusBarColor(renk);
+                getWindow().setNavigationBarColor(renk);
+                web.setBackgroundColor(renk);
+                ((android.view.View) web.getParent()).setBackgroundColor(renk);
+                android.view.View d = getWindow().getDecorView();
+                int bayrak = d.getSystemUiVisibility();
+                int acik = android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+                d.setSystemUiVisibility(koyu ? (bayrak & ~acik) : (bayrak | acik));
+            });
+        }
+
         /** Otomatik yedeğin yazılacağı dosyayı seçtirir (Drive, Dropbox ya da telefon klasörü). */
         @JavascriptInterface
         public void yedekKonumSec() {
