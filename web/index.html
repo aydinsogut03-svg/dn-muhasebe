@@ -680,7 +680,7 @@ header .orta-baslik{font-size:17px}
 
 <script>
 'use strict';
-const VERSIYON = '1.2.0';
+const VERSIYON = '1.3.0';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -1907,46 +1907,86 @@ function urunMiktar(id) {
   for (const s of D.stokHareket) if (s.urunId === id) n += s.tur === 'giris' ? s.miktar : -s.miktar;
   return Math.round(n * 1000) / 1000;
 }
-const stokDegeri = () => Math.round(D.urunler.reduce((s, u) => s + Math.max(0, urunMiktar(u.id)) * (u.alis || 0), 0));
+/* Ağırlıklı ortalama maliyet: fiyatlı girişlerden, çıkışlar ortalamayı değiştirmez. Giriş yoksa kartın alış fiyatı. */
+function urunMaliyet(u) {
+  let n = 0, deger = 0;
+  for (const s of D.stokHareket.filter(x => x.urunId === u.id).sort((a, b) => a.tarih.localeCompare(b.tarih) || (a.olusturma || 0) - (b.olusturma || 0))) {
+    if (s.tur === 'giris') {
+      if (s.birimFiyat > 0 && !s.sayim) { const ort = n > 0 ? deger / n : 0; deger = Math.max(0, n) * ort + s.miktar * s.birimFiyat; n = Math.max(0, n) + s.miktar; }
+      else { const ort = n > 0 ? deger / n : (u.alis || 0); n += s.miktar; deger = Math.max(0, n) * ort; }
+    } else { const ort = n > 0 ? deger / n : 0; n -= s.miktar; deger = Math.max(0, n) * ort; }
+  }
+  return n > 0 && deger > 0 ? Math.round(deger / n) : (u.alis || 0);
+}
+const stokDegeri = () => Math.round(D.urunler.reduce((s, u) => s + Math.max(0, urunMiktar(u.id)) * urunMaliyet(u), 0));
+const stokKategoriler = () => [...new Set(D.urunler.map(u => u.kategori).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'tr'));
+const urunAranan = u => kucult([u.ad, u.kod, u.marka, u.muadil, u.raf, u.barkod, u.uyumlu, u.kategori].join(' '));
 function urunSatiri(u) {
   const n = urunMiktar(u.id);
   const az = u.kritik > 0 && n <= u.kritik;
+  const alt = [u.kod, u.marka, u.raf && 'Raf ' + u.raf].filter(Boolean).join(' · ') || (u.satis ? 'Satış ' + para(u.satis) : 'Fiyat yok');
   return `<button class="hucre avatarli" data-urun="${u.id}"><span class="avatar r-kahve">${ikon('kutu')}</span>
-    <div class="ic"><b>${esc(u.ad)}${az ? '<span class="hap turuncu">az</span>' : ''}</b><small>${u.satis ? 'Satış ' + para(u.satis) : 'Fiyat yok'}${u.kod ? ' · ' + esc(u.kod) : ''}</small></div>
+    <div class="ic"><b>${esc(u.ad)}${az ? '<span class="hap turuncu">az</span>' : ''}</b><small>${esc(alt)}</small></div>
     <span class="tutar ${n < 0 ? 'gider' : az ? 'turuncu' : ''}">${sayiFmt(n)}<small>${esc(u.birim)}</small></span>${CHEV}</button>`;
 }
 function stokEkrani() {
   let h = sayfa('Stok', {sag: artiBtn('ekleBtn', 'Yeni ürün')});
-  const kritik = D.urunler.filter(u => u.kritik > 0 && urunMiktar(u.id) <= u.kritik).length;
-  h += `<div class="ikili"><div class="kart"><div class="k-ust">Stok değeri</div><div class="dev orta">${para(stokDegeri())}</div><div class="k-alt">alış fiyatıyla</div></div>
+  const kritik = D.urunler.filter(u => u.kritik > 0 && urunMiktar(u.id) <= u.kritik).length, kat = stokKategoriler();
+  if (ui.stokKat && !kat.includes(ui.stokKat)) ui.stokKat = '';
+  h += `<div class="ikili"><div class="kart"><div class="k-ust">Stok değeri</div><div class="dev orta">${para(stokDegeri())}</div><div class="k-alt">ortalama maliyetle</div></div>
     <div class="kart"><div class="k-ust">Kritik stok</div><div class="dev orta ${kritik ? 'turuncu' : ''}">${kritik} <span class="birim">ürün</span></div><div class="k-alt">${D.urunler.length} ürün kayıtlı</div></div></div>
-    <div class="segment" id="stokSec">${[['hepsi','Tümü'],['az','Azalanlar']].map(([v, a]) => `<button data-v="${v}" class="${ui.stokFiltre === v ? 'secili' : ''}">${a}</button>`).join('')}</div>
-    <div class="arama">${ikon('ara')}<input type="search" id="urunAra" placeholder="Ürün ara" value="${esc(ui.urunAra)}"></div><div id="urunListe"></div>`;
+    ${D.urunler.length ? `<div class="btn-izgara"><button id="stSayim">${ikon('tamam')}Sayım</button><button id="stListe">${ikon('yazici')}Stok listesi</button><button id="stSiparis" ${kritik ? '' : 'disabled'}>${ikon('sepet')}Sipariş listesi</button></div>` : ''}
+    <div class="segment" id="stokSec">${[['hepsi','Tümü'],['az','Azalanlar'],['yok','Stokta yok']].map(([v, a]) => `<button data-v="${v}" class="${ui.stokFiltre === v ? 'secili' : ''}">${a}</button>`).join('')}</div>
+    ${kat.length ? `<div class="cipler" id="stokKat"><button class="cip ${!ui.stokKat ? 'secili' : ''}" data-kat="">Tüm gruplar</button>${kat.map(k => `<button class="cip ${ui.stokKat === k ? 'secili' : ''}" data-kat="${esc(k)}">${esc(k)}</button>`).join('')}</div>` : ''}
+    <div class="arama">${ikon('ara')}<input type="search" id="urunAra" placeholder="Ad, parça no, marka, muadil, raf ara" value="${esc(ui.urunAra)}"></div><div id="urunListe"></div>`;
   $('#icerik').innerHTML = h;
   $('#ekleBtn').onclick = () => urunFormu();
   $('#urunAra').oninput = e => { ui.urunAra = e.target.value; urunListe(); };
   $$('#stokSec button').forEach(b => b.onclick = () => { ui.stokFiltre = b.dataset.v; $$('#stokSec button').forEach(x => x.classList.toggle('secili', x === b)); urunListe(); });
+  $$('#stokKat button').forEach(b => b.onclick = () => { ui.stokKat = b.dataset.kat; $$('#stokKat button').forEach(x => x.classList.toggle('secili', x === b)); urunListe(); });
+  if ($('#stSayim')) {
+    $('#stSayim').onclick = () => stokSayimFormu();
+    $('#stListe').onclick = () => yazdir('Stok listesi', stokListeKagit());
+    $('#stSiparis').onclick = () => yazdir('Sipariş listesi', stokListeKagit(true));
+  }
   urunListe();
 }
-function urunListe() {
-  const a = kucult(ui.urunAra.trim()), filtreli = a || ui.stokFiltre === 'az';
-  const l = D.urunler.filter(u => !a || kucult(u.ad + ' ' + (u.kod || '')).includes(a))
-    .filter(u => ui.stokFiltre !== 'az' || (u.kritik > 0 && urunMiktar(u.id) <= u.kritik))
+function stokFiltrele() {
+  const a = kucult(ui.urunAra.trim());
+  return D.urunler.filter(u => !a || urunAranan(u).includes(a))
+    .filter(u => !ui.stokKat || u.kategori === ui.stokKat)
+    .filter(u => ui.stokFiltre === 'hepsi' || (ui.stokFiltre === 'az' ? u.kritik > 0 && urunMiktar(u.id) <= u.kritik : urunMiktar(u.id) <= 0))
     .sort((x, y) => x.ad.localeCompare(y.ad, 'tr'));
+}
+function urunListe() {
+  const filtreli = ui.urunAra.trim() || ui.stokFiltre !== 'hepsi' || ui.stokKat;
+  const l = stokFiltrele();
   const kap = $('#urunListe');
-  kap.innerHTML = l.length ? `<div class="grup">${l.map(urunSatiri).join('')}</div>` : bosDurum('kutu', 'kahve', filtreli ? 'Sonuç yok' : 'Henüz ürün yok', filtreli ? 'Bu filtreye uyan ürün yok.' : 'Ürünlerinizi ekleyin, giriş-çıkışları takip edin.',
+  kap.innerHTML = l.length ? `<div class="grup">${l.map(urunSatiri).join('')}</div>` : bosDurum('kutu', 'kahve', filtreli ? 'Sonuç yok' : 'Henüz ürün yok', filtreli ? 'Bu filtreye uyan ürün yok.' : 'Parça ve malzemelerinizi ekleyin, giriş-çıkışları takip edin.',
     filtreli ? '' : `<button class="btn kucuk" id="bosEkle">${ikon('arti')} Yeni ürün</button>`);
   $$('[data-urun]', kap).forEach(b => b.onclick = () => git('stok/' + b.dataset.urun));
   const b = $('#bosEkle'); if (b) b.onclick = () => urunFormu();
 }
 function urunFormu(u) {
   const yeni = !u;
-  const x = u || {ad: '', kod: '', birim: 'adet', alis: 0, satis: 0, kdvOran: 20, kritik: 0};
+  const x = u || {ad: '', kod: '', birim: 'adet', alis: 0, satis: 0, kdvOran: 20, kritik: 0, marka: '', kategori: '', muadil: '', raf: '', barkod: '', uyumlu: '', tedarikciId: null, siparisMiktar: 0, not: ''};
+  const ver = modulAcik('veresiye');
   const m = modal(yeni ? 'Yeni ürün' : 'Ürünü düzenle', `
     <div class="grup">
-      <label class="f-satir sol"><input type="text" id="uAd" value="${esc(x.ad)}" placeholder="Ürün adı" autocomplete="off"></label>
-      <label class="f-satir sol"><input type="text" id="uKod" value="${esc(x.kod)}" placeholder="Ürün kodu / barkod (isteğe bağlı)"></label>
+      <label class="f-satir sol"><input type="text" id="uAd" value="${esc(x.ad)}" placeholder="Ürün / parça adı" autocomplete="off"></label>
+      <label class="f-satir sol"><input type="text" id="uKod" value="${esc(x.kod)}" placeholder="Parça no (OEM)"></label>
+      <label class="f-satir sol"><input type="text" id="uMarka" value="${esc(x.marka)}" placeholder="Marka (ör. Volvo Penta, MAN, Racor)"></label>
+      <label class="f-satir sol"><input type="text" id="uKat" value="${esc(x.kategori)}" placeholder="Grup (ör. Filtre, Yağ, Conta, Rulman)" list="uKatListe"></label>
+      <datalist id="uKatListe">${stokKategoriler().map(k => `<option value="${esc(k)}">`).join('')}</datalist>
       <label class="f-satir"><span>Birim</span><select id="uBirim">${BIRIMLER.map(b => `<option ${b === x.birim ? 'selected' : ''}>${b}</option>`).join('')}</select></label>
+    </div>
+    <div class="bolum">Parça bilgileri</div>
+    <div class="grup">
+      <label class="f-satir sol"><input type="text" id="uMuadil" value="${esc(x.muadil)}" placeholder="Muadil parça noları (virgülle)"></label>
+      <label class="f-satir sol"><input type="text" id="uUyumlu" value="${esc(x.uyumlu)}" placeholder="Uyumlu motor / model"></label>
+      <label class="f-satir sol"><input type="text" id="uRaf" value="${esc(x.raf)}" placeholder="Depo / raf yeri (ör. A-3-2)"></label>
+      <label class="f-satir sol"><input type="text" id="uBarkod" value="${esc(x.barkod)}" placeholder="Barkod"></label>
+      ${ver ? `<button class="hucre" id="uTedSec"><div class="ic"><b>Tedarikçi</b></div><span class="deger" id="uTedAd">${esc(x.tedarikciId ? kisi(x.tedarikciId)?.ad || 'Seç' : 'Seç')}</span>${CHEV}</button>` : ''}
     </div>
     <div class="bolum">Fiyatlar (KDV hariç)</div>
     <div class="grup">
@@ -1958,14 +1998,19 @@ function urunFormu(u) {
     <div class="grup">
       ${yeni ? `<label class="f-satir"><span>Açılış stoğu</span><input id="uBaslangic" inputmode="decimal" placeholder="0"></label>` : ''}
       <label class="f-satir"><span>Kritik seviye</span><input id="uKritik" inputmode="decimal" placeholder="0" value="${x.kritik || ''}"></label>
+      <label class="f-satir"><span>Sipariş miktarı</span><input id="uSiparis" inputmode="decimal" placeholder="—" value="${x.siparisMiktar || ''}"></label>
+      <label class="f-satir sol"><input type="text" id="uNot" value="${esc(x.not)}" placeholder="Not"></label>
     </div>
-    <p class="dipnot">Stok kritik seviyeye inince uyarı gösterilir.</p>
+    <p class="dipnot">Stok kritik seviyeye inince uyarı gösterilir. Sipariş miktarı sipariş listesinde önerilir.</p>
     ${yeni ? '' : `<div class="grup"><button class="hucre tehlike" id="uSil">Ürünü sil</button></div>`}`, {kaydet: () => {
       const ad = $('#uAd', m).value.trim();
       if (!ad) { bildir('Ürün adı girin', true); return false; }
-      const kayit = {...x, ad, kod: $('#uKod', m).value.trim(), birim: $('#uBirim', m).value,
+      const kod = $('#uKod', m).value.trim();
+      if (kod && D.urunler.some(y => y.id !== x.id && kucult(y.kod) === kucult(kod))) { bildir('Bu parça no başka bir üründe kayıtlı', true); return false; }
+      const kayit = {...x, ad, kod, birim: $('#uBirim', m).value, marka: $('#uMarka', m).value.trim(), kategori: $('#uKat', m).value.trim(),
+        muadil: $('#uMuadil', m).value.trim(), uyumlu: $('#uUyumlu', m).value.trim(), raf: $('#uRaf', m).value.trim(), barkod: $('#uBarkod', m).value.trim(),
         alis: tutarOku($('#uAlis', m).value) || 0, satis: tutarOku($('#uSatis', m).value) || 0,
-        kdvOran: +$('input[name=ukdv]:checked', m).value, kritik: sayiOku($('#uKritik', m).value) || 0};
+        kdvOran: +$('input[name=ukdv]:checked', m).value, kritik: sayiOku($('#uKritik', m).value) || 0, siparisMiktar: sayiOku($('#uSiparis', m).value) || 0, not: $('#uNot', m).value.trim()};
       if (yeni) {
         kayit.id = kimlik(); kayit.olusturma = Date.now(); D.urunler.push(kayit);
         const bas = sayiOku($('#uBaslangic', m).value);
@@ -1975,6 +2020,7 @@ function urunFormu(u) {
       setTimeout(() => { if (yeni) git('stok/' + kayit.id); else ciz(); }, 10);
     }, kaydetAd: yeni ? 'Ekle' : 'Kaydet'});
   if (yeni) setTimeout(() => $('#uAd', m).focus(), 320);
+  if ($('#uTedSec', m)) $('#uTedSec', m).onclick = () => kisiSec(k => { x.tedarikciId = k ? k.id : null; $('#uTedAd', m).textContent = k ? k.ad : 'Seç'; });
   if (!yeni) $('#uSil', m).onclick = async () => {
     if (!await onay(`${x.ad} silinsin mi?`, 'Ürün ve tüm stok hareketleri silinir. Kasaya işlenmiş tutarlar kalır.')) return;
     for (const s of D.stokHareket.filter(s => s.urunId === x.id)) for (const i of D.islemler) if (i.kaynak?.id === s.id) delete i.kaynak;
@@ -1987,37 +2033,82 @@ function urunEkrani(id) {
   const u = urun(id);
   if (!u) return git('stok', true);
   let h = sayfa(u.ad, {geri: 'stok', geriAd: 'Stok', sag: `<button class="nav-btn" id="uDuzenle">Düzenle</button>`});
-  const n = urunMiktar(id);
+  const n = urunMiktar(id), mal = urunMaliyet(u);
   const az = u.kritik > 0 && n <= u.kritik;
   const har = D.stokHareket.filter(s => s.urunId === id).sort((a, b) => b.tarih.localeCompare(a.tarih) || (b.olusturma || 0) - (a.olusturma || 0));
+  const yil = bugun().slice(0, 4), cikanYil = har.filter(s => s.tur === 'cikis' && !s.sayim && s.tarih.startsWith(yil)).reduce((t, s) => t + s.miktar, 0);
+  const alislar = har.filter(s => s.tur === 'giris' && s.birimFiyat > 0 && !s.sayim).slice(0, 5);
+  const ted = u.tedarikciId && kisi(u.tedarikciId);
+  const kaynakHap = s => s.kaynak?.tip === 'servis' ? '<span class="hap">servis</span>' : s.kaynak ? '<span class="hap">fatura</span>' : s.sayim ? '<span class="hap mavi">sayım</span>' : '';
+  const bilgi = [['Parça no', u.kod], ['Marka', u.marka], ['Grup', u.kategori], ['Muadil', u.muadil], ['Uyumlu', u.uyumlu], ['Raf', u.raf], ['Barkod', u.barkod], ['Not', u.not]].filter(([, v]) => v);
   h += `<div class="kart" style="text-align:center"><div class="k-ust">Eldeki stok</div>
       <div class="dev ${n < 0 ? 'gider' : az ? 'turuncu' : ''}">${sayiFmt(n)} <span style="font-size:20px">${esc(u.birim)}</span></div>
-      ${az ? `<div class="turuncu" style="font-size:14px">Kritik seviyenin (${sayiFmt(u.kritik)}) altında</div>` : ''}</div>
+      ${az ? `<div class="turuncu" style="font-size:14px">Kritik seviyenin (${sayiFmt(u.kritik)}) altında</div>` : ''}
+      <div class="fo-alt" style="margin-top:12px;text-align:left"><div><small>Stok değeri</small><b>${para(Math.round(Math.max(0, n) * mal))}</b></div><div style="text-align:right"><small>Bu yıl çıkan</small><b>${sayiFmt(cikanYil)} ${esc(u.birim)}</b></div></div></div>
     <div class="btn-grup"><button class="btn yesil-acik" data-st="giris">${ikon('giris')} Giriş</button><button class="btn kirmizi-acik" data-st="cikis">${ikon('cikis')} Çıkış</button></div>
+    <div class="btn-izgara"><button id="uSay">${ikon('tamam')}Sayım</button>${modulAcik('fatura') ? `<button id="uAlisF">${ikon('sepet')}Alış faturası</button>` : ''}${ted?.tel ? `<button id="uTedAra">${ikon('tel')}Tedarikçi</button>` : ''}</div>
+    ${bilgi.length ? `<div class="grup">${bilgi.map(([a, v]) => `<div class="hucre"><div class="ic"><b>${esc(a)}</b></div><span class="deger" style="white-space:normal;text-align:right">${esc(v)}</span></div>`).join('')}</div>` : ''}
     <div class="grup">
+      <div class="hucre"><div class="ic"><b>Ortalama maliyet</b><small>fiyatlı girişlerden</small></div><span class="deger">${para(mal)}</span></div>
       <div class="hucre"><div class="ic"><b>Alış fiyatı</b></div><span class="deger">${para(u.alis)}</span></div>
-      <div class="hucre"><div class="ic"><b>Satış fiyatı</b></div><span class="deger">${para(u.satis)}</span></div>
+      <div class="hucre"><div class="ic"><b>Satış fiyatı</b><small>${mal && u.satis ? 'kâr marjı %' + Math.round((u.satis - mal) / u.satis * 100) : ''}</small></div><span class="deger">${para(u.satis)}</span></div>
       <div class="hucre"><div class="ic"><b>KDV</b></div><span class="deger">%${u.kdvOran ?? 20}</span></div>
-      <div class="hucre"><div class="ic"><b>Stok değeri</b></div><span class="deger">${para(Math.round(Math.max(0, n) * (u.alis || 0)))}</span></div>
-      ${u.kod ? `<div class="hucre"><div class="ic"><b>Kod</b></div><span class="deger">${esc(u.kod)}</span></div>` : ''}
+      ${ted ? `<a class="hucre" href="#/veresiye/${ted.id}"><div class="ic"><b>Tedarikçi</b></div><span class="deger">${esc(ted.ad)}</span>${CHEV}</a>` : ''}
     </div>
+    ${alislar.length > 1 ? `<div class="bolum">Son alış fiyatları</div><div class="grup">${alislar.map(s => `<div class="hucre"><div class="ic"><b>${esc(tarihYaz(s.tarih, true))}</b><small>${esc(s.aciklama || '')}</small></div><span class="deger">${para(s.birimFiyat)} × ${sayiFmt(s.miktar)}</span></div>`).join('')}</div>` : ''}
     <div class="bolum">Hareketler</div>
     ${har.length ? `<div class="grup">${har.map(s => `<button class="hucre avatarli" data-sh="${s.id}">
         <span class="avatar ${s.tur === 'giris' ? 'r-yesil' : 'r-kirmizi'}">${ikon(s.tur === 'giris' ? 'giris' : 'cikis')}</span>
-        <div class="ic"><b>${s.tur === 'giris' ? 'Giriş' : 'Çıkış'}${s.islemId ? '<span class="hap yesil">kasada</span>' : ''}${s.kaynak ? '<span class="hap">fatura</span>' : ''}</b><small>${esc([tarihYaz(s.tarih, true), s.aciklama].filter(Boolean).join(' · '))}</small></div>
+        <div class="ic"><b>${s.tur === 'giris' ? 'Giriş' : 'Çıkış'}${s.islemId ? '<span class="hap yesil">kasada</span>' : ''}${kaynakHap(s)}</b><small>${esc([tarihYaz(s.tarih, true), s.aciklama].filter(Boolean).join(' · '))}</small></div>
         <span class="tutar ${s.tur === 'giris' ? 'gelir' : 'gider'}">${s.tur === 'giris' ? '+' : '−'}${sayiFmt(s.miktar)}<small>${s.birimFiyat ? para(Math.round(s.miktar * s.birimFiyat)) : ''}</small></span></button>`).join('')}</div>`
       : bosDurum('kutu', 'kahve', 'Hareket yok', 'Giriş veya çıkış ekleyin.')}`;
   $('#icerik').innerHTML = h;
   $('#uDuzenle').onclick = () => urunFormu(u);
+  $('#uSay').onclick = () => stokSayimFormu([u]);
+  if ($('#uAlisF')) $('#uAlisF').onclick = () => faturaFormu(null, 'alis', u.tedarikciId || null, [{ad: u.ad, urunId: u.id, miktar: u.siparisMiktar || 1, birim: u.birim, fiyat: u.alis || 0, kdv: u.kdvOran ?? 20}]);
+  if ($('#uTedAra')) $('#uTedAra').onclick = () => disariAc('tel:' + ted.tel.replace(/[^\d+]/g, ''));
   $$('[data-st]').forEach(b => b.onclick = () => stokHareketFormu(u, b.dataset.st));
   $$('[data-sh]').forEach(b => b.onclick = async () => {
     const s = D.stokHareket.find(x => x.id === b.dataset.sh);
-    if (s.kaynak) return otomatikKayitBilgi(s.tur === 'giris' ? 'Giriş' : 'Çıkış', `<div class="dev">${sayiFmt(s.miktar)} ${esc(u.birim)}</div>`, tarihYaz(s.tarih, true), kaynakBilgi(s.kaynak), 'Bu hareket bir faturadan otomatik oluştu.');
+    if (s.kaynak) return otomatikKayitBilgi(s.tur === 'giris' ? 'Giriş' : 'Çıkış', `<div class="dev">${sayiFmt(s.miktar)} ${esc(u.birim)}</div>`, tarihYaz(s.tarih, true), kaynakBilgi(s.kaynak), s.kaynak.tip === 'servis' ? 'Bu hareket bir servis kaydından otomatik oluştu.' : 'Bu hareket bir faturadan otomatik oluştu.');
     if (!await onay('Stok hareketi silinsin mi?', `${sayiFmt(s.miktar)} ${u.birim}${s.islemId ? ' · kasadaki karşılığı da silinir' : ''}`)) return;
     D.stokHareket = D.stokHareket.filter(x => x.id !== s.id);
     D.islemler = D.islemler.filter(i => i.kaynak?.id !== s.id);
     kaydet(); bildir('Silindi'); ciz();
   });
+}
+/* Sayım: sayılan miktar ile kayıttaki stok arasındaki farkı sayım hareketi olarak yazar. */
+function stokSayimFormu(liste) {
+  liste = liste || stokFiltrele();
+  if (!liste.length) { bildir('Sayılacak ürün yok', true); return; }
+  const m = modal('Stok sayımı', `<p class="dipnot" style="margin:0 4px 12px">Sayılan miktarı girin. Boş bırakılan ürünler değişmez; fark sayım hareketi olarak yazılır.</p>
+    <div class="grup"><label class="f-satir"><span>Sayım tarihi</span><input type="date" id="syTarih" value="${bugun()}"></label></div>
+    <div class="grup">${liste.map(u => `<label class="f-satir"><span style="flex:1;min-width:0"><b style="font-weight:600">${esc(u.ad)}</b><br><small class="soluk">${esc([u.kod, u.raf && 'Raf ' + u.raf].filter(Boolean).join(' · '))} · kayıtta ${sayiFmt(urunMiktar(u.id))} ${esc(u.birim)}</small></span><input data-sy="${u.id}" inputmode="decimal" placeholder="—" style="max-width:90px"></label>`).join('')}</div>`,
+    {kaydet: () => {
+      const tarih = $('#syTarih', m).value || bugun();
+      let n = 0;
+      $$('[data-sy]', m).forEach(i => {
+        const v = sayiOku(i.value); if (i.value.trim() === '' || !isFinite(v) || v < 0) return;
+        const u = urun(i.dataset.sy), fark = Math.round((v - urunMiktar(u.id)) * 1000) / 1000;
+        if (!fark) return;
+        D.stokHareket.push({id: kimlik(), urunId: u.id, tur: fark > 0 ? 'giris' : 'cikis', miktar: Math.abs(fark), birimFiyat: urunMaliyet(u), tarih, aciklama: `Sayım farkı (sayılan ${sayiFmt(v)})`, sayim: true, olusturma: Date.now()});
+        n++;
+      });
+      kaydet(); bildir(n ? `${n} üründe sayım farkı işlendi` : 'Fark yok'); setTimeout(ciz, 10);
+    }, kaydetAd: 'Sayımı kaydet'});
+}
+function stokListeKagit(siparis) {
+  const l = siparis ? D.urunler.filter(u => u.kritik > 0 && urunMiktar(u.id) <= u.kritik).sort((a, b) => (a.kategori || '').localeCompare(b.kategori || '', 'tr') || a.ad.localeCompare(b.ad, 'tr'))
+    : stokFiltrele().sort((a, b) => (a.kategori || '').localeCompare(b.kategori || '', 'tr') || a.ad.localeCompare(b.ad, 'tr'));
+  let top = 0;
+  const satir = l.map(u => { const n = urunMiktar(u.id), mal = urunMaliyet(u), d = Math.round(Math.max(0, n) * mal); top += d;
+    const oner = Math.max(u.siparisMiktar || 0, Math.ceil(u.kritik * 2 - n));
+    const ted = u.tedarikciId && kisi(u.tedarikciId);
+    return siparis ? `<tr><td>${esc(u.kod || '')}</td><td>${esc(u.ad)}${u.marka ? ' · ' + esc(u.marka) : ''}</td><td>${esc(ted?.ad || '')}</td><td class="sg">${sayiFmt(n)} ${esc(u.birim)}</td><td class="sg">${sayiFmt(u.kritik)}</td><td class="sg"><b>${sayiFmt(oner)}</b></td></tr>`
+      : `<tr><td>${esc(u.kod || '')}</td><td>${esc(u.ad)}${u.marka ? ' · ' + esc(u.marka) : ''}</td><td>${esc(u.raf || '')}</td><td class="sg">${sayiFmt(n)} ${esc(u.birim)}</td><td class="sg">${para(mal)}</td><td class="sg">${para(d)}</td></tr>`; }).join('');
+  return `<div class="kagit">${firmaBaslik(siparis ? 'SİPARİŞ LİSTESİ' : 'STOK LİSTESİ', `${l.length} ürün<br>Hazırlanma: ${esc(tarihYaz(bugun(), true))}`)}
+    <table style="font-size:11px"><thead><tr>${siparis ? '<th>Parça no</th><th>Ürün</th><th>Tedarikçi</th><th class="sg">Stok</th><th class="sg">Kritik</th><th class="sg">Önerilen</th>' : '<th>Parça no</th><th>Ürün</th><th>Raf</th><th class="sg">Stok</th><th class="sg">Ort. maliyet</th><th class="sg">Değer</th>'}</tr></thead>
+    <tbody>${satir || '<tr><td colspan="6">Ürün yok</td></tr>'}${siparis ? '' : `<tr class="top"><td colspan="5">Toplam stok değeri</td><td class="sg">${para(top)}</td></tr>`}</tbody></table></div>`;
 }
 function stokHareketFormu(u, tur) {
   const giris = tur === 'giris';
@@ -2128,9 +2219,9 @@ function faturaListe() {
   faturaTiklari(kap);
 }
 const yeniKalem = (kdv = 20) => ({ad: '', miktar: 1, birim: 'adet', fiyat: 0, kdv});
-function faturaFormu(f, tur = 'fatura', kisiId = null) {
+function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null) {
   const yeni = !f;
-  const x = f ? JSON.parse(JSON.stringify(f)) : {tur, no: sonrakiNo(tur), tarih: bugun(), vade: '', kisiId, musteriAd: '', kalemler: [yeniKalem(D.profil === 'bireysel' ? 0 : 20)], not: '', durum: 'gonderildi', odendi: false, odemeler: [], cariyeIsle: true, stokDus: true};
+  const x = f ? JSON.parse(JSON.stringify(f)) : {tur, no: sonrakiNo(tur), tarih: bugun(), vade: '', kisiId, musteriAd: '', kalemler: ilkKalemler || [yeniKalem(D.profil === 'bireysel' ? 0 : 20)], not: '', durum: 'gonderildi', odendi: false, odemeler: [], cariyeIsle: true, stokDus: true};
   const ver = modulAcik('veresiye'), stok = modulAcik('stok');
   const teklif = x.tur === 'teklif', alisF = x.tur === 'alis';
   if (yeni && alisF) x.no = '';
@@ -2224,7 +2315,7 @@ function urunSec(fn) {
   const m = modal('Ürün seç', `<div class="arama">${ikon('ara')}<input type="search" id="usAra" placeholder="Ara"></div><div id="usListe"></div>`);
   const doldur = () => {
     const a = kucult($('#usAra', m).value.trim());
-    const l = liste.filter(u => !a || kucult(u.ad + ' ' + (u.kod || '')).includes(a));
+    const l = liste.filter(u => !a || urunAranan(u).includes(a));
     $('#usListe', m).innerHTML = l.length ? `<div class="grup">${l.map(u => `<button class="hucre avatarli" data-us="${u.id}"><span class="avatar r-kahve">${ikon('kutu')}</span><div class="ic"><b>${esc(u.ad)}</b><small>Stok ${sayiFmt(urunMiktar(u.id))} ${esc(u.birim)}</small></div><span class="deger">${para(u.satis)}</span></button>`).join('')}</div>` : '<p class="soluk" style="text-align:center">Ürün yok</p>';
     $$('[data-us]', m).forEach(b => b.onclick = () => { kapat(); fn(urun(b.dataset.us)); });
   };
@@ -3758,7 +3849,7 @@ function raporEkrani() {
     const p = D.personelOdeme.filter(x => x.tarih >= bas && x.tarih <= son);
     if (p.length) ekler.push(`<div class="hucre"><div class="ic"><b>Personel ödemeleri</b><small>${p.length} ödeme</small></div><span class="deger">${para(p.reduce((s, x) => s + x.tutar, 0))}</span></div>`);
   }
-  if (modulAcik('stok') && D.urunler.length) ekler.push(`<div class="hucre"><div class="ic"><b>Güncel stok değeri</b><small>${D.urunler.length} ürün, alış fiyatıyla</small></div><span class="deger">${para(stokDegeri())}</span></div>`);
+  if (modulAcik('stok') && D.urunler.length) ekler.push(`<div class="hucre"><div class="ic"><b>Güncel stok değeri</b><small>${D.urunler.length} ürün, ortalama maliyetle</small></div><span class="deger">${para(stokDegeri())}</span></div>`);
   if (ekler.length) h += `<div class="bolum">Diğer</div><div class="grup">${ekler.join('')}</div>`;
   $('#icerik').innerHTML = h;
   kisiTiklari();
@@ -3816,7 +3907,7 @@ function raporKagit(bas, son, ad, liste) {
   if (modulAcik('fatura')) { const f = D.faturalar.filter(x => x.tur === 'fatura' && x.durum === 'gonderildi' && x.tarih >= bas && x.tarih <= son); if (f.length) ekler.push([`Kesilen faturalar (${f.length})`, para(f.reduce((s, x) => s + faturaHesap(x).toplam, 0))]);
     const al = D.faturalar.filter(x => x.tur === 'alis' && x.durum === 'gonderildi' && x.tarih >= bas && x.tarih <= son); if (al.length) ekler.push([`Alınan faturalar (${al.length})`, para(al.reduce((s, x) => s + faturaHesap(x).toplam, 0))]); }
   if (modulAcik('personel')) { const p = D.personelOdeme.filter(x => x.tarih >= bas && x.tarih <= son); if (p.length) ekler.push([`Personel ödemeleri (${p.length})`, para(p.reduce((s, x) => s + x.tutar, 0))]); }
-  if (modulAcik('stok') && D.urunler.length) ekler.push(['Stok değeri (bugün, alış fiyatıyla)', para(stokDegeri())]);
+  if (modulAcik('stok') && D.urunler.length) ekler.push(['Stok değeri (bugün, ortalama maliyetle)', para(stokDegeri())]);
   if (modulAcik('kdv')) { let h = 0, i = 0; for (const a of aylar) { const k = kdvAy(a); h += k.hesaplanan; i += k.indirilecek; } if (h || i) ekler.push(['Hesaplanan / indirilecek KDV', `${para(h)} / ${para(i)}`]); }
   return `<div class="kagit">${firmaBaslik('GELİR - GİDER RAPORU', `<span style="text-transform:capitalize">${esc(ad)}</span><br>${esc(tarihYaz(bas, true))} – ${esc(tarihYaz(son, true))}<br>Hazırlanma: ${esc(tarihYaz(bugun(), true))}`)}
     <div class="kutular"><div><small>Gelir</small><b>${para(o.gelir)}</b></div><div><small>Gider</small><b>${para(o.gider)}</b></div><div><small>Net ${o.net < 0 ? 'zarar' : 'kâr'}</small><b>${para(o.net)}</b></div><div><small>Kayıt</small><b>${liste.length}</b></div></div>
@@ -3997,6 +4088,9 @@ function ornekDoldur() {
   }
   const c1 = k('Deniz Yapı A.Ş.', '02160000001'), c2 = k('Mavi Liman Ltd.', '02320000002'), c3 = k('Kuzey Enerji A.Ş.'), t1 = k('Filtre Tedarik Ltd.'), t2 = k('Yağ Dünyası');
   const y = u('Yağ filtresi', 'adet', 400, 650, 30, 8), m = u('Motor yağı 20 L', 'bidon', 2400, 3300, 12, 4), r = u('Rulman 6205', 'adet', 180, 320, 40, 10);
+  Object.assign(y, {kod: 'MAN-51.05504', marka: 'MAN', kategori: 'Filtre', muadil: 'MANN W 962, Fleetguard LF3345', raf: 'A-1-2', uyumlu: 'MAN V8/V12', tedarikciId: t1.id, siparisMiktar: 20});
+  Object.assign(m, {kod: 'SHL-R4-15W40', marka: 'Shell', kategori: 'Yağ', raf: 'B-2', tedarikciId: t2.id, siparisMiktar: 10});
+  Object.assign(r, {kod: '6205-2RS', marka: 'SKF', kategori: 'Rulman', muadil: 'FAG 6205-2RSR', raf: 'A-3-1', tedarikciId: t1.id});
   const fat = (tur, kisi, i, g, kalemler, odendi, no) => {
     const f = {id: kimlik(), tur, no: no || sonrakiNo(tur), tarih: gun(i, g), vade: tur === 'teklif' ? '' : gun(Math.max(i - 1, 0), g), kisiId: kisi.id, musteriAd: '', kalemler: kalemler.map(([ad, miktar, fiyat, urunId]) => ({ad, miktar, birim: 'adet', fiyat: tl(fiyat), kdv: 20, ...(urunId ? {urunId} : {})})), not: '', durum: 'gonderildi', odemeler: [], cariyeIsle: true, stokDus: true, olusturma: Date.now()};
     const top = faturaHesap(f).toplam, pay = odendi === true ? top : odendi ? Math.round(top * odendi) : 0;
@@ -4200,7 +4294,7 @@ window.bildirimAc = hedef => {
 hesaplariYukle();
 D = yukle();
 const buAy = bugun().slice(0, 7);
-const uiBaslangic = () => ({ay: buAy, pAy: buAy, pSekme: 'liste', vSekme: 'ozet', bAy: buAy, kAy: buAy, rDonem: 'bu-ay', kasaTur: 'hepsi', kasaAra: '', kisiAra: '', urunAra: '', stokFiltre: 'hepsi', faturaAra: '', faturaFiltre: 'hepsi', servisFiltre: 'acik', servisAra: ''});
+const uiBaslangic = () => ({ay: buAy, pAy: buAy, pSekme: 'liste', vSekme: 'ozet', bAy: buAy, kAy: buAy, rDonem: 'bu-ay', kasaTur: 'hepsi', kasaAra: '', kisiAra: '', urunAra: '', stokFiltre: 'hepsi', stokKat: '', faturaAra: '', faturaFiltre: 'hepsi', servisFiltre: 'acik', servisAra: ''});
 ui = uiBaslangic();
 if (!location.hash) history.replaceState(null, '', '#/panel');
 ciz();

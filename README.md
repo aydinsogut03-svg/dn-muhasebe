@@ -31,6 +31,10 @@ Müşteri ve teknisyen imzası telefonda parmakla alınır. "Servis formu" düğ
 
 Kasa, banka hesapları, kredi kartları ve POS hesapları ayrı hesaplar olarak tanımlanır (açılış bakiyesi ve tarihi; kartta limit, kesim ve son ödeme günü). Gelir/gider, fatura tahsilatı/ödemesi, cari tahsilatı ve personel ödemesi formlarında ödeme şekli yerine hesap seçilir. Hesap seçilmemiş eski kayıtlar ödeme şekline göre varsayılan hesaba sayılır (nakit → kasa, havale → banka, kartla gelir → POS, kartla gider → kredi kartı). Hesaplar arası aktarım ve kart borcu ödemesi virman olarak girilir; gelir/gider sayılmaz. Her hesabın hareketleri yürüyen bakiyeyle listelenir ve PDF ekstresi alınır. Kart son ödeme gününe 7 gün kala özet ekranında hatırlatılır.
 
+## Detaylı stok
+
+Ürün kartında parça no (OEM), marka, grup, muadil parça noları, uyumlu motor, raf yeri, barkod, tedarikçi, kritik seviye ve sipariş miktarı tutulur; arama bunların hepsinde çalışır. Stok değeri fiyatlı girişlerden hesaplanan ağırlıklı ortalama maliyetle bulunur. Sayım ekranı sayılan miktarla kayıt arasındaki farkı sayım hareketi olarak yazar. Stok listesi (raf ve değerle) ve kritik seviyedeki ürünler için tedarikçili sipariş listesi PDF alınır; ürün ekranından o ürünle alış faturası açılır.
+
 ## Dosyalar
 
 - `web/index.html`: uygulamanın tamamı (HTML + CSS + JS). Tarayıcıda doğrudan açılabilir.
