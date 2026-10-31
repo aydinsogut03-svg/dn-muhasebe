@@ -1,13 +1,8 @@
 # PowerServ+
 
-DN Marine Makine ve Güç Sistemleri Ltd.Şti. için servis ve işletme yönetim programı: servis/iş emri ve servis formu, stok, cari, fatura, banka ve kasa, personel, vergi ve finans raporları. Profil tabanlı, tek dosyalık uygulama. Tek kod; ekranlar ve modüller seçilen profile göre açılır.
+DN Marine Makine ve Güç Sistemleri Ltd.Şti. için servis ve işletme yönetim programı: servis/iş emri ve servis formu, stok, cari, fatura, banka ve kasa, personel, vergi ve finans raporları. Tek dosyalık uygulama; tek profil (firma) vardır, bireysel/esnaf profilleri 2.1.0'da kaldırıldı ve eski hesaplar firma profiline taşınır. Açık modüller: Özet, Servis, Banka ve kasa, Gelir/Gider, Cari, Stok, Fatura, Personel, Vergi, Raporlar.
 
-| Profil | Varsayılan modüller |
-|---|---|
-| Bireysel | Özet, Gelir/Harcama, Bütçe, Raporlar (Borç/Alacak isteğe bağlı) |
-| Esnaf | Özet, Kasa, Veresiye, Stok, Raporlar |
-| Küçük işletme | Özet, Servis, Gelir/Gider, Veresiye, Stok, Fatura, Personel, Raporlar |
-| Şirket | Özet, Servis, Gelir/Gider, Cari, Stok, Fatura, Personel, Vergi, Raporlar |
+Arayüz telefon, tablet ve masaüstüne göre yerleşir; 960 px üstünde kenar menü sabit kalır ve formlar menünün sağında açılır. Ekran ölçeği otomatik ayarlanır (geniş ekranda büyür), Ayarlar > Görünüm'den sabitlenebilir. Doldurulmuş alanların adı üstünde küçük etiketle görünür.
 
 Her modül Ayarlar'dan profil bazında açılıp kapatılabilir. Modüller birbirine bağlıdır: kesilen fatura cariye borç yazar ve stoktan düşer, ödenince kasaya tahsilat girer; maaş ve stok hareketleri kasaya gider/gelir olarak işlenir.
 

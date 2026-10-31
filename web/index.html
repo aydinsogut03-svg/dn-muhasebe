@@ -221,6 +221,10 @@ a.kart:active{opacity:.7}
 .f-satir input::placeholder,.f-satir textarea::placeholder{color:var(--ucuncul)}
 .f-satir.sol input,.f-satir.sol textarea{text-align:left}
 .f-satir textarea{resize:none;min-height:72px;text-align:left}
+/* Yüzen etiket: doldurulmuş alanın ne olduğu üstünde küçük yazıyla görünür */
+.f-satir.sol .yuzen{position:absolute;left:14px;top:5px;font-size:11px;line-height:1;color:var(--ikincil);opacity:0;transform:translateY(4px);transition:opacity .15s,transform .15s;pointer-events:none;white-space:nowrap}
+.f-satir.sol:has(>input:not(:placeholder-shown)) .yuzen,.f-satir.sol:has(>textarea:not(:placeholder-shown)) .yuzen{opacity:1;transform:none}
+.f-satir.sol:has(.yuzen)>input:not(:placeholder-shown),.f-satir.sol:has(.yuzen)>textarea:not(:placeholder-shown){padding:19px 0 6px}
 .f-satir select{appearance:none;-webkit-appearance:none;color:var(--mavi);text-align:right;text-align-last:right}
 .f-satir input[type=date],.f-satir input[type=month]{color:var(--mavi);text-align:right;min-height:44px}
 .f-satir>input[type=checkbox]{display:none}
@@ -668,6 +672,31 @@ header .orta-baslik{font-size:17px}
 @keyframes ciz{to{stroke-dashoffset:0}}
 @keyframes solgun{from{opacity:0}}
 @keyframes don{to{transform:rotate(360deg)}}
+
+/* ---- Masaüstü yerleşimi ve ölçek (2.1) ---- */
+.grafik svg{max-height:230px}
+body.profilde main{max-width:560px}
+@media (min-width:960px){
+  main{max-width:1140px;padding:10px 32px 56px}
+  .buyuk-baslik{font-size:30px;margin-top:6px}
+  /* Formlar ve pencereler kenar menünün sağında açılır; menü üstlerini örtmez */
+  .perde{left:310px}
+  .sayfa-modal .modal-govde{padding:24px max(24px,calc((100% - 760px) / 2)) 32px}
+  .modal-alt{padding-left:max(24px,calc((100% - 760px) / 2));padding-right:max(24px,calc((100% - 760px) / 2))}
+  .sayfa-modal .modal-ust{padding-left:max(8px,calc((100% - 780px) / 2))}
+  .ikili{gap:16px}
+  .btn-izgara{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
+  .bildirim{left:calc(50% + 155px)}
+  .kagit-kap{display:flex;justify-content:center}
+}
+@media (min-width:1280px){
+  /* Geniş ekranda kart çiftleri ve listeler daha ferah */
+  .grup .hucre{min-height:48px}
+}
+@media (max-width:359px){
+  main{padding-left:10px;padding-right:10px}
+  .buyuk-baslik{font-size:22px}
+}
 </style>
 </head>
 <body>
@@ -680,7 +709,7 @@ header .orta-baslik{font-size:17px}
 
 <script>
 'use strict';
-const VERSIYON = '2.0.0';
+const VERSIYON = '2.1.0';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -749,7 +778,7 @@ const PROFILLER = {
   bireysel:{ad:'Bireysel', simge:'kisi', renk:'mavi', aciklama:'Kişisel gelir, harcama, bütçe ve borç-alacak takibi'},
   esnaf:{ad:'Esnaf', simge:'dukkan', renk:'turuncu', aciklama:'Dükkan kasası, veresiye defteri ve stok'},
   kucuk:{ad:'Küçük işletme', simge:'kutu', renk:'yesil', aciklama:'Gelir-gider, alacaklar, stok, fatura ve personel'},
-  sirket:{ad:'Şirket', simge:'sirket', renk:'indigo', aciklama:'Cari hesaplar, fatura, personel, KDV ve raporlar'}
+  sirket:{ad:'Firma', simge:'sirket', renk:'indigo', aciklama:'Servis, cari, stok, fatura, banka, personel, vergi ve raporlar'}
 };
 
 const TERIM = {
@@ -792,7 +821,6 @@ const MODULLER = [
   {id:'stok', simge:'kutu', renk:'kahve', varsayilan:['esnaf','kucuk','sirket'], ad:{_:'Stok'}, aciklama:'Ürünler, giriş-çıkış, kritik stok'},
   {id:'fatura', simge:'dosya', renk:'indigo', varsayilan:['kucuk','sirket'], ad:{_:'Fatura'}, aciklama:'Fatura ve teklif, yazdır ve paylaş'},
   {id:'personel', simge:'kisiler', renk:'camgobegi', varsayilan:['kucuk','sirket'], ad:{_:'Personel'}, aciklama:'Çalışanlar, puantaj, bordro, maaş ve avans'},
-  {id:'butce', simge:'hedef', renk:'mor', varsayilan:['bireysel'], ad:{_:'Bütçe'}, aciklama:'Aylık limitler ve birikim hedefleri'},
   {id:'kdv', simge:'yuzde', renk:'pembe', varsayilan:['sirket'], ad:{_:'Vergi'}, aciklama:'KDV, muhtasar, SGK, gelir/kurumlar vergisi ve takvim'},
   {id:'rapor', simge:'grafik', renk:'nane', varsayilan:TUM, ad:{_:'Raporlar'}, aciklama:'Dönemsel gelir-gider analizi'}
 ];
@@ -825,7 +853,7 @@ let H;
 function hesapKaydet() { try { localStorage.setItem(HESAP_ANAHTAR, JSON.stringify(H)); } catch (e) {} }
 function hesaplariYukle() {
   try { H = JSON.parse(localStorage.getItem(HESAP_ANAHTAR)); } catch (e) { H = null; }
-  if (H && Array.isArray(H.liste) && H.liste.length) { if (!H.liste.some(h => h.id === H.aktif)) H.aktif = H.liste[0].id; return; }
+  if (H && Array.isArray(H.liste) && H.liste.length) { for (const h of H.liste) if (h.profil) h.profil = 'sirket'; if (!H.liste.some(h => h.id === H.aktif)) H.aktif = H.liste[0].id; return; }
   // İlk açılış ya da eski sürüm: eski tek veri ilk hesap olur (eski kayıt silinmez).
   const id = 'h' + kimlik(), eski = localStorage.getItem(ANAHTAR);
   H = {aktif: id, liste: [{id, ad: '', profil: null}]};
@@ -846,6 +874,7 @@ function duzelt(d) {
   // 0.8.0: faturalarda kısmi ödeme; eski "ödendi" bilgisi tek ödemeye dönüşür.
   for (const f of d.faturalar) if (!Array.isArray(f.odemeler))
     f.odemeler = f.odendi ? [{id: kimlik(), tarih: f.odemeTarihi || f.tarih, tutar: faturaHesap(f).toplam, odeme: f.odemeSekli || 'havale'}] : [];
+  if (d.profil) d.profil = 'sirket';
   d.v = 2;
   return d;
 }
@@ -1066,6 +1095,8 @@ function modal(baslik, govde, {kaydet: kaydetFn, kaydetAd = 'Kaydet', tam = fals
   $('[data-sol]', m).onclick = () => kapat();
   if (kaydetFn) $('[data-sag]', m).onclick = () => { if (kaydetFn(m) !== false) kapat(); };
   anahtarBagla(m);
+  yuzenEtiket(m);
+  let z; new MutationObserver(() => { clearTimeout(z); z = setTimeout(() => yuzenEtiket(m), 0); }).observe(m, {childList: true, subtree: true});
   return m;
 }
 function eylemSayfa(baslik, aciklama, eylemler) {
@@ -1084,6 +1115,14 @@ function eylemSayfa(baslik, aciklama, eylemler) {
 }
 const onay = (baslik, metin, evet = 'Sil') => eylemSayfa(baslik, metin, [{ad: evet, tehlike: true, deger: true}]).then(v => v === true);
 /* iOS anahtarı: satırdaki gizli checkbox ile görünür anahtarı eşler */
+function yuzenEtiket(kok) {
+  $$('.f-satir.sol', kok).forEach(s => {
+    const i = $(':scope > input:not([type=checkbox]), :scope > textarea', s);
+    if (!i || !i.placeholder || $('.yuzen', s)) return;
+    const e = document.createElement('small'); e.className = 'yuzen'; e.textContent = i.placeholder.replace(/\s*\(.*?\)\s*$/, '');
+    s.prepend(e);
+  });
+}
 function anahtarBagla(kok) {
   $$('.f-satir', kok).forEach(s => {
     const gercek = $(':scope > input[type=checkbox]', s);
@@ -1132,8 +1171,8 @@ function kaydirma() { $('#ust').classList.toggle('kaydi', window.scrollY > 30); 
 window.addEventListener('scroll', kaydirma, {passive: true});
 
 /* Soldan açılan menü: profil başlığı, açık modüller (küçük rozetlerle), ayarlar */
-const SEKME_SIRA = ['servis','banka','kasa','veresiye','fatura','stok','personel','butce','kdv','rapor'];
-const MENU_GRUP = [['Servis', ['servis']], ['Satış ve cari', ['fatura', 'veresiye']], ['Nakit', ['banka', 'kasa', 'butce']], ['Stok', ['stok']], ['Çalışanlar', ['personel']], ['Vergi ve rapor', ['kdv', 'rapor']]];
+const SEKME_SIRA = ['servis','banka','kasa','veresiye','fatura','stok','personel','kdv','rapor'];
+const MENU_GRUP = [['Servis', ['servis']], ['Satış ve cari', ['fatura', 'veresiye']], ['Nakit', ['banka', 'kasa']], ['Stok', ['stok']], ['Çalışanlar', ['personel']], ['Vergi ve rapor', ['kdv', 'rapor']]];
 const cekmeceAc = () => document.body.classList.add('cekmece-acik');
 const cekmeceKapat = () => { const a = document.body.classList.contains('cekmece-acik'); document.body.classList.remove('cekmece-acik'); return a; };
 function rozet(id) {
@@ -1151,7 +1190,7 @@ function menuCiz(aktif) {
   const p = PROFILLER[D.profil];
   const satir = (id, ad, simge, renk, ek = '') => `<a href="#/${id}" data-id="${id}" class="${id === aktif ? 'secili' : ''}">${kare(simge, renk)}<span class="ad">${esc(ad)}</span>${ek}</a>`;
   const kapali = MODULLER.filter(m => !m.zorunlu && !modulAcik(m.id)).length;
-  $('#cekmece').innerHTML = `<button class="c-ust" id="cProfil">${kare(p.simge, p.renk)}<div style="min-width:0;flex:1"><b>${esc(D.ad || p.ad + ' hesabı')}</b><small>${esc(p.ad)} · hesap değiştir</small></div>${ikon('ileri', 'chev')}</button>
+  $('#cekmece').innerHTML = `<button class="c-ust" id="cProfil">${kare(p.simge, p.renk)}<div style="min-width:0;flex:1"><b>${esc(D.ad || 'Firma hesabı')}</b><small>Hesap değiştir</small></div>${ikon('ileri', 'chev')}</button>
     ${H.liste.length > 1 ? `<div class="c-hesaplar">${H.liste.filter(x => x.id !== H.aktif).map(x => `<button data-hgec="${x.id}">${kare(x.profil ? PROFILLER[x.profil].simge : 'kisi', x.profil ? PROFILLER[x.profil].renk : 'gri')}<span>${esc(hesapAdi(x))}</span></button>`).join('')}</div>` : ''}
     <div class="c-liste">${satir('panel', 'Özet', 'ev', 'mavi')}</div>
     ${MENU_GRUP.map(([baslik, idler]) => { const l = idler.filter(id => modulAcik(id)); return l.length ? `<div class="c-baslik">${esc(baslik)}</div>
@@ -1250,56 +1289,28 @@ const kucukKart = (yol, simge, renk, baslik, deger, alt, altSinif = '') => `<a c
   <div class="dev orta">${deger}</div><div class="k-alt ${altSinif}">${esc(alt)}</div></a>`;
 
 /* ================= Profil seçimi ================= */
+/* İlk açılış: tek profil (firma). Firma adı sorulur, örnek hesapla denenebilir. */
 function profilEkrani(ilk) {
+  if (!ilk) return git('ayarlar', true);
   document.body.classList.add('profilde');
   cekmeceKapat();
-  let h;
-  const hx = H.liste.find(x => x.id === H.aktif), geriDon = ilk && hx?.onceki && H.liste.some(x => x.id === hx.onceki);
-  if (ilk) {
-    sayfa('', geriDon ? {geri: 'panel', geriAd: 'Vazgeç'} : {});
-    if (geriDon) $('#geriBtn').onclick = () => { H.liste = H.liste.filter(x => x.id !== hx.id); localStorage.removeItem(veriAnahtari(hx.id)); hesabaGec(hx.onceki); };
-    h = `<div class="karsilama"><div class="logo">P+</div><h2>${H.liste.length > 1 ? 'Yeni hesap' : 'PowerServ+'}</h2><p>Bu hesap için profil seçin. Ekranlar ve modüller buna göre açılır.</p></div>
-      <div class="grup"><label class="f-satir sol"><input type="text" id="adGiris" value="${esc(D.ad)}" placeholder="Adınız veya işletme adı (isteğe bağlı)"></label></div>`;
-    if (H.liste.length === 1) h += `<div class="grup"><button class="hucre kareli" id="ornekDene">${kare('deney', 'mor')}<div class="ic"><b>Önce örnek verilerle deneyin</b><small>Dolu bir örnek hesap açılır, sonra kendi hesabınızı açarsınız</small></div>${CHEV}</button></div><div class="bolum">ya da profil seçin</div>`;
-  } else {
-    h = sayfa('Profil', {geri: 'ayarlar', geriAd: 'Ayarlar'}) + `<p class="dipnot" style="margin:-6px 4px 18px">Her profilin verisi ayrıdır. Başka profil seçince o profilin hesabına geçilir; yoksa boş bir hesap açılır. Bu hesabın kayıtları burada kalır.</p>`;
-  }
-  h += Object.entries(PROFILLER).map(([id, p]) => {
-    const mods = MODULLER.filter(m => !m.zorunlu && m.varsayilan.includes(id)).map(m => `<span>${esc(modulAdi(m, id))}</span>`).join('');
-    const not = ilk ? '' : D.profil === id ? ' <span class="hap mavi">açık</span>' : profilHesabi(id) ? ` <span class="hap">${esc(hesapAdi(profilHesabi(id)))}</span>` : (hesapBosMu() ? '' : ' <span class="hap">yeni hesap</span>');
-    return `<button class="profil-kart ${D.profil === id ? 'secili' : ''}" data-p="${id}">${kare(p.simge, p.renk)}
-      <div style="flex:1;min-width:0"><b>${esc(p.ad)}${not}</b><small>${esc(p.aciklama)}</small><div class="etiketler">${mods}</div></div></button>`;
-  }).join('');
-  $('#icerik').innerHTML = h;
+  const hx = H.liste.find(x => x.id === H.aktif), geriDon = hx?.onceki && H.liste.some(x => x.id === hx.onceki);
+  sayfa('', geriDon ? {geri: 'panel', geriAd: 'Vazgeç'} : {});
+  if (geriDon) $('#geriBtn').onclick = () => { H.liste = H.liste.filter(x => x.id !== hx.id); localStorage.removeItem(veriAnahtari(hx.id)); hesabaGec(hx.onceki); };
+  $('#icerik').innerHTML = `<div class="karsilama"><div class="logo">P+</div><h2>${H.liste.length > 1 ? 'Yeni firma hesabı' : 'PowerServ+'}</h2><p>Servis, cari, stok, fatura, banka ve finans yönetimi tek yerde.</p></div>
+    <div class="grup"><label class="f-satir sol"><input type="text" id="adGiris" value="${esc(D.ad || (H.liste.length > 1 ? '' : FIRMA_VARSAYILAN.ad))}" placeholder="Firma unvanı"></label></div>
+    <button class="btn" id="basla">Başla</button>
+    ${H.liste.length === 1 ? `<div class="grup" style="margin-top:16px"><button class="hucre kareli" id="ornekDene">${kare('deney', 'mor')}<div class="ic"><b>Önce örnek verilerle deneyin</b><small>Dolu bir örnek hesap açılır; gerçek hesabınıza dokunmaz</small></div>${CHEV}</button></div>` : ''}`;
   if ($('#ornekDene')) $('#ornekDene').onclick = ornekSor;
-  $$('.profil-kart').forEach(b => b.onclick = () => {
-    const yeni = b.dataset.p;
-    if (!ilk) {
-      // Profil = ayrı hesap: dolu bir hesabın profili değiştirilmez, o profilin hesabına geçilir.
-      if (yeni === D.profil) return git('panel', true);
-      const var_ = profilHesabi(yeni);
-      if (var_) return hesabaGec(var_.id);
-      if (!hesapBosMu()) {
-        const id = 'h' + kimlik();
-        localStorage.setItem(veriAnahtari(id), JSON.stringify({...yeniDurum(), profil: yeni}));
-        H.liste.push({id, ad: '', profil: yeni});
-        return hesabaGec(id);
-      }
-    }
-    if (ilk) { D.ad = $('#adGiris').value.trim(); if (hx) delete hx.onceki; }
-    D.profil = yeni;
-    kaydet();
-    bildir(`${PROFILLER[D.profil].ad} profili seçildi`);
-    git('panel', true);
-  });
+  $('#basla').onclick = () => {
+    D.ad = $('#adGiris').value.trim(); if (hx) delete hx.onceki;
+    D.profil = 'sirket'; kaydet(); git('panel', true);
+  };
 }
 
 /* ================= Hesaplar ================= */
-async function ornekSor() {
-  const p = await eylemSayfa('Örnek hesap', 'Hangi profil için örnek veri yüklensin?', Object.entries(PROFILLER).map(([id, x]) => ({ad: x.ad, deger: id})));
-  if (p) ornekHesapAc(p);
-}
-const hesapAdi = h => h.ad || (h.profil ? PROFILLER[h.profil].ad + ' hesabı' : 'Yeni hesap');
+function ornekSor() { ornekHesapAc('sirket'); }
+const hesapAdi = h => h.ad || (h.profil ? 'Firma hesabı' : 'Yeni hesap');
 const profilHesabi = p => H.liste.find(h => h.profil === p && h.id !== H.aktif);
 const hesapBosMu = () => !['islemler', 'kisiler', 'hareketler', 'urunler', 'faturalar', 'personeller', 'servisler', 'finansHesap'].some(k => D[k].length);
 function hesabaGec(id) {
@@ -1317,7 +1328,7 @@ function hesapEkle() {
 function hesaplarEkrani() {
   let h = sayfa('Hesaplar', {alt: 'Her hesabın verisi ayrıdır'});
   h += `<div class="grup">${H.liste.map(x => { const p = x.profil && PROFILLER[x.profil];
-    return `<button class="hucre kareli" data-h="${x.id}">${kare(p ? p.simge : 'kisi', p ? p.renk : 'gri')}<div class="ic"><b>${esc(hesapAdi(x))}</b><small>${p ? esc(p.ad) + ' profili' : 'Profil seçilmedi'}</small></div>
+    return `<button class="hucre kareli" data-h="${x.id}">${kare(p ? p.simge : 'kisi', p ? p.renk : 'gri')}<div class="ic"><b>${esc(hesapAdi(x))}</b><small>${p ? (x.ornek ? 'Örnek hesap' : 'Firma hesabı') : 'Kurulum bekliyor'}</small></div>
       ${x.id === H.aktif ? '<span class="hap mavi">açık</span>' : CHEV}</button>`; }).join('')}
     <button class="hucre eylem kareli" id="hEkle">${kare('arti', 'mavi')}<div class="ic"><b>Yeni hesap ekle</b></div></button>
     <button class="hucre kareli" id="hOrnek">${kare('deney', 'mor')}<div class="ic"><b>Örnek verilerle dene</b><small>Ayrı bir örnek hesap açar, gerçek hesaplarınıza dokunmaz</small></div>${CHEV}</button></div>
@@ -1435,7 +1446,7 @@ function panelEkrani() {
     const mn = Math.min(0, ...netler), mx = Math.max(1, ...netler), W = 340, Hs = 58;
     const nokta = netler.map((n, i) => [i / 5 * W, 8 + (1 - (n - mn) / (mx - mn || 1)) * (Hs - 16)]);
     const yol = nokta.map(([x, y], i) => (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1)).join(' ');
-    h += `<section class="kahraman"><div class="k-ust"><span><b>${selam}</b> · <span style="text-transform:capitalize">${esc(tarih)}</span></span><span class="k-surum">${esc(p.ad)} · v${VERSIYON}</span></div>
+    h += `<section class="kahraman"><div class="k-ust"><span><b>${selam}</b> · <span style="text-transform:capitalize">${esc(tarih)}</span></span><span class="k-surum">PowerServ+ · v${VERSIYON}</span></div>
       ${ac('kasa') ? `<div class="k-etiket">${esc(ayAdi(ay))} · net</div><div class="k-tutar ${o.net < 0 ? 'eksi' : ''}" data-sayac="${o.net}">${para(o.net)}</div>
       <div class="k-satir"><span><i style="background:#6cc398"></i>${esc(t.gelir)}<b>${kisaPara(o.gelir)}</b></span><span><i style="background:#e2806a"></i>${esc(t.gider)}<b>${kisaPara(o.gider)}</b></span></div>
       ${netler.every(n => !n) ? '' : `<svg viewBox="0 0 ${W} ${Hs}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="kAlan" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d2ad66" stop-opacity=".35"/><stop offset="1" stop-color="#d2ad66" stop-opacity="0"/></linearGradient></defs>
@@ -1705,7 +1716,7 @@ function kisiSatiri(k, b = kisiBakiye(k.id)) {
 function kisiTiklari(kok = document) { $$('[data-kisi]', kok).forEach(b => b.onclick = () => git('veresiye/' + b.dataset.kisi)); }
 
 const CARI_TIP = {musteri: 'Müşteri', tedarikci: 'Tedarikçi', ikisi: 'Müşteri ve tedarikçi'};
-const cariDetayli = () => D.profil === 'sirket' || D.profil === 'kucuk';
+const cariDetayli = () => true;
 const cariTip = k => k.tip || (D.faturalar.some(f => f.kisiId === k.id && f.tur === 'alis') && !D.faturalar.some(f => f.kisiId === k.id && f.tur === 'fatura') ? 'tedarikci' : 'musteri');
 const cariTipUyar = (k, tip) => tip === 'hepsi' || cariTip(k) === tip || cariTip(k) === 'ikisi';
 /* Cari özet: bu yıl satış/alış, açık ve vadesi geçen fatura, son tahsilat */
@@ -4138,10 +4149,10 @@ function ayarlarEkrani() {
   const p = PROFILLER[D.profil];
   let h = sayfa('Ayarlar');
   h += `<div class="grup"><button class="hucre avatarli" id="profilDegis" style="--girinti:74px">${kare(p.simge, p.renk, 'profil')}
-      <div class="ic"><b class="k">${esc(D.ad || 'İsimsiz')}</b><small>${esc(p.ad)} profili</small></div><span class="deger">Değiştir</span>${CHEV}</button></div>
+      <div class="ic"><b class="k">${esc(D.ad || 'İsimsiz')}</b><small>Firma hesabı · ${H.liste.length} hesap</small></div><span class="deger">Hesaplar</span>${CHEV}</button></div>
     <div class="bolum">${modulAcik('fatura') ? 'İşletme bilgileri' : 'Ad'}</div>
     <div class="grup">
-      <label class="f-satir sol"><input type="text" data-ayar="ad" value="${esc(D.ad)}" placeholder="Ad / işletme adı"></label>
+      <label class="f-satir sol"><input type="text" data-ayar="ad" value="${esc(D.ad)}" placeholder="Firma unvanı"></label>
       ${modulAcik('fatura') ? [['adres','Adres'],['vd','Vergi dairesi'],['vno','Vergi / TC no'],['mersis','MERSİS no'],['tel','Telefon'],['servisTel','Servis telefonu'],['eposta','E-posta'],['web','Web sitesi'],['iban','IBAN']].map(([a, p]) =>
         `<label class="f-satir sol"><input type="text" data-firma="${a}" value="${esc(D.firma[a])}" placeholder="${p}"></label>`).join('') : ''}
     </div>
@@ -4159,6 +4170,9 @@ function ayarlarEkrani() {
     <div class="grup">${MODULLER.map(m => `<div class="hucre kareli">${kare(m.simge, m.renk)}<div class="ic"><b>${esc(modulAdi(m))}</b><small>${esc(m.aciklama)}</small></div>
       ${m.zorunlu ? '<span class="deger" style="font-size:14px">Her zaman</span>' : `<label class="anahtar"><input type="checkbox" data-mod="${m.id}" ${modulAcik(m.id) ? 'checked' : ''}><span></span></label>`}</div>`).join('')}</div>
     <p class="dipnot">Kapalı modülün verisi silinmez. Açık modüller soldaki menüde görünür.</p>
+    <div class="bolum">Görünüm</div>
+    <div class="segment" id="olcekSec">${[['oto', 'Otomatik'], ['0.9', '%90'], ['1', '%100'], ['1.15', '%115'], ['1.3', '%130']].map(([v, a]) => `<button data-v="${v}" class="${olcekTercih() === v ? 'secili' : ''}">${a}</button>`).join('')}</div>
+    <p class="dipnot">Otomatik, ekran boyutuna göre yazıları ve düğmeleri büyütür ya da küçültür. Tarayıcıda Ctrl + / Ctrl − de çalışır.</p>
     <div class="bolum">Güvenlik</div>
     <div class="grup"><label class="hucre kareli">${kare('kilit', 'indigo')}<div class="ic"><b>PIN kilidi</b><small>Açılışta ve 30 sn sonra dönüşte PIN sorar</small></div><span class="anahtar"><input type="checkbox" id="pinAnahtar" ${kilitAyar() ? 'checked' : ''}><span></span></span></label>
       ${kilitAyar() ? `<button class="hucre kareli" id="pinDegis">${kare('kilit', 'gri')}<div class="ic"><b>PIN'i değiştir</b></div>${CHEV}</button>` : ''}</div>
@@ -4184,7 +4198,9 @@ function ayarlarEkrani() {
     <div class="grup"><button class="hucre tehlike" id="hepsiniSil">Bu hesabın verilerini sil</button></div>
     <p class="soluk" style="text-align:center;font-size:13px;margin:8px 0 0">PowerServ+ ${VERSIYON}<br>DN Marine Makine ve Güç Sistemleri Ltd.Şti.</p>`;
   $('#icerik').innerHTML = h;
-  $('#profilDegis').onclick = () => git('profil');
+  yuzenEtiket($('#icerik'));
+  $('#profilDegis').onclick = () => git('hesaplar');
+  $$('#olcekSec button').forEach(b => b.onclick = () => { try { localStorage.setItem(OLCEK_ANAHTAR, b.dataset.v); } catch (e) {} olcekUygula(); ayarlarEkrani(); });
   $$('[data-ayar]').forEach(i => i.onchange = () => { D[i.dataset.ayar] = i.value.trim(); kaydet(); bildir('Kaydedildi'); });
   $$('[data-firma]').forEach(i => i.onchange = () => { D.firma[i.dataset.firma] = i.value.trim(); kaydet(); bildir('Kaydedildi'); });
   $$('[data-servis]').forEach(i => i.onchange = () => { const a = i.dataset.servis; D.servisAyar[a] = a === 'saatUcret' ? tutarOku(i.value) || 0 : i.value.trim(); kaydet(); bildir('Kaydedildi'); });
@@ -4246,8 +4262,8 @@ $('#dosya').onchange = async e => {
 /* Seçilen profil için ayrı bir "Örnek" hesabı açar ve gerçekçi kayıtlarla doldurur. Gerçek hesaplara dokunmaz. */
 function ornekHesapAc(profil) {
   const id = 'h' + kimlik();
-  H.liste.push({id, ad: 'Örnek ' + PROFILLER[profil].ad.toLocaleLowerCase('tr'), profil, ornek: true});
-  localStorage.setItem(veriAnahtari(id), JSON.stringify({...yeniDurum(), profil, ad: 'Örnek ' + PROFILLER[profil].ad.toLocaleLowerCase('tr')}));
+  H.liste.push({id, ad: 'Örnek firma', profil, ornek: true});
+  localStorage.setItem(veriAnahtari(id), JSON.stringify({...yeniDurum(), profil, ad: 'Örnek firma'}));
   H.aktif = id; hesapKaydet();
   D = yukle(); ui = uiBaslangic();
   ornekDoldur();
@@ -4506,6 +4522,23 @@ window.bildirimAc = hedef => {
   if (id && id !== H.aktif && H.liste.some(h => h.id === id)) { H.aktif = id; hesapKaydet(); D = yukle(); ui = uiBaslangic(); }
   git(yol || 'panel', true);
 };
+/* ================= Ekran ölçeği =================
+   Otomatik: ekran genişliğine göre büyütür/küçültür (dizüstü 1366 px'te %100, Full HD'de %115, 2K ve üstünde %130).
+   Ayarlar > Görünüm'den sabit bir ölçek seçilebilir. Yazdırırken ölçek kaldırılır. */
+const OLCEK_ANAHTAR = 'powerserv.olcek';
+const olcekTercih = () => { try { return localStorage.getItem(OLCEK_ANAHTAR) || 'oto'; } catch (e) { return 'oto'; } };
+function olcekHesapla() {
+  const t = olcekTercih();
+  if (t !== 'oto') return +t || 1;
+  const w = window.innerWidth;
+  return w < 360 ? .9 : w < 1440 ? 1 : w < 1700 ? 1.08 : w < 2200 ? 1.15 : 1.3;
+}
+function olcekUygula() { document.documentElement.style.zoom = olcekHesapla() === 1 ? '' : String(olcekHesapla()); }
+window.addEventListener('resize', olcekUygula);
+window.addEventListener('beforeprint', () => { document.documentElement.style.zoom = ''; });
+window.addEventListener('afterprint', olcekUygula);
+olcekUygula();
+
 /* ================= Başlat ================= */
 hesaplariYukle();
 D = yukle();
