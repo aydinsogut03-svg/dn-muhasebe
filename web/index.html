@@ -680,7 +680,7 @@ header .orta-baslik{font-size:17px}
 
 <script>
 'use strict';
-const VERSIYON = '1.4.0';
+const VERSIYON = '1.5.0';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -3884,8 +3884,22 @@ function raporEkrani() {
   let h = sayfa('Raporlar', {sag: `<button class="nav-btn" id="csvBtn">Dışa aktar</button>`});
   const liste = D.islemler.filter(i => i.tarih >= bas && i.tarih <= son);
   const o = aralikToplam(bas, son);
-  h += `<div class="segment" id="dSec">${[['bu-ay','Bu ay'],['gecen-ay','Geçen ay'],['bu-yil','Bu yıl'],['12-ay','12 ay']].map(([v, a]) => `<button data-v="${v}" class="${ui.rDonem === v ? 'secili' : ''}">${a}</button>`).join('')}</div>
-    <div class="kart"><div class="kart-ust">${kare('grafik', 'nane')}<span style="text-transform:capitalize">${esc(ad)}</span></div>
+  const sekmeler = [['genel', 'Gelir-gider'], ['kar', 'Kâr/zarar'], ['nakit', 'Nakit'], ...(modulAcik('servis') ? [['servis', 'Servis']] : [])];
+  if (!sekmeler.some(x => x[0] === ui.rSekme)) ui.rSekme = 'genel';
+  h += `<div class="segment" id="rSekme">${sekmeler.map(([v, a]) => `<button data-v="${v}" class="${ui.rSekme === v ? 'secili' : ''}">${a}</button>`).join('')}</div>`;
+  h += `<div class="segment" id="dSec">${[['bu-ay','Bu ay'],['gecen-ay','Geçen ay'],['bu-yil','Bu yıl'],['12-ay','12 ay']].map(([v, a]) => `<button data-v="${v}" class="${ui.rDonem === v ? 'secili' : ''}">${a}</button>`).join('')}</div>`;
+  if (ui.rSekme !== 'genel') {
+    if (ui.rSekme === 'kar') { const k = karZarar(bas, son); h += `<div class="kart"><div class="kart-ust">${kare('grafik', 'nane')}<span style="text-transform:capitalize">${esc(ad)}</span></div><div class="dev ${k.net < 0 ? 'gider' : ''}">${para(k.net)}</div><div class="k-alt">net ${k.net < 0 ? 'zarar' : 'kâr'}, KDV hariç</div></div>` + karZararTablo(k); }
+    else if (ui.rSekme === 'nakit') h += nakitAkisHtml(bas, son);
+    else h += servisRaporHtml(bas, son);
+    $('#icerik').innerHTML = h;
+    $$('#rSekme button').forEach(b => b.onclick = () => { ui.rSekme = b.dataset.v; raporEkrani(); });
+    $$('#dSec button').forEach(b => b.onclick = () => { ui.rDonem = b.dataset.v; raporEkrani(); });
+    $('#csvBtn').onclick = () => yazdir(`Kâr zarar ${ad}`, karZararKagit(bas, son, ad));
+    $('#csvBtn').textContent = 'PDF';
+    return;
+  }
+  h += `<div class="kart"><div class="kart-ust">${kare('grafik', 'nane')}<span style="text-transform:capitalize">${esc(ad)}</span></div>
       <div class="ozet"><div><small>Gelir</small><b class="gelir">${kisaPara(o.gelir)}</b></div><div><small>Gider</small><b class="gider">${kisaPara(o.gider)}</b></div><div><small>Net</small><b class="${o.net < 0 ? 'gider' : ''}">${kisaPara(o.net)}</b></div></div>
       <div class="k-alt" style="font-size:14px;margin-top:10px">${o.gelir ? (o.net >= 0 ? `Kâr marjı %${Math.round(o.net / o.gelir * 100)}` : `Zarar, gelirin %${Math.round(-o.net / o.gelir * 100)} kadarı`) : 'Bu dönemde gelir yok'} · ${liste.length} kayıt</div></div>`;
   const aylar = [...Array(12)].map((_, i) => ayKaydir(bugun().slice(0, 7), i - 11));
@@ -3934,8 +3948,10 @@ function raporEkrani() {
   $('#icerik').innerHTML = h;
   kisiTiklari();
   $$('#dSec button').forEach(b => b.onclick = () => { ui.rDonem = b.dataset.v; raporEkrani(); });
+  $$('#rSekme button').forEach(b => b.onclick = () => { ui.rSekme = b.dataset.v; raporEkrani(); });
   $('#csvBtn').onclick = async () => {
-    const s = await eylemSayfa('Raporu dışa aktar', `${ad} · ${liste.length} kayıt`, [{ad: 'PDF rapor (yazdır / kaydet)', deger: 'pdf'}, {ad: 'Excel tablosu (CSV) paylaş', deger: 'csv'}]);
+    const s = await eylemSayfa('Raporu dışa aktar', `${ad} · ${liste.length} kayıt`, [{ad: 'PDF rapor (yazdır / kaydet)', deger: 'pdf'}, {ad: 'Kâr / zarar raporu (PDF)', deger: 'kar'}, {ad: 'Excel tablosu (CSV) paylaş', deger: 'csv'}]);
+    if (s === 'kar') return yazdir(`Kâr zarar ${ad}`, karZararKagit(bas, son, ad));
     if (s === 'pdf') return yazdir(`DN Muhasebe rapor ${ad}`, raporKagit(bas, son, ad, liste));
     if (s !== 'csv') return;
     if (!liste.length) return bildir('Bu dönemde dışa aktarılacak kayıt yok', true);
@@ -3943,6 +3959,122 @@ function raporEkrani() {
       [i.tarih, i.tur === 'gelir' ? 'Gelir' : 'Gider', i.kategori, i.aciklama, odemeAdi[i.odeme] || '', csvTL((i.tur === 'gelir' ? 1 : -1) * i.tutar), csvTL(i.kdv)]));
     try { bildir('Kaydedildi: ' + dosyaPaylas(`dn-muhasebe-${bas}_${son}.csv`, csv, 'text/csv')); } catch (e) { bildir('Kaydedilemedi', true); }
   };
+}
+/* ================= Finans raporları =================
+   Kâr/zarar fatura esaslıdır: satış hasılatı (KDV hariç) − satılan malın maliyeti (stok çıkışları × ortalama maliyet)
+   − stoksuz alış faturaları − faturasız giderler + faturasız gelirler. Tahsilat ve fatura ödemeleri kâra ikinci kez sayılmaz. */
+function karZarar(bas, son) {
+  const ic = t => t >= bas && t <= son;
+  const sf = D.faturalar.filter(f => f.tur === 'fatura' && faturaliMi(f) && ic(f.tarih));
+  const af = D.faturalar.filter(f => f.tur === 'alis' && faturaliMi(f) && ic(f.tarih));
+  const hasilat = sf.reduce((s, f) => s + faturaHesap(f).ara, 0);
+  const servisHasilat = sf.filter(f => f.servisId).reduce((s, f) => s + faturaHesap(f).ara, 0);
+  let smm = 0;
+  for (const h of D.stokHareket) if (h.tur === 'cikis' && !h.sayim && ic(h.tarih)) { const u = urun(h.urunId); if (u) smm += Math.round(h.miktar * urunMaliyet(u)); }
+  const stoksuzAlis = af.reduce((s, f) => s + f.kalemler.filter(k => !k.urunId).reduce((t, k) => t + Math.round(k.miktar * k.fiyat), 0), 0);
+  const gelirKat = {}, giderKat = {};
+  let digerGelir = 0, gider = 0;
+  for (const i of D.islemler) {
+    if (!ic(i.tarih) || i.kaynak?.tip === 'fatura' || i.kaynak?.tip === 'stok' || i.hareketId) continue;
+    const net = i.tutar - (i.kdv || 0);
+    if (i.tur === 'gelir') { if (i.kategori === 'Tahsilat') continue; digerGelir += net; gelirKat[i.kategori] = (gelirKat[i.kategori] || 0) + net; }
+    else { gider += net; giderKat[i.kategori] = (giderKat[i.kategori] || 0) + net; }
+  }
+  const brut = hasilat - smm, net = brut + digerGelir - stoksuzAlis - gider;
+  return {hasilat, servisHasilat, smm, brut, stoksuzAlis, digerGelir, gider, net, gelirKat, giderKat, satisAdet: sf.length};
+}
+function karZararTablo(k) {
+  const satir = (a, v, cls = '') => `<div class="hucre ${cls}"><div class="ic"><b>${a}</b></div><span class="tutar ${v < 0 ? 'gider' : ''}" style="font-size:15px">${para(v)}</span></div>`;
+  return `<div class="grup">
+    ${satir(`Satış hasılatı <small class="soluk">${k.satisAdet} fatura, KDV hariç</small>`, k.hasilat)}
+    ${k.servisHasilat ? satir('<small class="soluk">· servisten</small>', k.servisHasilat) : ''}
+    ${satir('Satılan malın maliyeti', -k.smm)}
+    ${satir('<span style="font-weight:700">Brüt kâr</span>', k.brut)}
+    ${k.digerGelir ? satir('Faturasız gelirler', k.digerGelir) : ''}
+    ${k.stoksuzAlis ? satir('Stok dışı alış faturaları', -k.stoksuzAlis) : ''}
+    ${satir('Faaliyet giderleri', -k.gider)}
+    ${satir(`<span style="font-weight:700">Net ${k.net < 0 ? 'zarar' : 'kâr'}</span>`, k.net)}
+  </div>
+  ${k.hasilat ? `<p class="dipnot">Brüt kâr marjı %${Math.round(k.brut / k.hasilat * 100)} · net kâr marjı %${Math.round(k.net / (k.hasilat + k.digerGelir || 1) * 100)}. Tutarlar KDV hariçtir; maliyet bugünkü ortalama maliyetle hesaplanır.</p>` : '<p class="dipnot">Tutarlar KDV hariçtir.</p>'}`;
+}
+/* Önümüzdeki günlerde beklenen tahsilat ve ödemeler */
+function nakitProjeksiyon(gun) {
+  const b = bugun(), sinir = (() => { const d = tarihNesne(b); d.setDate(d.getDate() + gun); return tarihStr(d); })();
+  let tahsilat = 0, odeme = 0, gecikmisT = 0, gecikmisO = 0;
+  for (const f of D.faturalar) if (faturaliMi(f)) {
+    const kl = faturaKalan(f); if (!kl) continue;
+    const v = f.vade || f.tarih;
+    if (v > sinir) continue;
+    if (f.tur === 'fatura') { tahsilat += kl; if (v < b) gecikmisT += kl; } else { odeme += kl; if (v < b) gecikmisO += kl; }
+  }
+  let kart = 0;
+  if (modulAcik('banka')) for (const h of aktifHesaplar()) if (h.tur === 'kart') { const so = kartSonOdeme(h), bor = -hesapBakiye(h); if (bor > 0 && so && so <= sinir) kart += bor; }
+  let maas = 0;
+  if (modulAcik('personel')) maas = D.personeller.filter(p => p.aktif !== false && p.maas > 0 && !maasOdendiMi(p.id, b.slice(0, 7))).reduce((s, p) => s + (p.maas || 0), 0) * Math.max(1, Math.round(gun / 30));
+  return {tahsilat, odeme, kart, maas, gecikmisT, gecikmisO, net: tahsilat - odeme - kart - maas};
+}
+function nakitAkisHtml(bas, son) {
+  const aylar = [];
+  for (let a = bas.slice(0, 7); a <= son.slice(0, 7); a = ayKaydir(a, 1)) aylar.push(a);
+  if (aylar.length < 3) for (let i = aylar.length; i < 6; i++) aylar.unshift(ayKaydir(aylar[0], -1));
+  let h = '';
+  if (modulAcik('banka') && D.finansHesap.length) {
+    const o = finansOzet();
+    h += `<div class="kart"><div class="kart-ust">${kare('banka', 'mavi')}Bugünkü durum</div><div class="ozet"><div><small>Kasa ve banka</small><b>${kisaPara(o.varlik)}</b></div><div><small>Kart borcu</small><b class="${o.kartBorc ? 'gider' : ''}">${kisaPara(o.kartBorc)}</b></div><div><small>Net</small><b>${kisaPara(o.net)}</b></div></div></div>`;
+  }
+  const p = [30, 60, 90].map(g => [g, nakitProjeksiyon(g)]);
+  h += `<div class="bolum">Beklenen nakit hareketi</div><div class="grup">${p.map(([g, x]) => `<div class="hucre"><div class="ic"><b>${g} gün içinde</b><small>tahsilat ${kisaPara(x.tahsilat)} · ödeme ${kisaPara(x.odeme + x.kart + x.maas)}</small></div><span class="tutar ${x.net < 0 ? 'gider' : 'gelir'}">${para(x.net)}</span></div>`).join('')}</div>
+    <p class="dipnot">Açık faturalar vadesine göre (vadesi geçenler dahil: tahsilat ${para(p[0][1].gecikmisT)}, ödeme ${para(p[0][1].gecikmisO)}), kredi kartı son ödemeleri ve ödenmemiş maaşlar.</p>`;
+  const v = aylar.map(a => ({a, ...ayToplam(a)}));
+  while (v.length > 1 && !v[0].gelir && !v[0].gider) v.shift();
+  let kum = 0;
+  h += `<div class="bolum">Aylık nakit akışı</div><div class="grup">${v.map(x => { kum += x.net; return `<div class="hucre"><div class="ic"><b style="text-transform:capitalize">${esc(ayAdi(x.a))}</b><small>giren ${kisaPara(x.gelir)} · çıkan ${kisaPara(x.gider)}</small></div><span class="tutar ${x.net < 0 ? 'gider' : 'gelir'}">${para(x.net)}<small>birikimli ${kisaPara(kum)}</small></span></div>`; }).join('')}</div>`;
+  if (modulAcik('banka') && D.finansHesap.length) {
+    const [b1, s1] = [bas, son];
+    const rows = aktifHesaplar().map(fh => { const l = hesapHareketleri(fh).filter(x => x.tarih >= b1 && x.tarih <= s1); return {fh, gi: l.filter(x => x.tutar > 0).reduce((s, x) => s + x.tutar, 0), ci: l.filter(x => x.tutar < 0).reduce((s, x) => s - x.tutar, 0)}; });
+    h += `<div class="bolum">Hesaplara göre (dönem)</div><div class="grup">${rows.map(r => `<a class="hucre kareli" href="#/banka/${r.fh.id}">${kare(HESAP_TUR[r.fh.tur].simge, HESAP_TUR[r.fh.tur].renk)}<div class="ic"><b>${esc(r.fh.ad)}</b><small>giren ${kisaPara(r.gi)} · çıkan ${kisaPara(r.ci)}</small></div><span class="tutar">${para(r.fh.tur === 'kart' ? -hesapBakiye(r.fh) : hesapBakiye(r.fh))}<small>${r.fh.tur === 'kart' ? 'borç' : 'bakiye'}</small></span></a>`).join('')}</div>`;
+  }
+  const borcYas = [['Vadesi gelmemiş', 0], ['1–30 gün', 0], ['31–60 gün', 0], ['60+ gün', 0]];
+  for (const f of D.faturalar) if (f.tur === 'alis' && faturaliMi(f)) { const kl = faturaKalan(f); if (!kl) continue; const g = vadeGun(f) ?? 0; borcYas[g >= 0 ? 0 : -g <= 30 ? 1 : -g <= 60 ? 2 : 3][1] += kl; }
+  if (borcYas.some(x => x[1])) h += `<div class="bolum">Borç yaşlandırma (alış faturaları)</div><div class="grup">${borcYas.map(([a, x]) => `<div class="hucre"><div class="ic"><b>${a}</b></div><span class="deger">${x ? para(x) : '—'}</span></div>`).join('')}</div>`;
+  return h;
+}
+function servisRaporHtml(bas, son) {
+  const l = D.servisler.filter(s => s.tarih >= bas && s.tarih <= son && s.durum !== 'iptal');
+  if (!l.length) return bosDurum('alet', 'mor', 'Bu dönemde servis yok', 'Servis kayıtları girildikçe teknisyen, makine ve parça kullanımı burada görünür.');
+  const tamam = l.filter(s => s.durum === 'tamam').length, saat = l.reduce((t, s) => t + iscilikSaat(s), 0);
+  const fat = D.faturalar.filter(f => f.servisId && l.some(s => s.id === f.servisId) && faturaliMi(f));
+  const ciro = fat.reduce((t, f) => t + faturaHesap(f).ara, 0);
+  const tek = {}, tur = {}, marka = {}, parca = {};
+  for (const s of l) {
+    for (const w of s.iscilik) { const a = w.teknisyen || 'Belirtilmedi'; (tek[a] ||= {saat: 0, is: new Set()}); tek[a].saat += w.sure || 0; tek[a].is.add(s.id); }
+    for (const t of s.turler) tur[t] = (tur[t] || 0) + 1;
+    const e = ekipman(s.ekipmanId) || s.ekipmanKopya; if (e?.marka) marka[e.marka] = (marka[e.marka] || 0) + 1;
+    for (const p of s.parcalar) { const a = [p.parcaNo, p.ad].filter(Boolean).join(' · '); (parca[a] ||= {m: 0, b: p.birim || ''}); parca[a].m += p.adet || 0; }
+  }
+  const cubuk = (ad, v, en, sag) => `<div class="cubuk-satir" style="padding:8px 0"><div class="ust"><span>${esc(ad)}</span><span class="sayi">${sag}</span></div><div class="cubuk"><i style="width:${v / (en || 1) * 100}%;background:var(--mor)"></i></div></div>`;
+  const tl = Object.entries(tek).sort((a, b) => b[1].saat - a[1].saat), te = Math.max(...tl.map(x => x[1].saat));
+  const pl = Object.entries(parca).sort((a, b) => b[1].m - a[1].m).slice(0, 8), pe = Math.max(1, ...pl.map(x => x[1].m));
+  return `<div class="ikili"><div class="kart"><div class="k-ust">Servis</div><div class="dev orta">${l.length}</div><div class="k-alt">${tamam} tamamlandı</div></div>
+      <div class="kart"><div class="k-ust">İşçilik</div><div class="dev orta">${sayiFmt(saat)} <span class="birim">saat</span></div><div class="k-alt">servis başına ${sayiFmt(Math.round(saat / l.length * 10) / 10)}</div></div></div>
+    ${ciro ? `<div class="kart"><div class="k-ust">Servisten faturalanan (KDV hariç)</div><div class="dev orta">${para(ciro)}</div><div class="k-alt">${fat.length} fatura · işçilik saati başına ${para(Math.round(ciro / (saat || 1)))}</div></div>` : ''}
+    ${l.length - fat.length > 0 && modulAcik('fatura') ? `<p class="dipnot">${l.length - fat.length} servis henüz faturalanmadı.</p>` : ''}
+    ${tl.length ? `<div class="bolum">Teknisyenlere göre</div><div class="kart">${tl.map(([a, v]) => cubuk(a, v.saat, te, `${sayiFmt(v.saat)} saat · ${v.is.size} iş`)).join('')}</div>` : ''}
+    ${Object.keys(tur).length ? `<div class="bolum">Servis türleri</div><div class="grup">${Object.entries(tur).sort((a, b) => b[1] - a[1]).map(([t, n]) => `<div class="hucre"><div class="ic"><b>${esc(SERVIS_TUR[t])}</b></div><span class="deger">${n}</span></div>`).join('')}</div>` : ''}
+    ${Object.keys(marka).length ? `<div class="bolum">Makine markaları</div><div class="grup">${Object.entries(marka).sort((a, b) => b[1] - a[1]).map(([t, n]) => `<div class="hucre"><div class="ic"><b>${esc(t)}</b></div><span class="deger">${n} servis</span></div>`).join('')}</div>` : ''}
+    ${pl.length ? `<div class="bolum">En çok kullanılan parçalar</div><div class="kart">${pl.map(([a, v]) => cubuk(a, v.m, pe, sayiFmt(v.m) + ' ' + esc(v.b))).join('')}</div>` : ''}`;
+}
+function karZararKagit(bas, son, ad) {
+  const k = karZarar(bas, son), r = (a, v, b) => `<tr${b ? ' class="top"' : ''}><td>${a}</td><td class="sg">${para(v)}</td></tr>`;
+  const kat = (o, baslik) => { const s = Object.entries(o).sort((a, b) => b[1] - a[1]); return s.length ? `<h4>${baslik}</h4><table><tbody>${s.map(([a, v]) => r(esc(a), v)).join('')}</tbody></table>` : ''; };
+  const n = nakitProjeksiyon(30);
+  return `<div class="kagit">${firmaBaslik('KÂR / ZARAR RAPORU', `<span style="text-transform:capitalize">${esc(ad)}</span><br>${esc(tarihYaz(bas, true))} – ${esc(tarihYaz(son, true))}<br>Hazırlanma: ${esc(tarihYaz(bugun(), true))}`)}
+    <table><tbody>${r(`Satış hasılatı (${k.satisAdet} fatura)`, k.hasilat)}${k.servisHasilat ? r('&nbsp;&nbsp;servisten', k.servisHasilat) : ''}${r('Satılan malın maliyeti', -k.smm)}${r('Brüt kâr', k.brut, 1)}
+      ${r('Faturasız gelirler', k.digerGelir)}${r('Stok dışı alış faturaları', -k.stoksuzAlis)}${r('Faaliyet giderleri', -k.gider)}${r(k.net < 0 ? 'Net zarar' : 'Net kâr', k.net, 1)}</tbody></table>
+    ${kat(k.giderKat, 'Faaliyet giderleri dağılımı')}${kat(k.gelirKat, 'Faturasız gelirler dağılımı')}
+    ${modulAcik('banka') && D.finansHesap.length ? `<h4>Hesap bakiyeleri (bugün)</h4><table><tbody>${aktifHesaplar().map(h => r(esc(h.ad) + (h.tur === 'kart' ? ' (borç)' : ''), h.tur === 'kart' ? -hesapBakiye(h) : hesapBakiye(h))).join('')}</tbody></table>` : ''}
+    <h4>30 günlük beklenti</h4><table><tbody>${r('Beklenen tahsilat', n.tahsilat)}${r('Beklenen ödemeler (fatura, kart, maaş)', -(n.odeme + n.kart + n.maas))}${r('Net', n.net, 1)}</tbody></table>
+    <div class="gri" style="margin-top:12px">Tutarlar KDV hariçtir. Satılan malın maliyeti bugünkü ortalama maliyetle hesaplanır. Bu rapor yönetim amaçlıdır, resmi mali tablo yerine geçmez.</div></div>`;
 }
 /* Alacak yaşlandırma, müşteriye ve ürüne göre satış */
 function alacakYaslandirma() {
@@ -4378,7 +4510,7 @@ window.bildirimAc = hedef => {
 hesaplariYukle();
 D = yukle();
 const buAy = bugun().slice(0, 7);
-const uiBaslangic = () => ({ay: buAy, pAy: buAy, pSekme: 'liste', vSekme: 'ozet', bAy: buAy, kAy: buAy, rDonem: 'bu-ay', kasaTur: 'hepsi', kasaAra: '', kisiAra: '', cariTip: 'hepsi', urunAra: '', stokFiltre: 'hepsi', stokKat: '', faturaAra: '', faturaFiltre: 'hepsi', servisFiltre: 'acik', servisAra: ''});
+const uiBaslangic = () => ({ay: buAy, pAy: buAy, pSekme: 'liste', vSekme: 'ozet', bAy: buAy, kAy: buAy, rDonem: 'bu-ay', rSekme: 'genel', kasaTur: 'hepsi', kasaAra: '', kisiAra: '', cariTip: 'hepsi', urunAra: '', stokFiltre: 'hepsi', stokKat: '', faturaAra: '', faturaFiltre: 'hepsi', servisFiltre: 'acik', servisAra: ''});
 ui = uiBaslangic();
 if (!location.hash) history.replaceState(null, '', '#/panel');
 ciz();

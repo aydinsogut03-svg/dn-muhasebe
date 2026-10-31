@@ -39,6 +39,10 @@ Kasa, banka hesapları, kredi kartları ve POS hesapları ayrı hesaplar olarak 
 
 Şirket ve küçük işletme profillerinde cari müşteri, tedarikçi ya da ikisi olarak işaretlenir; liste türe göre süzülür, alacak ve borç toplamları ayrı görünür. Cari kartında vergi dairesi, adres, ikinci telefon, e-posta, IBAN, birden fazla yetkili kişi (görev, telefon, e-posta), vade günü, risk limiti ve iskonto tutulur. Vade günü faturaların vade tarihini doldurur; risk limiti aşılınca fatura keserken uyarı verilir. Cari ekranında bu yılki satış/alış, son tahsilat, risk kullanımı, tekne ve makineler, servis geçmişi, faturalar ve hareketler birlikte görünür.
 
+## Finans raporları
+
+Raporlar ekranında dört sekme vardır. Gelir-gider: dönem özeti, 12 aylık grafik, kategori dağılımları, alacak yaşlandırma, müşteriye ve kaleme göre satış. Kâr/zarar: fatura esaslı, KDV hariç; satış hasılatı, satılan malın maliyeti (stok çıkışı × ortalama maliyet), brüt kâr, faturasız gelir ve giderler, net kâr ve PDF raporu. Nakit: hesap bakiyeleri, 30/60/90 günlük beklenen tahsilat ve ödemeler (açık faturalar, kart son ödemeleri, maaşlar), aylık nakit akışı, hesaplara göre giren/çıkan ve borç yaşlandırma. Servis: servis sayısı, işçilik saati, servisten faturalanan tutar, teknisyen, servis türü, makine markası ve parça kullanımı.
+
 ## Dosyalar
 
 - `web/index.html`: uygulamanın tamamı (HTML + CSS + JS). Tarayıcıda doğrudan açılabilir.
