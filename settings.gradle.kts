@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "DNMuhasebe"
+rootProject.name = "PowerServPlus"
 include(":app")

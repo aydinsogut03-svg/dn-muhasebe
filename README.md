@@ -1,6 +1,6 @@
-# DN Muhasebe
+# PowerServ+
 
-Profil tabanlı, tek dosyalık muhasebe uygulaması. Tek kod; ekranlar ve modüller seçilen profile göre açılır.
+DN Marine Makine ve Güç Sistemleri Ltd.Şti. için servis ve işletme yönetim programı: servis/iş emri ve servis formu, stok, cari, fatura, banka ve kasa, personel, vergi ve finans raporları. Profil tabanlı, tek dosyalık uygulama. Tek kod; ekranlar ve modüller seçilen profile göre açılır.
 
 | Profil | Varsayılan modüller |
 |---|---|
@@ -18,6 +18,8 @@ Fatura modülünde satış faturası, alınan (alış) fatura ve teklif vardır;
 Faturalara kısmi tahsilat/ödeme girilebilir; fatura ekranı tahsil edilen, kalan ve vade gününü gösterir. Cari ekranındaki Tahsilat, tutarı açık faturalara en eski vadeden başlayarak dağıtır; cari ekstresi PDF alınabilir. Raporlarda alacak yaşlandırma, müşteriye göre satış ve en çok satan kalemler vardır.
 
 Raporlar PDF olarak yazdırılabilir veya CSV olarak paylaşılabilir.
+
+Uygulamanın Android paket kimliği (`com.dnmarine.muhasebe`) ve veri anahtarları eski adla kalır; böylece güncellemede mevcut veriler korunur.
 
 Görsel dil "mürekkep ve kâğıt": sıcak kâğıt zemin, mürekkep laciverti, pirinç vurgu; tek yazı tipi Manrope (SIL OFL, çevrimdışı çalışmak için `index.html` içine gömülü). Arayüz: büyük başlıklar, gruplu listeler, soldan açılan menü (kenardan kaydırarak da açılır; geniş ekranda sabit kenar çubuğu), alttan açılan form pencereleri.
 
@@ -47,11 +49,11 @@ Raporlar ekranında dört sekme vardır. Gelir-gider: dönem özeti, 12 aylık g
 
 - `web/index.html`: uygulamanın tamamı (HTML + CSS + JS). Tarayıcıda doğrudan açılabilir.
 - `app/`: `index.html`'i WebView içinde açan küçük Android kabuğu.
-- `.github/workflows/build.yml`: her `main` gönderiminde APK derler ve **Releases > Son sürüm** sayfasına `dn-muhasebe.apk` olarak koyar.
+- `.github/workflows/build.yml`: her `main` gönderiminde APK derler ve **Releases > Son sürüm** sayfasına `powerserv.apk` olarak koyar.
 
 ## Veriler
 
-Veriler cihazda (localStorage) saklanır, internete gönderilmez. Her profil ayrı bir hesaptır: profil değiştirince o profilin hesabına geçilir, yoksa boş hesap açılır. Her hesabın verisi ayrı anahtarda tutulur (`dnmuhasebe.v1.<hesap>`), hesap listesi `dnmuhasebe.hesaplar` içindedir. Yedek yalnızca açık hesabı içerir. Ayarlar > Yedekleme ile JSON yedeği alınıp geri yüklenebilir; Android'de yedek `İndirilenler/DN Muhasebe` klasörüne yazılır.
+Veriler cihazda (localStorage) saklanır, internete gönderilmez. Her profil ayrı bir hesaptır: profil değiştirince o profilin hesabına geçilir, yoksa boş hesap açılır. Her hesabın verisi ayrı anahtarda tutulur (`dnmuhasebe.v1.<hesap>`), hesap listesi `dnmuhasebe.hesaplar` içindedir. Yedek yalnızca açık hesabı içerir. Ayarlar > Yedekleme ile JSON yedeği alınıp geri yüklenebilir; Android'de yedek `İndirilenler/PowerServ+` klasörüne yazılır.
 
 ## Bulut yedeği ve bildirimler
 

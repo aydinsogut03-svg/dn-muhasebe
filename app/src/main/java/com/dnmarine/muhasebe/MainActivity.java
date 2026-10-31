@@ -144,7 +144,7 @@ public class MainActivity extends Activity {
     /** Seçilen yedek dosyasının adı ve bulunduğu yer (Google Drive, Dropbox, telefon). */
     private JSONObject yedekBilgisi(Uri u) {
         JSONObject o = new JSONObject();
-        String ad = "DN Muhasebe yedek.json";
+        String ad = "PowerServ+ yedek.json";
         try (Cursor c = getContentResolver().query(u, new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null)) {
             if (c != null && c.moveToFirst()) ad = c.getString(0);
         } catch (Exception e) {
@@ -232,7 +232,7 @@ public class MainActivity extends Activity {
                 Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
                 i.addCategory(Intent.CATEGORY_OPENABLE);
                 i.setType("application/json");
-                i.putExtra(Intent.EXTRA_TITLE, "DN Muhasebe yedek.json");
+                i.putExtra(Intent.EXTRA_TITLE, "PowerServ+ yedek.json");
                 try {
                     startActivityForResult(i, YEDEK_SEC);
                 } catch (Exception e) {
@@ -312,7 +312,7 @@ public class MainActivity extends Activity {
             });
         }
 
-        /** Dosyayı İndirilenler/DN Muhasebe klasörüne yazar ve paylaşım ekranını açar (WhatsApp, e-posta, Drive, Excel...). */
+        /** Dosyayı İndirilenler/PowerServ+ klasörüne yazar ve paylaşım ekranını açar (WhatsApp, e-posta, Drive, Excel...). */
         @JavascriptInterface
         public String paylas(String ad, String icerik, String tur) {
             Uri u = Build.VERSION.SDK_INT >= 29 ? indirilenlereYaz(ad, icerik, tur) : null;
@@ -334,10 +334,10 @@ public class MainActivity extends Activity {
                     Toast.makeText(MainActivity.this, "Paylaşılacak uygulama bulunamadı", Toast.LENGTH_SHORT).show();
                 }
             });
-            return u != null ? "İndirilenler/DN Muhasebe" : "paylaşım ekranı";
+            return u != null ? "İndirilenler/PowerServ+" : "paylaşım ekranı";
         }
 
-        /** Dosyayı İndirilenler/DN Muhasebe klasörüne yazar; başarılıysa konumu, değilse boş metin döner. */
+        /** Dosyayı İndirilenler/PowerServ+ klasörüne yazar; başarılıysa konumu, değilse boş metin döner. */
         @JavascriptInterface
         public String dosyaKaydet(String ad, String icerik, String tur) {
             if (Build.VERSION.SDK_INT < 29) {
@@ -350,17 +350,17 @@ public class MainActivity extends Activity {
                 });
                 return "paylaşım ekranı";
             }
-            return indirilenlereYaz(ad, icerik, tur) != null ? "İndirilenler/DN Muhasebe" : "";
+            return indirilenlereYaz(ad, icerik, tur) != null ? "İndirilenler/PowerServ+" : "";
         }
     }
 
-    /** Android 10+ : İndirilenler/DN Muhasebe klasörüne yazar, dosyanın adresini döner. */
+    /** Android 10+ : İndirilenler/PowerServ+ klasörüne yazar, dosyanın adresini döner. */
     @android.annotation.TargetApi(29)
     private Uri indirilenlereYaz(String ad, String icerik, String tur) {
         ContentValues d = new ContentValues();
         d.put(MediaStore.MediaColumns.DISPLAY_NAME, ad);
         d.put(MediaStore.MediaColumns.MIME_TYPE, tur);
-        d.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/DN Muhasebe");
+        d.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/PowerServ+");
         try {
             Uri u = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, d);
             if (u == null) return null;
