@@ -22,6 +22,8 @@ Görsel dil iOS tarzı yumuşak görünüm (2.2): açık zemin, beyaz kartlar, b
 
 **Alt menüler ve raporlar (2.4):** Her modülün kenar menüde açılan alt menüsü vardır (İşlemler ve Raporlar); aynı öğeler ekran üstünde şerit olarak da durur. Liste raporları: eldeki stok, kritik stok, stok hareketleri, grup bazında stok değeri; cari bakiye, borçlu/alacaklı cariler, cari hareketler, tahsilat listesi; gelir/gider listesi, kategori özeti; hesap bakiyeleri ve hareketleri; satış/alış faturaları, teklifler, vadesi geçenler; servis listesi, açık iş emirleri, tekne ve makineler, yaklaşan bakımlar, kullanılan parçalar, teknisyen işçilik; personel listesi ve ödemeleri. Raporlar aranır, tarih aralığıyla süzülür, sütuna tıklayınca sıralanır, satıra tıklayınca kaydın detayı açılır; yazdırılır (PDF) ve Excel'e (CSV) aktarılır. Geniş ekranda detay ve rapor ekranlarının düğmeleri sağda dikey küçük düğmelerdir.
 
+**Kurumsal tasarım ve düzeltmeler (2.5):** Keskin köşeli, ince kenarlıklı, gölgesiz ticari görünüm; kenar menüde grup başlıkları yok, açık modüle tekrar tıklamak alt menüyü kapatır. Tutar ve miktar alanları Türkçe (1.250,50) ve İngilizce (1,250.50) yazımı doğru okur; binlik noktalı miktar (1.500) artık 1,5 sayılmaz. Stoğa işlenmeyen alış faturası kalemleri kâr/zarar raporunda gider sayılır. Aynı fatura/teklif numarası ikinci kez kullanılamaz.
+
 **Fişler (2.4):** Gelir fişi (GLR-yıl-sıra), gider fişi (GDR) ve tahsilat makbuzu (THS): firma bilgisi ve logo, ödeyen/ödenen, ödeme şekli, hesap, belge, tutar ve yazıyla tutar, imza alanları. Her gelir/gider kaydı ve her tahsilat tıklanınca fiş ekranı açılır; numara ilk görüntülemede verilir ve saklanır.
 
 ## Servis modülü
@@ -68,4 +70,4 @@ Açık faturaların vadesinden 3 gün önce ve vade günü, vergi takvimindeki b
 
 ## Örnek veri ve PIN kilidi
 
-Hesaplar ekranındaki (ve ilk açılıştaki) "Örnek verilerle dene" seçilen profil için ayrı bir örnek hesap açıp son 6 ayı kayıt, cari, fatura, stok ve personelle doldurur; gerçek hesaplara dokunmaz. Ayarlar > Güvenlik'ten 4 haneli PIN kilidi açılabilir: uygulama açılışta ve arka planda 30 saniyeden uzun kaldıktan sonra PIN sorar.
+Örnek veri özelliği 2.5'te kaldırıldı; daha önce açılmış örnek hesaplar ilk açılışta silinir (gerçek hesaplara dokunulmaz). Ayarlar > Güvenlik'ten 4 haneli PIN kilidi açılabilir: uygulama açılışta ve arka planda 30 saniyeden uzun kaldıktan sonra PIN sorar.

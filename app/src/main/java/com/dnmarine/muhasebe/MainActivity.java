@@ -229,7 +229,7 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void tema(boolean koyu) {
             runOnUiThread(() -> {
-                int renk = koyu ? 0xFF1B1C20 : 0xFFF2F3F7;
+                int renk = koyu ? 0xFF22252A : 0xFFFFFFFF;
                 getWindow().setStatusBarColor(renk);
                 getWindow().setNavigationBarColor(renk);
                 web.setBackgroundColor(renk);

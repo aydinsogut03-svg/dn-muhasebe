@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f2f3f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1b1c20" media="(prefers-color-scheme: dark)">
 <title>PowerServ+</title>
 <style id="yazitipleri">
@@ -947,7 +947,7 @@ body.cekmece-acik #cekmecePerde{-webkit-backdrop-filter:blur(2px);backdrop-filte
 
 /* ---- Alt menüler, liste raporları, yan düğmeler ve fişler (2.4) ---- */
 .c-liste a .c-ok{width:14px;height:14px;color:var(--ucuncul);stroke-width:2.6;margin-left:4px;transition:transform .25s var(--egri)}
-.c-liste a.secili .c-ok{transform:rotate(90deg);color:var(--mavi)}
+.c-liste a.acik .c-ok{transform:rotate(90deg);color:var(--mavi)}
 .c-alt-menu{margin:2px 0 8px 22px;padding-left:12px;border-left:1.5px solid color-mix(in srgb,var(--mavi) 30%,transparent);display:flex;flex-direction:column;gap:1px;animation:belir .3s var(--egri) both}
 .c-alt-baslik{font-size:11px;font-weight:700;color:var(--ikincil);margin:8px 8px 3px;letter-spacing:.02em}
 .c-alt-menu a{display:flex;align-items:center;gap:9px;min-height:32px!important;padding:4px 10px!important;font-size:13.5px!important;font-weight:500;color:var(--yazi);border-radius:9px}
@@ -1040,6 +1040,84 @@ body.cekmece-acik #cekmecePerde{-webkit-backdrop-filter:blur(2px);backdrop-filte
 .fis-kagit .fs-ia{border:1px solid #888;border-top:0;height:58px}
 .fis-kagit .fs-dip{text-align:center;color:#888;font-size:8px;margin-top:8px}
 @media print{#yazdirAlani .fis-kagit{zoom:.95;font-size:11px;padding:18px 20px;border:1.5px solid var(--fs);border-radius:6px}#yazdirAlani .liste-kagit{font-size:10px}}
+
+/* ================= Tema 2.5: kurumsal (ticari yazılım) =================
+   Keskin köşeler, ince kenarlıklar, gölgesiz düz yüzeyler, sıkı yerleşim ve kısa geçişler. */
+:root{
+  --bg:#edf0f4;--kart:#fff;--kart2:#f6f7f9;--kenar:#d5dbe3;--ayirici:#e3e7ec;--dolgu:#eef1f5;--dolgu2:#dde3ea;
+  --yazi:#17202b;--ikincil:#5b6573;--ucuncul:#9aa3ae;
+  --mavi:#1d5fbf;--marka:#1d5fbf;--altin:#1d5fbf;--altin2:#1d5fbf;
+  --yesil:#1f8a4c;--yesil-yazi:#1a7a42;--kirmizi:#c8352e;--turuncu:#c76a00;
+  --golge:none;--egri:cubic-bezier(.25,.8,.25,1);
+  --cam:#fff;--r:6px;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#191b1f;--kart:#22252a;--kart2:#2a2d33;--kenar:#383c44;--ayirici:#30343b;--dolgu:#2c3036;--dolgu2:#3a3f47;
+  --yazi:#eceef1;--ikincil:#a2a9b3;--ucuncul:#6c737d;--mavi:#5b9bf0;--cam:#22252a;
+}}
+html,body{font-size:14.5px;letter-spacing:0}
+header,header.kaydi{background:var(--kart);box-shadow:none;border-bottom:1px solid var(--kenar);-webkit-backdrop-filter:none;backdrop-filter:none}
+header .orta-baslik{font-size:16px;font-weight:700}
+#cekmece,body:not(.profilde) #cekmece{background:var(--kart)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border-right:1px solid var(--kenar)}
+.c-ust{border-bottom:1px solid var(--kenar);padding:14px 16px 12px}
+.c-ust .kare[class*=r-]{border-radius:6px;background:var(--mavi);box-shadow:none}
+.c-ayrac{height:1px;background:var(--ayirici);margin:10px 16px}
+.c-liste{padding:0 8px;gap:0}
+.c-liste:first-of-type{margin-top:8px}
+.c-liste a{border-radius:4px;min-height:38px;font-size:14px;font-weight:550;position:relative}
+.c-liste a.secili{background:color-mix(in srgb,var(--mavi) 10%,transparent);color:var(--mavi);font-weight:700}
+.c-liste a.secili::before{display:block!important;content:"";position:absolute;left:-8px;top:6px;bottom:6px;width:3px;border-radius:0;background:var(--mavi)}
+.c-liste .kare[class*=r-]{width:24px;height:24px;border-radius:5px;box-shadow:none}
+.c-liste .kare svg{width:14px;height:14px}
+.c-liste .rozet.uyar{border-radius:4px;box-shadow:none}
+.c-alt-menu{margin:0 0 6px 20px;border-left:1px solid var(--kenar);animation:none}
+.c-alt-menu a{border-radius:3px;font-size:13px!important}
+.c-alt-menu a.secili{background:color-mix(in srgb,var(--mavi) 10%,transparent)}
+.c-alt-baslik{text-transform:uppercase;font-size:10.5px;letter-spacing:.06em}
+.grup,.kart,.metrik,.tutar-kutu,.btn-izgara button,.profil-kart,.yeni-satir button,.cip,.alt-serit button,.rl-ozet div,.liste-kap,.yan-arac button,.rl-tarih input,.takvim button{border:1px solid var(--kenar)!important;box-shadow:none!important;border-radius:var(--r)!important}
+.kahraman{border-radius:var(--r);box-shadow:none;background:linear-gradient(135deg,#1f63c6,#184f9e)}
+.kahraman::after{box-shadow:none}
+.metrik{background:var(--kart)!important;border-top:3px solid var(--c,var(--mavi))!important}
+.bolum{text-transform:uppercase;font-size:11.5px;font-weight:700;letter-spacing:.05em;color:var(--ikincil);margin:20px 2px 6px}
+.hucre{min-height:42px}
+.kare{border-radius:5px}
+@supports (background:color-mix(in srgb,red 10%,transparent)){.kare[class*=r-]{background:var(--c);box-shadow:none}.avatar[class*=r-]{border-radius:6px}}
+.avatar{border-radius:6px}
+.hap{border-radius:3px;font-size:11px;padding:2px 6px;font-weight:700}
+.btn{border-radius:var(--r);min-height:40px;font-weight:650;box-shadow:none!important}
+.btn:not(.renkli):not(.yesil-acik):not(.kirmizi-acik){background:var(--mavi)}
+.btn.yesil-acik{background:var(--yesil)}
+.btn.renkli,.btn.kirmizi-acik{border:1px solid var(--kenar)!important;background:var(--kart)}
+.segment{border-radius:var(--r);border:1px solid var(--kenar);background:var(--kart2);padding:2px}
+.segment button,.segment label,.segment label span{border-radius:4px}
+.segment .secili,.segment input:checked+span{background:var(--mavi)!important;color:#fff!important;box-shadow:none!important}
+.arama{border-radius:var(--r);border:1px solid var(--kenar);background:var(--kart)}
+.cip.secili,.alt-serit button.secili{background:var(--mavi);border-color:var(--mavi)!important}
+.alt-serit button{border-radius:var(--r)!important;padding:6px 11px}
+.alt-serit{border-bottom:1px solid var(--kenar);padding-bottom:14px}
+.ay-secici button{border-radius:var(--r);border:1px solid var(--kenar)}
+.liste-kap{border-radius:var(--r)!important}
+.liste-tablo{font-size:13px}
+.liste-tablo th{background:#f0f3f7;color:#2a3442;text-transform:uppercase;font-size:11px;letter-spacing:.03em;border-bottom:1px solid var(--kenar)}
+.liste-tablo td{border-bottom:1px solid var(--ayirici);padding:8px 12px}
+.liste-tablo td+td,.liste-tablo th+th{border-left:1px solid var(--ayirici)}
+@media (prefers-color-scheme:dark){.liste-tablo th{background:var(--kart2);color:var(--yazi)}}
+.liste-tablo td.islem button{border-radius:4px}
+.modal:not(.sayfa-modal){border-radius:8px 8px 0 0}
+.eylem .grup,.eylem button.iptal{border-radius:8px!important}
+.sayfa-modal .modal-ust,.modal-alt{background:var(--kart);-webkit-backdrop-filter:none;backdrop-filter:none;border-color:var(--kenar)}
+.modal-alt .btn{border-radius:var(--r)}
+.bildirim{border-radius:6px;background:#1f2a37;color:#fff;-webkit-backdrop-filter:none;backdrop-filter:none}
+.logo,#kilitEkran .logo,.karsilama .logo{border-radius:10px;background:var(--mavi);box-shadow:none}
+#kilitEkran{background:linear-gradient(160deg,#1f63c6,#163f80)}
+.tus-takim button{border-radius:8px}
+.sayfa-modal .grup.cift{border-radius:var(--r)}
+/* Kısa ve sade geçişler */
+#icerik>*,.metrikler .metrik,.c-alt-menu{animation:none!important}
+.modal,.sayfa-modal{transition:transform .22s var(--egri)!important}
+.perde{transition:background .2s}
+.hucre:active,.metrik:active,.btn:active,.btn-izgara button:active,.yeni-satir button:active,.profil-kart:active,a.kart:active,.cip:active,.hizli button:active{transform:none!important;filter:brightness(.96)}
+.anahtar span:before{transition:transform .15s}
 </style>
 </head>
 <body>
@@ -1052,7 +1130,7 @@ body.cekmece-acik #cekmecePerde{-webkit-backdrop-filter:blur(2px);backdrop-filte
 
 <script>
 'use strict';
-const VERSIYON = '2.4.0';
+const VERSIYON = '2.5.0';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -1200,7 +1278,19 @@ let H;
 function hesapKaydet() { try { localStorage.setItem(HESAP_ANAHTAR, JSON.stringify(H)); } catch (e) {} }
 function hesaplariYukle() {
   try { H = JSON.parse(localStorage.getItem(HESAP_ANAHTAR)); } catch (e) { H = null; }
-  if (H && Array.isArray(H.liste) && H.liste.length) { for (const h of H.liste) if (h.profil) h.profil = 'sirket'; if (!H.liste.some(h => h.id === H.aktif)) H.aktif = H.liste[0].id; return; }
+  if (H && Array.isArray(H.liste) && H.liste.length) {
+    for (const h of H.liste) if (h.profil) h.profil = 'sirket';
+    // Örnek veri özelliği kaldırıldı (2.5): daha önce açılmış örnek hesaplar silinir, gerçek hesaplara dokunulmaz.
+    const ornek = H.liste.filter(h => h.ornek);
+    if (ornek.length) {
+      for (const h of ornek) localStorage.removeItem(ANAHTAR + '.' + h.id);
+      H.liste = H.liste.filter(h => !h.ornek);
+      if (!H.liste.length) { const id = 'h' + kimlik(); H.liste = [{id, ad: '', profil: null}]; H.aktif = id; }
+      hesapKaydet();
+    }
+    if (!H.liste.some(h => h.id === H.aktif)) H.aktif = H.liste[0].id;
+    return;
+  }
   // İlk açılış ya da eski sürüm: eski tek veri ilk hesap olur (eski kayıt silinmez).
   const id = 'h' + kimlik(), eski = localStorage.getItem(ANAHTAR);
   H = {aktif: id, liste: [{id, ad: '', profil: null}]};
@@ -1250,13 +1340,19 @@ const sayiFmt = n => (Math.round((n || 0) * 1000) / 1000).toLocaleString('tr-TR'
 function tutarOku(s) {
   s = String(s || '').trim().replace(/\s|₺|tl/gi, '');
   if (!s) return NaN;
-  if (s.includes(',') && s.includes('.')) s = s.replace(/\./g, '').replace(',', '.');
-  else if (s.includes(',')) s = s.replace(',', '.');
-  else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
-  const n = Number(s);
+  const n = Number(sayiMetni(s));
   return isFinite(n) ? Math.round(n * 100) : NaN;
 }
-function sayiOku(s) { const n = Number(String(s || '').trim().replace(/\s/g, '').replace(',', '.')); return isFinite(n) ? n : NaN; }
+/* Türkçe ve İngilizce yazımı çözer: 1.250,50 / 1,250.50 / 1250,5 / 1.250 (binlik) → 1250.5 / 1250 */
+function sayiMetni(s) {
+  s = String(s ?? '').trim().replace(/\s/g, '');
+  const v = s.lastIndexOf(','), n = s.lastIndexOf('.');
+  if (v >= 0 && n >= 0) return v > n ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, '');
+  if (v >= 0) return /^-?\d{1,3}(,\d{3})+$/.test(s) && s.split(',').length > 2 ? s.replace(/,/g, '') : s.replace(',', '.');
+  if (/^-?\d{1,3}(\.\d{3})+$/.test(s)) return s.replace(/\./g, '');
+  return s;
+}
+function sayiOku(s) { const t = sayiMetni(s); if (!t) return NaN; const n = Number(t); return isFinite(n) ? n : NaN; }
 const tutarYaz = k => k ? (k / 100).toFixed(2).replace('.', ',').replace(/,00$/, '') : '';
 function tarihYaz(t, uzun) {
   if (!t) return '';
@@ -1550,17 +1646,21 @@ function rozet(id) {
 function menuCiz(aktif) {
   const p = PROFILLER[D.profil];
   const yol = rota().join('/').split('?')[0];
-  const satir = (id, ad, simge, renk, ek = '') => `<a href="#/${id}" data-id="${id}" class="${id === aktif ? 'secili' : ''}">${kare(simge, renk)}<span class="ad">${esc(ad)}</span>${ek}${ALT_MENU[id] ? ikon('ileri', 'c-ok') : ''}</a>${id === aktif ? altMenuHtml(id, yol) : ''}`;
+  const satir = (id, ad, simge, renk, ek = '') => `<a href="#/${id}" data-id="${id}" class="${id === aktif ? 'secili' : ''} ${id === aktif && ALT_MENU[id] && !ui.altKapali ? 'acik' : ''}">${kare(simge, renk)}<span class="ad">${esc(ad)}</span>${ek}${ALT_MENU[id] ? ikon('ileri', 'c-ok') : ''}</a>${id === aktif && !ui.altKapali ? altMenuHtml(id, yol) : ''}`;
   const kapali = MODULLER.filter(m => !m.zorunlu && !modulAcik(m.id)).length;
   $('#cekmece').innerHTML = `<button class="c-ust" id="cProfil">${kare(p.simge, p.renk)}<div style="min-width:0;flex:1"><b>${esc(D.ad || 'Firma hesabı')}</b><small>Hesap değiştir</small></div>${ikon('ileri', 'chev')}</button>
     ${H.liste.length > 1 ? `<div class="c-hesaplar">${H.liste.filter(x => x.id !== H.aktif).map(x => `<button data-hgec="${x.id}">${kare(x.profil ? PROFILLER[x.profil].simge : 'kisi', x.profil ? PROFILLER[x.profil].renk : 'gri')}<span>${esc(hesapAdi(x))}</span></button>`).join('')}</div>` : ''}
     <div class="c-liste">${satir('panel', 'Özet', 'ev', 'mavi')}</div>
-    ${MENU_GRUP.map(([baslik, idler]) => { const l = idler.filter(id => modulAcik(id)); return l.length ? `<div class="c-baslik">${esc(baslik)}</div>
-    <div class="c-liste">${l.map(id => { const m = modul(id); return satir(id, modulAdi(m), m.simge, m.renk, rozet(id)); }).join('')}</div>` : ''; }).join('')}
-    <div class="c-baslik">Uygulama</div>
+    <div class="c-liste">${MENU_GRUP.flatMap(([, idler]) => idler.filter(id => modulAcik(id))).map(id => { const m = modul(id); return satir(id, modulAdi(m), m.simge, m.renk, rozet(id)); }).join('')}</div>
+    <div class="c-ayrac"></div>
     <div class="c-liste">${satir('menu', 'Modül ekle / kaldır', 'izgara', 'indigo', kapali ? `<span class="rozet">${kapali} kapalı</span>` : '')}${satir('ayarlar', 'Ayarlar', 'ayar', 'gri')}</div>
     <div class="c-alt">PowerServ+ ${VERSIYON}<br>DN Marine · veriler bu cihazda</div>`;
-  $$('#cekmece a').forEach(a => a.onclick = e => { e.preventDefault(); cekmeceKapat(); git(a.dataset.id, true); });
+  $$('#cekmece a').forEach(a => a.onclick = e => {
+    e.preventDefault();
+    // Açık modüle yeniden tıklamak alt menüyü kapatır / açar; başka modüle tıklamak oraya gider ve alt menüsünü açar
+    if (a.dataset.id === aktif && ALT_MENU[aktif]) { ui.altKapali = !ui.altKapali; menuCiz(aktif); return; }
+    ui.altKapali = false; cekmeceKapat(); git(a.dataset.id, true);
+  });
   altMenuBagla($('#cekmece'));
   $('#cProfil').onclick = () => { cekmeceKapat(); git('hesaplar'); };
   $$('[data-hgec]').forEach(b => b.onclick = () => hesabaGec(b.dataset.hgec));
@@ -1977,8 +2077,7 @@ function profilEkrani(ilk) {
   $('#icerik').innerHTML = `<div class="karsilama"><div class="logo">P+</div><h2>${H.liste.length > 1 ? 'Yeni firma hesabı' : 'PowerServ+'}</h2><p>Servis, cari, stok, fatura, banka ve finans yönetimi tek yerde.</p></div>
     <div class="grup"><label class="f-satir sol"><input type="text" id="adGiris" value="${esc(D.ad || (H.liste.length > 1 ? '' : FIRMA_VARSAYILAN.ad))}" placeholder="Firma unvanı"></label></div>
     <button class="btn" id="basla">Başla</button>
-    ${H.liste.length === 1 ? `<div class="grup" style="margin-top:16px"><button class="hucre kareli" id="ornekDene">${kare('deney', 'mor')}<div class="ic"><b>Önce örnek verilerle deneyin</b><small>Dolu bir örnek hesap açılır; gerçek hesabınıza dokunmaz</small></div>${CHEV}</button></div>` : ''}`;
-  if ($('#ornekDene')) $('#ornekDene').onclick = ornekSor;
+`;
   $('#basla').onclick = () => {
     D.ad = $('#adGiris').value.trim(); if (hx) delete hx.onceki;
     D.profil = 'sirket'; kaydet(); git('panel', true);
@@ -2008,12 +2107,11 @@ function hesaplarEkrani() {
     return `<button class="hucre kareli" data-h="${x.id}">${kare(p ? p.simge : 'kisi', p ? p.renk : 'gri')}<div class="ic"><b>${esc(hesapAdi(x))}</b><small>${p ? (x.ornek ? 'Örnek hesap' : 'Firma hesabı') : 'Kurulum bekliyor'}</small></div>
       ${x.id === H.aktif ? '<span class="hap mavi">açık</span>' : CHEV}</button>`; }).join('')}
     <button class="hucre eylem kareli" id="hEkle">${kare('arti', 'mavi')}<div class="ic"><b>Yeni hesap ekle</b></div></button>
-    <button class="hucre kareli" id="hOrnek">${kare('deney', 'mor')}<div class="ic"><b>Örnek verilerle dene</b><small>Ayrı bir örnek hesap açar, gerçek hesaplarınıza dokunmaz</small></div>${CHEV}</button></div>
+</div>
     <p class="dipnot">Her hesap ayrı bir firma defteridir. Kayıtlar, cariler, faturalar ve personel hesaplar arasında karışmaz.</p>
     ${H.liste.length > 1 ? `<div class="grup"><button class="hucre kareli" id="hTasi">${kare('donustur', 'turuncu')}<div class="ic"><b>Kayıtları başka hesaba taşı</b><small>Yanlış hesaba girilmiş kayıtları ayırın</small></div>${CHEV}</button></div>` : ''}`;
   $('#icerik').innerHTML = h;
   $('#hEkle').onclick = hesapEkle;
-  $('#hOrnek').onclick = ornekSor;
   if ($('#hTasi')) $('#hTasi').onclick = kayitTasi;
   $$('[data-h]').forEach(b => b.onclick = async () => {
     const x = H.liste.find(y => y.id === b.dataset.h);
@@ -2135,7 +2233,6 @@ function panelEkrani() {
     if (ac('kasa')) ad.push(['gelir', `İlk ${kucult(t.gelir)} kaydını ekleyin`, 'Tutar, kategori ve ödeme şekli yeterli']);
     if (ac('fatura')) ad.push(['fatura', 'İlk faturanızı kesin', 'Cari, stok ve KDV kendiliğinden işlenir']);
     else if (ac('veresiye')) ad.push(['cari', `İlk ${kucult(t.kisi)} kaydını açın`, 'Borç ve tahsilatları tek yerde izleyin']);
-    ad.push(['ornek', 'Önce örnek verilerle deneyin', 'Ayrı bir örnek hesap açılır']);
     h += `<div class="bolum">Başlarken</div><div class="grup">${ad.map(([id, b, s], i) => `<button class="hucre" data-bas="${id}"><span class="adim">${String(i + 1).padStart(2, '0')}</span><div class="ic"><b>${esc(b)}</b><small>${esc(s)}</small></div>${CHEV}</button>`).join('')}</div>`;
   }
 
@@ -3064,6 +3161,7 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null) {
     if (!x.kalemler.length) { bildir('En az bir kalem girin', true); x.kalemler.push(yeniKalem()); kalemCiz(); return false; }
     x.musteriAd = x.kisiId ? '' : $('#mMusteri', m).value.trim();
     x.no = $('#fNo', m).value.trim() || sonrakiNo(x.tur);
+    if (!alisF && D.faturalar.some(y => y.id !== x.id && y.tur === x.tur && y.no === x.no)) { bildir(`${x.no} numarası zaten kullanılıyor`, true); return false; }
     x.tarih = $('#fTarih', m).value || bugun();
     x.vade = $('#fVade', m).value;
     x.not = $('#fNot', m).value.trim();
@@ -4726,7 +4824,7 @@ function karZarar(bas, son) {
   const servisHasilat = sf.filter(f => f.servisId).reduce((s, f) => s + faturaHesap(f).ara, 0);
   let smm = 0;
   for (const h of D.stokHareket) if (h.tur === 'cikis' && !h.sayim && ic(h.tarih)) { const u = urun(h.urunId); if (u) smm += Math.round(h.miktar * urunMaliyet(u)); }
-  const stoksuzAlis = af.reduce((s, f) => s + f.kalemler.filter(k => !k.urunId).reduce((t, k) => t + Math.round(k.miktar * k.fiyat), 0), 0);
+  const stoksuzAlis = af.reduce((s, f) => s + f.kalemler.filter(k => !k.urunId || !f.stokDus || !modulAcik('stok')).reduce((t, k) => t + Math.round(k.miktar * k.fiyat), 0), 0);
   const gelirKat = {}, giderKat = {};
   let digerGelir = 0, gider = 0;
   for (const i of D.islemler) {
@@ -5292,7 +5390,7 @@ function temaUygula() {
   for (const ss of document.styleSheets) { try { gez(ss.cssRules); } catch (e) {} }
   const koyu = t === 'koyu' || (t === 'sistem' && matchMedia('(prefers-color-scheme: dark)').matches);
   document.documentElement.style.colorScheme = koyu ? 'dark' : 'light';
-  document.querySelectorAll('meta[name=theme-color]').forEach(m => { m.removeAttribute('media'); m.content = koyu ? '#1b1c20' : '#f2f3f7'; });
+  document.querySelectorAll('meta[name=theme-color]').forEach(m => { m.removeAttribute('media'); m.content = koyu ? '#22252a' : '#ffffff'; });
   try { if (window.Android && Android.tema) Android.tema(koyu); } catch (e) {}
 }
 temaUygula();
