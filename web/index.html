@@ -1118,6 +1118,25 @@ header .orta-baslik{font-size:16px;font-weight:700}
 .perde{transition:background .2s}
 .hucre:active,.metrik:active,.btn:active,.btn-izgara button:active,.yeni-satir button:active,.profil-kart:active,a.kart:active,.cip:active,.hizli button:active{transform:none!important;filter:brightness(.96)}
 .anahtar span:before{transition:transform .15s}
+/* ================= 2.6: ortak veritabanı — giriş ekranı, kilit uyarısı ================= */
+#girisEkran{position:fixed;inset:0;z-index:95;background:var(--bg);overflow:auto;display:flex;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top) + 24px) 16px calc(env(safe-area-inset-bottom) + 24px)}
+#girisEkran .giris-kutu{width:100%;max-width:400px;background:var(--kart);border:1px solid var(--kenar);border-radius:var(--r,6px);padding:28px 22px 20px}
+#girisEkran .giris-logo{display:block;height:46px;max-width:180px;object-fit:contain;margin:0 auto 14px}
+#girisEkran h2{margin:0;text-align:center;font-size:22px}
+#girisEkran .giris-kutu > p{margin:4px 0 18px;text-align:center;color:var(--ikincil);font-size:14px}
+#girisEkran .grup{margin:0 0 6px}
+#girisEkran .btn{width:100%;margin-top:6px}
+.giris-uyari{background:rgba(240,140,0,.12);color:var(--yazi);border-left:3px solid var(--turuncu);padding:9px 12px;margin:0 0 14px;font-size:14px}
+.giris-hata{min-height:18px;margin:6px 2px;font-size:13.5px;color:var(--kirmizi)}
+.giris-alt{display:flex;justify-content:space-between;margin-top:14px}
+button.bag{background:none;border:0;padding:0;color:var(--mavi);font:inherit;font-size:14px;cursor:pointer}
+.kilit-uyari{display:flex;gap:10px;align-items:flex-start;background:rgba(240,140,0,.1);border:1px solid rgba(240,140,0,.35);border-radius:var(--r,6px);padding:10px 12px;margin:0 0 14px}
+.kilit-uyari .i{width:20px;height:20px;flex:none;color:var(--turuncu);margin-top:1px}
+.kilit-uyari b{display:block;font-size:14.5px}.kilit-uyari small{color:var(--ikincil);font-size:13px}
+.modal.salt-okunur .modal-govde input,.modal.salt-okunur .modal-govde select,.modal.salt-okunur .modal-govde textarea{opacity:.75}
+.kod-alan{width:100%;box-sizing:border-box;border:0;background:transparent;color:var(--yazi);font:12.5px/1.45 ui-monospace,Menlo,Consolas,monospace;padding:12px;resize:vertical;word-break:break-all}
+select.secim{height:38px;border:1px solid var(--kenar);border-radius:var(--r,6px);background:var(--kart);color:var(--yazi);padding:0 10px;font:inherit;font-size:14px}
+.c-alt .ortak-durum.gider{color:var(--kirmizi)}
 </style>
 </head>
 <body>
@@ -1130,7 +1149,7 @@ header .orta-baslik{font-size:16px;font-weight:700}
 
 <script>
 'use strict';
-const VERSIYON = '2.5.0';
+const VERSIYON = '2.6.0';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -1255,6 +1274,7 @@ function modulAcik(id, p = D.profil) {
   const m = modul(id);
   if (!m) return false;
   if (m.zorunlu) return true;
+  if (!rolModulIzin(id)) return false;
   const o = (D.modulAyar[p] || {})[id];
   return o === undefined ? m.varsayilan.includes(p) : o;
 }
@@ -1316,11 +1336,14 @@ function duzelt(d) {
   return d;
 }
 function kaydet() {
+  // Ortak veritabanında "İzleyici" yetkisi: değişiklik kaydedilmez, ekran son kayıtlı hâle döner.
+  if (saltOkunur()) { bildir('Yalnızca görüntüleme yetkiniz var. Değişiklik kaydedilmedi.', true); D = yukle(); setTimeout(ciz, 0); return; }
   const h = H.liste.find(x => x.id === H.aktif);
   if (h && (h.ad !== D.ad || h.profil !== D.profil)) { h.ad = D.ad; h.profil = D.profil; hesapKaydet(); }
   try { localStorage.setItem(veriAnahtari(), JSON.stringify(D)); }
   catch (e) { bildir('Kaydedilemedi. Depolama dolu olabilir.', true); }
   if (window.bulutPlanla) bulutPlanla();
+  if (window.ortakPlanla) ortakPlanla();
 }
 let D, ui;
 
@@ -1537,6 +1560,7 @@ function modal(baslik, govde, {kaydet: kaydetFn, kaydetAd = 'Kaydet', tam = fals
   const m = $('.modal', el);
   $('[data-sol]', m).onclick = () => kapat();
   if (kaydetFn) $('[data-sag]', m).onclick = () => { if (kaydetFn(m) !== false) kapat(); };
+  if (kaydetFn && saltOkunur()) { $('.modal-govde', m).insertAdjacentHTML('afterbegin', `<div class="kilit-uyari">${ikon('kilit')}<div><b>Yalnızca görüntüleme</b><small>Yetkiniz İzleyici; bu kayıtta değişiklik yapamazsınız.</small></div></div>`); formuKilitle(m); }
   anahtarBagla(m);
   yuzenEtiket(m); ciftDuzen(m);
   let z; new MutationObserver(() => { clearTimeout(z); z = setTimeout(() => { yuzenEtiket(m); ciftDuzen(m); }, 0); }).observe(m, {childList: true, subtree: true, attributes: true, attributeFilter: ['class']});
@@ -1606,7 +1630,7 @@ window.geriTusu = function () {
   if (kapat() || cekmeceKapat()) return true;
   const [s = 'panel', p1] = rota();
   if (!D.profil) return false;
-  if (s === 'profil') { git('ayarlar', true); return true; }
+  if (s === 'profil' || s === 'kullanicilar' || s === 'islemkaydi') { git('ayarlar', true); return true; }
   if (s === 'fis') { history.back(); return true; }
   if (p1 && (DETAYLI.includes(s) || p1.startsWith('r-'))) { git(s, true); return true; }
   if (s !== 'panel') { git('panel', true); return true; }
@@ -1654,7 +1678,7 @@ function menuCiz(aktif) {
     <div class="c-liste">${MENU_GRUP.flatMap(([, idler]) => idler.filter(id => modulAcik(id))).map(id => { const m = modul(id); return satir(id, modulAdi(m), m.simge, m.renk, rozet(id)); }).join('')}</div>
     <div class="c-ayrac"></div>
     <div class="c-liste">${satir('menu', 'Modül ekle / kaldır', 'izgara', 'indigo', kapali ? `<span class="rozet">${kapali} kapalı</span>` : '')}${satir('ayarlar', 'Ayarlar', 'ayar', 'gri')}</div>
-    <div class="c-alt">PowerServ+ ${VERSIYON}<br>DN Marine · veriler bu cihazda</div>`;
+    <div class="c-alt">PowerServ+ ${VERSIYON}<br>${ortakBagli() ? `${esc(ortakOturum()?.ad || ortakOturum()?.eposta || '')} · <span class="ortak-durum">${esc(ortakDurumMetni())}</span>` : 'DN Marine · veriler bu cihazda'}</div>`;
   $$('#cekmece a').forEach(a => a.onclick = e => {
     e.preventDefault();
     // Açık modüle yeniden tıklamak alt menüyü kapatır / açar; başka modüle tıklamak oraya gider ve alt menüsünü açar
@@ -1687,6 +1711,7 @@ function ayBagla(alan, yeniden) {
 let sonRota = '';
 function ciz() {
   while (yigin.length) yigin.pop().remove();
+  if (ortakBagli() && !ortakOturum()) girisEkrani();
   $('#icerik').className = '';
   if (location.hash !== sonRota) { window.scrollTo(0, 0); sonRota = location.hash; }
   if (!D.profil) return profilEkrani(true);
@@ -1695,6 +1720,8 @@ function ciz() {
   if (s === 'menu') { menuCiz('menu'); menuEkrani(); return kaydirma(); }
   if (s === 'hesaplar') { menuCiz('hesaplar'); hesaplarEkrani(); return kaydirma(); }
   if (s === 'ayarlar') { menuCiz('menu'); ayarlarEkrani(); return kaydirma(); }
+  if (s === 'kullanicilar') { menuCiz('menu'); kullanicilarEkrani(); return kaydirma(); }
+  if (s === 'islemkaydi') { menuCiz('menu'); islemKaydiEkrani(); return kaydirma(); }
   if (s === 'fis') { fisEkrani(p1); yanDuzen(); return kaydirma(); }
   if (!modulAcik(s)) return git('panel', true);
   menuCiz(s);
@@ -2077,7 +2104,9 @@ function profilEkrani(ilk) {
   $('#icerik').innerHTML = `<div class="karsilama"><div class="logo">P+</div><h2>${H.liste.length > 1 ? 'Yeni firma hesabı' : 'PowerServ+'}</h2><p>Servis, cari, stok, fatura, banka ve finans yönetimi tek yerde.</p></div>
     <div class="grup"><label class="f-satir sol"><input type="text" id="adGiris" value="${esc(D.ad || (H.liste.length > 1 ? '' : FIRMA_VARSAYILAN.ad))}" placeholder="Firma unvanı"></label></div>
     <button class="btn" id="basla">Başla</button>
+    ${H.liste.length > 1 ? '' : `<p class="dipnot" style="text-align:center;margin-top:18px">Firmanızda PowerServ+ zaten kullanılıyor mu?<br><button class="bag" id="katil">Mevcut firmaya bağlan</button></p>`}
 `;
+  if ($('#katil')) $('#katil').onclick = ortakKatilFormu;
   $('#basla').onclick = () => {
     D.ad = $('#adGiris').value.trim(); if (hx) delete hx.onceki;
     D.profil = 'sirket'; kaydet(); git('panel', true);
@@ -2128,6 +2157,7 @@ function hesaplarEkrani() {
     } else if (s === 'sil') {
       if (!await onay(`${hesapAdi(x)} silinsin mi?`, 'Bu hesabın tüm kayıtları kalıcı olarak silinir. Önce yedek almanız önerilir.', 'Hesabı sil')) return;
       localStorage.removeItem(veriAnahtari(x.id));
+      if (ortak()?.hesap === x.id) { ortakYaz(null); localStorage.removeItem(IZ_ANAHTAR); $('#girisEkran')?.remove(); }
       H.liste = H.liste.filter(y => y.id !== x.id);
       if (x.id === H.aktif) return hesabaGec(H.liste[0].id);
       hesapKaydet(); bildir('Hesap silindi'); ciz();
@@ -5016,6 +5046,7 @@ function ayarlarEkrani() {
     <div class="segment" id="temaSec">${[['acik', 'Açık'], ['koyu', 'Koyu'], ['sistem', 'Sisteme göre']].map(([v, a]) => `<button data-v="${v}" class="${temaTercih() === v ? 'secili' : ''}">${a}</button>`).join('')}</div>
     <div class="segment" id="olcekSec">${[['oto', 'Otomatik'], ['0.9', '%90'], ['1', '%100'], ['1.15', '%115'], ['1.3', '%130']].map(([v, a]) => `<button data-v="${v}" class="${olcekTercih() === v ? 'secili' : ''}">${a}</button>`).join('')}</div>
     <p class="dipnot">Tema varsayılan olarak açıktır; koyu temada da yüzeyler gri tonda kalır. Ölçek Otomatik iken ekran boyutuna göre yazıları ve düğmeleri büyütür ya da küçültür. Tarayıcıda Ctrl + / Ctrl − de çalışır.</p>
+    ${ortakAyarHtml()}
     <div class="bolum">Güvenlik</div>
     <div class="grup"><label class="hucre kareli">${kare('kilit', 'indigo')}<div class="ic"><b>PIN kilidi</b><small>Açılışta ve 30 sn sonra dönüşte PIN sorar</small></div><span class="anahtar"><input type="checkbox" id="pinAnahtar" ${kilitAyar() ? 'checked' : ''}><span></span></span></label>
       ${kilitAyar() ? `<button class="hucre kareli" id="pinDegis">${kare('kilit', 'gri')}<div class="ic"><b>PIN'i değiştir</b></div>${CHEV}</button>` : ''}</div>
@@ -5043,6 +5074,7 @@ function ayarlarEkrani() {
   $('#icerik').innerHTML = h;
   yuzenEtiket($('#icerik'));
   $('#profilDegis').onclick = () => git('hesaplar');
+  ortakAyarBagla();
   $$('#temaSec button').forEach(b => b.onclick = () => { try { localStorage.setItem(TEMA_ANAHTAR, b.dataset.v); } catch (e) {} temaUygula(); ayarlarEkrani(); });
   $$('#olcekSec button').forEach(b => b.onclick = () => { try { localStorage.setItem(OLCEK_ANAHTAR, b.dataset.v); } catch (e) {} olcekUygula(); ayarlarEkrani(); });
   $$('[data-ayar]').forEach(i => i.onchange = () => { D[i.dataset.ayar] = i.value.trim(); kaydet(); bildir('Kaydedildi'); });
@@ -5070,8 +5102,9 @@ function ayarlarEkrani() {
   $('#bildirimAnahtar').onchange = e => { try { localStorage.setItem(BILDIRIM_ANAHTAR, e.target.checked ? 'acik' : 'kapali'); } catch (x) {} if (e.target.checked && window.Android && Android.bildirimIzni) Android.bildirimIzni(); hatirlaticiPlanla(); bildir(e.target.checked ? 'Hatırlatmalar açık' : 'Hatırlatmalar kapalı'); };
   if ($('#bildirimDene')) $('#bildirimDene').onclick = () => { Android.bildirimDene('PowerServ+', 'Bildirimler çalışıyor. Vade ve vergi günlerinde sabah 09.00\'da hatırlatılacaksınız.'); };
   $('#disaAktar').onclick = yedekAl;
-  $('#iceAktar').onclick = () => $('#dosya').click();
+  $('#iceAktar').onclick = () => { if (ortakBagli() && ortakRol() !== 'yonetici') return bildir('Ortak veritabanında yedekten geri yüklemeyi yalnızca yönetici yapabilir.', true); $('#dosya').click(); };
   $('#hepsiniSil').onclick = async () => {
+    if (ortakBagli()) return bildir('Ortak veritabanına bağlı hesapta toplu silme kapalı. Önce bu cihazı ayırın.', true);
     if (!await onay('Bu hesabın verileri silinsin mi?', 'Bu hesaptaki bütün kayıtlar kalıcı olarak silinir. Diğer hesaplar etkilenmez.', 'Hepsini sil')) return;
     D = {...yeniDurum(), profil: D.profil, ad: D.ad}; kaydet(); bildir('Bu hesabın verileri silindi'); git('panel', true);
   };
@@ -5095,7 +5128,7 @@ $('#dosya').onchange = async e => {
     if (j.tur === 'tum' && j.veriler && j.hesaplar) return tumYedektenYukle(j);
     const v = j.veri || j;
     if (!Array.isArray(v.islemler) || !Array.isArray(v.kisiler)) throw new Error('biçim');
-    if (!await onay('Yedek geri yüklensin mi?', `Yedekte ${v.islemler.length} gelir-gider, ${v.kisiler.length} kişi, ${(v.faturalar || []).length} fatura var. Mevcut verilerin yerine geçer.`, 'Geri yükle')) return;
+    if (!await onay('Yedek geri yüklensin mi?', `Yedekte ${v.islemler.length} gelir-gider, ${v.kisiler.length} kişi, ${(v.faturalar || []).length} fatura var. Mevcut verilerin yerine geçer.${ortakBagli() ? ' Ortak veritabanındaki veriler de değişir; tüm kullanıcılar etkilenir.' : ''}`, 'Geri yükle')) return;
     D = duzelt(v); kaydet(); bildir('Yedek geri yüklendi');
     git(D.profil ? 'panel' : 'profil', true);
   } catch (err) { bildir('Dosya okunamadı. PowerServ+ yedeği seçin.', true); }
@@ -5277,7 +5310,7 @@ async function pinKaldir() {
   bildir('PIN kilidi kapatıldı');
   return true;
 }
-window.arkaPlan = () => { arkaPlanZaman = Date.now(); if (bulutKirli) bulutYaz(); };
+window.arkaPlan = () => { arkaPlanZaman = Date.now(); if (bulutKirli) bulutYaz(); if (window.ortakOturum && ortakOturum()) ortakEsitle(); };
 window.onPlan = () => { if (arkaPlanZaman && Date.now() - arkaPlanZaman > 30000) kilitle(); arkaPlanZaman = 0; };
 document.addEventListener('visibilitychange', () => document.hidden ? window.arkaPlan() : window.onPlan());
 
@@ -5317,6 +5350,7 @@ window.yedekKonumSecildi = k => {
   if (rota()[0] === 'ayarlar') ayarlarEkrani();
 };
 async function tumYedektenYukle(j) {
+  if (ortak()) return bildir('Ortak veritabanı kullanılırken tüm hesapları geri yükleme kapalı. Önce bu cihazı ayırın.', true);
   const n = Object.keys(j.veriler || {}).length;
   if (!await onay('Tüm hesaplar geri yüklensin mi?', `Yedekte ${n} hesap var (${tarihYaz(String(j.tarih).slice(0, 10), true)}). Bu telefondaki tüm hesapların yerine geçer.`, 'Geri yükle')) return;
   for (const h of H.liste) localStorage.removeItem(veriAnahtari(h.id));
@@ -5401,6 +5435,694 @@ window.addEventListener('beforeprint', () => { document.documentElement.style.zo
 window.addEventListener('afterprint', olcekUygula);
 olcekUygula();
 
+/* ================= Ortak veritabanı (Firebase) — 2.6 =================
+   Masaüstü ve telefonlar aynı firmaya bağlanır. Veri önce bu cihazda tutulur (internet yokken de çalışır); her kayıt
+   (fatura, cari, servis, ürün...) Firestore'da ayrı bir belge olarak saklanır, yalnızca değişenler gönderilir ve çekilir.
+   Yapı: firmalar/{firma} · uyeler/{uid} (rol) · kayit/{koleksiyon~id} · log/{…} (değiştirilemez işlem kaydı) · kilit/{kayıt}.
+   Giriş Firebase e-posta/şifre ile yapılır. Yetkiler hem burada hem Firestore güvenlik kurallarında (KURALLAR) uygulanır. */
+const ORTAK_ANAHTAR = 'powerserv.ortak', IZ_ANAHTAR = 'powerserv.ortak.iz';
+const ROLLER = {
+  yonetici: {ad: 'Yönetici', aciklama: 'Her şey, kullanıcı yönetimi dahil'},
+  muhasebe: {ad: 'Muhasebe', aciklama: 'Tüm modüller, kullanıcı yönetimi hariç'},
+  servis: {ad: 'Servis', aciklama: 'Servis, stok, cari ve fatura/teklif'},
+  izleyici: {ad: 'İzleyici', aciklama: 'Yalnızca görüntüler, değiştiremez'}
+};
+const SERVIS_MODUL = ['panel', 'servis', 'stok', 'veresiye', 'fatura'];
+const SERVIS_KOLEKSIYON = ['servisler', 'ekipmanlar', 'urunler', 'stokHareket', 'kisiler', 'hareketler', 'faturalar'];
+const ORTAK_HARIC = ['v', 'sonYedek'];
+const KOLEKSIYON_AD = {islemler: 'Gelir/gider', kisiler: 'Cari', hareketler: 'Cari hareket', urunler: 'Ürün', stokHareket: 'Stok hareketi',
+  faturalar: 'Fatura/teklif', finansHesap: 'Banka/kasa hesabı', virmanlar: 'Virman', ekipmanlar: 'Tekne/makine', servisler: 'Servis',
+  personeller: 'Personel', personelOdeme: 'Personel ödemesi', hedefler: 'Hedef', _firma: 'Firma bilgileri', _ad: 'Firma unvanı',
+  _servisAyar: 'Servis ayarları', _finansAyar: 'Finans ayarları', _modulAyar: 'Modül ayarları', _puantaj: 'Puantaj', _butceler: 'Bütçe',
+  _bordroAyar: 'Bordro ayarları', _vergiAyar: 'Vergi ayarları', _fisNo: 'Fiş numaraları', _profil: 'Profil'};
+const ISLEM_AD = {ekle: 'Ekledi', duzenle: 'Değiştirdi', sil: 'Sildi', toplu: 'Toplu gönderim', kurulum: 'Kurulum', giris: 'Giriş', kullanici: 'Kullanıcı'};
+const KURALLAR = `rules_version = '2';
+// PowerServ+ ortak veritabanı güvenlik kuralları. Firebase konsolu > Firestore Database > Kurallar sekmesine yapıştırın.
+service cloud.firestore {
+  match /databases/{db}/documents {
+    function uyeYol(f) { return /databases/$(db)/documents/firmalar/$(f)/uyeler/$(request.auth.uid); }
+    function uye(f) { return request.auth != null && exists(uyeYol(f)) && get(uyeYol(f)).data.aktif == true; }
+    function rol(f) { return get(uyeYol(f)).data.rol; }
+    function yazar(f) { return uye(f) && rol(f) in ['yonetici', 'muhasebe', 'servis']; }
+    function servisIzni(k) { return k in ['servisler', 'ekipmanlar', 'urunler', 'stokHareket', 'kisiler', 'hareketler', 'faturalar']; }
+    match /firmalar/{f} {
+      allow read: if uye(f);
+      allow create: if request.auth != null && request.resource.data.sahip == request.auth.uid;
+      allow update: if uye(f) && rol(f) == 'yonetici';
+      match /uyeler/{u} {
+        allow read: if uye(f) || (request.auth != null && request.auth.uid == u);
+        allow create: if (request.auth != null && u == request.auth.uid
+            && getAfter(/databases/$(db)/documents/firmalar/$(f)).data.sahip == request.auth.uid
+            && !exists(/databases/$(db)/documents/firmalar/$(f))) || (uye(f) && rol(f) == 'yonetici');
+        allow update, delete: if uye(f) && rol(f) == 'yonetici';
+      }
+      match /kayit/{k} {
+        allow read: if uye(f);
+        allow write: if yazar(f) && (rol(f) != 'servis' || servisIzni(request.resource.data.k));
+      }
+      match /log/{l} {
+        allow read: if uye(f) && rol(f) in ['yonetici', 'muhasebe'];
+        allow create: if uye(f) && request.resource.data.u == request.auth.uid;
+      }
+      match /kilit/{k} { allow read, write: if yazar(f); }
+    }
+  }
+}`;
+
+const ortak = () => { try { return JSON.parse(localStorage.getItem(ORTAK_ANAHTAR)) || null; } catch (e) { return null; } };
+function ortakYaz(o) { try { o ? localStorage.setItem(ORTAK_ANAHTAR, JSON.stringify(o)) : localStorage.removeItem(ORTAK_ANAHTAR); } catch (e) {} }
+const izOku = () => { let i; try { i = JSON.parse(localStorage.getItem(IZ_ANAHTAR)); } catch (e) {} i ||= {}; i.ozet ||= {}; i.ad ||= {}; i.son ||= ''; return i; };
+const izYaz = i => { try { localStorage.setItem(IZ_ANAHTAR, JSON.stringify(i)); } catch (e) {} };
+function ortakBagli() { const o = ortak(); return !!(o && o.hesap && o.hesap === H.aktif && !o.kurulum); }
+function ortakOturum() { const o = ortak(); return o && o.hesap === H.aktif && !o.kurulum && o.oturum ? o.oturum : null; }
+function ortakRol() { const s = ortakOturum(); return s ? s.rol || 'izleyici' : null; }
+function saltOkunur() { return ortakRol() === 'izleyici'; }
+function rolModulIzin(id) { return ortakRol() !== 'servis' || SERVIS_MODUL.includes(id); }
+
+/* --- HTTP: Firestore ve Firebase Auth REST uç noktaları --- */
+const FS = 'https://firestore.googleapis.com', KIM = 'https://identitytoolkit.googleapis.com', JET = 'https://securetoken.googleapis.com';
+const belgeKok = o => `projects/${o.p}/databases/(default)/documents`;
+const firmaYol = (o, ek = '') => `${belgeKok(o)}/firmalar/${o.f}${ek}`;
+const fsUrl = (o, ek) => `${FS}/v1/${firmaYol(o, ek)}`;
+function ortakHataMetni(kod) {
+  const k = String(kod || '');
+  const t = [['EMAIL_EXISTS', 'Bu e-posta ile zaten bir kullanıcı var'], ['INVALID_LOGIN_CREDENTIALS', 'E-posta veya şifre yanlış'], ['INVALID_PASSWORD', 'E-posta veya şifre yanlış'],
+    ['EMAIL_NOT_FOUND', 'E-posta veya şifre yanlış'], ['WEAK_PASSWORD', 'Şifre en az 6 karakter olmalı'], ['INVALID_EMAIL', 'E-posta adresi geçersiz'], ['MISSING_PASSWORD', 'Şifre girin'],
+    ['TOO_MANY_ATTEMPTS', 'Çok fazla deneme yapıldı, birkaç dakika sonra tekrar deneyin'], ['USER_DISABLED', 'Bu kullanıcı kapatılmış'],
+    ['TOKEN_EXPIRED', 'Oturum süresi doldu, yeniden giriş yapın'], ['INVALID_REFRESH_TOKEN', 'Oturum süresi doldu, yeniden giriş yapın'], ['USER_NOT_FOUND', 'Oturum süresi doldu, yeniden giriş yapın'],
+    ['API key not valid', 'Firebase API anahtarı geçersiz'], ['API_KEY_INVALID', 'Firebase API anahtarı geçersiz'],
+    ['CONFIGURATION_NOT_FOUND', 'Firebase\'de E-posta/Şifre girişi açılmamış (Authentication > Sign-in method)'], ['OPERATION_NOT_ALLOWED', 'Firebase\'de E-posta/Şifre girişi açılmamış (Authentication > Sign-in method)'],
+    ['PERMISSION_DENIED', 'Bu işlem için yetkiniz yok'], ['Missing or insufficient permissions', 'Bu işlem için yetkiniz yok'],
+    ['ALREADY_EXISTS', 'Bu kayıt zaten var'], ['does not exist', 'Firestore veritabanı oluşturulmamış'], ['NOT_FOUND', 'Kayıt bulunamadı']];
+  const b = t.find(([a]) => k.includes(a));
+  return b ? b[1] : 'Sunucu hatası: ' + k.slice(0, 120);
+}
+const OTURUM_HATA = ['TOKEN_EXPIRED', 'INVALID_REFRESH_TOKEN', 'USER_NOT_FOUND', 'USER_DISABLED', 'INVALID_ID_TOKEN', 'CREDENTIAL_TOO_OLD_LOGIN_AGAIN'];
+async function ortakIstek(o, yontem, url, govde, {yetki = true, form = false} = {}) {
+  const h = {};
+  if (yetki) h.Authorization = 'Bearer ' + await ortakJeton(o);
+  let b;
+  if (form) { h['Content-Type'] = 'application/x-www-form-urlencoded'; b = govde; }
+  else if (govde !== undefined) { h['Content-Type'] = 'application/json'; b = JSON.stringify(govde); }
+  let r;
+  try { r = await fetch(url, {method: yontem, headers: h, body: b, cache: 'no-store'}); }
+  catch (e) { throw Object.assign(new Error('İnternet bağlantısı yok'), {ag: true}); }
+  const metin = await r.text();
+  let j = null; try { j = metin ? JSON.parse(metin) : null; } catch (e) {}
+  if (Array.isArray(j) && j[0]?.error) j = j[0];
+  if (!r.ok || j?.error) {
+    const kod = j?.error?.message || j?.error?.status || ('HTTP ' + r.status);
+    throw Object.assign(new Error(ortakHataMetni(kod)), {kod, durum: r.status, oturum: OTURUM_HATA.some(x => String(kod).includes(x)) || (r.status === 401 && yetki)});
+  }
+  return j;
+}
+/* Kimlik jetonu 1 saat geçerlidir; süresi dolmadan yenileme jetonuyla yenilenir. */
+async function ortakJeton(o) {
+  const s = o.oturum;
+  if (!s) throw Object.assign(new Error('Giriş yapılmamış'), {oturum: true});
+  if (s.bitis > Date.now() + 60000) return s.tok;
+  const j = await ortakIstek(o, 'POST', `${JET}/v1/token?key=${encodeURIComponent(o.a)}`, 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(s.yen), {yetki: false, form: true});
+  Object.assign(s, {tok: j.id_token, yen: j.refresh_token, bitis: Date.now() + (+j.expires_in || 3600) * 1000});
+  const g = ortak(); if (g && g.oturum && g.oturum.uid === s.uid) { g.oturum = {...g.oturum, tok: s.tok, yen: s.yen, bitis: s.bitis}; ortakYaz(g); }
+  return s.tok;
+}
+async function ortakGirisYap(o, eposta, sifre, yeni) {
+  const j = await ortakIstek(o, 'POST', `${KIM}/v1/accounts:${yeni ? 'signUp' : 'signInWithPassword'}?key=${encodeURIComponent(o.a)}`, {email: eposta, password: sifre, returnSecureToken: true}, {yetki: false});
+  return {uid: j.localId, eposta: j.email || eposta, tok: j.idToken, yen: j.refreshToken, bitis: Date.now() + (+j.expiresIn || 3600) * 1000};
+}
+
+/* --- Firestore değer dönüşümü --- */
+const fsDeger = v => typeof v === 'boolean' ? {booleanValue: v} : typeof v === 'number' ? (Number.isInteger(v) ? {integerValue: String(v)} : {doubleValue: v}) : v == null ? {nullValue: null} : {stringValue: String(v)};
+const fsAlanlar = o => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, fsDeger(v)]));
+function fsOku(d) {
+  const r = {};
+  for (const [k, v] of Object.entries(d.fields || {})) r[k] = 'integerValue' in v ? +v.integerValue : 'doubleValue' in v ? v.doubleValue : 'booleanValue' in v ? v.booleanValue : 'timestampValue' in v ? v.timestampValue : 'nullValue' in v ? null : v.stringValue;
+  r._ad = d.name.split('/').pop();
+  return r;
+}
+const zYaz = () => ({fieldPath: 'z', setToServerValue: 'REQUEST_TIME'});
+const zNorm = z => String(z || '').replace(/(\.\d+)?Z$/, m => '.' + ((m.length > 1 ? m.slice(1, -1) : '') + '000000000').slice(0, 9) + 'Z');
+const logYazimi = (o, s, i, k, d) => ({update: {name: firmaYol(o, '/log/' + Date.now().toString(36) + kimlik()), fields: fsAlanlar({u: s.uid, a: s.ad || s.eposta, i, k, d: String(d || '').slice(0, 160)})}, updateTransforms: [zYaz()]});
+
+/* --- Kayıtlar: dizilerdeki her öğe ayrı belge, diğer alanlar (firma, ayarlar...) birer belge --- */
+const ozet = s => pinOzet(s, '');
+const idTemiz = id => String(id).replace(/[^\w-]/g, '_').slice(0, 300);
+function ortakKayitlar(d) {
+  const m = new Map();
+  for (const [k, v] of Object.entries(d)) {
+    if (ORTAK_HARIC.includes(k) || v === undefined) continue;
+    if (Array.isArray(v)) { for (const x of v) { const j = JSON.stringify(x); m.set(k + '~' + (x && x.id != null ? idTemiz(x.id) : 'h' + ozet(j)), {k, j, x}); } }
+    else m.set('_~' + k, {k: '_' + k, j: JSON.stringify(v)});
+  }
+  return m;
+}
+const anahtarKoleksiyon = key => key.startsWith('_~') ? '_' + key.slice(2) : key.slice(0, key.indexOf('~'));
+function kayitEtiket(k, x) {
+  if (!x || typeof x !== 'object') return '';
+  const kisi = x.kisiId && D.kisiler.find(y => y.id === x.kisiId);
+  const p = [x.no || x.isEmriNo || x.belgeNo || x.kod, x.ad || x.unvan || x.baslik || x.aciklama || x.ariza || x.not, kisi?.ad, typeof x.tutar === 'number' && x.tutar ? para(x.tutar) : ''].filter(v => v && typeof v !== 'object');
+  return p.join(' · ').slice(0, 120);
+}
+
+/* --- Gönder: son eşitlemeden beri değişen ve silinen kayıtlar tek seferde (en çok 200'lük paketler) yazılır --- */
+function ortakFarklar(iz) {
+  const m = ortakKayitlar(D), f = [], rol = ortakRol();
+  for (const [key, r] of m) { const h = ozet(r.j); if (iz.ozet[key] !== h) f.push({key, k: r.k, j: r.j, h, x: r.x, yeni: !(key in iz.ozet)}); }
+  for (const key of Object.keys(iz.ozet)) if (!m.has(key)) f.push({key, k: anahtarKoleksiyon(key), j: '', h: null, sil: true});
+  return rol === 'servis' ? f.filter(r => SERVIS_KOLEKSIYON.includes(r.k)) : f;
+}
+async function ortakGonder() {
+  const o = ortak(), s = o?.oturum;
+  if (!s || saltOkunur()) return 0;
+  const iz = izOku(), f = ortakFarklar(iz);
+  if (!f.length) return 0;
+  const toplu = f.length > 40;
+  for (let i = 0; i < f.length; i += 200) {
+    const p = f.slice(i, i + 200), w = [];
+    for (const r of p) {
+      w.push({update: {name: firmaYol(o, '/kayit/' + r.key), fields: fsAlanlar({k: r.k, j: r.j, s: !!r.sil, u: s.uid})}, updateTransforms: [zYaz()]});
+      if (!toplu) w.push(logYazimi(o, s, r.sil ? 'sil' : r.yeni ? 'ekle' : 'duzenle', r.k, r.sil ? iz.ad[r.key] : r.k.startsWith('_') ? '' : kayitEtiket(r.k, r.x)));
+    }
+    if (toplu && !i) w.push(logYazimi(o, s, 'toplu', '', f.length + ' kayıt gönderildi'));
+    await ortakIstek(o, 'POST', `${FS}/v1/${belgeKok(o)}:commit`, {writes: w});
+    for (const r of p) {
+      if (r.sil) { delete iz.ozet[r.key]; delete iz.ad[r.key]; }
+      else { iz.ozet[r.key] = r.h; if (!r.k.startsWith('_')) iz.ad[r.key] = kayitEtiket(r.k, r.x); }
+    }
+    izYaz(iz);
+  }
+  return f.length;
+}
+
+/* --- Çek: sunucu zamanı (z) son çekilenden büyük olan belgeler. Yerelde gönderilmemiş değişikliği olan kayıt ezilmez. --- */
+function yerelBul(key) {
+  if (key.startsWith('_~')) return null;
+  const k = key.slice(0, key.indexOf('~')), id = key.slice(k.length + 1), l = D[k];
+  if (!Array.isArray(l)) return {k, id, l: null, i: -1};
+  let i = l.findIndex(x => x && x.id != null && idTemiz(x.id) === id);
+  if (i < 0 && id.startsWith('h')) i = l.findIndex(x => x && x.id == null && 'h' + ozet(JSON.stringify(x)) === id);
+  return {k, id, l, i};
+}
+function yerindeDegistir(eski, yeni) {
+  if (!eski || !yeni || typeof eski !== 'object' || typeof yeni !== 'object' || Array.isArray(eski) !== Array.isArray(yeni)) return false;
+  if (Array.isArray(eski)) { eski.splice(0, eski.length, ...yeni); return true; }
+  for (const a of Object.keys(eski)) if (!(a in yeni)) delete eski[a];
+  Object.assign(eski, yeni);
+  return true;
+}
+function ortakUygula(b, iz) {
+  const key = b._ad, h = b.s ? null : ozet(b.j || '');
+  if (!b.s && iz.ozet[key] === h) return false;
+  const ad = key.startsWith('_~') ? key.slice(2) : null;
+  // Gönderilmemiş yerel değişiklik varsa yerel kazanır (bir sonraki gönderimde sunucuya gider).
+  if (key in iz.ozet) {
+    let simdi;
+    if (ad) simdi = D[ad] === undefined ? undefined : ozet(JSON.stringify(D[ad]));
+    else { const y = yerelBul(key); simdi = y.l && y.i >= 0 ? ozet(JSON.stringify(y.l[y.i])) : undefined; }
+    if (simdi !== undefined && simdi !== iz.ozet[key]) return false;
+  }
+  if (ad) {
+    if (ORTAK_HARIC.includes(ad)) return false;
+    if (b.s) { delete iz.ozet[key]; return false; }
+    const v = JSON.parse(b.j);
+    if (!yerindeDegistir(D[ad], v)) D[ad] = v;
+    iz.ozet[key] = h;
+    return true;
+  }
+  const y = yerelBul(key);
+  if (b.s) {
+    delete iz.ozet[key]; delete iz.ad[key];
+    if (y.l && y.i >= 0) { y.l.splice(y.i, 1); return true; }
+    return false;
+  }
+  const v = JSON.parse(b.j);
+  if (!y.l) D[y.k] = [];
+  const l = D[y.k];
+  if (y.i >= 0) { if (!yerindeDegistir(l[y.i], v)) l[y.i] = v; } else l.push(v);
+  iz.ozet[key] = h; iz.ad[key] = kayitEtiket(y.k, v);
+  return true;
+}
+async function ortakCek() {
+  const o = ortak();
+  if (!o?.oturum) return 0;
+  let iz = izOku(), n = 0;
+  for (let tur = 0; tur < 200; tur++) {
+    const q = {structuredQuery: {from: [{collectionId: 'kayit'}], orderBy: [{field: {fieldPath: 'z'}, direction: 'ASCENDING'}], limit: 500}};
+    if (iz.son) q.structuredQuery.where = {fieldFilter: {field: {fieldPath: 'z'}, op: 'GREATER_THAN_OR_EQUAL', value: {timestampValue: iz.son}}};
+    const r = await ortakIstek(o, 'POST', `${FS}/v1/${firmaYol(o)}:runQuery`, q);
+    const l = (r || []).filter(x => x.document).map(x => fsOku(x.document));
+    iz = izOku();   // gönderim arada izi güncellemiş olabilir
+    let son = iz.son;
+    for (const b of l) { if (ortakUygula(b, iz)) n++; const z = zNorm(b.z); if (z > son) son = z; }
+    const ilerledi = son !== iz.son;
+    iz.son = son; izYaz(iz);
+    if (l.length < 500 || !ilerledi) break;
+  }
+  if (n) {
+    try { localStorage.setItem(veriAnahtari(), JSON.stringify(D)); } catch (e) {}
+    const hx = H.liste.find(x => x.id === H.aktif);
+    if (hx && (hx.ad !== D.ad || hx.profil !== D.profil)) { hx.ad = D.ad; hx.profil = D.profil; hesapKaydet(); }
+  }
+  return n;
+}
+
+/* --- Eşitleme döngüsü: kayıttan 1,5 sn sonra, 20 sn'de bir, uygulamaya dönünce ve internet gelince --- */
+let ortakMesgul = false, ortakTekrar = false, ortakZaman = 0, ortakSayac = 0, ortakCizBekle = false;
+const ortakDurum = {zaman: 0, hata: '', gonderilen: 0, cekilen: 0};
+function ortakCizilebilir() {
+  const a = document.activeElement;
+  return !yigin.length && !$('#girisEkran') && !(a && a.closest && a.closest('#icerik') && a.matches('input, textarea, select'));
+}
+async function ortakEsitle() {
+  if (!ortakOturum()) return;
+  if (ortakMesgul) { ortakTekrar = true; return; }
+  ortakMesgul = true;
+  try {
+    const iz = izOku();
+    let c = 0;
+    if (!iz.son) c += await ortakCek();     // ilk eşitlemede önce buluttaki veri alınır
+    const g = await ortakGonder();
+    c += await ortakCek();
+    if (++ortakSayac % 6 === 1) await ortakUyelikKontrol();
+    Object.assign(ortakDurum, {zaman: Date.now(), hata: '', gonderilen: ortakDurum.gonderilen + g, cekilen: ortakDurum.cekilen + c});
+    if (c) ortakCizBekle = true;
+  } catch (e) {
+    ortakDurum.hata = e.message;
+    if (e.oturum && !e.ag) ortakOturumKapat('Oturum süresi doldu. Yeniden giriş yapın.');
+  } finally {
+    ortakMesgul = false;
+    if (ortakCizBekle && ortakCizilebilir()) { ortakCizBekle = false; ciz(); }
+    ortakDurumCiz();
+    if (ortakTekrar) { ortakTekrar = false; setTimeout(ortakEsitle, 300); }
+  }
+}
+window.ortakPlanla = () => { if (!ortakOturum()) return; clearTimeout(ortakZaman); ortakZaman = setTimeout(ortakEsitle, 1500); };
+setInterval(() => { if (!document.hidden) ortakEsitle(); }, 20000);
+window.addEventListener('online', () => ortakEsitle());
+document.addEventListener('visibilitychange', () => { if (document.hidden) ortakEsitle(); else setTimeout(ortakEsitle, 400); });
+function ortakDurumMetni() {
+  if (!ortakOturum()) return 'Giriş yapılmadı';
+  if (ortakDurum.hata) return 'Eşitlenemedi: ' + ortakDurum.hata;
+  const iz = izOku(), b = ortakFarklar(iz).length;
+  if (!ortakDurum.zaman) return 'Eşitleniyor…';
+  return `Eşitlendi ${new Date(ortakDurum.zaman).toLocaleTimeString('tr-TR', {hour: '2-digit', minute: '2-digit'})}${b ? ` · ${b} kayıt bekliyor` : ''}`;
+}
+function ortakDurumCiz() {
+  $$('.ortak-durum').forEach(e => { e.textContent = ortakDurumMetni(); e.classList.toggle('gider', !!ortakDurum.hata); });
+}
+async function ortakUyelikKontrol() {
+  const o = ortak(), s = o?.oturum;
+  if (!s) return;
+  let u = null;
+  try { u = fsOku(await ortakIstek(o, 'GET', fsUrl(o, '/uyeler/' + s.uid))); }
+  catch (e) { if (e.ag || e.oturum) throw e; if (e.durum !== 404 && e.durum !== 403) throw e; }
+  if (!u || u.aktif === false) return ortakOturumKapat('Bu kullanıcının firmaya erişimi kapatıldı.');
+  if (u.rol !== s.rol || (u.ad || '') !== (s.ad || '')) {
+    const g = ortak(); g.oturum = {...g.oturum, rol: u.rol, ad: u.ad || ''}; ortakYaz(g);
+    bildir('Yetkiniz güncellendi: ' + (ROLLER[u.rol]?.ad || u.rol));
+    ortakCizBekle = true;
+  }
+}
+
+/* --- Oturum: giriş ekranı, çıkış, cihazı ayırma --- */
+function ortakOturumKapat(neden) {
+  const o = ortak();
+  if (!o) return;
+  if (o.oturum) o.sonEposta = o.oturum.eposta;
+  o.oturum = null; ortakYaz(o);
+  if (o.hesap === H.aktif) girisEkrani(neden);
+}
+async function ortakAyir() {
+  const o = ortak();
+  if (!o) return;
+  if (!await onay('Bu cihaz ortak veritabanından ayrılsın mı?', 'Bu cihazdaki veriler silinmez ama artık diğer cihazlarla eşitlenmez. Gönderilmemiş değişiklikler buluta gitmez.', 'Ayır')) return;
+  ortakYaz(null); localStorage.removeItem(IZ_ANAHTAR);
+  $('#girisEkran')?.remove();
+  bildir('Cihaz ortak veritabanından ayrıldı'); ciz();
+}
+async function ortakUyeOku(o, uid) {
+  try { return fsOku(await ortakIstek(o, 'GET', fsUrl(o, '/uyeler/' + uid))); }
+  catch (e) { if (e.durum === 404 || e.durum === 403) return null; throw e; }
+}
+function girisEkrani(neden) {
+  const o = ortak();
+  if (!o || $('#girisEkran')) return;
+  cekmeceKapat();
+  while (yigin.length) yigin.pop().remove();
+  const el = document.createElement('div'); el.id = 'girisEkran';
+  el.innerHTML = `<div class="giris-kutu">
+      <img class="giris-logo" src="${LOGO}" alt="DN Marine">
+      <h2>PowerServ+</h2><p>${esc(o.firmaAd || 'Ortak veritabanı')} · kullanıcı girişi</p>
+      ${neden ? `<div class="giris-uyari">${esc(neden)}</div>` : ''}
+      <div class="grup"><label class="f-satir sol"><input type="email" id="gEposta" autocomplete="username" placeholder="E-posta" value="${esc(o.sonEposta || '')}"></label>
+        <label class="f-satir sol"><input type="password" id="gSifre" autocomplete="current-password" placeholder="Şifre"></label></div>
+      <p class="giris-hata gider" id="gHata"></p>
+      <button class="btn" id="gGiris">Giriş yap</button>
+      <div class="giris-alt"><button class="bag" id="gUnuttum">Şifremi unuttum</button><button class="bag" id="gAyir">Bu cihazı ayır</button></div>
+    </div>`;
+  document.body.appendChild(el);
+  yuzenEtiket(el);
+  const hata = m => { $('#gHata').textContent = m || ''; };
+  const giris = async () => {
+    const e = $('#gEposta').value.trim(), s = $('#gSifre').value;
+    if (!e || !s) return hata('E-posta ve şifre girin');
+    const b = $('#gGiris'); b.disabled = true; b.textContent = 'Giriş yapılıyor…'; hata('');
+    try {
+      const g = ortak(), ot = await ortakGirisYap(g, e, s);
+      const u = await ortakUyeOku({...g, oturum: ot}, ot.uid);
+      if (!u || u.aktif === false) throw new Error('Bu kullanıcı firmaya ekli değil ya da erişimi kapatılmış. Yöneticinize başvurun.');
+      g.oturum = {...ot, rol: u.rol, ad: u.ad || ''}; g.sonEposta = ot.eposta; ortakYaz(g);
+      el.remove(); bildir('Hoş geldiniz' + (u.ad ? ', ' + u.ad : ''));
+      ciz(); ortakEsitle();
+    } catch (x) { hata(x.message); b.disabled = false; b.textContent = 'Giriş yap'; }
+  };
+  $('#gGiris').onclick = giris;
+  $('#gSifre').onkeydown = ev => { if (ev.key === 'Enter') giris(); };
+  $('#gUnuttum').onclick = async () => {
+    const e = $('#gEposta').value.trim();
+    if (!e) return hata('Önce e-posta adresinizi yazın');
+    try { await ortakIstek(ortak(), 'POST', `${KIM}/v1/accounts:sendOobCode?key=${encodeURIComponent(o.a)}`, {requestType: 'PASSWORD_RESET', email: e}, {yetki: false}); hata(''); bildir('Şifre sıfırlama bağlantısı e-postanıza gönderildi'); }
+    catch (x) { hata(x.message); }
+  };
+  $('#gAyir').onclick = ortakAyir;
+  setTimeout(() => { const e = $('#gEposta', el); if (e && el.isConnected) (e.value ? $('#gSifre', el) : e).focus(); }, 200);
+}
+
+/* --- Kurulum (ilk yönetici) ve bağlanma (diğer cihazlar) --- */
+function firebaseAyarCoz(metin) {
+  const t = String(metin || '');
+  const al = ad => (t.match(new RegExp(ad + '["\']?\\s*[:=]\\s*["\']([^"\']+)["\']')) || [])[1];
+  return {a: al('apiKey'), p: al('projectId')};
+}
+const baglantiKodu = o => 'PS1-' + btoa(unescape(encodeURIComponent(JSON.stringify({a: o.a, p: o.p, f: o.f, n: o.firmaAd || ''}))));
+function baglantiKoduCoz(k) {
+  try { const j = JSON.parse(decodeURIComponent(escape(atob(String(k).trim().replace(/^PS1-/, '').replace(/\s+/g, ''))))); if (j.a && j.p && j.f) return {a: j.a, p: j.p, f: j.f, firmaAd: j.n || ''}; } catch (e) {}
+  return null;
+}
+function firmaKoduUret(ad) {
+  const s = kucult(ad || 'firma').replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ö/g, 'o').replace(/ç/g, 'c').replace(/ı/g, 'i').replace(/[^a-z0-9]+/g, '').slice(0, 14) || 'firma';
+  return s + '-' + Math.random().toString(36).slice(2, 8);
+}
+function metinKopyala(t, mesaj = 'Kopyalandı') {
+  try { if (window.Android && Android.kopyala) { Android.kopyala(t); return bildir(mesaj); } } catch (e) {}
+  try { navigator.clipboard.writeText(t).then(() => bildir(mesaj), () => bildir('Kopyalanamadı; metni seçip kopyalayın', true)); } catch (e) { bildir('Kopyalanamadı; metni seçip kopyalayın', true); }
+}
+function kuralGoster() {
+  modal('Güvenlik kuralları', `<p class="dipnot" style="margin-top:0">Firebase konsolu > Firestore Database > <b>Kurallar</b> sekmesindeki metnin tamamını silip bunu yapıştırın ve <b>Yayınla</b>'ya basın.</p>
+    <div class="grup"><textarea class="kod-alan" readonly rows="14">${esc(KURALLAR)}</textarea></div>
+    <button class="btn" id="kuralKopya">Kuralları kopyala</button>`);
+  $('#kuralKopya').onclick = () => metinKopyala(KURALLAR, 'Kurallar kopyalandı');
+}
+function ortakKurFormu() {
+  if (!D.profil) return;
+  const m = modal('Ortak veritabanı kur', `
+    <p class="dipnot" style="margin-top:0">Bu cihazdaki <b>${esc(D.ad || 'firma')}</b> verileri buluta yüklenir ve siz yönetici olursunuz. Sonra diğer cihazlara bağlantı kodu ile kullanıcı eklersiniz.</p>
+    <div class="bolum">1. Firebase projesi</div>
+    <div class="grup"><label class="f-satir sol"><textarea id="okAyar" rows="5" placeholder="Firebase yapılandırması (firebaseConfig)"></textarea></label></div>
+    <p class="dipnot">Firebase konsolu > Proje ayarları > Uygulamalarınız > Web uygulaması > <b>firebaseConfig</b> bölümünü olduğu gibi yapıştırın. İçinden apiKey ve projectId alınır. Kuralları yapıştırmayı unutmayın: <button class="bag" id="okKural">kuralları göster</button></p>
+    <div class="bolum">2. Yönetici kullanıcı</div>
+    <div class="grup">
+      <label class="f-satir sol"><input id="okAd" placeholder="Ad soyad" value=""></label>
+      <label class="f-satir sol"><input id="okEposta" type="email" autocomplete="username" placeholder="E-posta"></label>
+      <label class="f-satir sol"><input id="okSifre" type="password" autocomplete="new-password" placeholder="Şifre (en az 6 karakter)"></label>
+    </div>
+    <p class="giris-hata gider" id="okHata"></p>`, {kaydetAd: 'Kur ve verileri yükle', kaydet: () => { kur(); return false; }});
+  $('#okKural', m).onclick = kuralGoster;
+  const hata = t => { $('#okHata', m).textContent = t || ''; };
+  let calisiyor = false;
+  async function kur() {
+    if (calisiyor) return;
+    const c = firebaseAyarCoz($('#okAyar', m).value), ad = $('#okAd', m).value.trim(), e = $('#okEposta', m).value.trim(), s = $('#okSifre', m).value;
+    if (!c.a || !c.p) return hata('Yapılandırmada apiKey ve projectId bulunamadı');
+    if (!ad || !e) return hata('Ad ve e-posta girin');
+    if (s.length < 6) return hata('Şifre en az 6 karakter olmalı');
+    const b = $('[data-sag]', m); calisiyor = true; b.disabled = true; b.textContent = 'Kuruluyor…'; hata('');
+    const o = {...c, f: firmaKoduUret(D.ad), firmaAd: D.ad || '', hesap: H.aktif, kurulum: true};
+    try {
+      let ot;
+      try { ot = await ortakGirisYap(o, e, s, true); }
+      catch (x) { if (x.kod !== 'EMAIL_EXISTS') throw x; ot = await ortakGirisYap(o, e, s); }
+      o.oturum = {...ot, rol: 'yonetici', ad}; o.sonEposta = ot.eposta;
+      ortakYaz(o);
+      await ortakIstek(o, 'POST', `${FS}/v1/${belgeKok(o)}:commit`, {writes: [
+        {update: {name: firmaYol(o), fields: fsAlanlar({ad: D.ad || '', sahip: ot.uid, olusturma: Date.now()})}, currentDocument: {exists: false}},
+        {update: {name: firmaYol(o, '/uyeler/' + ot.uid), fields: fsAlanlar({ad, eposta: ot.eposta, rol: 'yonetici', aktif: true, ekleyen: ot.uid, eklenme: Date.now()})}}]});
+      // Güvenlik kuralları üyeliği yazıldıktan sonra görür; işlem kaydı ayrı yazılır.
+      await ortakIstek(o, 'POST', `${FS}/v1/${belgeKok(o)}:commit`, {writes: [logYazimi(o, o.oturum, 'kurulum', '', 'Ortak veritabanı kuruldu')]});
+      izYaz({ozet: {}, ad: {}, son: ''});
+      delete o.kurulum; ortakYaz(o);
+      b.textContent = 'Veriler yükleniyor…';
+      await ortakEsitle();
+      if (ortakDurum.hata) throw new Error(ortakDurum.hata);
+      kapat(); bildir('Ortak veritabanı kuruldu');
+      ciz();
+      setTimeout(() => baglantiKoduGoster(), 350);
+    } catch (x) {
+      const g = ortak(); if (g && g.kurulum) ortakYaz(null);
+      hata(x.message); calisiyor = false; b.disabled = false; b.textContent = 'Kur ve verileri yükle';
+    }
+  }
+}
+function baglantiKoduGoster() {
+  const o = ortak();
+  if (!o) return;
+  const k = baglantiKodu(o);
+  modal('Bağlantı kodu', `<p class="dipnot" style="margin-top:0">Diğer cihazda PowerServ+ > Ayarlar > Ortak veritabanı > <b>Mevcut firmaya bağlan</b> deyip bu kodu yapıştırın. Giriş için o kişiyi önce <b>Kullanıcılar</b>'dan ekleyin.</p>
+    <div class="grup"><textarea class="kod-alan" readonly rows="4">${esc(k)}</textarea></div>
+    <button class="btn" id="bkKopya">Kodu kopyala</button>
+    <p class="dipnot">Kod tek başına giriş sağlamaz; e-posta ve şifre de gerekir.</p>`);
+  $('#bkKopya').onclick = () => metinKopyala(k, 'Bağlantı kodu kopyalandı');
+}
+function ortakKatilFormu() {
+  const m = modal('Mevcut firmaya bağlan', `
+    <p class="dipnot" style="margin-top:0">Yöneticinin verdiği bağlantı kodunu ve size açılan kullanıcı bilgilerini girin. Firma verileri bu cihazda <b>yeni bir hesap</b> olarak açılır; mevcut hesaplarınıza dokunulmaz.</p>
+    <div class="grup"><label class="f-satir sol"><textarea id="okKod" rows="3" placeholder="Bağlantı kodu (PS1-…)"></textarea></label></div>
+    <div class="grup">
+      <label class="f-satir sol"><input id="okEposta" type="email" autocomplete="username" placeholder="E-posta"></label>
+      <label class="f-satir sol"><input id="okSifre" type="password" autocomplete="current-password" placeholder="Şifre"></label>
+    </div>
+    <p class="giris-hata gider" id="okHata"></p>`, {kaydetAd: 'Bağlan', kaydet: () => { baglan(); return false; }});
+  const hata = t => { $('#okHata', m).textContent = t || ''; };
+  let calisiyor = false;
+  async function baglan() {
+    if (calisiyor) return;
+    const c = baglantiKoduCoz($('#okKod', m).value), e = $('#okEposta', m).value.trim(), s = $('#okSifre', m).value;
+    if (!c) return hata('Bağlantı kodu geçersiz');
+    if (!e || !s) return hata('E-posta ve şifre girin');
+    const b = $('[data-sag]', m); calisiyor = true; b.disabled = true; b.textContent = 'Bağlanıyor…'; hata('');
+    const eskiAktif = H.aktif, bosHesap = !D.profil && hesapBosMu();
+    let yeniId = null;
+    try {
+      const ot = await ortakGirisYap(c, e, s);
+      const u = await ortakUyeOku({...c, oturum: ot}, ot.uid);
+      if (!u || u.aktif === false) throw new Error('Bu kullanıcı firmaya ekli değil. Yöneticiden sizi Kullanıcılar bölümüne eklemesini isteyin.');
+      yeniId = 'h' + kimlik();
+      H.liste.push({id: yeniId, ad: c.firmaAd, profil: 'sirket'});
+      localStorage.setItem(veriAnahtari(yeniId), JSON.stringify({...yeniDurum(), profil: 'sirket', ad: c.firmaAd}));
+      H.aktif = yeniId; hesapKaydet();
+      D = yukle(); ui = uiBaslangic();
+      ortakYaz({...c, hesap: yeniId, oturum: {...ot, rol: u.rol, ad: u.ad || ''}, sonEposta: ot.eposta});
+      izYaz({ozet: {}, ad: {}, son: ''});
+      b.textContent = 'Veriler indiriliyor…';
+      await ortakCek();
+      D = duzelt(D); localStorage.setItem(veriAnahtari(), JSON.stringify(D));
+      const o2 = ortak(); await ortakIstek(o2, 'POST', `${FS}/v1/${belgeKok(o2)}:commit`, {writes: [logYazimi(o2, o2.oturum, 'giris', '', 'Yeni cihaz bağlandı')]}).catch(() => {});
+      if (bosHesap) { H.liste = H.liste.filter(h => h.id !== eskiAktif); localStorage.removeItem(veriAnahtari(eskiAktif)); hesapKaydet(); }
+      kapat(); bildir((c.firmaAd || 'Firma') + ' verileri indirildi');
+      ortakEsitle();
+      git('panel', true); ciz();
+    } catch (x) {
+      if (yeniId) { H.liste = H.liste.filter(h => h.id !== yeniId); localStorage.removeItem(veriAnahtari(yeniId)); H.aktif = eskiAktif; hesapKaydet(); D = yukle(); ui = uiBaslangic(); ortakYaz(null); localStorage.removeItem(IZ_ANAHTAR); }
+      hata(x.message); calisiyor = false; b.disabled = false; b.textContent = 'Bağlan';
+    }
+  }
+}
+
+/* --- Ayarlar bölümü --- */
+function ortakAyarHtml() {
+  const o = ortak(), s = ortakOturum(), r = ortakRol();
+  let h = '<div class="bolum">Ortak veritabanı</div>';
+  if (!o) return h + `<div class="grup">
+      <button class="hucre kareli" id="ortakKur">${kare('bulut', 'mavi')}<div class="ic"><b>Ortak veritabanını kur</b><small>Bu cihaz yönetici olur, veriler buluta yüklenir</small></div>${CHEV}</button>
+      <button class="hucre kareli" id="ortakKatil">${kare('kisiler', 'nane')}<div class="ic"><b>Mevcut firmaya bağlan</b><small>Bağlantı kodu ve kullanıcı bilgisiyle</small></div>${CHEV}</button></div>
+    <p class="dipnot">Masaüstü ve telefonlar aynı veriyi kullanır, her kullanıcı kendi şifresiyle girer. İnternet yokken de çalışır; bağlantı gelince eşitlenir. Ücretsiz bir Firebase projesi gerekir.</p>`;
+  if (o.hesap !== H.aktif) { const hx = H.liste.find(x => x.id === o.hesap); return h + `<div class="grup"><button class="hucre kareli" id="ortakHesap">${kare('bulut', 'gri')}<div class="ic"><b>${esc(hx ? hesapAdi(hx) : 'Başka bir hesap')} hesabına bağlı</b><small>Bu hesap ortak veritabanını kullanmıyor</small></div><span class="deger">Geç</span>${CHEV}</button></div>`; }
+  return h + `<div class="grup">
+      <div class="hucre kareli">${kare('kisi', 'mavi')}<div class="ic"><b>${esc(s?.ad || s?.eposta || '')}</b><small>${esc(s?.eposta || '')} · ${esc(o.firmaAd || o.f)}</small></div><span class="hap mavi">${esc(ROLLER[r]?.ad || '')}</span></div>
+      <button class="hucre kareli" id="ortakSimdi">${kare('donustur', 'nane')}<div class="ic"><b>Şimdi eşitle</b><small class="ortak-durum">${esc(ortakDurumMetni())}</small></div>${CHEV}</button>
+      ${r === 'yonetici' ? `<button class="hucre kareli" id="ortakKullanici">${kare('kisiler', 'indigo')}<div class="ic"><b>Kullanıcılar ve yetkiler</b><small>Kullanıcı ekle, rol ver, erişimi kapat</small></div>${CHEV}</button>
+      <button class="hucre kareli" id="ortakKod">${kare('kilit', 'mor')}<div class="ic"><b>Bağlantı kodu</b><small>Yeni cihazı firmaya bağlamak için</small></div>${CHEV}</button>` : ''}
+      ${r === 'yonetici' || r === 'muhasebe' ? `<button class="hucre kareli" id="ortakLog">${kare('liste', 'turuncu')}<div class="ic"><b>İşlem kaydı</b><small>Kim, ne zaman, neyi değiştirdi</small></div>${CHEV}</button>` : ''}
+      ${r === 'yonetici' ? `<button class="hucre kareli" id="ortakKural">${kare('dosya', 'gri')}<div class="ic"><b>Güvenlik kuralları</b><small>Firebase'e yapıştırılacak metin</small></div>${CHEV}</button>` : ''}
+      <button class="hucre kareli" id="ortakCikis">${kare('cikis', 'gri')}<div class="ic"><b>Oturumu kapat</b></div>${CHEV}</button>
+      <button class="hucre kareli" id="ortakAyir">${kare('kapat', 'gri')}<div class="ic"><b>Bu cihazı ayır</b><small>Veriler bu cihazda kalır, eşitleme durur</small></div>${CHEV}</button></div>
+    <p class="dipnot">Aynı kaydı başka biri düzenliyorsa form kilitli açılır. Her değişiklik işlem kaydına yazılır.</p>`;
+}
+function ortakAyarBagla() {
+  const b = (id, f) => { const e = $('#' + id); if (e) e.onclick = f; };
+  b('ortakKur', ortakKurFormu); b('ortakKatil', ortakKatilFormu); b('ortakKod', baglantiKoduGoster); b('ortakKural', kuralGoster);
+  b('ortakHesap', () => hesabaGec(ortak().hesap));
+  b('ortakSimdi', async () => { await ortakEsitle(); bildir(ortakDurum.hata ? 'Eşitlenemedi: ' + ortakDurum.hata : 'Eşitlendi', !!ortakDurum.hata); });
+  b('ortakKullanici', () => git('kullanicilar')); b('ortakLog', () => git('islemkaydi'));
+  b('ortakCikis', async () => { if (await onay('Oturum kapatılsın mı?', 'Yeniden girmek için e-posta ve şifre gerekir.', 'Oturumu kapat')) { await ortakEsitle(); ortakOturumKapat(''); } });
+  b('ortakAyir', ortakAyir);
+}
+
+/* --- Kullanıcılar (yalnızca yönetici) --- */
+async function kullanicilarEkrani() {
+  if (ortakRol() !== 'yonetici') return git('ayarlar', true);
+  const o = ortak();
+  $('#icerik').innerHTML = sayfa('Kullanıcılar', {geri: 'ayarlar', geriAd: 'Ayarlar'}) + `<div class="yan-arac"><button id="kYeni">${ikon('arti')}Kullanıcı ekle</button><button id="kKod">${ikon('kilit')}Bağlantı kodu</button></div><div id="kListe"><p class="soluk">Yükleniyor…</p></div>`;
+  yanDuzen();
+  $('#kYeni').onclick = () => kullaniciFormu(null, o);
+  $('#kKod').onclick = baglantiKoduGoster;
+  let l;
+  try { const r = await ortakIstek(o, 'GET', fsUrl(o, '/uyeler') + '?pageSize=300'); l = (r?.documents || []).map(fsOku); }
+  catch (e) { if ($('#kListe')) $('#kListe').innerHTML = `<p class="gider">${esc(e.message)}</p>`; return; }
+  if (rota()[0] !== 'kullanicilar') return;
+  l.sort((a, b) => (b.aktif !== false) - (a.aktif !== false) || String(a.ad || a.eposta).localeCompare(String(b.ad || b.eposta), 'tr'));
+  $('#kListe').innerHTML = `<div class="grup">${l.map((u, i) => `<button class="hucre kareli" data-ku="${i}">${kare('kisi', u.aktif === false ? 'gri' : 'mavi')}<div class="ic"><b>${esc(u.ad || u.eposta)}${u._ad === o.oturum.uid ? ' <span class="hap">siz</span>' : ''}</b><small>${esc(u.eposta || '')}</small></div>
+      <span class="hap ${u.aktif === false ? 'kirmizi' : u.rol === 'yonetici' ? 'mavi' : ''}">${u.aktif === false ? 'Kapalı' : esc(ROLLER[u.rol]?.ad || u.rol)}</span>${CHEV}</button>`).join('')}</div>
+    <p class="dipnot">${Object.entries(ROLLER).map(([, r]) => `<b>${r.ad}:</b> ${r.aciklama}`).join('<br>')}</p>`;
+  $$('[data-ku]').forEach(b => b.onclick = () => kullaniciFormu(l[+b.dataset.ku], o, l));
+}
+function kullaniciFormu(u, o, liste = []) {
+  const yeni = !u, ben = u && u._ad === o.oturum.uid;
+  const m = modal(yeni ? 'Yeni kullanıcı' : (u.ad || u.eposta), `
+    <div class="grup">
+      <label class="f-satir sol"><input id="kuAd" placeholder="Ad soyad" value="${esc(u?.ad || '')}"></label>
+      ${yeni ? `<label class="f-satir sol"><input id="kuEposta" type="email" placeholder="E-posta" autocomplete="off"></label>
+      <label class="f-satir sol"><input id="kuSifre" type="text" placeholder="Geçici şifre (en az 6 karakter)" autocomplete="off" value="${Math.random().toString(36).slice(2, 10)}"></label>`
+        : `<div class="hucre"><div class="ic"><b>${esc(u.eposta || '')}</b><small>E-posta</small></div></div>`}
+    </div>
+    <div class="bolum">Yetki</div>
+    <div class="grup" id="kuRol">${Object.entries(ROLLER).map(([k, r]) => `<label class="hucre"><div class="ic"><b>${r.ad}</b><small>${r.aciklama}</small></div><input type="radio" name="kuRol" value="${k}" ${(u?.rol || 'servis') === k ? 'checked' : ''} ${ben ? 'disabled' : ''}></label>`).join('')}</div>
+    ${!yeni ? `<div class="grup"><label class="hucre kareli">${kare('kilit', 'gri')}<div class="ic"><b>Erişim açık</b><small>Kapatılırsa bu kullanıcı giremez</small></div><span class="anahtar"><input type="checkbox" id="kuAktif" ${u.aktif !== false ? 'checked' : ''} ${ben ? 'disabled' : ''}><span></span></span></label></div>` : ''}
+    ${ben ? '<p class="dipnot">Kendi yetkinizi ve erişiminizi değiştiremezsiniz.</p>' : ''}
+    ${yeni ? '<p class="dipnot">Kullanıcıya e-posta, geçici şifre ve bağlantı kodunu iletin. Şifresini girişte "Şifremi unuttum" ile değiştirebilir.</p>' : ''}
+    <p class="giris-hata gider" id="kuHata"></p>`, {kaydetAd: yeni ? 'Kullanıcıyı ekle' : 'Kaydet', kaydet: () => { kaydetK(); return false; }});
+  const hata = t => { $('#kuHata', m).textContent = t || ''; };
+  let calisiyor = false;
+  async function kaydetK() {
+    if (calisiyor) return;
+    const ad = $('#kuAd', m).value.trim(), rol = ($('[name=kuRol]:checked', m) || {}).value || 'servis';
+    if (!ad) return hata('Ad girin');
+    const b = $('[data-sag]', m); calisiyor = true; b.disabled = true; hata('');
+    try {
+      const s = ortak().oturum;
+      if (yeni) {
+        const e = $('#kuEposta', m).value.trim(), sf = $('#kuSifre', m).value;
+        if (!e) throw new Error('E-posta girin');
+        if (sf.length < 6) throw new Error('Şifre en az 6 karakter olmalı');
+        if (liste.some(x => (x.eposta || '').toLowerCase() === e.toLowerCase())) throw new Error('Bu e-posta zaten listede');
+        const yeniK = await ortakGirisYap(ortak(), e, sf, true);   // yalnızca hesabı açar; yöneticinin oturumu değişmez
+        await ortakIstek(ortak(), 'POST', `${FS}/v1/${belgeKok(o)}:commit`, {writes: [
+          {update: {name: firmaYol(o, '/uyeler/' + yeniK.uid), fields: fsAlanlar({ad, eposta: yeniK.eposta, rol, aktif: true, ekleyen: s.uid, eklenme: Date.now()})}},
+          logYazimi(o, s, 'kullanici', '', `${ad} (${yeniK.eposta}) eklendi · ${ROLLER[rol].ad}`)]});
+        kapat(); bildir('Kullanıcı eklendi');
+        setTimeout(() => modal('Kullanıcı eklendi', `<p class="dipnot" style="margin-top:0">Bu bilgileri <b>${esc(ad)}</b> ile paylaşın:</p>
+          <div class="grup"><textarea class="kod-alan" readonly rows="6">${esc(`E-posta: ${yeniK.eposta}\nŞifre: ${sf}\nBağlantı kodu: ${baglantiKodu(ortak())}`)}</textarea></div><button class="btn" id="kuKopya">Bilgileri kopyala</button>`), 330);
+        setTimeout(() => { const k = $('#kuKopya'); if (k) k.onclick = () => metinKopyala(`E-posta: ${yeniK.eposta}\nŞifre: ${sf}\nBağlantı kodu: ${baglantiKodu(ortak())}`, 'Bilgiler kopyalandı'); }, 400);
+      } else {
+        const aktif = ben ? true : $('#kuAktif', m).checked, r2 = ben ? u.rol : rol;
+        if (u.rol === 'yonetici' && (r2 !== 'yonetici' || !aktif) && liste.filter(x => x.rol === 'yonetici' && x.aktif !== false).length < 2) throw new Error('En az bir yönetici kalmalı');
+        const deg = [u.ad !== ad && 'ad', u.rol !== r2 && 'yetki ' + ROLLER[r2].ad, (u.aktif !== false) !== aktif && (aktif ? 'erişim açıldı' : 'erişim kapatıldı')].filter(Boolean);
+        await ortakIstek(ortak(), 'POST', `${FS}/v1/${belgeKok(o)}:commit`, {writes: [
+          {update: {name: firmaYol(o, '/uyeler/' + u._ad), fields: fsAlanlar({ad, eposta: u.eposta || '', rol: r2, aktif, ekleyen: u.ekleyen || '', eklenme: u.eklenme || 0})}},
+          logYazimi(o, s, 'kullanici', '', `${ad}: ${deg.join(', ') || 'kaydedildi'}`)]});
+        if (ben) { const g = ortak(); g.oturum.ad = ad; ortakYaz(g); }
+        kapat(); bildir('Kaydedildi');
+      }
+      kullanicilarEkrani();
+    } catch (x) { hata(x.message); calisiyor = false; b.disabled = false; }
+  }
+}
+
+/* --- İşlem kaydı (yönetici ve muhasebe): en yeni 500 kayıt, kullanıcı ve metin filtresi --- */
+async function islemKaydiEkrani() {
+  const r = ortakRol();
+  if (r !== 'yonetici' && r !== 'muhasebe') return git('ayarlar', true);
+  const o = ortak();
+  ui.logAra ??= ''; ui.logKisi ??= '';
+  $('#icerik').innerHTML = sayfa('İşlem kaydı', {geri: 'ayarlar', geriAd: 'Ayarlar'}) + `<div class="rapor-ust"><div class="arama">${ikon('ara')}<input type="search" id="logAra" placeholder="Kayıtta ara" value="${esc(ui.logAra)}"></div>
+      <select id="logKisi" class="secim"><option value="">Tüm kullanıcılar</option></select></div>
+    <div class="yan-arac"><button id="logYaz">${ikon('yazici')}Yazdır</button><button id="logYeni">${ikon('donustur')}Yenile</button></div>
+    <div id="logTablo"><p class="soluk">Yükleniyor…</p></div>`;
+  yanDuzen();
+  $('#logYeni').onclick = islemKaydiEkrani;
+  let l;
+  try {
+    const q = {structuredQuery: {from: [{collectionId: 'log'}], orderBy: [{field: {fieldPath: 'z'}, direction: 'DESCENDING'}], limit: 500}};
+    l = ((await ortakIstek(o, 'POST', `${FS}/v1/${firmaYol(o)}:runQuery`, q)) || []).filter(x => x.document).map(x => fsOku(x.document));
+  } catch (e) { if ($('#logTablo')) $('#logTablo').innerHTML = `<p class="gider">${esc(e.message)}</p>`; return; }
+  if (rota()[0] !== 'islemkaydi') return;
+  const kisiler = [...new Set(l.map(x => x.a))].sort((a, b) => String(a).localeCompare(String(b), 'tr'));
+  $('#logKisi').innerHTML += kisiler.map(k => `<option ${ui.logKisi === k ? 'selected' : ''}>${esc(k)}</option>`).join('');
+  const zaman = z => { const d = new Date(z); return isNaN(d) ? '' : d.toLocaleString('tr-TR', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'}); };
+  const satir = x => [zaman(x.z), x.a || '', ISLEM_AD[x.i] || x.i || '', KOLEKSIYON_AD[x.k] || x.k || '', x.d || ''];
+  let son = [];
+  const ciz1 = () => {
+    const a = kucult(ui.logAra.trim());
+    son = l.filter(x => (!ui.logKisi || x.a === ui.logKisi) && (!a || kucult(satir(x).join(' ')).includes(a)));
+    $('#logTablo').innerHTML = son.length ? `<div class="liste-kap"><table class="liste-tablo"><thead><tr><th>Tarih</th><th>Kullanıcı</th><th>İşlem</th><th>Bölüm</th><th>Kayıt</th></tr></thead>
+      <tbody>${son.map(x => `<tr class="${x.i === 'sil' ? 'uyar' : ''}">${satir(x).map(v => `<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+      <p class="dipnot">${son.length} kayıt gösteriliyor (en yeni ${l.length} kayıt içinden). İşlem kaydı silinemez ve değiştirilemez.</p>`
+      : bosDurum('liste', 'gri', 'Kayıt yok', 'Bu filtreye uyan işlem bulunamadı.');
+  };
+  ciz1();
+  $('#logAra').oninput = e => { ui.logAra = e.target.value; ciz1(); };
+  $('#logKisi').onchange = e => { ui.logKisi = e.target.value; ciz1(); };
+  $('#logYaz').onclick = () => yazdir('Islem kaydi', listeKagit({ad: 'İşlem kaydı', k: [['Tarih'], ['Kullanıcı'], ['İşlem'], ['Bölüm'], ['Kayıt']]}, son.map(x => ({d: satir(x)})), {ara: ui.logAra}));
+}
+
+/* --- Belge kilidi: düzenleme formu açılınca kayıt 3 dk kilitlenir (her dakika uzatılır), form kapanınca açılır --- */
+async function belgeKilitle(key) {
+  const el = yigin[yigin.length - 1], m = el && $('.modal', el);
+  if (!m) return;
+  const o = ortak(), s = o?.oturum;
+  if (!s) return;
+  const url = fsUrl(o, '/kilit/' + key);
+  try {
+    let k = null;
+    try { k = fsOku(await ortakIstek(o, 'GET', url)); } catch (e) { if (e.durum !== 404) throw e; }
+    if (!yigin.includes(el)) return;
+    if (k && k.u !== s.uid && k.bitis > Date.now()) {
+      $('.modal-govde', m).insertAdjacentHTML('afterbegin', `<div class="kilit-uyari">${ikon('kilit')}<div><b>${esc(k.a || 'Başka bir kullanıcı')} bu kaydı düzenliyor</b><small>Kayıt şu an kilitli; değişiklik yapamazsınız. Daha sonra yeniden açın.</small></div></div>`);
+      formuKilitle(m);
+      return;
+    }
+    const yaz = () => ortakIstek(ortak(), 'PATCH', url, {fields: fsAlanlar({u: s.uid, a: s.ad || s.eposta, bitis: Date.now() + 180000})}).catch(() => {});
+    await yaz();
+    const birak = () => ortakIstek(ortak(), 'DELETE', url).catch(() => {});
+    if (!yigin.includes(el)) return birak();
+    const t = setInterval(yaz, 60000), once = el._kapaninca;
+    el._kapaninca = () => { clearInterval(t); birak(); if (once) once(); };
+  } catch (e) { /* internet yoksa kilitsiz devam edilir */ }
+}
+function formuKilitle(m) {
+  $('.modal-alt', m)?.remove();
+  $$('.modal-govde input, .modal-govde select, .modal-govde textarea, .modal-govde button', m).forEach(e => { e.disabled = true; });
+  m.classList.add('salt-okunur');
+}
+const KILITLI_FORM = [['islemFormu', 'islemler', 0], ['kisiFormu', 'kisiler', 0], ['hareketFormu', 'hareketler', 1], ['urunFormu', 'urunler', 0], ['faturaFormu', 'faturalar', 0],
+  ['odemeFormu', 'faturalar', 0], ['finansHesapFormu', 'finansHesap', 0], ['virmanFormu', 'virmanlar', 0], ['ekipmanFormu', 'ekipmanlar', 0], ['servisFormu', 'servisler', 0],
+  ['personelFormu', 'personeller', 0], ['hedefFormu', 'hedefler', 0]];
+for (const [ad, k, i] of KILITLI_FORM) {
+  const asil = window[ad];
+  if (typeof asil !== 'function') continue;
+  window[ad] = function (...a) {
+    const r = asil.apply(this, a), x = a[i];
+    if (x && typeof x === 'object' && x.id != null && ortakOturum() && !saltOkunur() && D[k]?.includes(x)) belgeKilitle(k + '~' + idTemiz(x.id));
+    return r;
+  };
+}
+function ortakBaslat() {
+  const o = ortak();
+  if (o && o.kurulum) { ortakYaz(null); return; }   // yarım kalan kurulum
+  if (ortakBagli() && !ortakOturum()) return girisEkrani();
+  if (ortakOturum()) ortakEsitle();
+}
+
 /* ================= Başlat ================= */
 hesaplariYukle();
 D = yukle();
@@ -5411,6 +6133,7 @@ if (!location.hash) history.replaceState(null, '', '#/panel');
 ciz();
 kilitle();
 hatirlaticiPlanla();
+ortakBaslat();
 </script>
 </body>
 </html>

@@ -225,6 +225,15 @@ public class MainActivity extends Activity {
 
     /** Sayfadaki JavaScript'in "Android" adıyla çağırdığı yöntemler. */
     private class Kopru {
+        /** Bağlantı kodu ve kullanıcı bilgilerini panoya kopyalar (WebView'de navigator.clipboard file:// sayfada çalışmaz). */
+        @JavascriptInterface
+        public void kopyala(String metin) {
+            runOnUiThread(() -> {
+                android.content.ClipboardManager p = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                if (p != null) p.setPrimaryClip(ClipData.newPlainText("PowerServ+", metin));
+            });
+        }
+
         /** Sayfanın teması değişince durum ve gezinme çubuğunu aynı renge boyar. */
         @JavascriptInterface
         public void tema(boolean koyu) {

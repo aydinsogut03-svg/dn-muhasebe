@@ -52,11 +52,23 @@ Raporlar ekranında dört sekme vardır. Gelir-gider: dönem özeti, 12 aylık g
 
 - `web/index.html`: uygulamanın tamamı (HTML + CSS + JS). Tarayıcıda doğrudan açılabilir.
 - `app/`: `index.html`'i WebView içinde açan küçük Android kabuğu.
+- `firestore.rules`: ortak veritabanının Firebase güvenlik kuralları (uygulamada Ayarlar > Ortak veritabanı > Güvenlik kuralları'ndan da kopyalanır).
 - `.github/workflows/build.yml`: her `main` gönderiminde APK derler ve **Releases > Son sürüm** sayfasına `powerserv.apk` olarak koyar.
 
 ## Veriler
 
-Veriler cihazda (localStorage) saklanır, internete gönderilmez. Her profil ayrı bir hesaptır: profil değiştirince o profilin hesabına geçilir, yoksa boş hesap açılır. Her hesabın verisi ayrı anahtarda tutulur (`dnmuhasebe.v1.<hesap>`), hesap listesi `dnmuhasebe.hesaplar` içindedir. Yedek yalnızca açık hesabı içerir. Ayarlar > Yedekleme ile JSON yedeği alınıp geri yüklenebilir; Android'de yedek `İndirilenler/PowerServ+` klasörüne yazılır.
+Veriler cihazda (localStorage) saklanır; ortak veritabanı kurulmadıkça internete gönderilmez. Her profil ayrı bir hesaptır: profil değiştirince o profilin hesabına geçilir, yoksa boş hesap açılır. Her hesabın verisi ayrı anahtarda tutulur (`dnmuhasebe.v1.<hesap>`), hesap listesi `dnmuhasebe.hesaplar` içindedir. Yedek yalnızca açık hesabı içerir. Ayarlar > Yedekleme ile JSON yedeği alınıp geri yüklenebilir; Android'de yedek `İndirilenler/PowerServ+` klasörüne yazılır.
+
+## Ortak veritabanı (2.6)
+
+Masaüstü ve telefonlar aynı firmaya bağlanıp aynı veriyi kullanır. Altyapı ücretsiz başlayan bir Firebase projesidir (Authentication + Firestore); uygulama Firebase'in REST uç noktalarıyla konuşur, ek kütüphane yüklemez.
+
+- **Çevrimdışı önce:** veri yine cihazda tutulur. Her kayıt (fatura, cari, servis, ürün, gelir/gider...) Firestore'da `firmalar/{firma}/kayit/{koleksiyon~id}` belgesidir; yalnızca değişen ve silinen kayıtlar gönderilir. Kayıttan 1,5 sn sonra, 20 sn'de bir, uygulamaya dönünce ve internet gelince eşitlenir. Gönderilmemiş yerel değişiklik, gelen sürümle ezilmez.
+- **Kullanıcılar ve yetkiler:** her kullanıcı kendi e-posta ve şifresiyle girer. Roller: Yönetici (her şey ve kullanıcı yönetimi), Muhasebe (tüm modüller), Servis (servis, stok, cari, fatura/teklif), İzleyici (yalnızca görüntüler). Yetkiler hem uygulamada hem `firestore.rules` güvenlik kurallarında uygulanır.
+- **İşlem kaydı:** her ekleme, değişiklik ve silme kim/ne zaman/hangi kayıt olarak `log` altına yazılır; kurallar gereği silinemez ve değiştirilemez. Ayarlar > Ortak veritabanı > İşlem kaydı (Yönetici ve Muhasebe).
+- **Belge kilidi:** bir kaydın düzenleme formu açılınca kayıt 3 dakika kilitlenir (form açık kaldıkça uzar). Aynı kaydı açan diğer kullanıcı formu salt okunur görür.
+
+Kurulum: Firebase konsolunda proje açılır, Authentication'da E-posta/Şifre girişi etkinleştirilir, Firestore veritabanı oluşturulur ve Kurallar sekmesine `firestore.rules` içeriği yapıştırılır. Proje ayarlarından Web uygulaması eklenip `firebaseConfig` kopyalanır. PowerServ+ > Ayarlar > Ortak veritabanı > Ortak veritabanını kur ekranına yapıştırılır; bu cihazın verisi yüklenir ve kuran kişi yönetici olur. Diğer cihazlar Kullanıcılar ekranından eklenir ve Bağlantı kodu ile "Mevcut firmaya bağlan" der (karşılama ekranında da vardır); firma verisi o cihazda yeni bir hesap olarak açılır.
 
 ## Bulut yedeği ve bildirimler
 
