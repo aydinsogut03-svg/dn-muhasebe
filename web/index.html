@@ -5441,6 +5441,9 @@ olcekUygula();
    Yapı: firmalar/{firma} · uyeler/{uid} (rol) · kayit/{koleksiyon~id} · log/{…} (değiştirilemez işlem kaydı) · kilit/{kayıt}.
    Giriş Firebase e-posta/şifre ile yapılır. Yetkiler hem burada hem Firestore güvenlik kurallarında (KURALLAR) uygulanır. */
 const ORTAK_ANAHTAR = 'powerserv.ortak', IZ_ANAHTAR = 'powerserv.ortak.iz';
+/* DN Marine'in Firebase projesi programa gömülüdür: kurulumda yalnızca yönetici bilgisi, bağlanırken yalnızca e-posta ve şifre istenir.
+   (Firebase web API anahtarı gizli değildir; veriyi güvenlik kuralları korur.) */
+const ORTAK_VARSAYILAN = {a: 'AIzaSyDAeu4h2NtmK1O9poY7qxjd_KyAbqFcuK0', p: 'dnservicepro-67f24', f: 'dnmarine', firmaAd: 'DN Marine Makine ve Güç Sistemleri Ltd.Şti.'};
 const ROLLER = {
   yonetici: {ad: 'Yönetici', aciklama: 'Her şey, kullanıcı yönetimi dahil'},
   muhasebe: {ad: 'Muhasebe', aciklama: 'Tüm modüller, kullanıcı yönetimi hariç'},
@@ -5836,28 +5839,27 @@ function kuralGoster() {
 function ortakKurFormu() {
   if (!D.profil) return;
   const m = modal('Ortak veritabanı kur', `
-    <p class="dipnot" style="margin-top:0">Bu cihazdaki <b>${esc(D.ad || 'firma')}</b> verileri buluta yüklenir ve siz yönetici olursunuz. Sonra diğer cihazlara bağlantı kodu ile kullanıcı eklersiniz.</p>
-    <div class="bolum">1. Firebase projesi</div>
-    <div class="grup"><label class="f-satir sol"><textarea id="okAyar" rows="5" placeholder="Firebase yapılandırması (firebaseConfig)"></textarea></label></div>
-    <p class="dipnot">Firebase konsolu > Proje ayarları > Uygulamalarınız > Web uygulaması > <b>firebaseConfig</b> bölümünü olduğu gibi yapıştırın. İçinden apiKey ve projectId alınır. Kuralları yapıştırmayı unutmayın: <button class="bag" id="okKural">kuralları göster</button></p>
-    <div class="bolum">2. Yönetici kullanıcı</div>
+    <p class="dipnot" style="margin-top:0">Bu cihazdaki <b>${esc(D.ad || 'firma')}</b> verileri buluta yüklenir ve siz yönetici olursunuz. Sonra diğer kullanıcıları Kullanıcılar ekranından eklersiniz; onlar yalnızca e-posta ve şifreyle bağlanır.</p>
+    <div class="bolum">Yönetici kullanıcı</div>
     <div class="grup">
       <label class="f-satir sol"><input id="okAd" placeholder="Ad soyad" value=""></label>
       <label class="f-satir sol"><input id="okEposta" type="email" autocomplete="username" placeholder="E-posta"></label>
       <label class="f-satir sol"><input id="okSifre" type="password" autocomplete="new-password" placeholder="Şifre (en az 6 karakter)"></label>
     </div>
+    <p class="dipnot">Firebase projesi: <b>${ORTAK_VARSAYILAN.p}</b> (programa tanımlı). <button class="bag" id="okDiger">Başka bir Firebase projesi kullan</button></p>
+    <div class="grup gizli" id="okAyarGrup"><label class="f-satir sol"><textarea id="okAyar" rows="5" placeholder="Firebase yapılandırması (firebaseConfig)"></textarea></label></div>
     <p class="giris-hata gider" id="okHata"></p>`, {kaydetAd: 'Kur ve verileri yükle', kaydet: () => { kur(); return false; }});
-  $('#okKural', m).onclick = kuralGoster;
+  $('#okDiger', m).onclick = () => { $('#okAyarGrup', m).classList.remove('gizli'); $('#okDiger', m).remove(); };
   const hata = t => { $('#okHata', m).textContent = t || ''; };
   let calisiyor = false;
   async function kur() {
     if (calisiyor) return;
-    const c = firebaseAyarCoz($('#okAyar', m).value), ad = $('#okAd', m).value.trim(), e = $('#okEposta', m).value.trim(), s = $('#okSifre', m).value;
+    const yaz = $('#okAyar', m).value.trim(), c = yaz ? firebaseAyarCoz(yaz) : ORTAK_VARSAYILAN, ad = $('#okAd', m).value.trim(), e = $('#okEposta', m).value.trim(), s = $('#okSifre', m).value;
     if (!c.a || !c.p) return hata('Yapılandırmada apiKey ve projectId bulunamadı');
     if (!ad || !e) return hata('Ad ve e-posta girin');
     if (s.length < 6) return hata('Şifre en az 6 karakter olmalı');
     const b = $('[data-sag]', m); calisiyor = true; b.disabled = true; b.textContent = 'Kuruluyor…'; hata('');
-    const o = {...c, f: firmaKoduUret(D.ad), firmaAd: D.ad || '', hesap: H.aktif, kurulum: true};
+    const o = {a: c.a, p: c.p, f: c === ORTAK_VARSAYILAN ? ORTAK_VARSAYILAN.f : firmaKoduUret(D.ad), firmaAd: D.ad || '', hesap: H.aktif, kurulum: true};
     try {
       let ot;
       try { ot = await ortakGirisYap(o, e, s, true); }
@@ -5883,6 +5885,8 @@ function ortakKurFormu() {
     }
   }
 }
+const ortakBilgiMetni = (e, sf) => { const o = ortak(), v = o && o.p === ORTAK_VARSAYILAN.p && o.f === ORTAK_VARSAYILAN.f;
+  return `PowerServ+ girişi\nE-posta: ${e}\nŞifre: ${sf}\n` + (v ? 'Programı açın > Mevcut firmaya bağlan (ya da Ayarlar > Ortak veritabanı > Mevcut firmaya bağlan) > e-posta ve şifreyi girin.' : 'Bağlantı kodu: ' + baglantiKodu(o)); };
 function baglantiKoduGoster() {
   const o = ortak();
   if (!o) return;
@@ -5895,18 +5899,20 @@ function baglantiKoduGoster() {
 }
 function ortakKatilFormu() {
   const m = modal('Mevcut firmaya bağlan', `
-    <p class="dipnot" style="margin-top:0">Yöneticinin verdiği bağlantı kodunu ve size açılan kullanıcı bilgilerini girin. Firma verileri bu cihazda <b>yeni bir hesap</b> olarak açılır; mevcut hesaplarınıza dokunulmaz.</p>
-    <div class="grup"><label class="f-satir sol"><textarea id="okKod" rows="3" placeholder="Bağlantı kodu (PS1-…)"></textarea></label></div>
+    <p class="dipnot" style="margin-top:0">Yöneticinin size açtığı e-posta ve şifreyi girin. Firma verileri bu cihazda <b>yeni bir hesap</b> olarak açılır; mevcut hesaplarınıza dokunulmaz.</p>
+    <div class="grup gizli" id="okKodGrup"><label class="f-satir sol"><textarea id="okKod" rows="3" placeholder="Bağlantı kodu (PS1-…)"></textarea></label></div>
     <div class="grup">
       <label class="f-satir sol"><input id="okEposta" type="email" autocomplete="username" placeholder="E-posta"></label>
       <label class="f-satir sol"><input id="okSifre" type="password" autocomplete="current-password" placeholder="Şifre"></label>
     </div>
+    <p class="dipnot"><button class="bag" id="okKodAc">Başka bir firmaya bağlantı koduyla bağlan</button></p>
     <p class="giris-hata gider" id="okHata"></p>`, {kaydetAd: 'Bağlan', kaydet: () => { baglan(); return false; }});
+  $('#okKodAc', m).onclick = () => { $('#okKodGrup', m).classList.remove('gizli'); $('#okKodAc', m).remove(); };
   const hata = t => { $('#okHata', m).textContent = t || ''; };
   let calisiyor = false;
   async function baglan() {
     if (calisiyor) return;
-    const c = baglantiKoduCoz($('#okKod', m).value), e = $('#okEposta', m).value.trim(), s = $('#okSifre', m).value;
+    const kod = $('#okKod', m).value.trim(), c = kod ? baglantiKoduCoz(kod) : ORTAK_VARSAYILAN, e = $('#okEposta', m).value.trim(), s = $('#okSifre', m).value;
     if (!c) return hata('Bağlantı kodu geçersiz');
     if (!e || !s) return hata('E-posta ve şifre girin');
     const b = $('[data-sag]', m); calisiyor = true; b.disabled = true; b.textContent = 'Bağlanıyor…'; hata('');
@@ -5999,7 +6005,7 @@ function kullaniciFormu(u, o, liste = []) {
     <div class="grup" id="kuRol">${Object.entries(ROLLER).map(([k, r]) => `<label class="hucre"><div class="ic"><b>${r.ad}</b><small>${r.aciklama}</small></div><input type="radio" name="kuRol" value="${k}" ${(u?.rol || 'servis') === k ? 'checked' : ''} ${ben ? 'disabled' : ''}></label>`).join('')}</div>
     ${!yeni ? `<div class="grup"><label class="hucre kareli">${kare('kilit', 'gri')}<div class="ic"><b>Erişim açık</b><small>Kapatılırsa bu kullanıcı giremez</small></div><span class="anahtar"><input type="checkbox" id="kuAktif" ${u.aktif !== false ? 'checked' : ''} ${ben ? 'disabled' : ''}><span></span></span></label></div>` : ''}
     ${ben ? '<p class="dipnot">Kendi yetkinizi ve erişiminizi değiştiremezsiniz.</p>' : ''}
-    ${yeni ? '<p class="dipnot">Kullanıcıya e-posta, geçici şifre ve bağlantı kodunu iletin. Şifresini girişte "Şifremi unuttum" ile değiştirebilir.</p>' : ''}
+    ${yeni ? '<p class="dipnot">Kullanıcıya e-posta ve geçici şifreyi iletin. Şifresini girişte "Şifremi unuttum" ile değiştirebilir.</p>' : ''}
     <p class="giris-hata gider" id="kuHata"></p>`, {kaydetAd: yeni ? 'Kullanıcıyı ekle' : 'Kaydet', kaydet: () => { kaydetK(); return false; }});
   const hata = t => { $('#kuHata', m).textContent = t || ''; };
   let calisiyor = false;
@@ -6021,8 +6027,8 @@ function kullaniciFormu(u, o, liste = []) {
           logYazimi(o, s, 'kullanici', '', `${ad} (${yeniK.eposta}) eklendi · ${ROLLER[rol].ad}`)]});
         kapat(); bildir('Kullanıcı eklendi');
         setTimeout(() => modal('Kullanıcı eklendi', `<p class="dipnot" style="margin-top:0">Bu bilgileri <b>${esc(ad)}</b> ile paylaşın:</p>
-          <div class="grup"><textarea class="kod-alan" readonly rows="6">${esc(`E-posta: ${yeniK.eposta}\nŞifre: ${sf}\nBağlantı kodu: ${baglantiKodu(ortak())}`)}</textarea></div><button class="btn" id="kuKopya">Bilgileri kopyala</button>`), 330);
-        setTimeout(() => { const k = $('#kuKopya'); if (k) k.onclick = () => metinKopyala(`E-posta: ${yeniK.eposta}\nŞifre: ${sf}\nBağlantı kodu: ${baglantiKodu(ortak())}`, 'Bilgiler kopyalandı'); }, 400);
+          <div class="grup"><textarea class="kod-alan" readonly rows="6">${esc(ortakBilgiMetni(yeniK.eposta, sf))}</textarea></div><button class="btn" id="kuKopya">Bilgileri kopyala</button>`), 330);
+        setTimeout(() => { const k = $('#kuKopya'); if (k) k.onclick = () => metinKopyala(ortakBilgiMetni(yeniK.eposta, sf), 'Bilgiler kopyalandı'); }, 400);
       } else {
         const aktif = ben ? true : $('#kuAktif', m).checked, r2 = ben ? u.rol : rol;
         if (u.rol === 'yonetici' && (r2 !== 'yonetici' || !aktif) && liste.filter(x => x.rol === 'yonetici' && x.aktif !== false).length < 2) throw new Error('En az bir yönetici kalmalı');
