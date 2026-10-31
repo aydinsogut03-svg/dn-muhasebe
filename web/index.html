@@ -5467,6 +5467,7 @@ service cloud.firestore {
     function uye(f) { return request.auth != null && exists(uyeYol(f)) && get(uyeYol(f)).data.aktif == true; }
     function rol(f) { return get(uyeYol(f)).data.rol; }
     function yazar(f) { return uye(f) && rol(f) in ['yonetici', 'muhasebe', 'servis']; }
+    function anahtarUyar(key, k) { return k is string && (key.split('~')[0] == k || (key.split('~')[0] == '_' && k == '_' + key.split('~')[1])); }
     function servisIzni(k) { return k in ['servisler', 'ekipmanlar', 'urunler', 'stokHareket', 'kisiler', 'hareketler', 'faturalar']; }
     match /firmalar/{f} {
       allow read: if uye(f);
@@ -5479,9 +5480,11 @@ service cloud.firestore {
             && !exists(/databases/$(db)/documents/firmalar/$(f))) || (uye(f) && rol(f) == 'yonetici');
         allow update, delete: if uye(f) && rol(f) == 'yonetici';
       }
-      match /kayit/{k} {
+      // Belge adı (koleksiyon~id) ile k alanı aynı koleksiyonu göstermeli; silme yok (silinen kayıt işaretlenir).
+      match /kayit/{key} {
         allow read: if uye(f);
-        allow write: if yazar(f) && (rol(f) != 'servis' || servisIzni(request.resource.data.k));
+        allow create, update: if yazar(f) && anahtarUyar(key, request.resource.data.k)
+          && (rol(f) != 'servis' || servisIzni(request.resource.data.k));
       }
       match /log/{l} {
         allow read: if uye(f) && rol(f) in ['yonetici', 'muhasebe'];
