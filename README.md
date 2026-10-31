@@ -6,8 +6,8 @@ Profil tabanlı, tek dosyalık muhasebe uygulaması. Tek kod; ekranlar ve modül
 |---|---|
 | Bireysel | Özet, Gelir/Harcama, Bütçe, Raporlar (Borç/Alacak isteğe bağlı) |
 | Esnaf | Özet, Kasa, Veresiye, Stok, Raporlar |
-| Küçük işletme | Özet, Gelir/Gider, Veresiye, Stok, Fatura, Personel, Raporlar |
-| Şirket | Özet, Gelir/Gider, Cari, Stok, Fatura, Personel, Vergi, Raporlar |
+| Küçük işletme | Özet, Servis, Gelir/Gider, Veresiye, Stok, Fatura, Personel, Raporlar |
+| Şirket | Özet, Servis, Gelir/Gider, Cari, Stok, Fatura, Personel, Vergi, Raporlar |
 
 Her modül Ayarlar'dan profil bazında açılıp kapatılabilir. Modüller birbirine bağlıdır: kesilen fatura cariye borç yazar ve stoktan düşer, ödenince kasaya tahsilat girer; maaş ve stok hareketleri kasaya gider/gelir olarak işlenir.
 
@@ -20,6 +20,12 @@ Faturalara kısmi tahsilat/ödeme girilebilir; fatura ekranı tahsil edilen, kal
 Raporlar PDF olarak yazdırılabilir veya CSV olarak paylaşılabilir.
 
 Görsel dil "mürekkep ve kâğıt": sıcak kâğıt zemin, mürekkep laciverti, pirinç vurgu; tek yazı tipi Manrope (SIL OFL, çevrimdışı çalışmak için `index.html` içine gömülü). Arayüz: büyük başlıklar, gruplu listeler, soldan açılan menü (kenardan kaydırarak da açılır; geniş ekranda sabit kenar çubuğu), alttan açılan form pencereleri.
+
+## Servis modülü
+
+Müşterinin tekne ve makineleri (ana makine, jeneratör, şanzıman, pervane/şaft, elektrik) cari kartında tutulur: marka, model, seri no, motor no, çalışma saati. Servis kaydı (iş emri) müşteri ve makineyi seçerek açılır; şikâyet, yapılan işlemler, kullanılan parçalar (stoktan seçilen parçalar stoktan düşer, müşteri malı düşmez), teknisyen işçilik saatleri, test ve teslim durumu, sonraki bakım girilir. Durumlar: açık, devam ediyor, parça bekleniyor, onay bekleniyor, tamamlandı, iptal.
+
+Müşteri ve teknisyen imzası telefonda parmakla alınır. "Servis formu" düğmesi fiyatsız, yasal bilgilendirmeli A4 servis formunu PDF olarak verir (DN Marine logosu gömülüdür; Ayarlar > Servis formu'ndan başka logo yüklenebilir, garanti süresi ve yetkili mahkeme oradan girilir). "Faturala" servisten taslak fatura oluşturur: parçalar satış fiyatıyla, işçilik ayarlardaki saat ücretiyle gelir; stok servisten düştüğü için fatura stok düşmez. Sonraki bakım tarihi yaklaşan makineler servis ekranında ve özette görünür.
 
 ## Dosyalar
 
