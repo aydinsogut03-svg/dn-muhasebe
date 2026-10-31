@@ -944,6 +944,102 @@ body.cekmece-acik #cekmecePerde{-webkit-backdrop-filter:blur(2px);backdrop-filte
   .modal-alt{padding-left:max(24px,calc((100% - 900px) / 2));padding-right:max(24px,calc((100% - 900px) / 2))}
   .sayfa-modal .modal-ust{padding-left:max(8px,calc((100% - 920px) / 2))}
 }
+
+/* ---- Alt menüler, liste raporları, yan düğmeler ve fişler (2.4) ---- */
+.c-liste a .c-ok{width:14px;height:14px;color:var(--ucuncul);stroke-width:2.6;margin-left:4px;transition:transform .25s var(--egri)}
+.c-liste a.secili .c-ok{transform:rotate(90deg);color:var(--mavi)}
+.c-alt-menu{margin:2px 0 8px 22px;padding-left:12px;border-left:1.5px solid color-mix(in srgb,var(--mavi) 30%,transparent);display:flex;flex-direction:column;gap:1px;animation:belir .3s var(--egri) both}
+.c-alt-baslik{font-size:11px;font-weight:700;color:var(--ikincil);margin:8px 8px 3px;letter-spacing:.02em}
+.c-alt-menu a{display:flex;align-items:center;gap:9px;min-height:32px!important;padding:4px 10px!important;font-size:13.5px!important;font-weight:500;color:var(--yazi);border-radius:9px}
+.c-alt-menu a svg{width:15px;height:15px;color:var(--ikincil);flex:none}
+.c-alt-menu a.secili{background:color-mix(in srgb,var(--mavi) 12%,transparent);color:var(--mavi);font-weight:650}
+.c-alt-menu a.secili svg{color:var(--mavi)}
+.c-alt-menu a span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.alt-serit{display:flex;gap:6px;overflow-x:auto;margin:0 -16px 16px;padding:2px 16px 4px;scrollbar-width:none}
+.alt-serit::-webkit-scrollbar{display:none}
+.alt-serit button{flex:none;display:flex;align-items:center;gap:6px;border:0;background:var(--kart);box-shadow:var(--golge);border-radius:99px;padding:7px 13px 7px 10px;font-size:13px;font-weight:600;color:var(--yazi);transition:background .2s,color .2s,transform .15s var(--egri)}
+.alt-serit button svg{width:15px;height:15px;color:var(--mavi)}
+.alt-serit button.rapor svg{color:var(--nane)}
+.alt-serit button.secili{background:var(--mavi);color:#fff}.alt-serit button.secili svg{color:#fff}
+.alt-serit button:active{transform:scale(.96)}
+@media (min-width:960px){.alt-serit{flex-wrap:wrap;overflow:visible;margin:0 0 18px;padding:0}}
+.rapor-ust{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin-bottom:12px}
+.rapor-ust .arama{flex:1 1 260px;margin:0}
+.rl-tarih{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.rl-tarih input{border:0;background:var(--kart);box-shadow:var(--golge);border-radius:10px;padding:7px 10px;font-size:14px;color:var(--yazi)}
+.rl-tarih .cipler{padding:0;margin-left:4px}
+.rl-ozet{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.rl-ozet div{background:var(--kart);box-shadow:var(--golge);border-radius:14px;padding:9px 14px;min-width:120px}
+.rl-ozet small{display:block;font-size:12px;color:var(--ikincil)}
+.rl-ozet b{font-size:17px;font-variant-numeric:tabular-nums}
+.liste-kap{background:var(--kart);border-radius:16px;box-shadow:var(--golge);overflow:auto;max-height:calc(100vh - 230px);margin-bottom:20px}
+.liste-tablo{width:100%;border-collapse:separate;border-spacing:0;font-size:13.5px}
+.liste-tablo th{position:sticky;top:0;z-index:1;background:var(--kart2);color:var(--ikincil);font-size:12px;font-weight:700;text-align:left;padding:10px 12px;white-space:nowrap;cursor:pointer;border-bottom:1px solid var(--ayirici);user-select:none}
+.liste-tablo th:hover{color:var(--mavi)}
+.liste-tablo td{padding:9px 12px;border-bottom:.5px solid var(--ayirici);white-space:nowrap;max-width:280px;overflow:hidden;text-overflow:ellipsis}
+.liste-tablo .sg{text-align:right;font-variant-numeric:tabular-nums}
+.liste-tablo tbody tr{transition:background .15s}
+.liste-tablo tbody tr.tik{cursor:pointer}
+.liste-tablo tbody tr.tik:hover{background:color-mix(in srgb,var(--mavi) 7%,transparent)}
+.liste-tablo tbody tr.uyar td:first-child{box-shadow:inset 3px 0 0 var(--kirmizi)}
+.liste-tablo tbody tr.uyar{background:color-mix(in srgb,var(--kirmizi) 5%,transparent)}
+.liste-tablo tfoot td{position:sticky;bottom:0;background:var(--kart2);font-weight:700;border-top:1px solid var(--ayirici);border-bottom:0}
+.liste-tablo td.islem{padding:4px 8px;text-align:right;width:1%}
+.liste-tablo td.islem button{border:0;background:var(--dolgu);color:var(--mavi);width:28px;height:28px;border-radius:8px;display:inline-grid;place-items:center;margin-left:4px;transition:background .15s}
+.liste-tablo td.islem button:hover{background:color-mix(in srgb,var(--mavi) 18%,transparent)}
+.liste-tablo td.islem svg{width:15px;height:15px}
+/* Yan küçük düğmeler: telefonda üstte satır, geniş ekranda sağda dikey sütun */
+.yan-arac{display:flex;gap:8px;margin-bottom:14px}
+.yan-arac button{display:flex;align-items:center;gap:6px;border:0;background:var(--kart);box-shadow:var(--golge);border-radius:12px;padding:8px 12px;font-size:12.5px;font-weight:600;color:var(--yazi)}
+.yan-arac button svg{width:16px;height:16px;color:var(--mavi)}
+@media (min-width:1200px){
+  #icerik.yanli{display:grid;grid-template-columns:minmax(0,1fr) 92px;column-gap:22px;align-items:start}
+  #icerik.yanli>*{grid-column:1}
+  #icerik.yanli>.btn-izgara,#icerik.yanli>.yan-arac{grid-column:2;grid-row:1/span 40;position:sticky;top:70px;display:flex;flex-direction:column;gap:8px;margin:0}
+  #icerik.yanli>.btn-izgara button,#icerik.yanli>.yan-arac button{flex-direction:column;justify-content:center;gap:5px;padding:10px 4px;font-size:11.5px;text-align:center;min-height:62px;width:100%}
+  #icerik.yanli>.yan-arac button svg,#icerik.yanli>.btn-izgara button svg{width:20px;height:20px}
+  #icerik.yanli>.btn-izgara button:hover,#icerik.yanli>.yan-arac button:hover{background:color-mix(in srgb,var(--mavi) 9%,var(--kart))}
+}
+/* Liste raporu çıktısı */
+.liste-kagit{font-size:10px}
+.liste-kagit .lk-ust{display:flex;gap:12px;align-items:center;border-bottom:2px solid #1f2f5a;padding-bottom:8px;margin-bottom:8px}
+.liste-kagit .lk-ust img{height:42px}
+.liste-kagit .lk-ust b{font-size:11.5px}
+.liste-kagit .lk-baslik{margin-left:auto;text-align:right}
+.liste-kagit .lk-baslik h3{margin:0;font-size:15px;color:#1f2f5a}
+.liste-kagit th{background:#1f2f5a;color:#fff;font-size:9px;padding:4px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.liste-kagit td{padding:3px 4px;font-size:9.5px}
+.liste-kagit tbody tr:nth-child(even) td{background:#f3f5f9;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.liste-kagit .lk-dip{text-align:right;color:#888;font-size:8px;margin-top:8px}
+/* Fişler (gelir, gider, tahsilat makbuzu) */
+.fis-kagit{--fs:#1f2f5a;width:680px;max-width:none;font-size:11px;line-height:1.4;color:#111;border:1px solid #c9ced8;border-radius:6px;padding:20px 22px}
+#yazdirAlani .fis-kagit{width:auto;border:1.5px solid #1f2f5a}
+.fis-gider{--fs:#7a2430}.fis-tahsilat{--fs:#1f5a3a}
+.fis-kagit .fs-ust{display:grid;grid-template-columns:120px 1fr auto;gap:14px;align-items:center}
+.fis-kagit .fs-logo{width:120px;max-height:56px;object-fit:contain}
+.fis-kagit .fs-firma{font-size:9.5px;color:#444}
+.fis-kagit .fs-firma b{display:block;font-size:11.5px;color:#111;margin-bottom:2px}
+.fis-kagit .fs-kutu{border:2px solid var(--fs);border-radius:6px;padding:6px 10px;min-width:180px}
+.fis-kagit .fs-kutu h3{margin:0 0 4px;font-size:14px;color:var(--fs);letter-spacing:.04em;white-space:nowrap}
+.fis-kagit .fs-kutu table{margin:0;width:auto;font-size:10.5px}
+.fis-kagit .fs-kutu td{border:0;padding:0 8px 0 0}
+.fis-kagit .fs-kutu td:first-child{color:#555;font-weight:700}
+.fis-kagit .fs-bar{background:var(--fs);color:#fff;font-weight:700;font-size:10px;padding:3px 8px;margin:14px 0 6px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.fis-kagit .fs-ikili{display:grid;grid-template-columns:1fr 1fr;column-gap:22px}
+.fis-kagit .fs-alan{display:flex;gap:8px;align-items:baseline;padding:3px 0}
+.fis-kagit .fs-alan span{color:#555;font-weight:700;min-width:104px;white-space:nowrap}
+.fis-kagit .fs-alan b{flex:1;font-weight:500;border-bottom:1px dotted #999;min-height:1.4em}
+.fis-kagit .fs-tutar{display:grid;grid-template-columns:auto 1fr;gap:12px;margin:12px 0 8px;border:1.5px solid var(--fs);border-radius:6px;padding:8px 12px;align-items:center}
+.fis-kagit .fs-tutar span{display:block;font-size:9px;font-weight:700;color:#555}
+.fis-kagit .fs-tutar>div:first-child b{font-size:20px;color:var(--fs);white-space:nowrap}
+.fis-kagit .fs-yazi{border-left:1px solid #ccc;padding-left:12px}
+.fis-kagit .fs-yazi b{font-style:italic;font-weight:600}
+.fis-kagit .fs-beyan{font-size:9.5px;color:#444;margin:6px 0 10px;font-style:italic}
+.fis-kagit .fs-imzalar{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.fis-kagit .fs-ib{border:1px solid #888;text-align:center;font-weight:700;font-size:9px;padding:3px}
+.fis-kagit .fs-ia{border:1px solid #888;border-top:0;height:58px}
+.fis-kagit .fs-dip{text-align:center;color:#888;font-size:8px;margin-top:8px}
+@media print{#yazdirAlani .fis-kagit{zoom:.95;font-size:11px;padding:18px 20px;border:1.5px solid var(--fs);border-radius:6px}#yazdirAlani .liste-kagit{font-size:10px}}
 </style>
 </head>
 <body>
@@ -956,11 +1052,15 @@ body.cekmece-acik #cekmecePerde{-webkit-backdrop-filter:blur(2px);backdrop-filte
 
 <script>
 'use strict';
-const VERSIYON = '2.3.0';
+const VERSIYON = '2.4.0';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
 const SIMGE = {
+  liste:'<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/>',
+  kalem:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  yukari:'<path d="M12 19V5M5 12l7-7 7 7"/>',
+  asagi:'<path d="M12 5v14M19 12l-7 7-7-7"/>',
   bulut:'<path d="M17.5 19a4.5 4.5 0 1 0-1.3-8.8A6 6 0 0 0 4.6 12.6 3.5 3.5 0 0 0 6.5 19z"/>',
   zil:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
   kilit:'<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
@@ -1411,7 +1511,8 @@ window.geriTusu = function () {
   const [s = 'panel', p1] = rota();
   if (!D.profil) return false;
   if (s === 'profil') { git('ayarlar', true); return true; }
-  if (p1 && DETAYLI.includes(s)) { git(s, true); return true; }
+  if (s === 'fis') { history.back(); return true; }
+  if (p1 && (DETAYLI.includes(s) || p1.startsWith('r-'))) { git(s, true); return true; }
   if (s !== 'panel') { git('panel', true); return true; }
   return false;
 };
@@ -1448,7 +1549,8 @@ function rozet(id) {
 }
 function menuCiz(aktif) {
   const p = PROFILLER[D.profil];
-  const satir = (id, ad, simge, renk, ek = '') => `<a href="#/${id}" data-id="${id}" class="${id === aktif ? 'secili' : ''}">${kare(simge, renk)}<span class="ad">${esc(ad)}</span>${ek}</a>`;
+  const yol = rota().join('/').split('?')[0];
+  const satir = (id, ad, simge, renk, ek = '') => `<a href="#/${id}" data-id="${id}" class="${id === aktif ? 'secili' : ''}">${kare(simge, renk)}<span class="ad">${esc(ad)}</span>${ek}${ALT_MENU[id] ? ikon('ileri', 'c-ok') : ''}</a>${id === aktif ? altMenuHtml(id, yol) : ''}`;
   const kapali = MODULLER.filter(m => !m.zorunlu && !modulAcik(m.id)).length;
   $('#cekmece').innerHTML = `<button class="c-ust" id="cProfil">${kare(p.simge, p.renk)}<div style="min-width:0;flex:1"><b>${esc(D.ad || 'Firma hesabı')}</b><small>Hesap değiştir</small></div>${ikon('ileri', 'chev')}</button>
     ${H.liste.length > 1 ? `<div class="c-hesaplar">${H.liste.filter(x => x.id !== H.aktif).map(x => `<button data-hgec="${x.id}">${kare(x.profil ? PROFILLER[x.profil].simge : 'kisi', x.profil ? PROFILLER[x.profil].renk : 'gri')}<span>${esc(hesapAdi(x))}</span></button>`).join('')}</div>` : ''}
@@ -1459,6 +1561,7 @@ function menuCiz(aktif) {
     <div class="c-liste">${satir('menu', 'Modül ekle / kaldır', 'izgara', 'indigo', kapali ? `<span class="rozet">${kapali} kapalı</span>` : '')}${satir('ayarlar', 'Ayarlar', 'ayar', 'gri')}</div>
     <div class="c-alt">PowerServ+ ${VERSIYON}<br>DN Marine · veriler bu cihazda</div>`;
   $$('#cekmece a').forEach(a => a.onclick = e => { e.preventDefault(); cekmeceKapat(); git(a.dataset.id, true); });
+  altMenuBagla($('#cekmece'));
   $('#cProfil').onclick = () => { cekmeceKapat(); git('hesaplar'); };
   $$('[data-hgec]').forEach(b => b.onclick = () => hesabaGec(b.dataset.hgec));
   document.body.classList.remove('profilde');
@@ -1492,14 +1595,328 @@ function ciz() {
   if (s === 'menu') { menuCiz('menu'); menuEkrani(); return kaydirma(); }
   if (s === 'hesaplar') { menuCiz('hesaplar'); hesaplarEkrani(); return kaydirma(); }
   if (s === 'ayarlar') { menuCiz('menu'); ayarlarEkrani(); return kaydirma(); }
+  if (s === 'fis') { fisEkrani(p1); yanDuzen(); return kaydirma(); }
   if (!modulAcik(s)) return git('panel', true);
   menuCiz(s);
+  if (p1 && p1.startsWith('r-')) { const [r, q = ''] = p1.slice(2).split('?'); raporListe(s, r, new URLSearchParams(q)); yanDuzen(); return kaydirma(); }
   const ekran = {panel: panelEkrani, servis: p1 ? () => servisEkrani1(p1) : servisEkrani, banka: p1 ? () => finansHesapEkrani(p1) : bankaEkrani, kasa: kasaEkrani, veresiye: p1 ? () => kisiEkrani(p1) : veresiyeEkrani,
     stok: p1 ? () => urunEkrani(p1) : stokEkrani, fatura: p1 ? () => faturaEkrani(p1) : faturaListeEkrani,
     personel: p1 ? () => personelDetay(p1) : personelEkrani, butce: butceEkrani, kdv: kdvEkrani, rapor: raporEkrani}[s];
   ekran();
+  if (!p1 && ALT_MENU[s]) { const b = $('#icerik > .buyuk-baslik'); const ser = altSerit(s, s); if (b) b.insertAdjacentHTML('afterend', ser); else $('#icerik').insertAdjacentHTML('afterbegin', ser); altMenuBagla($('#icerik > .alt-serit')); }
+  yanDuzen();
   kaydirma();
 }
+/* Detay ekranlarındaki düğme ızgarası geniş ekranda sağda dikey küçük düğmeler olur */
+function yanDuzen() { $('#icerik').classList.toggle('yanli', !!$('#icerik > .btn-izgara, #icerik > .yan-arac')); }
+
+/* ================= Alt menüler, liste raporları ve fişler (2.4) =================
+   Her modülün kenar menüde açılan alt menüsü vardır: işlemler ve raporlar. Raporlar tablo olarak listelenir,
+   satıra tıklayınca kaydın detayı açılır; yazdırılır (PDF) ve Excel'e (CSV) aktarılır. */
+const ALT_MENU = {
+  servis: [['İşlemler', [['Servis kayıtları', 'alet', 'servis'], ['Yeni servis / iş emri', 'arti', () => servisFormu()]]],
+    ['Raporlar', [['Servis listesi', 'liste', 'servis/r-servisler'], ['Açık iş emirleri', 'saat', 'servis/r-acik'], ['Tekne ve makineler', 'alet', 'servis/r-ekipman'],
+      ['Yaklaşan bakımlar', 'takvim', 'servis/r-bakim'], ['Kullanılan parçalar', 'kutu', 'servis/r-parca'], ['Teknisyen işçilik', 'kisiler', 'servis/r-iscilik']]]],
+  banka: [['İşlemler', [['Hesaplar', 'banka', 'banka'], ['Yeni hesap', 'arti', () => finansHesapFormu()], ['Virman', 'donustur', () => virmanFormu()]]],
+    ['Raporlar', [['Hesap bakiyeleri', 'liste', 'banka/r-bakiye'], ['Hesap hareketleri', 'donustur', 'banka/r-hareket']]]],
+  kasa: [['İşlemler', [['Gelir / gider kayıtları', 'cuzdan', 'kasa'], ['Gelir fişi', 'arti', () => islemFormu(null, 'gelir', null, true)], ['Gider fişi', 'eksi', () => islemFormu(null, 'gider', null, true)]]],
+    ['Raporlar', [['Gelir listesi', 'liste', 'kasa/r-gelir'], ['Gider listesi', 'liste', 'kasa/r-gider'], ['Kategori özeti', 'grafik', 'kasa/r-kategori']]]],
+  veresiye: [['İşlemler', [['Cari kartlar', 'defter', 'veresiye'], ['Yeni cari', 'arti', () => kisiFormu()], ['Tahsilat fişi', 'para', () => kisiSec(k => k && tahsilatFisiAc(k), false)]]],
+    ['Raporlar', [['Cari bakiye listesi', 'liste', 'veresiye/r-bakiye'], ['Borçlu cariler', 'yukari', 'veresiye/r-borclu'], ['Alacaklı cariler', 'asagi', 'veresiye/r-alacakli'],
+      ['Cari hareketler', 'donustur', 'veresiye/r-hareket'], ['Tahsilat listesi', 'para', 'veresiye/r-tahsilat']]]],
+  stok: [['İşlemler', [['Ürün kartları', 'kutu', 'stok'], ['Yeni ürün', 'arti', () => urunFormu()], ['Stok sayımı', 'tamam', () => stokSayimFormu()]]],
+    ['Raporlar', [['Eldeki stok listesi', 'liste', 'stok/r-eldeki'], ['Kritik stok', 'uyari', 'stok/r-kritik'], ['Stok hareketleri', 'donustur', 'stok/r-hareket'], ['Grup bazında stok değeri', 'grafik', 'stok/r-deger']]]],
+  fatura: [['İşlemler', [['Fatura ve teklifler', 'dosya', 'fatura'], ['Yeni satış faturası', 'arti', () => faturaFormu(null, 'fatura')], ['Yeni alış faturası', 'asagi', () => faturaFormu(null, 'alis')], ['Yeni teklif', 'dosya', () => faturaFormu(null, 'teklif')]]],
+    ['Raporlar', [['Satış faturaları', 'liste', 'fatura/r-satis'], ['Alış faturaları', 'liste', 'fatura/r-alis'], ['Teklifler', 'dosya', 'fatura/r-teklif'], ['Vadesi geçenler', 'saat', 'fatura/r-vade']]]],
+  personel: [['İşlemler', [['Çalışanlar', 'kisiler', 'personel'], ['Yeni personel', 'arti', () => personelFormu()]]],
+    ['Raporlar', [['Personel listesi', 'liste', 'personel/r-liste'], ['Maaş ve avans ödemeleri', 'para', 'personel/r-odeme']]]]
+};
+/* Kenar menüde etkin modülün alt öğeleri */
+function altMenuHtml(id, aktifYol) {
+  const g = ALT_MENU[id];
+  if (!g) return '';
+  return `<div class="c-alt-menu">${g.map(([baslik, l]) => `<div class="c-alt-baslik">${esc(baslik)}</div>${l.map(([ad, simge, hedef], i) =>
+    `<a href="${typeof hedef === 'string' ? '#/' + hedef : 'javascript:void 0'}" data-alt="${id}|${g.findIndex(x => x[0] === baslik)}|${i}" class="${hedef === aktifYol ? 'secili' : ''}">${ikon(simge)}<span>${esc(ad)}</span></a>`).join('')}`).join('')}</div>`;
+}
+function altMenuBagla(kok) {
+  $$('[data-alt]', kok).forEach(a => a.onclick = e => {
+    e.preventDefault(); e.stopPropagation();
+    const [id, gi, i] = a.dataset.alt.split('|'), hedef = ALT_MENU[id][+gi][1][+i][2];
+    cekmeceKapat();
+    if (typeof hedef === 'string') git(hedef); else hedef();
+  });
+}
+/* Modül ekranlarının üstündeki alt menü şeridi (telefonda ve masaüstünde hızlı geçiş) */
+function altSerit(id, aktifYol) {
+  const g = ALT_MENU[id];
+  if (!g) return '';
+  const l = g.flatMap(([b, x], gi) => x.map((o, i) => [o, gi, i]));
+  return `<nav class="alt-serit">${l.map(([[ad, simge, hedef], gi, i]) => `<button data-alt="${id}|${gi}|${i}" class="${hedef === aktifYol ? 'secili' : ''} ${gi ? 'rapor' : ''}">${ikon(simge)}${esc(ad)}</button>`).join('')}</nav>`;
+}
+
+/* ---- Liste raporları ---- */
+const AY_BASI = () => bugun().slice(0, 4) + '-01-01';
+const tarihAraliginda = (t, r) => (!r.bas || t >= r.bas) && (!r.son || t <= r.son);
+function raporTanim(m, id) {
+  const R = {
+    stok: {
+      eldeki: {ad: 'Eldeki stok listesi', k: [['Parça no'], ['Ürün'], ['Marka'], ['Grup'], ['Raf'], ['Miktar', 'sayi'], ['Birim'], ['Ort. maliyet', 'para'], ['Stok değeri', 'para', 1], ['Satış fiyatı', 'para']],
+        veri: () => [...D.urunler].sort((a, b) => a.ad.localeCompare(b.ad, 'tr')).map(u => { const n = urunMiktar(u.id), c = urunMaliyet(u);
+          return {d: [u.kod, u.ad, u.marka, u.kategori, u.raf, n, u.birim, c, Math.max(0, n) * c, u.satis], yol: 'stok/' + u.id, uyar: u.kritik > 0 && n <= u.kritik}; })},
+      kritik: {ad: 'Kritik stok', k: [['Parça no'], ['Ürün'], ['Miktar', 'sayi'], ['Kritik seviye', 'sayi'], ['Sipariş önerisi', 'sayi'], ['Birim'], ['Tedarikçi']],
+        veri: () => D.urunler.filter(u => u.kritik > 0 && urunMiktar(u.id) <= u.kritik).map(u => { const n = urunMiktar(u.id);
+          return {d: [u.kod, u.ad, n, u.kritik, u.siparisMiktar || Math.max(0, u.kritik * 2 - n), u.birim, u.tedarikciId ? kisi(u.tedarikciId)?.ad : ''], yol: 'stok/' + u.id, uyar: true}; })},
+      hareket: {ad: 'Stok hareketleri', tarihli: true, k: [['Tarih', 'tarih'], ['Ürün'], ['Parça no'], ['Tür'], ['Giriş', 'sayi', 1], ['Çıkış', 'sayi', 1], ['Birim fiyat', 'para'], ['Açıklama']],
+        veri: r => D.stokHareket.filter(s => tarihAraliginda(s.tarih, r)).sort((a, b) => b.tarih.localeCompare(a.tarih)).map(s => { const u = urun(s.urunId) || {};
+          return {d: [s.tarih, u.ad, u.kod, s.sayim ? 'Sayım' : s.tur === 'giris' ? 'Giriş' : 'Çıkış', s.tur === 'giris' ? s.miktar : 0, s.tur === 'giris' ? 0 : s.miktar, s.birimFiyat, s.aciklama], yol: u.id ? 'stok/' + u.id : ''}; })},
+      deger: {ad: 'Grup bazında stok değeri', k: [['Grup'], ['Ürün sayısı', 'sayi', 1], ['Toplam miktar', 'sayi', 1], ['Stok değeri', 'para', 1]],
+        veri: () => { const g = {}; for (const u of D.urunler) { const k = u.kategori || 'Grupsuz', n = Math.max(0, urunMiktar(u.id)); (g[k] ||= [0, 0, 0]); g[k][0]++; g[k][1] += n; g[k][2] += n * urunMaliyet(u); }
+          return Object.entries(g).sort((a, b) => b[1][2] - a[1][2]).map(([k, v]) => ({d: [k, ...v], yol: 'stok/r-eldeki?ara=' + encodeURIComponent(k === 'Grupsuz' ? '' : k)})); }}
+    },
+    veresiye: {
+      bakiye: {ad: 'Cari bakiye listesi', k: [['Cari'], ['Tür'], ['Telefon'], ['İl'], ['Borç', 'para', 1], ['Alacak', 'para', 1], ['Bakiye', 'para', 1], ['Durum']],
+        veri: () => cariSatirlari(() => true)},
+      borclu: {ad: 'Borçlu cariler', k: [['Cari'], ['Tür'], ['Telefon'], ['İl'], ['Borç', 'para', 1], ['Alacak', 'para', 1], ['Bakiye', 'para', 1], ['Durum']], veri: () => cariSatirlari(b => b > 0)},
+      alacakli: {ad: 'Alacaklı cariler', k: [['Cari'], ['Tür'], ['Telefon'], ['İl'], ['Borç', 'para', 1], ['Alacak', 'para', 1], ['Bakiye', 'para', 1], ['Durum']], veri: () => cariSatirlari(b => b < 0)},
+      hareket: {ad: 'Cari hareketler', tarihli: true, k: [['Tarih', 'tarih'], ['Cari'], ['Hareket'], ['Açıklama'], ['Borç', 'para', 1], ['Alacak', 'para', 1]],
+        veri: r => D.hareketler.filter(h => tarihAraliginda(h.tarih, r)).sort((a, b) => b.tarih.localeCompare(a.tarih) || (b.olusturma || 0) - (a.olusturma || 0)).map(h => { const a = hareketArti(h.tur);
+          return {d: [h.tarih, kisi(h.kisiId)?.ad, hareketAd(h.tur), h.aciklama, a ? h.tutar : 0, a ? 0 : h.tutar], yol: h.tur === 'tahsilat' ? 'fis/' + h.id : 'veresiye/' + h.kisiId, fis: h.tur === 'tahsilat' ? h.id : ''}; })},
+      tahsilat: {ad: 'Tahsilat listesi', tarihli: true, k: [['Makbuz no'], ['Tarih', 'tarih'], ['Cari'], ['Açıklama'], ['Ödeme'], ['Tutar', 'para', 1]],
+        veri: r => D.hareketler.filter(h => h.tur === 'tahsilat' && tarihAraliginda(h.tarih, r)).sort((a, b) => b.tarih.localeCompare(a.tarih)).map(h => { const i = h.islemId && D.islemler.find(x => x.id === h.islemId);
+          return {d: [fisNo('tahsilat', h, false), h.tarih, kisi(h.kisiId)?.ad, h.aciklama, i ? odemeAdi[i.odeme] || '' : '', h.tutar], yol: 'fis/' + h.id, fis: h.id}; })}
+    },
+    kasa: {
+      gelir: {ad: 'Gelir listesi', tarihli: true, k: [['Fiş no'], ['Tarih', 'tarih'], ['Kategori'], ['Açıklama'], ['Ödeme'], ['Hesap'], ['KDV', 'para', 1], ['Tutar', 'para', 1]], veri: r => islemSatirlari('gelir', r)},
+      gider: {ad: 'Gider listesi', tarihli: true, k: [['Fiş no'], ['Tarih', 'tarih'], ['Kategori'], ['Açıklama'], ['Ödeme'], ['Hesap'], ['KDV', 'para', 1], ['Tutar', 'para', 1]], veri: r => islemSatirlari('gider', r)},
+      kategori: {ad: 'Kategori özeti', tarihli: true, k: [['Tür'], ['Kategori'], ['Kayıt', 'sayi', 1], ['Tutar', 'para', 1]],
+        veri: r => { const g = {}; for (const i of D.islemler) if (tarihAraliginda(i.tarih, r)) { const k = i.tur + '|' + i.kategori; (g[k] ||= [0, 0]); g[k][0]++; g[k][1] += i.tutar; }
+          return Object.entries(g).sort((a, b) => a[0].localeCompare(b[0]) || b[1][1] - a[1][1]).map(([k, v]) => { const [tur, kat] = k.split('|'); return {d: [tur === 'gelir' ? 'Gelir' : 'Gider', kat, ...v], yol: `kasa/r-${tur}?ara=${encodeURIComponent(kat)}`}; }); }}
+    },
+    banka: {
+      bakiye: {ad: 'Hesap bakiyeleri', k: [['Hesap'], ['Tür'], ['Banka / IBAN'], ['Hareket', 'sayi', 1], ['Bakiye', 'para', 1]],
+        veri: () => D.finansHesap.map(h => ({d: [h.ad, HESAP_TUR[h.tur]?.ad, [h.banka, h.iban].filter(Boolean).join(' · '), hesapHareketleri(h).length, hesapBakiye(h)], yol: 'banka/' + h.id}))},
+      hareket: {ad: 'Hesap hareketleri', tarihli: true, k: [['Tarih', 'tarih'], ['Hesap'], ['Açıklama'], ['Kategori'], ['Giriş', 'para', 1], ['Çıkış', 'para', 1]],
+        veri: r => D.finansHesap.flatMap(h => hesapHareketleri(h).filter(x => tarihAraliginda(x.tarih, r)).map(x => ({x, h}))).sort((a, b) => b.x.tarih.localeCompare(a.x.tarih))
+          .map(({x, h}) => ({d: [x.tarih, h.ad, x.ad, x.alt, x.tutar > 0 ? x.tutar : 0, x.tutar < 0 ? -x.tutar : 0], yol: x.islem ? 'fis/' + x.islem.id : 'banka/' + h.id, fis: x.islem ? x.islem.id : ''}))}
+    },
+    fatura: {
+      satis: {ad: 'Satış faturaları', tarihli: true, k: [['No'], ['Tarih', 'tarih'], ['Vade', 'tarih'], ['Müşteri'], ['Durum'], ['Toplam', 'para', 1], ['Kalan', 'para', 1]], veri: r => faturaSatirlari('fatura', r)},
+      alis: {ad: 'Alış faturaları', tarihli: true, k: [['No'], ['Tarih', 'tarih'], ['Vade', 'tarih'], ['Satıcı'], ['Durum'], ['Toplam', 'para', 1], ['Kalan', 'para', 1]], veri: r => faturaSatirlari('alis', r)},
+      teklif: {ad: 'Teklifler', tarihli: true, k: [['No'], ['Tarih', 'tarih'], ['Geçerlilik', 'tarih'], ['Müşteri'], ['Durum'], ['Toplam', 'para', 1], ['Kalan', 'para']], veri: r => faturaSatirlari('teklif', r)},
+      vade: {ad: 'Vadesi geçen faturalar', k: [['No'], ['Tarih', 'tarih'], ['Vade', 'tarih'], ['Cari'], ['Gecikme (gün)', 'sayi'], ['Toplam', 'para', 1], ['Kalan', 'para', 1]],
+        veri: () => D.faturalar.filter(f => faturaliMi(f) && !f.odendi && f.vade && f.vade < bugun()).sort((a, b) => a.vade.localeCompare(b.vade))
+          .map(f => ({d: [f.no + (f.tur === 'alis' ? ' (alış)' : ''), f.tarih, f.vade, faturaMusteri(f), -gunFark(f.vade), faturaHesap(f).toplam, faturaKalan(f)], yol: 'fatura/' + f.id, uyar: true}))}
+    },
+    servis: {
+      servisler: {ad: 'Servis listesi', tarihli: true, k: [['Form no'], ['İş emri'], ['Tarih', 'tarih'], ['Müşteri'], ['Tekne'], ['Makine'], ['Durum'], ['İşçilik (saat)', 'sayi', 1]], veri: r => servisSatirlari(s => tarihAraliginda(s.tarih, r))},
+      acik: {ad: 'Açık iş emirleri', k: [['Form no'], ['İş emri'], ['Tarih', 'tarih'], ['Müşteri'], ['Tekne'], ['Makine'], ['Durum'], ['İşçilik (saat)', 'sayi', 1]], veri: () => servisSatirlari(servisAcikMi)},
+      ekipman: {ad: 'Tekne ve makineler', k: [['Tekne'], ['Makine'], ['Seri no'], ['Motor no'], ['Çalışma saati', 'sayi'], ['Müşteri'], ['Servis sayısı', 'sayi', 1], ['Son servis', 'tarih']],
+        veri: () => D.ekipmanlar.map(e => { const ss = D.servisler.filter(s => s.ekipmanId === e.id).sort((a, b) => b.tarih.localeCompare(a.tarih));
+          return {d: [e.tekne, ekipmanAd(e), e.seriNo, e.motorNo, e.saat, kisi(e.kisiId)?.ad, ss.length, ss[0]?.tarih || ''], yol: ss[0] ? 'servis/' + ss[0].id : e.kisiId ? 'veresiye/' + e.kisiId : ''}; })},
+      bakim: {ad: 'Yaklaşan bakımlar', k: [['Bakım tarihi', 'tarih'], ['Kalan gün', 'sayi'], ['Müşteri'], ['Tekne'], ['Makine'], ['Bakım saati'], ['Son servis']],
+        veri: () => D.servisler.filter(s => s.sonrakiBakim && s.durum !== 'iptal').sort((a, b) => a.sonrakiBakim.localeCompare(b.sonrakiBakim))
+          .map(s => { const e = ekipman(s.ekipmanId) || s.ekipmanKopya || {}, g = gunFark(s.sonrakiBakim); return {d: [s.sonrakiBakim, g, servisMusteri(s), s.tekne || e.tekne, ekipmanAd(e), s.sonrakiBakimSaat, s.no], yol: 'servis/' + s.id, uyar: g < 0}; })},
+      parca: {ad: 'Kullanılan parçalar', tarihli: true, k: [['Parça no'], ['Parça'], ['Birim'], ['Toplam adet', 'sayi', 1], ['Servis sayısı', 'sayi', 1]],
+        veri: r => { const g = {}; for (const s of D.servisler.filter(s => tarihAraliginda(s.tarih, r))) for (const p of s.parcalar) { const k = (p.parcaNo || '') + '|' + (p.ad || ''); (g[k] ||= {p, n: 0, s: new Set()}); g[k].n += p.adet || 0; g[k].s.add(s.id); }
+          return Object.values(g).sort((a, b) => b.n - a.n).map(x => ({d: [x.p.parcaNo, x.p.ad, x.p.birim, x.n, x.s.size], yol: x.p.urunId ? 'stok/' + x.p.urunId : ''})); }},
+      iscilik: {ad: 'Teknisyen işçilik', tarihli: true, k: [['Teknisyen'], ['Servis sayısı', 'sayi', 1], ['Toplam saat', 'sayi', 1]],
+        veri: r => { const g = {}; for (const s of D.servisler) for (const w of s.iscilik) { const t = w.tarih || s.tarih; if (!tarihAraliginda(t, r)) continue; const k = w.teknisyen || 'Belirtilmedi'; (g[k] ||= {s: new Set(), h: 0}); g[k].s.add(s.id); g[k].h += w.sure || 0; }
+          return Object.entries(g).sort((a, b) => b[1].h - a[1].h).map(([k, v]) => ({d: [k, v.s.size, Math.round(v.h * 100) / 100], yol: 'servis/r-servisler?ara=' + encodeURIComponent(k)})); }}
+    },
+    personel: {
+      liste: {ad: 'Personel listesi', k: [['Ad soyad'], ['Görev'], ['Telefon'], ['İşe giriş', 'tarih'], ['Ücret', 'para', 1], ['Durum']],
+        veri: () => D.personeller.map(p => ({d: [p.ad, p.gorev, p.tel, p.iseGiris, p.maas, p.aktif === false ? 'Ayrıldı' : 'Çalışıyor'], yol: 'personel/' + p.id}))},
+      odeme: {ad: 'Maaş ve avans ödemeleri', tarihli: true, k: [['Tarih', 'tarih'], ['Personel'], ['Tür'], ['Dönem'], ['Açıklama'], ['Tutar', 'para', 1]],
+        veri: r => D.personelOdeme.filter(o => tarihAraliginda(o.tarih, r)).sort((a, b) => b.tarih.localeCompare(a.tarih)).map(o => ({d: [o.tarih, D.personeller.find(p => p.id === o.personelId)?.ad, ODEME_TUR[o.tur] || o.tur, o.donem ? ayKisa(o.donem) : '', o.aciklama, o.tutar], yol: 'personel/' + o.personelId}))}
+    }
+  };
+  return R[m]?.[id];
+}
+function cariSatirlari(kosul) {
+  return [...D.kisiler].sort((a, b) => a.ad.localeCompare(b.ad, 'tr')).map(k => {
+    let borc = 0, alacak = 0; for (const h of D.hareketler) if (h.kisiId === k.id) hareketArti(h.tur) ? borc += h.tutar : alacak += h.tutar;
+    const b = borc - alacak; return {b, r: {d: [k.ad, CARI_TIP[cariTip(k)], k.tel, k.il, borc, alacak, b, b > 0 ? 'Borçlu' : b < 0 ? 'Alacaklı' : 'Kapalı'], yol: 'veresiye/' + k.id, uyar: k.riskLimit > 0 && b > k.riskLimit}};
+  }).filter(x => kosul(x.b)).map(x => x.r);
+}
+function islemSatirlari(tur, r) {
+  return D.islemler.filter(i => i.tur === tur && tarihAraliginda(i.tarih, r)).sort((a, b) => b.tarih.localeCompare(a.tarih) || (b.olusturma || 0) - (a.olusturma || 0))
+    .map(i => ({d: [fisNo(tur, i, false), i.tarih, i.kategori, i.aciklama, odemeAdi[i.odeme] || '', finHesapAdi(islemHesapId(i)), i.kdv || 0, i.tutar], yol: 'fis/' + i.id, fis: i.id}));
+}
+function faturaSatirlari(tur, r) {
+  return D.faturalar.filter(f => f.tur === tur && tarihAraliginda(f.tarih, r)).sort((a, b) => b.tarih.localeCompare(a.tarih) || (b.no || '').localeCompare(a.no || ''))
+    .map(f => ({d: [f.no, f.tarih, f.vade, faturaMusteri(f), faturaDurum(f)[0], faturaHesap(f).toplam, faturaliMi(f) ? faturaKalan(f) : 0], yol: 'fatura/' + f.id, uyar: faturaliMi(f) && !f.odendi && f.vade && f.vade < bugun()}));
+}
+function servisSatirlari(kosul) {
+  return D.servisler.filter(kosul).sort((a, b) => b.tarih.localeCompare(a.tarih)).map(s => { const e = ekipman(s.ekipmanId) || s.ekipmanKopya || {};
+    return {d: [s.no, s.isEmriNo, s.tarih, servisMusteri(s), s.tekne || e.tekne, ekipmanAd(e), (SERVIS_DURUM[s.durum] || [''])[0], iscilikSaat(s)], yol: 'servis/' + s.id}; });
+}
+const hucreYaz = (v, tip) => v === undefined || v === null || v === '' ? '' : tip === 'para' ? para(v) : tip === 'sayi' ? sayiFmt(v) : tip === 'tarih' ? tarihYaz(v, true) : String(v);
+const csvYaz = (v, tip) => v === undefined || v === null ? '' : tip === 'para' ? csvTL(v) : tip === 'sayi' ? String(v).replace('.', ',') : String(v);
+function raporListe(m, id, sorgu) {
+  const R = raporTanim(m, id);
+  if (!R) return git(m, true);
+  const anahtar = m + '/' + id;
+  ui.rl ||= {};
+  const d = ui.rl[anahtar] ||= {ara: sorgu.get('ara') || '', bas: R.tarihli ? AY_BASI() : '', son: R.tarihli ? bugun() : '', sira: null, ters: false};
+  if (sorgu.has('ara')) d.ara = sorgu.get('ara');
+  let h = sayfa(R.ad, {geri: m, geriAd: modulAdi(m)});
+  h += altSerit(m, m + '/r-' + id);
+  h += `<div class="rapor-ust">
+      <div class="arama">${ikon('ara')}<input type="search" id="rlAra" placeholder="Listede ara" value="${esc(d.ara)}"></div>
+      ${R.tarihli ? `<div class="rl-tarih"><input type="date" id="rlBas" value="${d.bas}" aria-label="Başlangıç"><span>–</span><input type="date" id="rlSon" value="${d.son}" aria-label="Bitiş">
+        <div class="cipler">${[['ay', 'Bu ay'], ['yil', 'Bu yıl'], ['gecen', 'Geçen yıl'], ['tum', 'Tümü']].map(([v, a]) => `<button class="cip" data-donem="${v}">${a}</button>`).join('')}</div></div>` : ''}
+    </div>
+    <div class="yan-arac"><button id="rlYaz" title="Yazdır / PDF">${ikon('yazici')}Yazdır</button><button id="rlCsv" title="Excel (CSV)">${ikon('indir')}Excel</button><button id="rlYeni" title="Yenile">${ikon('donustur')}Yenile</button></div>
+    <div id="rlOzet"></div><div id="rlTablo"></div>`;
+  $('#icerik').innerHTML = h;
+  let son = [];
+  const ciz1 = () => {
+    let l = R.veri(d);
+    const a = kucult(d.ara.trim());
+    if (a) l = l.filter(r => kucult(r.d.map((v, i) => hucreYaz(v, R.k[i][1])).join(' ')).includes(a));
+    if (d.sira !== null) { const t = R.k[d.sira][1]; l = [...l].sort((x, y) => { const p = x.d[d.sira] ?? '', q = y.d[d.sira] ?? ''; const c = t === 'para' || t === 'sayi' ? (+p || 0) - (+q || 0) : String(p).localeCompare(String(q), 'tr'); return d.ters ? -c : c; }); }
+    son = l;
+    const top = R.k.map(([, t, topla], i) => topla ? l.reduce((s, r) => s + (+r.d[i] || 0), 0) : null);
+    $('#rlOzet').innerHTML = `<div class="rl-ozet"><div><small>Kayıt</small><b>${l.length}</b></div>${R.k.map(([ad, t], i) => top[i] !== null && t === 'para' ? `<div><small>${esc(ad)}</small><b>${para(top[i])}</b></div>` : '').join('')}</div>`;
+    $('#rlTablo').innerHTML = l.length ? `<div class="liste-kap"><table class="liste-tablo"><thead><tr>${R.k.map(([ad, t], i) => `<th class="${t === 'para' || t === 'sayi' ? 'sg' : ''}" data-sira="${i}">${esc(ad)}${d.sira === i ? (d.ters ? ' ▼' : ' ▲') : ''}</th>`).join('')}<th></th></tr></thead>
+      <tbody>${l.map((r, n) => `<tr data-n="${n}" class="${r.yol ? 'tik' : ''} ${r.uyar ? 'uyar' : ''}">${r.d.map((v, i) => `<td class="${R.k[i][1] === 'para' || R.k[i][1] === 'sayi' ? 'sg' : ''}">${esc(hucreYaz(v, R.k[i][1]))}</td>`).join('')}
+        <td class="islem">${r.fis ? `<button data-fisyaz="${r.fis}" title="Fişi yazdır">${ikon('yazici')}</button>` : ''}</td></tr>`).join('')}</tbody>
+      <tfoot><tr>${R.k.map(([, t], i) => `<td class="${t ? 'sg' : ''}">${i === 0 ? 'Toplam' : top[i] !== null ? esc(hucreYaz(top[i], t)) : ''}</td>`).join('')}<td></td></tr></tfoot></table></div>`
+      : bosDurum('liste', 'gri', 'Kayıt yok', R.tarihli ? 'Seçilen tarih aralığında kayıt bulunamadı.' : 'Bu raporda gösterilecek kayıt yok.');
+    $$('#rlTablo th[data-sira]').forEach(th => th.onclick = () => { const i = +th.dataset.sira; d.ters = d.sira === i ? !d.ters : false; d.sira = i; ciz1(); });
+    $$('#rlTablo tr[data-n]').forEach(tr => tr.onclick = e => { if (e.target.closest('[data-fisyaz]')) return; const r = son[+tr.dataset.n]; if (r.yol) git(r.yol); });
+    $$('#rlTablo [data-fisyaz]').forEach(b => b.onclick = e => { e.stopPropagation(); fisYazdir(b.dataset.fisyaz); });
+  };
+  ciz1();
+  $('#rlAra').oninput = e => { d.ara = e.target.value; ciz1(); };
+  if (R.tarihli) {
+    $('#rlBas').onchange = e => { d.bas = e.target.value; ciz1(); };
+    $('#rlSon').onchange = e => { d.son = e.target.value; ciz1(); };
+    $$('[data-donem]').forEach(b => b.onclick = () => { const y = bugun().slice(0, 4), v = b.dataset.donem;
+      [d.bas, d.son] = v === 'ay' ? ayAraligi(bugun().slice(0, 7)) : v === 'yil' ? [y + '-01-01', y + '-12-31'] : v === 'gecen' ? [(y - 1) + '-01-01', (y - 1) + '-12-31'] : ['', ''];
+      $('#rlBas').value = d.bas; $('#rlSon').value = d.son; ciz1(); });
+  }
+  $('#rlYeni').onclick = () => ciz1();
+  $('#rlYaz').onclick = () => yazdir(R.ad, listeKagit(R, son, d));
+  $('#rlCsv').onclick = () => {
+    if (!son.length) return bildir('Aktarılacak kayıt yok', true);
+    const csv = csvYap(R.k.map(x => x[0]), son.map(r => r.d.map((v, i) => R.k[i][1] === 'tarih' ? v || '' : csvYaz(v, R.k[i][1]))));
+    try { bildir('Kaydedildi: ' + dosyaPaylas(`powerserv-${m}-${id}-${bugun()}.csv`, csv, 'text/csv')); } catch (e) { bildir('Kaydedilemedi', true); }
+  };
+  altMenuBagla($('#icerik'));
+}
+function listeKagit(R, l, d) {
+  const top = R.k.map(([, t, topla], i) => topla ? l.reduce((s, r) => s + (+r.d[i] || 0), 0) : null);
+  const donem = R.tarihli ? (d.bas || d.son ? `${d.bas ? tarihYaz(d.bas, true) : '…'} – ${d.son ? tarihYaz(d.son, true) : '…'}` : 'Tüm kayıtlar') : 'Rapor tarihi ' + tarihYaz(bugun(), true);
+  return `<div class="kagit liste-kagit">
+    <div class="lk-ust"><img src="${D.firma.logo || LOGO}" alt=""><div><b>${esc(firmaUnvan())}</b><div class="gri">${esc([firmaAlan('tel'), firmaAlan('eposta')].filter(Boolean).join(' · '))}</div></div>
+      <div class="lk-baslik"><h3>${esc(R.ad.toLocaleUpperCase('tr-TR'))}</h3><div class="gri">${esc(donem)}${d.ara ? ' · Filtre: ' + esc(d.ara) : ''}<br>${l.length} kayıt</div></div></div>
+    <table><thead><tr>${R.k.map(([ad, t]) => `<th class="${t === 'para' || t === 'sayi' ? 'sg' : ''}">${esc(ad)}</th>`).join('')}</tr></thead>
+    <tbody>${l.map(r => `<tr>${r.d.map((v, i) => `<td class="${R.k[i][1] === 'para' || R.k[i][1] === 'sayi' ? 'sg' : ''}">${esc(hucreYaz(v, R.k[i][1]))}</td>`).join('')}</tr>`).join('')}</tbody>
+    ${top.some(x => x !== null) ? `<tfoot><tr class="top">${R.k.map(([, t], i) => `<td class="${t ? 'sg' : ''}">${i === 0 ? 'TOPLAM' : top[i] !== null ? esc(hucreYaz(top[i], t)) : ''}</td>`).join('')}</tr></tfoot>` : ''}</table>
+    <div class="lk-dip">PowerServ+ · ${esc(firmaUnvan())} · ${esc(new Date().toLocaleString('tr-TR'))}</div></div>`;
+}
+
+/* ---- Fişler: gelir fişi, gider fişi, tahsilat makbuzu ---- */
+const FIS_TUR = {gelir: ['GELİR FİŞİ', 'GLR'], gider: ['GİDER FİŞİ', 'GDR'], tahsilat: ['TAHSİLAT MAKBUZU', 'THS']};
+/* Fiş numarası kayıt başına bir kez verilir ve saklanır. Başka modülden türetilen kayıtlar yeniden oluşturulduğunda
+   numara kaybolmasın diye kaynak, tarih ve tutarla eşlenir. */
+function fisAnahtar(k) { return k.kaynak ? `${k.kaynak.id}|${k.tur}|${k.tarih}|${k.tutar}` : k.id; }
+function fisNo(tur, k, ver = true) {
+  D.fisNo ||= {};
+  const a = fisAnahtar(k);
+  if (D.fisNo[a]) return D.fisNo[a];
+  if (!ver) return '';
+  const on = FIS_TUR[tur][1] + '-' + k.tarih.slice(0, 4) + '-';
+  const max = Object.values(D.fisNo).filter(n => n.startsWith(on)).reduce((s, n) => Math.max(s, parseInt(n.slice(on.length)) || 0), 0);
+  D.fisNo[a] = on + String(max + 1).padStart(4, '0');
+  kaydet();
+  return D.fisNo[a];
+}
+function fisKaydi(id) {
+  const i = D.islemler.find(x => x.id === id);
+  if (i) return {tur: i.tur, k: i, tutar: i.tutar, tarih: i.tarih};
+  const h = D.hareketler.find(x => x.id === id && x.tur === 'tahsilat');
+  if (h) return {tur: 'tahsilat', k: h, tutar: h.tutar, tarih: h.tarih};
+  return null;
+}
+const BIRLER = ['', 'bir', 'iki', 'üç', 'dört', 'beş', 'altı', 'yedi', 'sekiz', 'dokuz'], ONLAR = ['', 'on', 'yirmi', 'otuz', 'kırk', 'elli', 'altmış', 'yetmiş', 'seksen', 'doksan'];
+function ucBasamak(n) { const y = Math.floor(n / 100), o = Math.floor(n % 100 / 10), b = n % 10; return (y ? (y > 1 ? BIRLER[y] : '') + 'yüz' : '') + ONLAR[o] + BIRLER[b]; }
+/* Tutarı yazıyla yazar: 12.500,50 → "onikibinbeşyüz Türk lirası elli kuruş" */
+function yaziyla(kurus) {
+  const tl = Math.floor(Math.abs(kurus) / 100), kr = Math.abs(kurus) % 100;
+  const bolum = ['', 'bin', 'milyon', 'milyar', 'trilyon'];
+  let s = '', n = tl, i = 0;
+  if (!n) s = 'sıfır';
+  while (n > 0) { const u = n % 1000; if (u) s = (i === 1 && u === 1 ? '' : ucBasamak(u)) + bolum[i] + s; n = Math.floor(n / 1000); i++; }
+  return `${s} Türk lirası${kr ? ' ' + ucBasamak(kr) + ' kuruş' : ''}`;
+}
+function fisKagit(id) {
+  const f = fisKaydi(id);
+  if (!f) return '';
+  const {tur, k} = f, [baslik] = FIS_TUR[tur], no = fisNo(tur, k);
+  const i = tur === 'tahsilat' ? (k.islemId && D.islemler.find(x => x.id === k.islemId)) : k;
+  const c = tur === 'tahsilat' ? kisi(k.kisiId) : (k.hareketId && kisi(D.hareketler.find(x => x.id === k.hareketId)?.kisiId));
+  const kb = kaynakBilgi(k.kaynak);
+  const taraf = c?.ad || (kb && k.kaynak?.tip === 'fatura' ? faturaMusteri(D.faturalar.find(x => x.id === k.kaynak.id) || {}) : '');
+  const alan = (l, v) => `<div class="fs-alan"><span>${esc(l)}</span><b>${esc(v || '')}</b></div>`;
+  const imza = tur === 'gider' ? ['ÖDEYEN (AD SOYAD / İMZA)', 'TESLİM ALAN (AD SOYAD / İMZA)'] : ['TESLİM EDEN (AD SOYAD / İMZA)', 'TESLİM ALAN (KAŞE / İMZA)'];
+  const F = [firmaAlan('adres'), [firmaAlan('vd') && firmaAlan('vd') + ' VD ' + firmaAlan('vno'), firmaAlan('mersis') && 'MERSİS ' + firmaAlan('mersis')].filter(Boolean).join(' · '), [firmaAlan('tel'), firmaAlan('eposta'), firmaAlan('web')].filter(Boolean).join(' · ')].filter(Boolean);
+  const beyan = tur === 'tahsilat' ? `Yukarıda yazılı tutar ${taraf ? esc(taraf) + ' tarafından ' : ''}${esc(firmaUnvan())} adına tahsil edilmiştir.`
+    : tur === 'gelir' ? `Yukarıda yazılı tutar ${esc(firmaUnvan())} kasasına / hesabına gelir olarak kaydedilmiştir.` : `Yukarıda yazılı tutar ${esc(firmaUnvan())} tarafından ödenmiştir.`;
+  return `<div class="kagit fis-kagit fis-${tur}">
+    <div class="fs-ust"><img class="fs-logo" src="${D.firma.logo || LOGO}" alt="">
+      <div class="fs-firma"><b>${esc(firmaUnvan())}</b>${F.map(x => `<div>${esc(x)}</div>`).join('')}</div>
+      <div class="fs-kutu"><h3>${baslik}</h3><table><tr><td>No:</td><td>${esc(no)}</td></tr><tr><td>Tarih:</td><td>${esc(tarihYaz(k.tarih, true))}</td></tr></table></div></div>
+    <div class="fs-bar">${tur === 'gider' ? 'ÖDEME BİLGİLERİ' : tur === 'tahsilat' ? 'TAHSİLAT BİLGİLERİ' : 'GELİR BİLGİLERİ'}</div>
+    <div class="fs-ikili">
+      ${alan(tur === 'gider' ? 'Ödenen (Kime)' : 'Ödeyen (Kimden)', taraf)}
+      ${alan('Kategori', tur === 'tahsilat' ? 'Tahsilat' : k.kategori)}
+      ${alan('Ödeme şekli', i ? odemeAdi[i.odeme] || '' : '')}
+      ${alan('Hesap', i ? finHesapAdi(islemHesapId(i)) : '')}
+      ${alan('Belge', kb ? kb.ad : '')}
+      ${alan('KDV', i && i.kdvOran ? `%${i.kdvOran} · ${para(i.kdv || 0)}` : '')}
+    </div>
+    ${alan('Açıklama', k.aciklama)}
+    <div class="fs-tutar"><div><span>TUTAR</span><b>${para(f.tutar)}</b></div><div class="fs-yazi"><span>YALNIZ</span><b>${esc(yaziyla(f.tutar))}</b></div></div>
+    <p class="fs-beyan">${beyan}</p>
+    <div class="fs-imzalar"><div><div class="fs-ib">${imza[0]}</div><div class="fs-ia"></div></div><div><div class="fs-ib">${imza[1]}</div><div class="fs-ia"></div></div></div>
+    <div class="fs-dip">${esc(firmaUnvan())} · ${baslik} · ${esc(no)}</div>
+  </div>`;
+}
+function fisYazdir(id) {
+  const f = fisKaydi(id);
+  if (!f) return bildir('Kayıt bulunamadı', true);
+  yazdir(`${FIS_TUR[f.tur][0]} ${fisNo(f.tur, f.k)}`, fisKagit(id));
+}
+/* Fiş detay ekranı: önizleme ve yanda küçük düğmeler */
+function fisEkrani(id) {
+  const f = fisKaydi(id);
+  if (!f) return git('kasa', true);
+  const geri = f.tur === 'tahsilat' ? 'veresiye/' + f.k.kisiId : 'kasa';
+  menuCiz(f.tur === 'tahsilat' ? 'veresiye' : 'kasa');
+  let h = sayfa(`${FIS_TUR[f.tur][0].charAt(0) + FIS_TUR[f.tur][0].slice(1).toLocaleLowerCase('tr-TR')} ${fisNo(f.tur, f.k)}`, {geri, geriAd: f.tur === 'tahsilat' ? (kisi(f.k.kisiId)?.ad || 'Cari') : modulAdi('kasa')});
+  const kb = kaynakBilgi(f.k.kaynak);
+  h += `<div class="kart fatura-ozet"><div class="fo-ust"><div style="flex:1;min-width:0"><small>${esc(FIS_TUR[f.tur][0])} · ${esc(fisNo(f.tur, f.k))}</small><b class="fo-ad">${esc(f.tur === 'tahsilat' ? kisi(f.k.kisiId)?.ad || '' : f.k.kategori)}</b>
+      <span class="fo-vade">${ikon('saat', 'kucuk-simge')}${esc(tarihYaz(f.tarih, true))}${f.k.aciklama ? ' · ' + esc(f.k.aciklama) : ''}</span></div></div>
+      <div class="fo-tutar ${f.tur === 'gider' ? 'gider' : 'gelir'}">${para(f.tutar)}</div></div>
+    <div class="btn-izgara"><button id="fsYaz">${ikon('yazici')}Yazdır</button><button id="fsDuz">${ikon('kalem')}Düzenle</button>${kb ? `<button id="fsKaynak">${ikon('dosya')}Kaynak</button>` : ''}${f.tur === 'tahsilat' ? `<button id="fsCari">${ikon('defter')}Cari</button>` : ''}<button id="fsSil">${ikon('cop')}Sil</button></div>
+    <div class="bolum">Önizleme</div><div class="kagit-kap">${fisKagit(id)}</div>`;
+  $('#icerik').innerHTML = h;
+  $('#fsYaz').onclick = () => fisYazdir(id);
+  $('#fsDuz').onclick = () => f.tur === 'tahsilat' ? hareketFormu(kisi(f.k.kisiId), f.k) : islemFormu(f.k);
+  if ($('#fsKaynak')) $('#fsKaynak').onclick = () => git(kb.yol);
+  if ($('#fsCari')) $('#fsCari').onclick = () => git('veresiye/' + f.k.kisiId);
+  $('#fsSil').onclick = async () => {
+    if (f.k.kaynak) return bildir('Bu kayıt başka bir modülden geldi; kaynağından silin', true);
+    if (!await onay('Fiş silinsin mi?', `${para(f.tutar)} · ${tarihYaz(f.tarih, true)}`)) return;
+    if (f.tur === 'tahsilat') { D.hareketler = D.hareketler.filter(x => x.id !== id); if (f.k.islemId) D.islemler = D.islemler.filter(i => i.id !== f.k.islemId); }
+    else { D.islemler = D.islemler.filter(x => x.id !== id); }
+    kaydet(); bildir('Silindi'); git(geri, true);
+  };
+}
+/* Tahsilat fişi: cari seçilince tahsilat formu açılır, kaydedince makbuz ekranına gider */
+function tahsilatFisiAc(k) { hareketFormu(k, null, 'tahsilat', true); }
 
 /* ================= Ortak hesaplar ================= */
 function aralikToplam(bas, son) {
@@ -1829,7 +2246,7 @@ function islemSatiri(i, tarihli) {
     <span class="tutar ${g ? 'gelir' : ''}">${g ? '+' : '−'}${para(i.tutar)}</span></button>`;
 }
 function islemTiklari(kok = document) {
-  $$('[data-islem]', kok).forEach(b => b.onclick = () => islemFormu(D.islemler.find(i => i.id === b.dataset.islem)));
+  $$('[data-islem]', kok).forEach(b => b.onclick = () => git('fis/' + b.dataset.islem));
 }
 function kasaEkrani() {
   const t = T();
@@ -1900,7 +2317,7 @@ function otomatikKayitBilgi(baslik, ust, alt, bilgi, metin) {
   if (bilgi) $('#kaynagaGit', m).onclick = () => { kapat(); git(bilgi.yol); };
 }
 
-function islemFormu(islem, varsayilanTur, hesapId) {
+function islemFormu(islem, varsayilanTur, hesapId, fisSonra) {
   const t = T();
   if (islem && (islem.kaynak || islem.hareketId)) {
     let bilgi = kaynakBilgi(islem.kaynak);
@@ -1956,7 +2373,7 @@ function islemFormu(islem, varsayilanTur, hesapId) {
     kaydet();
     if (yeni && !kayit.tarih.startsWith(ui.ay)) ui.ay = kayit.tarih.slice(0, 7);
     bildir(yeni ? 'Eklendi' : 'Güncellendi');
-    setTimeout(ciz, 10);
+    setTimeout(() => yeni && fisSonra ? git('fis/' + kayit.id) : ciz(), 10);
   }
   if (!yeni) $('#fSil', m).onclick = async () => {
     if (!await onay('Bu kayıt silinsin mi?', `${para(i.tutar)} · ${i.kategori}`)) return;
@@ -2161,7 +2578,7 @@ function kisiEkrani(id) {
   $$('[data-yara]').forEach(b => b.onclick = () => disariAc('tel:' + k.yetkililer[+b.dataset.yara].tel.replace(/[^\d+]/g, '')));
   $$('[data-yeni]').forEach(btn => btn.onclick = () => btn.dataset.yeni === 'tahsilat' && fatAcik ? cariTahsilat(k) : hareketFormu(k, null, btn.dataset.yeni));
   $('#kEkstre').onclick = () => yazdir(`${k.ad} ekstre`, cariEkstre(k));
-  $$('[data-hareket]').forEach(btn => btn.onclick = () => hareketFormu(k, D.hareketler.find(x => x.id === btn.dataset.hareket)));
+  $$('[data-hareket]').forEach(btn => btn.onclick = () => { const hr = D.hareketler.find(x => x.id === btn.dataset.hareket); if (hr.tur === 'tahsilat') git('fis/' + hr.id); else hareketFormu(k, hr); });
   faturaTiklari();
   if ($('#kFatura')) $('#kFatura').onclick = () => faturaFormu(null, 'fatura', k.id);
   if (k.tel) {
@@ -2175,7 +2592,7 @@ function kisiEkrani(id) {
 function veresiyeHizli() {
   kisiSec(k => k && hareketFormu(k, null, 'borc'), false);
 }
-function hareketFormu(k, h, varsayilanTur) {
+function hareketFormu(k, h, varsayilanTur, fisSonra) {
   const t = T();
   if (h && h.kaynak) {
     return otomatikKayitBilgi(hareketAd(h.tur, t), `<div class="dev">${para(h.tutar)}</div>`,
@@ -2219,7 +2636,7 @@ function hareketFormu(k, h, varsayilanTur) {
     if (yeni) D.hareketler.push(kayit); else D.hareketler[D.hareketler.findIndex(y => y.id === x.id)] = kayit;
     kaydet();
     bildir(kasayaIsle ? 'Kaydedildi, kasaya işlendi' : 'Kaydedildi');
-    setTimeout(() => { if (rota()[1] === k.id) ciz(); else git('veresiye/' + k.id); }, 10);
+    setTimeout(() => { if (yeni && fisSonra && kayit.tur === 'tahsilat') git('fis/' + kayit.id); else if (rota()[1] === k.id || rota()[0] === 'fis') ciz(); else git('veresiye/' + k.id); }, 10);
   }
   if (!yeni) $('#hSil', m).onclick = async () => {
     if (!await onay('Hareket silinsin mi?', `${para(x.tutar)}${x.islemId ? ' · kasadaki karşılığı da silinir' : ''}`)) return;
