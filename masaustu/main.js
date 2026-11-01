@@ -17,12 +17,13 @@ function ac() {
   Menu.setApplicationMenu(null);
   pencere.once('ready-to-show', () => { pencere.maximize(); pencere.show(); });
   // Dış bağlantılar (web sitesi, e-posta, harita) varsayılan tarayıcıda açılır.
+  const disari = url => { if (/^(https?|mailto|tel):/i.test(url)) shell.openExternal(url); };
   pencere.webContents.setWindowOpenHandler(({url}) => {
-    if (/^(https?|mailto|tel):/i.test(url)) shell.openExternal(url);
+    disari(url);
     return {action: 'deny'};
   });
   pencere.webContents.on('will-navigate', (e, url) => {
-    if (!url.startsWith('file:')) { e.preventDefault(); shell.openExternal(url); }
+    if (!url.startsWith('file:')) { e.preventDefault(); disari(url); }
   });
   // İndirilen dosyalar (ekli fatura PDF'i, Excel, yedek) İndirilenler/PowerServ+ klasörüne kaydedilir; PDF varsayılan uygulamayla açılır.
   pencere.webContents.session.on('will-download', (e, oge) => {

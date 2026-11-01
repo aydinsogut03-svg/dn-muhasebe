@@ -1,12 +1,16 @@
 rules_version = '2';
-// PowerServ+ ortak veritabanı güvenlik kuralları (2.7). Firebase konsolu > Firestore Database > Kurallar sekmesine yapıştırın.
+// PowerServ+ ortak veritabanı güvenlik kuralları (2.9.2). Firebase konsolu > Firestore Database > Kurallar sekmesine yapıştırın.
 service cloud.firestore {
   match /databases/{db}/documents {
+    // Yeni firma açılışı kapalı: kimse API anahtarıyla kendine yeni firma kurup veritabanını kullanamaz.
+    // Yeni bir Firebase projesinde ilk kurulum için geçici olarak true yapın, kurulumdan sonra yeniden false yapıp yayınlayın.
+    function kurulumAcik() { return false; }
     function uyeYol(f) { return /databases/$(db)/documents/firmalar/$(f)/uyeler/$(request.auth.uid); }
     function uye(f) { return request.auth != null && exists(uyeYol(f)) && get(uyeYol(f)).data.aktif == true; }
     function rol(f) { return get(uyeYol(f)).data.rol; }
     function yazar(f) { return uye(f) && rol(f) in ['yonetici', 'muhasebe', 'servis']; }
     function finans(f) { return uye(f) && rol(f) in ['yonetici', 'muhasebe']; }
+    function sahip(f) { return get(/databases/$(db)/documents/firmalar/$(f)).data.sahip; }
     function anahtarUyar(key, k) { return k is string && (key.split('~')[0] == k || (key.split('~')[0] == '_' && k == '_' + key.split('~')[1])); }
     function servisIzni(k) { return k in ['servisler', 'ekipmanlar', 'urunler', 'stokHareket', 'kisiler', 'hareketler', 'faturalar']; }
     function genel(k) { return servisIzni(k) || k in ['_firma', '_ad', '_profil', '_servisAyar', '_modulAyar']; }
@@ -18,19 +22,30 @@ service cloud.firestore {
     }
     function uyeGecerli() {
       let d = request.resource.data;
-      return d.rol in ['yonetici', 'muhasebe', 'servis', 'izleyici'] && d.aktif is bool && d.ad is string && d.ad.size() < 200;
+      return d.keys().hasOnly(['ad', 'eposta', 'rol', 'aktif', 'ekleyen', 'eklenme', 'yetki'])
+        && d.rol in ['yonetici', 'muhasebe', 'servis', 'izleyici'] && d.aktif is bool && d.ad is string && d.ad.size() < 200
+        && (!('eposta' in d) || (d.eposta is string && d.eposta.size() < 200))
+        && (!('yetki' in d) || (d.yetki is string && d.yetki.size() < 1000));
+    }
+    function kilitGecerli() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['u', 'a', 'bitis']) && d.u == request.auth.uid && d.bitis is int
+        && d.bitis <= request.time.toMillis() + 900000 && (!('a' in d) || d.a == null || (d.a is string && d.a.size() <= 200));
     }
     match /firmalar/{f} {
       allow read: if uye(f);
-      allow create: if request.auth != null && request.resource.data.sahip == request.auth.uid;
+      allow create: if kurulumAcik() && request.auth != null && request.resource.data.sahip == request.auth.uid;
       allow update: if uye(f) && rol(f) == 'yonetici' && request.resource.data.sahip == resource.data.sahip;
       match /uyeler/{u} {
         allow read: if uye(f) || (request.auth != null && request.auth.uid == u);
-        allow create: if uyeGecerli() && ((request.auth != null && u == request.auth.uid && request.resource.data.rol == 'yonetici'
+        allow create: if uyeGecerli() && ((kurulumAcik() && request.auth != null && u == request.auth.uid && request.resource.data.rol == 'yonetici'
             && getAfter(/databases/$(db)/documents/firmalar/$(f)).data.sahip == request.auth.uid
             && !exists(/databases/$(db)/documents/firmalar/$(f))) || (uye(f) && rol(f) == 'yonetici'));
-        allow update: if uye(f) && rol(f) == 'yonetici' && uyeGecerli();
-        allow delete: if uye(f) && rol(f) == 'yonetici' && u != request.auth.uid;
+        // Firma sahibinin kaydını yalnız kendisi değiştirir; yönetici kendini kapatamaz ya da rolünü düşüremez (kilitlenme olmasın).
+        allow update: if uye(f) && rol(f) == 'yonetici' && uyeGecerli()
+          && (u != sahip(f) || request.auth.uid == u)
+          && (u != request.auth.uid || (request.resource.data.rol == 'yonetici' && request.resource.data.aktif == true));
+        allow delete: if uye(f) && rol(f) == 'yonetici' && u != request.auth.uid && u != sahip(f);
       }
       // Servisin görebildiği kayıtlar. Gizli koleksiyonlar burada yalnızca boşaltılmış (eski sürümden kalan) olarak bulunabilir.
       match /kayit/{key} {
@@ -47,14 +62,19 @@ service cloud.firestore {
       // İşlem kaydı değiştirilemez ve silinemez.
       match /log/{l} {
         allow read: if finans(f);
-        allow create: if uye(f) && request.resource.data.u == request.auth.uid && request.resource.data.z == request.time
-          && request.resource.data.d is string && request.resource.data.d.size() <= 200;
+        allow create: if uye(f) && request.resource.data.keys().hasOnly(['u', 'a', 'i', 'k', 'd', 'z'])
+          && request.resource.data.u == request.auth.uid && request.resource.data.z == request.time
+          && request.resource.data.d is string && request.resource.data.d.size() <= 200
+          && (!('a' in request.resource.data) || request.resource.data.a == null || (request.resource.data.a is string && request.resource.data.a.size() <= 200))
+          && (!('i' in request.resource.data) || (request.resource.data.i is string && request.resource.data.i.size() <= 40))
+          && (!('k' in request.resource.data) || (request.resource.data.k is string && request.resource.data.k.size() <= 300));
       }
+      // Düzenleme kilidi en çok 15 dakika ileriye konabilir; böylece kimse bir kaydı süresiz kilitleyemez.
       match /kilit/{k} {
         allow read: if yazar(f);
+        allow create: if yazar(f) && kilitGecerli();
         // Başkasının süresi dolmamış kilidi ezilemez; herkes yalnız kendi kilidini kaldırır.
-        allow create: if yazar(f) && request.resource.data.u == request.auth.uid;
-        allow update: if yazar(f) && request.resource.data.u == request.auth.uid
+        allow update: if yazar(f) && kilitGecerli()
           && (resource.data.u == request.auth.uid || resource.data.bitis < request.time.toMillis());
         allow delete: if yazar(f) && resource.data.u == request.auth.uid;
       }
