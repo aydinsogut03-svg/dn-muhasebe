@@ -1961,7 +1961,7 @@ function menuCiz(aktif) {
     const acik = !genis && ui.acikGrup === g.id;
     let ic = '';
     if (acik) ic = g.tek ? `<div class="c-agac">${altMenuHtml(g.tek, yol)}</div>`
-      : `<div class="c-agac">${grupOgeleri(g).map((o, i) => `<div class="c-agac-oge ${modulAcik(o.modul) && o.modul === aktif && ui.menuGrup !== undefined ? '' : ''}"><button class="uc-oge ${o.modul === aktif && aktifGrup === g.id ? 'uc-secili' : ''}" data-mo="${g.id}|${i}">${kare(o.simge || modul(o.modul).simge, o.renk || modul(o.modul).renk)}<span class="ad">${esc(o.ad)}</span>${rozet(o.modul)}</button>${o.alt ? `<button class="c-ac" data-mac="${g.id}|${i}" aria-label="Alt menü">${ikon('ileri', 'c-ok' + (ui.acikOge === g.id + '|' + i ? ' don' : ''))}</button>` : ''}</div>
+      : `<div class="c-agac">${grupOgeleri(g).map((o, i) => `<div class="c-agac-oge ${modulAcik(o.modul) && o.modul === aktif && ui.menuGrup !== undefined ? '' : ''}"><button class="uc-oge ${o.modul === aktif && aktifGrup === g.id && grupOgeleri(g).findIndex(y => y.modul === aktif) === i ? 'uc-secili' : ''}" data-mo="${g.id}|${i}">${kare(o.simge || modul(o.modul).simge, o.renk || modul(o.modul).renk)}<span class="ad">${esc(o.ad)}</span>${rozet(o.modul)}</button>${o.alt ? `<button class="c-ac" data-mac="${g.id}|${i}" aria-label="Alt menü">${ikon('ileri', 'c-ok' + (ui.acikOge === g.id + '|' + i ? ' don' : ''))}</button>` : ''}</div>
           ${ui.acikOge === g.id + '|' + i ? altMenuHtml(o.alt, yol) : ''}`).join('')}</div>`;
     return `<a href="#" data-grup="${g.id}" class="${aktifGrup === g.id ? 'secili' : ''} ${acik ? 'acik' : ''}">${kare(g.simge, g.renk)}<span class="ad">${esc(g.ad)}</span>${g.tek ? rozet(g.tek) : ''}${ikon('ileri', 'c-ok')}</a>${ic}`;
   };
