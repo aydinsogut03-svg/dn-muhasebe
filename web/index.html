@@ -2820,6 +2820,7 @@ async function belgeEkle(kamera) {
 const boyutYaz = b => b >= 1048576 ? sayiFmt(Math.round(b / 104857.6) / 10) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
 async function belgeGoster(ek) {
   const b = await belgeOku(ek.id);
+  if (b && b.veri && !belgeVeriGecerli(b)) return bildir('Belge bozuk ya da güvenli değil, açılmadı', true);
   if (!b || !b.veri) return bildir(ortakBagli() ? 'Belge bu cihaza henüz inmedi. Eşitleyip tekrar deneyin.' : 'Belge bu cihazda bulunamadı', true);
   if (b.tip === 'pdf') {
     if (window.Android && Android.belgeAc) { if (!Android.belgeAc(b.ad, b.veri.slice(b.veri.indexOf(',') + 1), 'application/pdf')) bildir('PDF açılamadı', true); return; }
@@ -2828,8 +2829,8 @@ async function belgeGoster(ek) {
   }
   modal(ek.ad, `<div class="belge-goster"><img src="${b.veri}" alt="${esc(ek.ad)}"></div><p class="dipnot">${esc(boyutYaz(ek.boyut || 0))}</p>`, {solAd: 'Kapat', tam: true});
 }
-const ekSatiri = (ek, silinir) => `<div class="hucre kareli ek-satir" data-ek="${ek.id}">${kare(ek.tip === 'pdf' ? 'dosya' : 'kamera', ek.tip === 'pdf' ? 'kirmizi' : 'mavi')}
-  <div class="ic"><b>${esc(ek.ad)}</b><small>${ek.tip === 'pdf' ? 'PDF' : 'Fotoğraf'}${ek.boyut ? ' · ' + boyutYaz(ek.boyut) : ''}</small></div>${silinir ? `<button type="button" class="ek-sil" data-eksil="${ek.id}" aria-label="Kaldır">Kaldır</button>` : CHEV}</div>`;
+const ekSatiri = (ek, silinir) => `<div class="hucre kareli ek-satir" data-ek="${esc(ek.id)}">${kare(ek.tip === 'pdf' ? 'dosya' : 'kamera', ek.tip === 'pdf' ? 'kirmizi' : 'mavi')}
+  <div class="ic"><b>${esc(ek.ad)}</b><small>${ek.tip === 'pdf' ? 'PDF' : 'Fotoğraf'}${ek.boyut ? ' · ' + boyutYaz(ek.boyut) : ''}</small></div>${silinir ? `<button type="button" class="ek-sil" data-eksil="${esc(ek.id)}" aria-label="Kaldır">Kaldır</button>` : CHEV}</div>`;
 /* Formlarda ek alanı: x.ekler dizisini düzenler. Kaydedilmeden kapanırsa yeni eklenenler silinir. */
 function ekAlani(baslik) {
   return `<div class="bolum">${esc(baslik)}</div><div class="grup" id="ekListe"></div>
@@ -2875,10 +2876,12 @@ async function belgeGonder(o, s) {
   }
   return l.length;
 }
+/* Ek verisi yalnızca base64 data adresi olabilir (javascript: gibi adresler ve HTML enjeksiyonu engellenir). */
+const belgeVeriGecerli = b => !!b && typeof b.veri === 'string' && (b.tip === 'pdf' ? /^data:[\w.+\/-]*;base64,[A-Za-z0-9+/=]*$/ : /^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]*$/).test(b.veri);
 async function belgeAl(b) {
   const id = b._ad.slice('belgeler~'.length);
   if (b.s) { const y = await belgeOku(id); if (y && y.gonderildi !== false) await belgeIslem('readwrite', st => st ? st.delete(id) : void belgeBellek.delete(id)); return; }
-  try { const v = JSON.parse(b.j); const y = await belgeOku(v.id); if (y && !y.gonderildi) return; await belgeYaz({...v, hesap: H.aktif, tarih: Date.now(), gonderildi: true}); } catch (e) {}
+  try { const v = JSON.parse(b.j); if (!belgeVeriGecerli(v) || idTemiz(v.id) !== id) return; v.ad = String(v.ad || '').slice(0, 200); const y = await belgeOku(v.id); if (y && !y.gonderildi) return; await belgeYaz({...v, hesap: H.aktif, tarih: Date.now(), gonderildi: true}); } catch (e) {}
 }
 
 function otomatikKayitBilgi(baslik, ust, alt, bilgi, metin) {
@@ -6219,14 +6222,18 @@ const KOLEKSIYON_AD = {islemler: 'Gelir/gider', kisiler: 'Cari', hareketler: 'Ca
   _bordroAyar: 'Bordro ayarları', _vergiAyar: 'Vergi ayarları', _fisNo: 'Fiş numaraları', _profil: 'Profil'};
 const ISLEM_AD = {ekle: 'Ekledi', duzenle: 'Değiştirdi', sil: 'Sildi', toplu: 'Toplu gönderim', kurulum: 'Kurulum', giris: 'Giriş', kullanici: 'Kullanıcı'};
 const KURALLAR = `rules_version = '2';
-// PowerServ+ ortak veritabanı güvenlik kuralları (2.7). Firebase konsolu > Firestore Database > Kurallar sekmesine yapıştırın.
+// PowerServ+ ortak veritabanı güvenlik kuralları (2.9.2). Firebase konsolu > Firestore Database > Kurallar sekmesine yapıştırın.
 service cloud.firestore {
   match /databases/{db}/documents {
+    // Yeni firma açılışı kapalı: kimse API anahtarıyla kendine yeni firma kurup veritabanını kullanamaz.
+    // Yeni bir Firebase projesinde ilk kurulum için geçici olarak true yapın, kurulumdan sonra yeniden false yapıp yayınlayın.
+    function kurulumAcik() { return false; }
     function uyeYol(f) { return /databases/$(db)/documents/firmalar/$(f)/uyeler/$(request.auth.uid); }
     function uye(f) { return request.auth != null && exists(uyeYol(f)) && get(uyeYol(f)).data.aktif == true; }
     function rol(f) { return get(uyeYol(f)).data.rol; }
     function yazar(f) { return uye(f) && rol(f) in ['yonetici', 'muhasebe', 'servis']; }
     function finans(f) { return uye(f) && rol(f) in ['yonetici', 'muhasebe']; }
+    function sahip(f) { return get(/databases/$(db)/documents/firmalar/$(f)).data.sahip; }
     function anahtarUyar(key, k) { return k is string && (key.split('~')[0] == k || (key.split('~')[0] == '_' && k == '_' + key.split('~')[1])); }
     function servisIzni(k) { return k in ['servisler', 'ekipmanlar', 'urunler', 'stokHareket', 'kisiler', 'hareketler', 'faturalar']; }
     function genel(k) { return servisIzni(k) || k in ['_firma', '_ad', '_profil', '_servisAyar', '_modulAyar']; }
@@ -6238,19 +6245,30 @@ service cloud.firestore {
     }
     function uyeGecerli() {
       let d = request.resource.data;
-      return d.rol in ['yonetici', 'muhasebe', 'servis', 'izleyici'] && d.aktif is bool && d.ad is string && d.ad.size() < 200;
+      return d.keys().hasOnly(['ad', 'eposta', 'rol', 'aktif', 'ekleyen', 'eklenme', 'yetki'])
+        && d.rol in ['yonetici', 'muhasebe', 'servis', 'izleyici'] && d.aktif is bool && d.ad is string && d.ad.size() < 200
+        && (!('eposta' in d) || (d.eposta is string && d.eposta.size() < 200))
+        && (!('yetki' in d) || (d.yetki is string && d.yetki.size() < 1000));
+    }
+    function kilitGecerli() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['u', 'a', 'bitis']) && d.u == request.auth.uid && d.bitis is int
+        && d.bitis <= request.time.toMillis() + 900000 && (!('a' in d) || d.a == null || (d.a is string && d.a.size() <= 200));
     }
     match /firmalar/{f} {
       allow read: if uye(f);
-      allow create: if request.auth != null && request.resource.data.sahip == request.auth.uid;
+      allow create: if kurulumAcik() && request.auth != null && request.resource.data.sahip == request.auth.uid;
       allow update: if uye(f) && rol(f) == 'yonetici' && request.resource.data.sahip == resource.data.sahip;
       match /uyeler/{u} {
         allow read: if uye(f) || (request.auth != null && request.auth.uid == u);
-        allow create: if uyeGecerli() && ((request.auth != null && u == request.auth.uid && request.resource.data.rol == 'yonetici'
+        allow create: if uyeGecerli() && ((kurulumAcik() && request.auth != null && u == request.auth.uid && request.resource.data.rol == 'yonetici'
             && getAfter(/databases/$(db)/documents/firmalar/$(f)).data.sahip == request.auth.uid
             && !exists(/databases/$(db)/documents/firmalar/$(f))) || (uye(f) && rol(f) == 'yonetici'));
-        allow update: if uye(f) && rol(f) == 'yonetici' && uyeGecerli();
-        allow delete: if uye(f) && rol(f) == 'yonetici' && u != request.auth.uid;
+        // Firma sahibinin kaydını yalnız kendisi değiştirir; yönetici kendini kapatamaz ya da rolünü düşüremez (kilitlenme olmasın).
+        allow update: if uye(f) && rol(f) == 'yonetici' && uyeGecerli()
+          && (u != sahip(f) || request.auth.uid == u)
+          && (u != request.auth.uid || (request.resource.data.rol == 'yonetici' && request.resource.data.aktif == true));
+        allow delete: if uye(f) && rol(f) == 'yonetici' && u != request.auth.uid && u != sahip(f);
       }
       // Servisin görebildiği kayıtlar. Gizli koleksiyonlar burada yalnızca boşaltılmış (eski sürümden kalan) olarak bulunabilir.
       match /kayit/{key} {
@@ -6267,14 +6285,19 @@ service cloud.firestore {
       // İşlem kaydı değiştirilemez ve silinemez.
       match /log/{l} {
         allow read: if finans(f);
-        allow create: if uye(f) && request.resource.data.u == request.auth.uid && request.resource.data.z == request.time
-          && request.resource.data.d is string && request.resource.data.d.size() <= 200;
+        allow create: if uye(f) && request.resource.data.keys().hasOnly(['u', 'a', 'i', 'k', 'd', 'z'])
+          && request.resource.data.u == request.auth.uid && request.resource.data.z == request.time
+          && request.resource.data.d is string && request.resource.data.d.size() <= 200
+          && (!('a' in request.resource.data) || request.resource.data.a == null || (request.resource.data.a is string && request.resource.data.a.size() <= 200))
+          && (!('i' in request.resource.data) || (request.resource.data.i is string && request.resource.data.i.size() <= 40))
+          && (!('k' in request.resource.data) || (request.resource.data.k is string && request.resource.data.k.size() <= 300));
       }
+      // Düzenleme kilidi en çok 15 dakika ileriye konabilir; böylece kimse bir kaydı süresiz kilitleyemez.
       match /kilit/{k} {
         allow read: if yazar(f);
+        allow create: if yazar(f) && kilitGecerli();
         // Başkasının süresi dolmamış kilidi ezilemez; herkes yalnız kendi kilidini kaldırır.
-        allow create: if yazar(f) && request.resource.data.u == request.auth.uid;
-        allow update: if yazar(f) && request.resource.data.u == request.auth.uid
+        allow update: if yazar(f) && kilitGecerli()
           && (resource.data.u == request.auth.uid || resource.data.bitis < request.time.toMillis());
         allow delete: if yazar(f) && resource.data.u == request.auth.uid;
       }
@@ -6469,6 +6492,19 @@ function yerindeDegistir(eski, yeni) {
   Object.assign(eski, yeni);
   return true;
 }
+/* Başka cihazdan gelen kayıt temizlenir: kimlik, tarih, tür gibi sayfada tırnaksız ya da öznitelik içinde kullanılan alanlardan
+   HTML'i bozabilecek karakterler atılır, __proto__ gibi tehlikeli anahtarlar alınmaz. (Kötü niyetli bir kullanıcının veritabanına
+   yazdığı kayıtla başka kullanıcının ekranında kod çalıştırmasını önler.) */
+const KORUNAN_ALAN = /^(id|kaynak|tarih|vade|bas|son|tur|tip|durum|odeme|renk|simge|birim|kdvOran|tevkifat|.+Id|.+Tarih|.+Gun|.+Gunu)$/;
+function guvenliVeri(v, alan) {
+  if (Array.isArray(v)) return v.map(x => guvenliVeri(x, alan));
+  if (v && typeof v === 'object') {
+    const o = {};
+    for (const [k, x] of Object.entries(v)) if (k !== '__proto__' && k !== 'constructor' && k !== 'prototype') o[k] = guvenliVeri(x, k);
+    return o;
+  }
+  return typeof v === 'string' && alan && KORUNAN_ALAN.test(alan) ? v.replace(/[<>"'`&]/g, '') : v;
+}
 function ortakUygula(b, iz) {
   const key = b._ad, h = b.s ? null : ozet(b.j || '');
   if (!b.s && iz.ozet[key] === h) return false;
@@ -6483,7 +6519,7 @@ function ortakUygula(b, iz) {
   if (ad) {
     if (ORTAK_HARIC.includes(ad)) return false;
     if (b.s) { delete iz.ozet[key]; return false; }
-    const v = JSON.parse(b.j);
+    const v = guvenliVeri(JSON.parse(b.j));
     if (!yerindeDegistir(D[ad], v)) D[ad] = v;
     iz.ozet[key] = h;
     return true;
@@ -6494,7 +6530,7 @@ function ortakUygula(b, iz) {
     if (y.l && y.i >= 0) { y.l.splice(y.i, 1); return true; }
     return false;
   }
-  const v = JSON.parse(b.j);
+  const v = guvenliVeri(JSON.parse(b.j));
   if (!y.l) D[y.k] = [];
   const l = D[y.k];
   if (y.i >= 0) { if (!yerindeDegistir(l[y.i], v)) l[y.i] = v; } else l.push(v);
@@ -6696,7 +6732,7 @@ function ekranKilitle() {
   el.innerHTML = `<div class="giris-kutu">
       <div class="kilit-simge">${ikon('kilit')}</div>
       <h2>Ekran kilitli</h2><p>${esc(s.ad || s.eposta)} · ${esc(ROLLER[s.rol]?.ad || '')}</p>
-      <form id="ekForm" autocomplete="off" onsubmit="return false">
+      <form id="ekForm" autocomplete="off">
         <input type="email" autocomplete="username" value="${esc(s.eposta)}" hidden>
         <div class="grup"><label class="f-satir sol"><input type="password" id="ekSifre" autocomplete="current-password" placeholder="Hesap şifreniz"></label></div>
         <p class="giris-hata gider" id="ekHata"></p>
@@ -6733,6 +6769,7 @@ function ekranKilitle() {
     } catch (x) { hata(x.ag ? 'Bu cihazda kilit için internet bağlantısı bir kez gerekli' : x.message); }
     finally { calisiyor = false; const b = $('#ekAc', el); if (b) b.disabled = false; }
   };
+  $('#ekForm', el).onsubmit = ev => ev.preventDefault();
   $('#ekAc', el).onclick = ac;
   $('#ekSifre', el).onkeydown = ev => { if (ev.key === 'Enter') ac(); };
   $('#ekCikis', el).onclick = () => { el.remove(); ekranAyarYaz({kilitli: false, yanlis: 0}); ortakOturumKapat(''); };

@@ -24,6 +24,13 @@ android {
         }
     }
 
+    // Debug imzalı olsa da APK hata ayıklanabilir değildir: USB ile bağlanan biri uygulama verisini (oturum jetonu, kayıtlar) okuyamaz.
+    buildTypes {
+        getByName("debug") {
+            isDebuggable = false
+        }
+    }
+
     // Uygulamanın tamamı tek dosya: web/index.html. APK onu WebView içinde açar.
     sourceSets {
         getByName("main") {

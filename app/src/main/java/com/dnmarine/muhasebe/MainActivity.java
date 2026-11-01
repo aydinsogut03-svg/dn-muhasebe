@@ -275,6 +275,9 @@ public class MainActivity extends Activity {
     }
 
     private void disariAc(Uri u) {
+        // Yalnızca web, e-posta, telefon ve WhatsApp bağlantıları açılır (intent:, file:, content: gibi adresler engellenir).
+        String sema = u.getScheme() == null ? "" : u.getScheme().toLowerCase(java.util.Locale.ROOT);
+        if (!(sema.equals("https") || sema.equals("http") || sema.equals("mailto") || sema.equals("tel") || sema.equals("whatsapp") || sema.equals("geo"))) return;
         try {
             startActivity(new Intent(Intent.ACTION_VIEW, u));
         } catch (Exception e) {
