@@ -1,0 +1,63 @@
+rules_version = '2';
+// PowerServ+ ortak veritabanı güvenlik kuralları (2.7). Firebase konsolu > Firestore Database > Kurallar sekmesine yapıştırın.
+service cloud.firestore {
+  match /databases/{db}/documents {
+    function uyeYol(f) { return /databases/$(db)/documents/firmalar/$(f)/uyeler/$(request.auth.uid); }
+    function uye(f) { return request.auth != null && exists(uyeYol(f)) && get(uyeYol(f)).data.aktif == true; }
+    function rol(f) { return get(uyeYol(f)).data.rol; }
+    function yazar(f) { return uye(f) && rol(f) in ['yonetici', 'muhasebe', 'servis']; }
+    function finans(f) { return uye(f) && rol(f) in ['yonetici', 'muhasebe']; }
+    function anahtarUyar(key, k) { return k is string && (key.split('~')[0] == k || (key.split('~')[0] == '_' && k == '_' + key.split('~')[1])); }
+    function servisIzni(k) { return k in ['servisler', 'ekipmanlar', 'urunler', 'stokHareket', 'kisiler', 'hareketler', 'faturalar']; }
+    function genel(k) { return servisIzni(k) || k in ['_firma', '_ad', '_profil', '_servisAyar', '_modulAyar']; }
+    // Her kayıt: yalnız bilinen alanlar, yazan kişi oturumdaki kişi, zaman sunucu saati, boyut sınırlı.
+    function kayitGecerli(key) {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['k', 'j', 's', 'u', 'z']) && d.j is string && d.j.size() < 900000 && d.s is bool
+        && d.u == request.auth.uid && d.z == request.time && anahtarUyar(key, d.k);
+    }
+    function uyeGecerli() {
+      let d = request.resource.data;
+      return d.rol in ['yonetici', 'muhasebe', 'servis', 'izleyici'] && d.aktif is bool && d.ad is string && d.ad.size() < 200;
+    }
+    match /firmalar/{f} {
+      allow read: if uye(f);
+      allow create: if request.auth != null && request.resource.data.sahip == request.auth.uid;
+      allow update: if uye(f) && rol(f) == 'yonetici' && request.resource.data.sahip == resource.data.sahip;
+      match /uyeler/{u} {
+        allow read: if uye(f) || (request.auth != null && request.auth.uid == u);
+        allow create: if uyeGecerli() && ((request.auth != null && u == request.auth.uid && request.resource.data.rol == 'yonetici'
+            && getAfter(/databases/$(db)/documents/firmalar/$(f)).data.sahip == request.auth.uid
+            && !exists(/databases/$(db)/documents/firmalar/$(f))) || (uye(f) && rol(f) == 'yonetici'));
+        allow update: if uye(f) && rol(f) == 'yonetici' && uyeGecerli();
+        allow delete: if uye(f) && rol(f) == 'yonetici' && u != request.auth.uid;
+      }
+      // Servisin görebildiği kayıtlar. Gizli koleksiyonlar burada yalnızca boşaltılmış (eski sürümden kalan) olarak bulunabilir.
+      match /kayit/{key} {
+        allow read: if uye(f);
+        allow create, update: if yazar(f) && kayitGecerli(key) && (
+          (genel(request.resource.data.k) && (rol(f) != 'servis' || servisIzni(request.resource.data.k)))
+          || (finans(f) && !genel(request.resource.data.k) && request.resource.data.s == true && request.resource.data.j == ''));
+      }
+      // Gelir/gider, banka/kasa, personel, bordro, vergi...: servis rolü okuyamaz, yalnızca yönetici ve muhasebe yazar.
+      match /ozel/{key} {
+        allow read: if uye(f) && rol(f) in ['yonetici', 'muhasebe', 'izleyici'];
+        allow create, update: if finans(f) && kayitGecerli(key) && !genel(request.resource.data.k);
+      }
+      // İşlem kaydı değiştirilemez ve silinemez.
+      match /log/{l} {
+        allow read: if finans(f);
+        allow create: if uye(f) && request.resource.data.u == request.auth.uid && request.resource.data.z == request.time
+          && request.resource.data.d is string && request.resource.data.d.size() <= 200;
+      }
+      match /kilit/{k} {
+        allow read: if yazar(f);
+        // Başkasının süresi dolmamış kilidi ezilemez; herkes yalnız kendi kilidini kaldırır.
+        allow create: if yazar(f) && request.resource.data.u == request.auth.uid;
+        allow update: if yazar(f) && request.resource.data.u == request.auth.uid
+          && (resource.data.u == request.auth.uid || resource.data.bitis < request.time.toMillis());
+        allow delete: if yazar(f) && resource.data.u == request.auth.uid;
+      }
+    }
+  }
+}

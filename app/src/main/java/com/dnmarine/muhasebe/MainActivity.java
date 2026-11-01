@@ -23,7 +23,13 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.view.Gravity;
+import android.view.HapticFeedbackConstants;
+import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.OutputStream;
@@ -43,6 +49,8 @@ public class MainActivity extends Activity {
     private ValueCallback<Uri[]> dosyaGeriDonus;
     private String bekleyenYol;
     private boolean sayfaHazir;
+    private View acilis;
+    private long acilisZaman;
 
     @Override
     protected void onCreate(Bundle durum) {
@@ -53,7 +61,34 @@ public class MainActivity extends Activity {
         web = new WebView(this);
         web.setBackgroundColor(getColor(R.color.zemin));
         kok.addView(web, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        // Açılış ekranı: sayfa yüklenene kadar (en az 1,2 sn) firma logosu gösterilir, sonra yumuşakça kaybolur.
+        LinearLayout a = new LinearLayout(this);
+        a.setOrientation(LinearLayout.VERTICAL);
+        a.setGravity(Gravity.CENTER);
+        a.setBackgroundColor(0xFFFFFFFF);
+        a.setClickable(true);
+        float dp = getResources().getDisplayMetrics().density;
+        ImageView logo = new ImageView(this);
+        logo.setImageResource(R.drawable.acilis_logo);
+        logo.setAdjustViewBounds(true);
+        int en = (int) Math.min(getResources().getDisplayMetrics().widthPixels * 0.62f, 300 * dp);
+        a.addView(logo, new LinearLayout.LayoutParams(en, LinearLayout.LayoutParams.WRAP_CONTENT));
+        TextView alt = new TextView(this);
+        alt.setText("PowerServ+");
+        alt.setTextColor(0xFF5B6675);
+        alt.setTextSize(15);
+        alt.setLetterSpacing(0.04f);
+        alt.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams ap = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        ap.topMargin = (int) (18 * dp);
+        a.addView(alt, ap);
+        logo.setAlpha(0f); logo.setScaleX(0.92f); logo.setScaleY(0.92f);
+        logo.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(450).start();
+        kok.addView(a, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        acilis = a;
+        acilisZaman = System.currentTimeMillis();
         setContentView(kok);
+        kok.postDelayed(this::acilisiKapat, 4000);   // sayfa geç yüklenirse yine de kapanır
 
         // Android 15+ uygulamayı kenardan kenara çizer: sistem çubukları ve klavye için boşluk bırak.
         if (Build.VERSION.SDK_INT >= 35) {
@@ -79,6 +114,7 @@ public class MainActivity extends Activity {
             public void onPageFinished(WebView v, String adres) {
                 sayfaHazir = true;
                 bekleyenYoluAc();
+                acilisiKapat();
             }
 
             @Override
@@ -144,7 +180,7 @@ public class MainActivity extends Activity {
     /** Seçilen yedek dosyasının adı ve bulunduğu yer (Google Drive, Dropbox, telefon). */
     private JSONObject yedekBilgisi(Uri u) {
         JSONObject o = new JSONObject();
-        String ad = "DN Muhasebe yedek.json";
+        String ad = "PowerServ+ yedek.json";
         try (Cursor c = getContentResolver().query(u, new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null)) {
             if (c != null && c.moveToFirst()) ad = c.getString(0);
         } catch (Exception e) {
@@ -223,8 +259,49 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void acilisiKapat() {
+        final View a = acilis;
+        if (a == null) return;
+        acilis = null;
+        long kalan = Math.max(0, 1200 - (System.currentTimeMillis() - acilisZaman));
+        a.postDelayed(() -> a.animate().alpha(0f).setDuration(280).withEndAction(() -> {
+            if (a.getParent() instanceof FrameLayout) ((FrameLayout) a.getParent()).removeView(a);
+        }).start(), kalan);
+    }
+
     /** Sayfadaki JavaScript'in "Android" adıyla çağırdığı yöntemler. */
     private class Kopru {
+        /** Düğmeye dokununca kısa dokunma titreşimi (telefonun dokunma geri bildirimi ayarına uyar). */
+        @JavascriptInterface
+        public void titret() {
+            runOnUiThread(() -> web.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY));
+        }
+
+        /** Bağlantı kodu ve kullanıcı bilgilerini panoya kopyalar (WebView'de navigator.clipboard file:// sayfada çalışmaz). */
+        @JavascriptInterface
+        public void kopyala(String metin) {
+            runOnUiThread(() -> {
+                android.content.ClipboardManager p = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                if (p != null) p.setPrimaryClip(ClipData.newPlainText("PowerServ+", metin));
+            });
+        }
+
+        /** Sayfanın teması değişince durum ve gezinme çubuğunu aynı renge boyar. */
+        @JavascriptInterface
+        public void tema(boolean koyu) {
+            runOnUiThread(() -> {
+                int renk = koyu ? 0xFF22252A : 0xFFFFFFFF;
+                getWindow().setStatusBarColor(renk);
+                getWindow().setNavigationBarColor(renk);
+                web.setBackgroundColor(renk);
+                ((android.view.View) web.getParent()).setBackgroundColor(renk);
+                android.view.View d = getWindow().getDecorView();
+                int bayrak = d.getSystemUiVisibility();
+                int acik = android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+                d.setSystemUiVisibility(koyu ? (bayrak & ~acik) : (bayrak | acik));
+            });
+        }
+
         /** Otomatik yedeğin yazılacağı dosyayı seçtirir (Drive, Dropbox ya da telefon klasörü). */
         @JavascriptInterface
         public void yedekKonumSec() {
@@ -232,7 +309,7 @@ public class MainActivity extends Activity {
                 Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
                 i.addCategory(Intent.CATEGORY_OPENABLE);
                 i.setType("application/json");
-                i.putExtra(Intent.EXTRA_TITLE, "DN Muhasebe yedek.json");
+                i.putExtra(Intent.EXTRA_TITLE, "PowerServ+ yedek.json");
                 try {
                     startActivityForResult(i, YEDEK_SEC);
                 } catch (Exception e) {
@@ -312,7 +389,7 @@ public class MainActivity extends Activity {
             });
         }
 
-        /** Dosyayı İndirilenler/DN Muhasebe klasörüne yazar ve paylaşım ekranını açar (WhatsApp, e-posta, Drive, Excel...). */
+        /** Dosyayı İndirilenler/PowerServ+ klasörüne yazar ve paylaşım ekranını açar (WhatsApp, e-posta, Drive, Excel...). */
         @JavascriptInterface
         public String paylas(String ad, String icerik, String tur) {
             Uri u = Build.VERSION.SDK_INT >= 29 ? indirilenlereYaz(ad, icerik, tur) : null;
@@ -334,10 +411,10 @@ public class MainActivity extends Activity {
                     Toast.makeText(MainActivity.this, "Paylaşılacak uygulama bulunamadı", Toast.LENGTH_SHORT).show();
                 }
             });
-            return u != null ? "İndirilenler/DN Muhasebe" : "paylaşım ekranı";
+            return u != null ? "İndirilenler/PowerServ+" : "paylaşım ekranı";
         }
 
-        /** Dosyayı İndirilenler/DN Muhasebe klasörüne yazar; başarılıysa konumu, değilse boş metin döner. */
+        /** Dosyayı İndirilenler/PowerServ+ klasörüne yazar; başarılıysa konumu, değilse boş metin döner. */
         @JavascriptInterface
         public String dosyaKaydet(String ad, String icerik, String tur) {
             if (Build.VERSION.SDK_INT < 29) {
@@ -350,17 +427,17 @@ public class MainActivity extends Activity {
                 });
                 return "paylaşım ekranı";
             }
-            return indirilenlereYaz(ad, icerik, tur) != null ? "İndirilenler/DN Muhasebe" : "";
+            return indirilenlereYaz(ad, icerik, tur) != null ? "İndirilenler/PowerServ+" : "";
         }
     }
 
-    /** Android 10+ : İndirilenler/DN Muhasebe klasörüne yazar, dosyanın adresini döner. */
+    /** Android 10+ : İndirilenler/PowerServ+ klasörüne yazar, dosyanın adresini döner. */
     @android.annotation.TargetApi(29)
     private Uri indirilenlereYaz(String ad, String icerik, String tur) {
         ContentValues d = new ContentValues();
         d.put(MediaStore.MediaColumns.DISPLAY_NAME, ad);
         d.put(MediaStore.MediaColumns.MIME_TYPE, tur);
-        d.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/DN Muhasebe");
+        d.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/PowerServ+");
         try {
             Uri u = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, d);
             if (u == null) return null;
