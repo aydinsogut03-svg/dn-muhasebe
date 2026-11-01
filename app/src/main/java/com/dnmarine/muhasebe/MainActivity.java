@@ -23,7 +23,13 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.view.Gravity;
+import android.view.HapticFeedbackConstants;
+import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.OutputStream;
@@ -43,6 +49,8 @@ public class MainActivity extends Activity {
     private ValueCallback<Uri[]> dosyaGeriDonus;
     private String bekleyenYol;
     private boolean sayfaHazir;
+    private View acilis;
+    private long acilisZaman;
 
     @Override
     protected void onCreate(Bundle durum) {
@@ -53,7 +61,34 @@ public class MainActivity extends Activity {
         web = new WebView(this);
         web.setBackgroundColor(getColor(R.color.zemin));
         kok.addView(web, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        // Açılış ekranı: sayfa yüklenene kadar (en az 1,2 sn) firma logosu gösterilir, sonra yumuşakça kaybolur.
+        LinearLayout a = new LinearLayout(this);
+        a.setOrientation(LinearLayout.VERTICAL);
+        a.setGravity(Gravity.CENTER);
+        a.setBackgroundColor(0xFFFFFFFF);
+        a.setClickable(true);
+        float dp = getResources().getDisplayMetrics().density;
+        ImageView logo = new ImageView(this);
+        logo.setImageResource(R.drawable.acilis_logo);
+        logo.setAdjustViewBounds(true);
+        int en = (int) Math.min(getResources().getDisplayMetrics().widthPixels * 0.62f, 300 * dp);
+        a.addView(logo, new LinearLayout.LayoutParams(en, LinearLayout.LayoutParams.WRAP_CONTENT));
+        TextView alt = new TextView(this);
+        alt.setText("PowerServ+");
+        alt.setTextColor(0xFF5B6675);
+        alt.setTextSize(15);
+        alt.setLetterSpacing(0.04f);
+        alt.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams ap = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        ap.topMargin = (int) (18 * dp);
+        a.addView(alt, ap);
+        logo.setAlpha(0f); logo.setScaleX(0.92f); logo.setScaleY(0.92f);
+        logo.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(450).start();
+        kok.addView(a, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        acilis = a;
+        acilisZaman = System.currentTimeMillis();
         setContentView(kok);
+        kok.postDelayed(this::acilisiKapat, 4000);   // sayfa geç yüklenirse yine de kapanır
 
         // Android 15+ uygulamayı kenardan kenara çizer: sistem çubukları ve klavye için boşluk bırak.
         if (Build.VERSION.SDK_INT >= 35) {
@@ -79,6 +114,7 @@ public class MainActivity extends Activity {
             public void onPageFinished(WebView v, String adres) {
                 sayfaHazir = true;
                 bekleyenYoluAc();
+                acilisiKapat();
             }
 
             @Override
@@ -223,8 +259,24 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void acilisiKapat() {
+        final View a = acilis;
+        if (a == null) return;
+        acilis = null;
+        long kalan = Math.max(0, 1200 - (System.currentTimeMillis() - acilisZaman));
+        a.postDelayed(() -> a.animate().alpha(0f).setDuration(280).withEndAction(() -> {
+            if (a.getParent() instanceof FrameLayout) ((FrameLayout) a.getParent()).removeView(a);
+        }).start(), kalan);
+    }
+
     /** Sayfadaki JavaScript'in "Android" adıyla çağırdığı yöntemler. */
     private class Kopru {
+        /** Düğmeye dokununca kısa dokunma titreşimi (telefonun dokunma geri bildirimi ayarına uyar). */
+        @JavascriptInterface
+        public void titret() {
+            runOnUiThread(() -> web.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY));
+        }
+
         /** Bağlantı kodu ve kullanıcı bilgilerini panoya kopyalar (WebView'de navigator.clipboard file:// sayfada çalışmaz). */
         @JavascriptInterface
         public void kopyala(String metin) {

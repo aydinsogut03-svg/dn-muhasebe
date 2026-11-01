@@ -1137,6 +1137,19 @@ header .orta-baslik{font-size:16px;font-weight:700}
 .bildirim svg{flex:none}
 .grafik .ek{font-size:12px}
 .grafik svg{max-height:none}
+/* ================= 2.7: telefon uygulaması (APK) — iOS tarzı düğmeler ve dokunma hissi ================= */
+html.apk{--r:12px}
+html.apk .btn{border-radius:12px;min-height:46px;font-weight:600;letter-spacing:-.01em}
+html.apk .modal-alt .btn{border-radius:14px;min-height:50px}
+html.apk .yan-arac button,html.apk .alt-serit button,html.apk .cip,html.apk .hizli button,html.apk .btn-izgara button,html.apk .yeni-satir button{border-radius:999px!important}
+html.apk .segment{border-radius:10px}html.apk .segment button,html.apk .segment label,html.apk .segment label span{border-radius:8px}
+html.apk .btn,html.apk .yan-arac button,html.apk .alt-serit button,html.apk .cip,html.apk .hizli button,html.apk .btn-izgara button,html.apk .yeni-satir button,html.apk .metrik,html.apk a.kart,html.apk .segment button,html.apk .tus-takim button,html.apk button.bag,html.apk .ust-arac button{transition:transform .32s cubic-bezier(.2,.9,.3,1.25),opacity .2s,filter .2s;-webkit-tap-highlight-color:transparent}
+html.apk .btn:active,html.apk .yan-arac button:active,html.apk .alt-serit button:active,html.apk .cip:active,html.apk .hizli button:active,html.apk .btn-izgara button:active,html.apk .yeni-satir button:active,html.apk .segment button:active,html.apk .tus-takim button:active,html.apk .ust-arac button:active{transform:scale(.94)!important;opacity:.82;transition:transform .08s,opacity .08s}
+html.apk .metrik:active,html.apk a.kart:active{transform:scale(.97)!important;filter:brightness(.97)}
+html.apk button.bag:active{opacity:.45}
+html.apk .hucre{transition:background-color .25s;-webkit-tap-highlight-color:transparent}
+html.apk .bildirim{border-radius:14px}
+html.apk .hucre:active{background:rgba(120,130,150,.16)!important;transition:none}
 button.bag{background:none;border:0;padding:0;color:var(--mavi);font:inherit;font-size:14px;cursor:pointer}
 .kilit-uyari{display:flex;gap:10px;align-items:flex-start;background:rgba(240,140,0,.1);border:1px solid rgba(240,140,0,.35);border-radius:var(--r,6px);padding:10px 12px;margin:0 0 14px}
 .kilit-uyari .i{width:20px;height:20px;flex:none;color:var(--turuncu);margin-top:1px}
@@ -1157,7 +1170,7 @@ select.secim{height:38px;border:1px solid var(--kenar);border-radius:var(--r,6px
 
 <script>
 'use strict';
-const VERSIYON = '2.7.0';
+const VERSIYON = '2.7.1';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -6346,6 +6359,17 @@ function ortakBaslat() {
   if (ortakOturum()) { if (ekranKilitGerekli()) ekranKilitle(); else ekranEtkinlik(); ortakEsitle(); }
 }
 
+/* Telefon uygulamasında iOS tarzı düğmeler ve dokunma titreşimi */
+if (window.Android) {
+  document.documentElement.classList.add('apk');
+  let sonTitresim = 0;
+  document.addEventListener('pointerdown', e => {
+    const h = e.target.closest && e.target.closest('button, .btn, a, .hucre, .cip, .metrik, [data-n], label.anahtar, input[type=checkbox], input[type=radio]');
+    if (!h || h.disabled || Date.now() - sonTitresim < 60) return;
+    sonTitresim = Date.now();
+    try { Android.titret && Android.titret(); } catch (x) {}
+  }, {capture: true, passive: true});
+}
 /* ================= Başlat ================= */
 hesaplariYukle();
 D = yukle();
