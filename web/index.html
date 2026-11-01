@@ -442,6 +442,12 @@ a.kart:active{opacity:.7}
 .kalem .f-satir input{font-size:16px}
 .kalem-ad{gap:10px}
 .kalem-ad .kalem-kod{flex:0 0 30%;border-right:.5px solid var(--ayirici)!important;padding-right:8px!important}
+.kalem .kalem-isk{flex:0 0 17%!important;text-align:right;border-left:.5px solid var(--ayirici)!important;padding-left:8px!important;margin-left:8px}
+.ek-isaret{width:14px;height:14px;margin-left:6px;vertical-align:-2px;opacity:.6}
+.ek-satir{cursor:pointer}
+.ek-sil{background:none;border:0;color:var(--kirmizi,#c62828);font:inherit;font-size:14px;padding:6px 4px;cursor:pointer}
+.belge-goster{background:#fff;border:1px solid var(--ayirici);text-align:center}
+.belge-goster img{display:block;max-width:100%;height:auto;margin:0 auto}
 .kalem-alt{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 16px 10px;font-size:14px;color:var(--ikincil)}
 .kalem-alt button{border:0;background:none;color:var(--kirmizi);font-size:14px;padding:4px 0}
 .kdv-sec{display:flex;gap:4px}
@@ -1271,11 +1277,13 @@ select.secim{height:38px;border:1px solid var(--kenar);border-radius:var(--r,6px
 
 <script>
 'use strict';
-const VERSIYON = '2.8.1';
+const VERSIYON = '2.9.0';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
 const SIMGE = {
+  kamera:'<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  atac:'<path d="M20 11.5l-8.3 8.3a5 5 0 0 1-7.1-7.1l8.6-8.6a3.4 3.4 0 0 1 4.8 4.8l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l7.9-7.9"/>',
   liste:'<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/>',
   kalem:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
   yukari:'<path d="M12 19V5M5 12l7-7 7 7"/>',
@@ -1961,7 +1969,7 @@ const ALT_MENU = {
       ['Yaklaşan bakımlar', 'takvim', 'servis/r-bakim'], ['Kullanılan parçalar', 'kutu', 'servis/r-parca'], ['Teknisyen işçilik', 'kisiler', 'servis/r-iscilik']]]],
   banka: [['İşlemler', [['Hesaplar', 'banka', 'banka'], ['Yeni hesap', 'arti', () => finansHesapFormu()], ['Virman', 'donustur', () => virmanFormu()]]],
     ['Raporlar', [['Hesap bakiyeleri', 'liste', 'banka/r-bakiye'], ['Hesap hareketleri', 'donustur', 'banka/r-hareket']]]],
-  kasa: [['İşlemler', [['Gelir / gider kayıtları', 'cuzdan', 'kasa'], ['Gelir fişi', 'arti', () => islemFormu(null, 'gelir', null, true)], ['Gider fişi', 'eksi', () => islemFormu(null, 'gider', null, true)]]],
+  kasa: [['İşlemler', [['Gelir / gider kayıtları', 'cuzdan', 'kasa'], ['Gelir fişi', 'arti', () => islemFormu(null, 'gelir', null, true)], ['Gider fişi', 'eksi', () => islemFormu(null, 'gider', null, true)], ['Fiş fotoğrafından gider', 'kamera', fisCek]]],
     ['Raporlar', [['Gelir listesi', 'liste', 'kasa/r-gelir'], ['Gider listesi', 'liste', 'kasa/r-gider'], ['Kategori özeti', 'grafik', 'kasa/r-kategori']]]],
   veresiye: [['İşlemler', [['Cari kartlar', 'defter', 'veresiye'], ['Yeni cari', 'arti', () => kisiFormu()], ['Tahsilat fişi', 'para', () => kisiSec(k => k && tahsilatFisiAc(k), false)]]],
     ['Raporlar', [['Cari bakiye listesi', 'liste', 'veresiye/r-bakiye'], ['Borçlu cariler', 'yukari', 'veresiye/r-borclu'], ['Alacaklı cariler', 'asagi', 'veresiye/r-alacakli'],
@@ -2230,7 +2238,7 @@ function fisKagit(id) {
   const i = tur === 'tahsilat' ? (k.islemId && D.islemler.find(x => x.id === k.islemId)) : k;
   const c = tur === 'tahsilat' ? kisi(k.kisiId) : (k.hareketId && kisi(D.hareketler.find(x => x.id === k.hareketId)?.kisiId));
   const kb = kaynakBilgi(k.kaynak);
-  const taraf = c?.ad || (kb && k.kaynak?.tip === 'fatura' ? faturaMusteri(D.faturalar.find(x => x.id === k.kaynak.id) || {}) : '');
+  const taraf = c?.ad || (kb && k.kaynak?.tip === 'fatura' ? faturaMusteri(D.faturalar.find(x => x.id === k.kaynak.id) || {}) : '') || k.satici || '';
   const alan = (l, v) => `<div class="fs-alan"><span>${esc(l)}</span><b>${esc(v || '')}</b></div>`;
   const imza = tur === 'gider' ? ['ÖDEYEN (AD SOYAD / İMZA)', 'TESLİM ALAN (AD SOYAD / İMZA)'] : ['TESLİM EDEN (AD SOYAD / İMZA)', 'TESLİM ALAN (KAŞE / İMZA)'];
   const F = [firmaAlan('adres'), [firmaAlan('vd') && firmaAlan('vd') + ' VD ' + firmaAlan('vno'), firmaAlan('mersis') && 'MERSİS ' + firmaAlan('mersis')].filter(Boolean).join(' · '), [firmaAlan('tel'), firmaAlan('eposta'), firmaAlan('web')].filter(Boolean).join(' · ')].filter(Boolean);
@@ -2246,7 +2254,7 @@ function fisKagit(id) {
       ${alan('Kategori', tur === 'tahsilat' ? 'Tahsilat' : k.kategori)}
       ${alan('Ödeme şekli', i ? odemeAdi[i.odeme] || '' : '')}
       ${alan('Hesap', i ? finHesapAdi(islemHesapId(i)) : '')}
-      ${alan('Belge', kb ? kb.ad : '')}
+      ${alan('Belge', kb ? kb.ad : k.belgeNo || '')}
       ${alan('KDV', i && i.kdvOran ? `%${i.kdvOran} · ${para(i.kdv || 0)}` : '')}
     </div>
     ${alan('Açıklama', k.aciklama)}
@@ -2273,8 +2281,11 @@ function fisEkrani(id) {
       <span class="fo-vade">${ikon('saat', 'kucuk-simge')}${esc(tarihYaz(f.tarih, true))}${f.k.aciklama ? ' · ' + esc(f.k.aciklama) : ''}</span></div></div>
       <div class="fo-tutar ${f.tur === 'gider' ? 'gider' : 'gelir'}">${para(f.tutar)}</div></div>
     <div class="btn-izgara"><button id="fsYaz">${ikon('yazici')}Yazdır</button><button id="fsDuz">${ikon('kalem')}Düzenle</button>${kb ? `<button id="fsKaynak">${ikon('dosya')}Kaynak</button>` : ''}${f.tur === 'tahsilat' ? `<button id="fsCari">${ikon('defter')}Cari</button>` : ''}<button id="fsSil">${ikon('cop')}Sil</button></div>
+    ${f.k.satici || f.k.belgeNo ? `<div class="grup">${f.k.satici ? `<div class="hucre"><div class="ic"><b>Satıcı</b></div><span class="deger">${esc(f.k.satici)}</span></div>` : ''}${f.k.belgeNo ? `<div class="hucre"><div class="ic"><b>Belge no</b></div><span class="deger">${esc(f.k.belgeNo)}</span></div>` : ''}</div>` : ''}
+    ${ekListesiHtml(f.k)}
     <div class="bolum">Önizleme</div><div class="kagit-kap">${fisKagit(id)}</div>`;
   $('#icerik').innerHTML = h;
+  ekListesiBagla(f.k);
   $('#fsYaz').onclick = () => fisYazdir(id);
   $('#fsDuz').onclick = () => f.tur === 'tahsilat' ? hareketFormu(kisi(f.k.kisiId), f.k) : islemFormu(f.k);
   if ($('#fsKaynak')) $('#fsKaynak').onclick = () => git(kb.yol);
@@ -2283,7 +2294,7 @@ function fisEkrani(id) {
     if (f.k.kaynak) return bildir('Bu kayıt başka bir modülden geldi; kaynağından silin', true);
     if (!await onay('Fiş silinsin mi?', `${para(f.tutar)} · ${tarihYaz(f.tarih, true)}`)) return;
     if (f.tur === 'tahsilat') { D.hareketler = D.hareketler.filter(x => x.id !== id); if (f.k.islemId) D.islemler = D.islemler.filter(i => i.id !== f.k.islemId); }
-    else { D.islemler = D.islemler.filter(x => x.id !== id); }
+    else { ekleriSil(f.k); D.islemler = D.islemler.filter(x => x.id !== id); }
     kaydet(); bildir('Silindi'); git(geri, true);
   };
 }
@@ -2615,12 +2626,14 @@ function islemSatiri(i, tarihli) {
   const alt = [tarihli ? tarihYaz(i.tarih) : '', i.aciklama ? kat : '', islemHesapAd(i), i.kaynak || i.hareketId ? 'otomatik' : ''].filter(Boolean).join(' · ');
   const [sm, rk] = kategoriSimge(kat, i.tur);
   return `<button class="hucre kareli islem" data-islem="${i.id}">${kare(sm, rk)}
-    <div class="ic"><b>${esc(baslik)}</b><small>${esc(alt) || '&nbsp;'}</small></div>
+    <div class="ic"><b>${esc(baslik)}${i.ekler?.length ? ikon('atac', 'ek-isaret') : ''}</b><small>${esc(alt) || '&nbsp;'}</small></div>
     <span class="tutar ${g ? 'gelir' : ''}">${g ? '+' : '−'}${para(i.tutar)}</span></button>`;
 }
 function islemTiklari(kok = document) {
   $$('[data-islem]', kok).forEach(b => b.onclick = () => git('fis/' + b.dataset.islem));
 }
+/* Telefonda hızlı gider: önce fişin fotoğrafı çekilir, sonra tutar ve kategori girilir */
+async function fisCek() { const ek = await belgeEkle(true); if (ek) islemFormu(null, 'gider', null, false, ek); }
 function kasaEkrani() {
   const t = T();
   let h = sayfa(modulAdi('kasa'), {sag: artiBtn('ekleBtn')});
@@ -2629,7 +2642,7 @@ function kasaEkrani() {
       <div><small>${esc(t.gelir)}</small><b class="gelir">${para(o.gelir)}</b></div>
       <div><small>${esc(t.gider)}</small><b class="gider">${para(o.gider)}</b></div>
       <div><small>Net</small><b class="${o.net < 0 ? 'gider' : ''}">${para(o.net)}</b></div></div></div>
-    <div class="btn-grup"><button class="btn yesil-acik" data-yeni="gelir">${ikon('arti')} ${esc(t.gelir)}</button><button class="btn kirmizi-acik" data-yeni="gider">${ikon('eksi')} ${esc(t.gider)}</button></div>
+    <div class="btn-grup"><button class="btn yesil-acik" data-yeni="gelir">${ikon('arti')} ${esc(t.gelir)}</button><button class="btn kirmizi-acik" data-yeni="gider">${ikon('eksi')} ${esc(t.gider)}</button><button class="btn renkli" id="fisCekBtn">${ikon('kamera')} Fiş çek</button></div>
     <div class="segment" id="turSec">${[['hepsi','Tümü'],['gelir',t.gelir],['gider',t.gider]].map(([v, a]) => `<button data-v="${v}" class="${ui.kasaTur === v ? 'secili' : ''}">${esc(a)}</button>`).join('')}</div>
     <div class="arama">${ikon('ara')}<input type="search" id="kasaAra" placeholder="Ara" value="${esc(ui.kasaAra)}"></div>
     <div id="kasaListe"></div>`;
@@ -2637,6 +2650,7 @@ function kasaEkrani() {
   ayBagla('ay', kasaEkrani);
   $('#ekleBtn').onclick = () => islemFormu(null, ui.kasaTur === 'gelir' ? 'gelir' : 'gider');
   $$('[data-yeni]').forEach(b => b.onclick = () => islemFormu(null, b.dataset.yeni));
+  $('#fisCekBtn').onclick = fisCek;
   $$('#turSec button').forEach(b => b.onclick = () => {
     ui.kasaTur = b.dataset.v;
     $$('#turSec button').forEach(x => x.classList.toggle('secili', x === b));
@@ -2683,6 +2697,145 @@ function kategoriSimge(kat, tur) {
 const KDV_ORAN = [0, 1, 10, 20];
 const kdvAyir = (tutar, oran) => oran ? Math.round(tutar - tutar / (1 + oran / 100)) : 0;
 
+/* ================= Belge ekleri (fatura PDF'i, fiş fotoğrafı) =================
+   Dosyalar localStorage'ı doldurmasın diye cihazda IndexedDB'de durur; kayıtta yalnızca {id, ad, tip, boyut} tutulur.
+   Ortak veritabanında "ozel/belgeler~<id>" belgesi olarak eşitlenir (yalnızca yönetici, muhasebe ve izleyici görür). */
+const BELGE_RESIM_PX = 1600, BELGE_PDF_SINIR = 600 * 1024;
+let belgeDbSoz = null;
+const belgeBellek = new Map();   // IndexedDB yoksa (gizli pencere vb.) geçici bellek
+function belgeDb() {
+  return belgeDbSoz ||= new Promise(coz => {
+    try {
+      const r = indexedDB.open('powerserv-belge', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('b', {keyPath: 'id'});
+      r.onsuccess = () => coz(r.result);
+      r.onerror = () => coz(null);
+    } catch (e) { coz(null); }
+  });
+}
+async function belgeIslem(mod, fn) {
+  const db = await belgeDb();
+  if (!db) return fn(null);
+  return new Promise((coz, red) => {
+    const t = db.transaction('b', mod), s = t.objectStore('b');
+    let sonuc; const r = fn(s);
+    if (r) r.onsuccess = () => { sonuc = r.result; };
+    t.oncomplete = () => coz(sonuc);
+    t.onerror = () => red(t.error);
+  });
+}
+const belgeYaz = b => belgeIslem('readwrite', s => s ? s.put(b) : void belgeBellek.set(b.id, b));
+const belgeOku = async id => (await belgeIslem('readonly', s => s ? s.get(id) : null)) ?? belgeBellek.get(id) ?? null;
+async function belgeHepsi() { const l = await belgeIslem('readonly', s => s ? s.getAll() : null); return l || [...belgeBellek.values()]; }
+/* Kayıttan çıkarılan ek: sunucuya silindi bilgisi gidene kadar işaretli kalır */
+async function belgeSil(id) { const b = await belgeOku(id); if (b) await belgeYaz({id, hesap: b.hesap, silindi: true, gonderildi: false}); }
+
+function dosyaSec(accept, kamera) {
+  return new Promise(coz => {
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = accept;
+    if (kamera) inp.setAttribute('capture', 'environment');
+    inp.onchange = () => coz(inp.files[0] || null);
+    inp.click();
+  });
+}
+const dataUrlOku = f => new Promise((coz, red) => { const r = new FileReader(); r.onload = () => coz(r.result); r.onerror = red; r.readAsDataURL(f); });
+/* Fotoğraf küçültülür (uzun kenar 1600 px, JPEG): fiş okunur kalır, bir fotoğraf ~150-300 KB olur */
+function resimKucult(dataUrl) {
+  return new Promise((coz, red) => {
+    const img = new Image();
+    img.onload = () => {
+      const o = Math.min(1, BELGE_RESIM_PX / Math.max(img.width, img.height)), c = document.createElement('canvas');
+      c.width = Math.round(img.width * o); c.height = Math.round(img.height * o);
+      const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
+      let q = .75, v = c.toDataURL('image/jpeg', q);
+      while (v.length > 850000 && q > .35) { q -= .1; v = c.toDataURL('image/jpeg', q); }
+      coz(v);
+    };
+    img.onerror = () => red(new Error('resim'));
+    img.src = dataUrl;
+  });
+}
+/* Yeni ek seçtirir; {id, ad, tip, boyut} döner (iptalde null) */
+async function belgeEkle(kamera) {
+  const f = await dosyaSec(kamera ? 'image/*' : 'image/*,application/pdf', kamera);
+  if (!f) return null;
+  const pdf = f.type === 'application/pdf' || /\.pdf$/i.test(f.name);
+  if (!pdf && !f.type.startsWith('image/')) { bildir('Yalnızca fotoğraf veya PDF eklenebilir', true); return null; }
+  if (pdf && f.size > BELGE_PDF_SINIR) { bildir('PDF en çok 600 KB olabilir. Daha küçük bir dosya seçin veya fotoğrafını çekin.', true); return null; }
+  let veri;
+  try { veri = await dataUrlOku(f); if (!pdf) veri = await resimKucult(veri); }
+  catch (e) { bildir('Dosya okunamadı', true); return null; }
+  const ek = {id: kimlik(), ad: (f.name || '').trim() || (pdf ? 'belge.pdf' : 'fis-' + bugun() + '.jpg'), tip: pdf ? 'pdf' : 'resim', boyut: Math.round(veri.length * .75)};
+  if (!pdf && kamera && !f.name) ek.ad = 'fis-' + bugun() + '.jpg';
+  try { await belgeYaz({...ek, hesap: H.aktif, veri, tarih: Date.now(), gonderildi: false}); }
+  catch (e) { bildir('Belge kaydedilemedi. Cihaz depolaması dolu olabilir.', true); return null; }
+  return ek;
+}
+const boyutYaz = b => b >= 1048576 ? sayiFmt(Math.round(b / 104857.6) / 10) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+async function belgeGoster(ek) {
+  const b = await belgeOku(ek.id);
+  if (!b || !b.veri) return bildir(ortakBagli() ? 'Belge bu cihaza henüz inmedi. Eşitleyip tekrar deneyin.' : 'Belge bu cihazda bulunamadı', true);
+  if (b.tip === 'pdf') {
+    if (window.Android && Android.belgeAc) { if (!Android.belgeAc(b.ad, b.veri.slice(b.veri.indexOf(',') + 1), 'application/pdf')) bildir('PDF açılamadı', true); return; }
+    const a = document.createElement('a'); a.href = b.veri; a.download = b.ad; document.body.appendChild(a); a.click(); a.remove();
+    return;
+  }
+  modal(ek.ad, `<div class="belge-goster"><img src="${b.veri}" alt="${esc(ek.ad)}"></div><p class="dipnot">${esc(boyutYaz(ek.boyut || 0))}</p>`, {solAd: 'Kapat', tam: true});
+}
+const ekSatiri = (ek, silinir) => `<div class="hucre kareli ek-satir" data-ek="${ek.id}">${kare(ek.tip === 'pdf' ? 'dosya' : 'kamera', ek.tip === 'pdf' ? 'kirmizi' : 'mavi')}
+  <div class="ic"><b>${esc(ek.ad)}</b><small>${ek.tip === 'pdf' ? 'PDF' : 'Fotoğraf'}${ek.boyut ? ' · ' + boyutYaz(ek.boyut) : ''}</small></div>${silinir ? `<button type="button" class="ek-sil" data-eksil="${ek.id}" aria-label="Kaldır">Kaldır</button>` : CHEV}</div>`;
+/* Formlarda ek alanı: x.ekler dizisini düzenler. Kaydedilmeden kapanırsa yeni eklenenler silinir. */
+function ekAlani(baslik) {
+  return `<div class="bolum">${esc(baslik)}</div><div class="grup" id="ekListe"></div>
+    <div class="btn-grup"><button type="button" class="btn renkli" id="ekKamera">${ikon('kamera')} Fotoğraf çek</button><button type="button" class="btn renkli" id="ekDosya">${ikon('yukle')} Dosya ekle</button></div>`;
+}
+function ekBagla(m, x) {
+  x.ekler ||= [];
+  const ilk = new Set(x.ekler.map(e => e.id)), yeni = [], kaldirilan = [];
+  let kayitli = false;
+  const sil1 = id => belgeIslem('readwrite', s => s ? s.delete(id) : void belgeBellek.delete(id));
+  // Form kaydedilmeden kapanırsa bu formda eklenen dosyalar cihazdan silinir.
+  const perde = m.closest('.perde'), once = perde?._kapaninca;
+  if (perde) perde._kapaninca = () => { once && once(); if (!kayitli) for (const id of yeni) sil1(id); };
+  const ciz1 = () => {
+    const kap = $('#ekListe', m);
+    kap.innerHTML = x.ekler.length ? x.ekler.map(e => ekSatiri(e, true)).join('') : '<div class="hucre"><div class="ic"><small>Fatura PDF\'i veya fiş fotoğrafı ekleyin. Telefonda "Fotoğraf çek" kamerayı açar.</small></div></div>';
+    $$('[data-ek]', kap).forEach(el => el.onclick = e => { if (e.target.closest('[data-eksil]')) return; belgeGoster(x.ekler.find(y => y.id === el.dataset.ek)); });
+    $$('[data-eksil]', kap).forEach(b => b.onclick = () => { const id = b.dataset.eksil; x.ekler = x.ekler.filter(y => y.id !== id); kaldirilan.push(id); ciz1(); });
+  };
+  const ekle = async kamera => { const ek = await belgeEkle(kamera); if (ek) { x.ekler.push(ek); yeni.push(ek.id); ciz1(); } };
+  $('#ekKamera', m).onclick = () => ekle(true);
+  $('#ekDosya', m).onclick = () => ekle(false);
+  ciz1();
+  return {
+    kaydedildi() { kayitli = true; for (const id of kaldirilan) ilk.has(id) ? belgeSil(id) : sil1(id); }
+  };
+}
+/* Kayıt silinince ekleri de silinir */
+function ekleriSil(x) { for (const e of x?.ekler || []) belgeSil(e.id); }
+/* Detay ekranlarında salt okunur ek listesi */
+const ekListesiHtml = x => x.ekler?.length ? `<div class="bolum">Ekler</div><div class="grup" id="ekGoster">${x.ekler.map(e => ekSatiri(e, false)).join('')}</div>` : '';
+function ekListesiBagla(x) { $$('#ekGoster [data-ek]').forEach(el => el.onclick = () => belgeGoster(x.ekler.find(y => y.id === el.dataset.ek))); }
+
+/* --- Ortak veritabanı: bekleyen ekleri gönderir, gelenleri cihaza yazar --- */
+async function belgeGonder(o, s) {
+  if (!['yonetici', 'muhasebe'].includes(ortakRol())) return 0;
+  const l = (await belgeHepsi()).filter(b => b.hesap === H.aktif && !b.gonderildi);
+  for (const b of l) {
+    const j = b.silindi ? '' : JSON.stringify({id: b.id, ad: b.ad, tip: b.tip, boyut: b.boyut, veri: b.veri});
+    await ortakIstek(o, 'POST', `${FS}/v1/${belgeKok(o)}:commit`, {writes: [{update: {name: firmaYol(o, '/ozel/belgeler~' + idTemiz(b.id)), fields: fsAlanlar({k: 'belgeler', j, s: !!b.silindi, u: s.uid})}, updateTransforms: [zYaz()]}]});
+    if (b.silindi) await belgeIslem('readwrite', st => st ? st.delete(b.id) : void belgeBellek.delete(b.id));
+    else await belgeYaz({...b, gonderildi: true});
+  }
+  return l.length;
+}
+async function belgeAl(b) {
+  const id = b._ad.slice('belgeler~'.length);
+  if (b.s) { const y = await belgeOku(id); if (y && y.gonderildi !== false) await belgeIslem('readwrite', st => st ? st.delete(id) : void belgeBellek.delete(id)); return; }
+  try { const v = JSON.parse(b.j); const y = await belgeOku(v.id); if (y && !y.gonderildi) return; await belgeYaz({...v, hesap: H.aktif, tarih: Date.now(), gonderildi: true}); } catch (e) {}
+}
+
 function otomatikKayitBilgi(baslik, ust, alt, bilgi, metin) {
   const m = modal(baslik, `<div class="tutar-kutu">${ust}<div class="soluk" style="font-size:15px;margin-top:4px">${esc(alt)}</div></div>
     <p class="dipnot" style="margin:0 4px 18px">${esc(metin)}</p>
@@ -2690,7 +2843,7 @@ function otomatikKayitBilgi(baslik, ust, alt, bilgi, metin) {
   if (bilgi) $('#kaynagaGit', m).onclick = () => { kapat(); git(bilgi.yol); };
 }
 
-function islemFormu(islem, varsayilanTur, hesapId, fisSonra) {
+function islemFormu(islem, varsayilanTur, hesapId, fisSonra, ilkEk) {
   const t = T();
   if (islem && (islem.kaynak || islem.hareketId)) {
     let bilgi = kaynakBilgi(islem.kaynak);
@@ -2700,7 +2853,7 @@ function islemFormu(islem, varsayilanTur, hesapId, fisSonra) {
       'Bu kayıt başka bir modülden otomatik oluştu. Değiştirmek veya silmek için kaynağındaki kaydı kullanın.');
   }
   const yeni = !islem;
-  const i = islem ? {...islem} : {tur: varsayilanTur || 'gider', tutar: 0, kategori: '', tarih: bugun(), aciklama: '', odeme: hesapId ? HESAP_TUR[finansHesap(hesapId).tur].odeme : 'nakit', hesapId: hesapId || null, kdvOran: 0};
+  const i = islem ? {...islem, ekler: [...(islem.ekler || [])]} : {tur: varsayilanTur || 'gider', tutar: 0, kategori: '', tarih: bugun(), aciklama: '', odeme: hesapId ? HESAP_TUR[finansHesap(hesapId).tur].odeme : 'nakit', hesapId: hesapId || null, kdvOran: 0, ekler: ilkEk ? [ilkEk] : []};
   const kdvAcik = modulAcik('kdv');
   const m = modal(yeni ? 'Yeni kayıt' : 'Kaydı düzenle', `
     <div class="segment">
@@ -2715,9 +2868,17 @@ function islemFormu(islem, varsayilanTur, hesapId, fisSonra) {
       <label class="f-satir"><span>Tarih</span><input type="date" id="fTarih" value="${i.tarih}"></label>
       <label class="f-satir sol"><input type="text" id="fAcik" value="${esc(i.aciklama)}" placeholder="Açıklama (isteğe bağlı)"></label>
     </div>
+    <div class="grup" id="fBelgeGrup">
+      <label class="f-satir"><span>Satıcı / firma</span><input type="text" id="fSatici" value="${esc(i.satici || '')}" placeholder="Fişi kesen firma"></label>
+      <label class="f-satir"><span>Belge no</span><input type="text" id="fBelgeNo" value="${esc(i.belgeNo || '')}" placeholder="Fiş / fatura no"></label>
+    </div>
     ${odemeAlani('odeme', i.odeme, i.hesapId || (islem && D.finansHesap.length ? islemHesapId(islem) : null), i.tur)}
     ${kdvAcik ? `<div class="bolum">KDV oranı (tutara dahil)</div><div class="segment">${KDV_ORAN.map(o => `<label><input type="radio" name="kdv" value="${o}" ${(i.kdvOran || 0) === o ? 'checked' : ''}><span>${o ? '%' + o : 'Yok'}</span></label>`).join('')}</div>` : ''}
+    ${ekAlani('Fiş / belge')}
     ${yeni ? '' : `<div class="grup"><button class="hucre tehlike" id="fSil">Kaydı sil</button></div>`}`, {kaydet: kaydetIslem, kaydetAd: yeni ? 'Ekle' : 'Kaydet'});
+  const ekler = ekBagla(m, i);
+  const belgeGoster1 = () => $('#fBelgeGrup', m).classList.toggle('gizli', $('input[name=tur]:checked', m).value !== 'gider');
+  belgeGoster1();
   const cipCiz = () => {
     const tur = $('input[name=tur]:checked', m).value;
     const secili = $('#fKat', m).value.trim();
@@ -2729,7 +2890,7 @@ function islemFormu(islem, varsayilanTur, hesapId, fisSonra) {
     $('#fKat', m).value = '';
     $('#fTutar', m).className = 'tutar-giris ' + (r.value === 'gelir' ? 'gelir' : 'gider');
     const hs = $('[data-hesap=odeme]', m)?.closest('label')?.querySelector('span'); if (hs) hs.textContent = r.value === 'gelir' ? 'Giren hesap' : 'Çıkan hesap';
-    cipCiz();
+    belgeGoster1(); cipCiz();
   });
   $('#fKat', m).oninput = cipCiz;
   if (yeni) setTimeout(() => $('#fTutar', m).focus(), 320);
@@ -2740,7 +2901,10 @@ function islemFormu(islem, varsayilanTur, hesapId, fisSonra) {
     const kayit = {...i, tutar, tur: $('input[name=tur]:checked', m).value,
       kategori: $('#fKat', m).value.trim() || 'Diğer', tarih: $('#fTarih', m).value || bugun(),
       ...odemeOku('odeme', m), aciklama: $('#fAcik', m).value.trim(),
-      kdvOran, kdv: kdvAyir(tutar, kdvOran)};
+      kdvOran, kdv: kdvAyir(tutar, kdvOran), ekler: i.ekler};
+    if (kayit.tur === 'gider') { kayit.satici = $('#fSatici', m).value.trim(); kayit.belgeNo = $('#fBelgeNo', m).value.trim(); }
+    for (const a of ['satici', 'belgeNo', 'ekler']) if (!kayit[a] || (Array.isArray(kayit[a]) && !kayit[a].length)) delete kayit[a];
+    ekler.kaydedildi();
     if (yeni) { kayit.id = kimlik(); kayit.olusturma = Date.now(); D.islemler.push(kayit); }
     else D.islemler[D.islemler.findIndex(x => x.id === i.id)] = kayit;
     kaydet();
@@ -2750,7 +2914,7 @@ function islemFormu(islem, varsayilanTur, hesapId, fisSonra) {
   }
   if (!yeni) $('#fSil', m).onclick = async () => {
     if (!await onay('Bu kayıt silinsin mi?', `${para(i.tutar)} · ${i.kategori}`)) return;
-    D.islemler = D.islemler.filter(x => x.id !== i.id);
+    ekleriSil(i); D.islemler = D.islemler.filter(x => x.id !== i.id);
     kaydet(); bildir('Silindi'); ciz();
   };
 }
@@ -3283,15 +3447,22 @@ function stokHareketFormu(u, tur) {
 }
 
 /* ================= Fatura / Teklif ================= */
+/* Satır tutarı: miktar × fiyat, varsa satır iskontosu (%) düşülür. KDV iskontolu tutar üzerinden hesaplanır. */
+const kalemBrut = k => Math.round((k.miktar || 0) * (k.fiyat || 0));
+const kalemIsk = k => k.iskonto ? Math.round(kalemBrut(k) * k.iskonto / 100) : 0;
+const kalemNet = k => kalemBrut(k) - kalemIsk(k);
+/* KDV tevkifatı: f.tevkifat = pay (x/10). Tevkif edilen KDV'yi alıcı vergi dairesine öder, faturanın ödenecek tutarından düşer. */
+const TEVKIFAT = [0, 2, 3, 4, 5, 7, 9, 10];
 function faturaHesap(f) {
-  let ara = 0, kdv = 0; const oranlar = {};
+  let brut = 0, iskonto = 0, ara = 0, kdv = 0; const oranlar = {};
   for (const k of f.kalemler || []) {
-    const t = Math.round((k.miktar || 0) * (k.fiyat || 0));
+    const b = kalemBrut(k), i = kalemIsk(k), t = b - i;
     const kd = Math.round(t * (k.kdv || 0) / 100);
-    ara += t; kdv += kd;
+    brut += b; iskonto += i; ara += t; kdv += kd;
     if (k.kdv) oranlar[k.kdv] = (oranlar[k.kdv] || 0) + kd;
   }
-  return {ara, kdv, oranlar, toplam: ara + kdv};
+  const tevkif = f.tevkifat && f.tur !== 'teklif' ? Math.round(kdv * f.tevkifat / 10) : 0;
+  return {brut, iskonto, ara, kdv, oranlar, tevkif, toplam: ara + kdv - tevkif};
 }
 const faturaTurAd = f => ({teklif: 'Teklif', alis: 'Alış faturası'})[f.tur] || 'Fatura';
 const faturaliMi = f => (f.tur === 'fatura' || f.tur === 'alis') && f.durum === 'gonderildi';
@@ -3321,7 +3492,7 @@ const faturaMusteri = f => (f.kisiId && kisi(f.kisiId)?.ad) || f.musteriAd || (f
 function faturaSatiri(f) {
   const [d, r] = faturaDurum(f);
   return `<button class="hucre avatarli" data-fatura="${f.id}"><span class="avatar r-${f.tur === 'teklif' ? 'camgobegi' : f.tur === 'alis' ? 'turuncu' : 'indigo'}">${ikon(f.tur === 'alis' ? 'giris' : 'dosya')}</span>
-    <div class="ic"><b>${esc(faturaMusteri(f))}</b><small>${f.tur === 'alis' ? 'Alış · ' : ''}${esc(f.no)} · ${esc(tarihYaz(f.tarih))}</small></div>
+    <div class="ic"><b>${esc(faturaMusteri(f))}${f.ekler?.length ? ikon('atac', 'ek-isaret') : ''}</b><small>${f.tur === 'alis' ? 'Alış · ' : ''}${esc(f.no)} · ${esc(tarihYaz(f.tarih))}</small></div>
     <span class="tutar">${para(faturaHesap(f).toplam)}<small><span class="hap ${r}" style="margin:0">${d}</span>${faturaliMi(f) && !f.odendi && faturaOdenen(f) ? `<br>kalan ${para(faturaKalan(f))}` : ''}</small></span>${CHEV}</button>`;
 }
 function faturaTiklari(kok = document) { $$('[data-fatura]', kok).forEach(b => b.onclick = () => git('fatura/' + b.dataset.fatura)); }
@@ -3379,8 +3550,10 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null) {
     <div class="bolum">Kalemler</div>
     <div id="kalemler"></div>
     <div class="btn-grup">${stok && D.urunler.length ? `<button class="btn renkli" id="stoktanEkle">${ikon('kutu')} Stoktan</button>` : ''}<button class="btn renkli" id="kalemEkle">${ikon('arti')} Kalem ekle</button></div>
+    ${!teklif ? `<div class="grup"><label class="f-satir"><span>KDV tevkifatı</span><select id="fTevkif">${TEVKIFAT.map(o => `<option value="${o}" ${(x.tevkifat || 0) === o ? 'selected' : ''}>${o ? o + '/10' : 'Yok'}</option>`).join('')}</select></label></div>` : ''}
     <div class="grup" id="toplamlar"></div>
     <div class="grup"><label class="f-satir sol"><textarea id="fNot" placeholder="Not (ödeme koşulları vb.)">${esc(x.not)}</textarea></label></div>
+    ${!teklif ? ekAlani(alisF ? 'Fatura belgesi (PDF veya fotoğraf)' : 'Ekler') : ''}
     ${!teklif ? `<div class="grup">
       ${ver ? `<label class="f-satir" id="cariSatir"><span style="flex:1">${alisF ? 'Cari hesaba alacak yaz' : 'Cari hesaba borç yaz'}</span>${anahtar('fCari', x.cariyeIsle)}</label>` : ''}
       ${stok ? `<label class="f-satir"><span style="flex:1">${alisF ? 'Stoğa ekle' : 'Stoktan düş'}</span>${anahtar('fStok', x.stokDus)}</label>` : ''}
@@ -3391,16 +3564,18 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null) {
   cariGoster();
   const toplamCiz = () => {
     const t = faturaHesap(x);
-    $('#toplamlar', m).innerHTML = `<div class="hucre"><div class="ic"><b>Ara toplam</b></div><span class="deger sayi">${para(t.ara)}</span></div>
+    $('#toplamlar', m).innerHTML = `${t.iskonto ? `<div class="hucre"><div class="ic"><b>Brüt toplam</b></div><span class="deger sayi">${para(t.brut)}</span></div><div class="hucre"><div class="ic"><b>İskonto</b></div><span class="deger sayi">−${para(t.iskonto)}</span></div>` : ''}
+      <div class="hucre"><div class="ic"><b>Ara toplam</b></div><span class="deger sayi">${para(t.ara)}</span></div>
       ${Object.entries(t.oranlar).map(([o, v]) => `<div class="hucre"><div class="ic"><b>KDV %${o}</b></div><span class="deger sayi">${para(v)}</span></div>`).join('')}
-      <div class="hucre"><div class="ic"><b class="k">Genel toplam</b></div><span class="tutar" style="font-weight:700">${para(t.toplam)}</span></div>`;
+      ${t.tevkif ? `<div class="hucre"><div class="ic"><b>KDV tevkifatı (${x.tevkifat}/10)</b><small>${alisF ? '2 No.lu KDV ile siz ödersiniz' : 'Alıcı öder'}</small></div><span class="deger sayi">−${para(t.tevkif)}</span></div>` : ''}
+      <div class="hucre"><div class="ic"><b class="k">${t.tevkif ? 'Ödenecek tutar' : 'Genel toplam'}</b></div><span class="tutar" style="font-weight:700">${para(t.toplam)}</span></div>`;
   };
   const kalemCiz = () => {
     $('#kalemler', m).innerHTML = x.kalemler.map((k, i) => `<div class="kalem" data-k="${i}">
       <div class="f-satir sol kalem-ad"><input type="text" data-a="kod" value="${esc(k.kod || (k.urunId && urun(k.urunId)?.kod) || '')}" placeholder="Parça no" class="kalem-kod"><input type="text" data-a="ad" value="${esc(k.ad)}" placeholder="Ürün / hizmet açıklaması"></div>
-      <div class="f-satir"><input data-a="miktar" inputmode="decimal" value="${k.miktar ? sayiFmt(k.miktar) : ''}" placeholder="Miktar" style="text-align:left;flex:0 0 22%"><span class="soluk" style="flex:none;min-width:0;margin-right:auto">${esc(k.birim || 'adet')} ×</span><input data-a="fiyat" inputmode="decimal" value="${tutarYaz(k.fiyat)}" placeholder="Birim fiyat ₺"></div>
+      <div class="f-satir"><input data-a="miktar" inputmode="decimal" value="${k.miktar ? sayiFmt(k.miktar) : ''}" placeholder="Miktar" style="text-align:left;flex:0 0 22%"><span class="soluk" style="flex:none;min-width:0;margin-right:auto">${esc(k.birim || 'adet')} ×</span><input data-a="fiyat" inputmode="decimal" value="${tutarYaz(k.fiyat)}" placeholder="Birim fiyat ₺">${teklif ? '' : `<input data-a="iskonto" inputmode="decimal" value="${k.iskonto ? sayiFmt(k.iskonto) : ''}" placeholder="İsk. %" class="kalem-isk" aria-label="İskonto yüzdesi">`}</div>
       <div class="kalem-alt"><div class="kdv-sec">${KDV_ORAN.map(o => `<button type="button" data-kdv="${o}" class="${(k.kdv || 0) === o ? 'secili' : ''}">%${o}</button>`).join('')}</div>
-        <span class="sayi" data-tutar>${para(Math.round((k.miktar || 0) * (k.fiyat || 0)))}</span>${x.kalemler.length > 1 ? `<button type="button" data-sil>Sil</button>` : ''}</div></div>`).join('');
+        <span class="sayi" data-tutar>${para(kalemNet(k))}</span>${x.kalemler.length > 1 ? `<button type="button" data-sil>Sil</button>` : ''}</div></div>`).join('');
     $$('.kalem', m).forEach(el => {
       const k = x.kalemler[+el.dataset.k];
       $$('input[data-a]', el).forEach(inp => inp.oninput = () => {
@@ -3408,8 +3583,9 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null) {
         if (a === 'ad') k.ad = inp.value;
         else if (a === 'kod') k.kod = inp.value.trim();
         else if (a === 'miktar') k.miktar = sayiOku(inp.value) || 0;
+        else if (a === 'iskonto') { const v = Math.min(100, Math.max(0, sayiOku(inp.value) || 0)); if (v) k.iskonto = v; else delete k.iskonto; }
         else k.fiyat = tutarOku(inp.value) || 0;
-        $('[data-tutar]', el).textContent = para(Math.round((k.miktar || 0) * (k.fiyat || 0)));
+        $('[data-tutar]', el).textContent = para(kalemNet(k));
         toplamCiz();
       });
       $$('[data-kdv]', el).forEach(b => b.onclick = () => { k.kdv = +b.dataset.kdv; $$('[data-kdv]', el).forEach(y => y.classList.toggle('secili', y === b)); toplamCiz(); });
@@ -3418,6 +3594,8 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null) {
     toplamCiz();
   };
   kalemCiz();
+  const ekler = teklif ? null : ekBagla(m, x);
+  if ($('#fTevkif', m)) $('#fTevkif', m).onchange = e => { x.tevkifat = +e.target.value; if (!x.tevkifat) delete x.tevkifat; toplamCiz(); };
   $('#kalemEkle', m).onclick = () => { x.kalemler.push(yeniKalem(x.kalemler[x.kalemler.length - 1]?.kdv ?? 20)); kalemCiz(); $$('.kalem input[data-a=ad]', m).pop().focus(); };
   if ($('#stoktanEkle', m)) $('#stoktanEkle', m).onclick = () => urunSec(u => {
     const kalem = {ad: u.ad, kod: u.kod || '', urunId: u.id, miktar: 1, birim: u.birim, fiyat: alisF ? (u.alis || 0) : u.satis, kdv: u.kdvOran ?? 20};
@@ -3450,6 +3628,8 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null) {
     if (yeni) { x.id = kimlik(); x.olusturma = Date.now(); D.faturalar.push(x); }
     else D.faturalar[D.faturalar.findIndex(y => y.id === x.id)] = x;
     faturaTuret(x);
+    if (ekler) ekler.kaydedildi();
+    if (!x.ekler?.length) delete x.ekler;
     kaydet(); bildir(yeni ? (teklif ? 'Teklif oluşturuldu' : alisF ? 'Alış faturası kaydedildi' : 'Fatura oluşturuldu') : 'Kaydedildi');
     setTimeout(() => git('fatura/' + x.id, !yeni), 10);
     setTimeout(() => riskUyari(x), 2600);
@@ -3499,7 +3679,7 @@ function alisTuret(f) {
   const t = faturaHesap(f), kaynak = {tip: 'fatura', id: f.id}, ad = `Alış faturası ${f.no}`;
   const cari = f.kisiId && f.cariyeIsle && modulAcik('veresiye') && kisi(f.kisiId);
   if (f.stokDus && modulAcik('stok')) for (const k of f.kalemler) if (k.urunId && urun(k.urunId))
-    D.stokHareket.push({id: kimlik(), urunId: k.urunId, tur: 'giris', miktar: k.miktar, birimFiyat: k.fiyat, tarih: f.tarih, aciklama: `${ad} · ${faturaMusteri(f)}`, kaynak, olusturma: Date.now()});
+    D.stokHareket.push({id: kimlik(), urunId: k.urunId, tur: 'giris', miktar: k.miktar, birimFiyat: k.iskonto && k.miktar ? kalemNet(k) / k.miktar : k.fiyat, tarih: f.tarih, aciklama: `${ad} · ${faturaMusteri(f)}`, kaynak, olusturma: Date.now()});
   if (cari) D.hareketler.push({id: kimlik(), kisiId: f.kisiId, tur: 'alis', tutar: t.toplam, tarih: f.tarih, aciklama: ad, kaynak, olusturma: Date.now()});
   odemeTuret(f, cari, ad, kaynak);
 }
@@ -3574,12 +3754,13 @@ function faturaKagit(f) {
       <div style="text-align:right"><b>${esc(D.ad || 'İşletme adı')}</b><div class="gri">${[F.adres, F.vd && 'V.D.: ' + F.vd, F.vno && 'V.No: ' + F.vno, F.tel, F.eposta].filter(Boolean).map(esc).join('<br>')}</div></div></div>
     <div class="gri" style="margin-bottom:4px">${f.tur === 'alis' ? 'SATICI' : 'SAYIN'}</div><b>${esc(faturaMusteri(f))}</b>
     ${k ? `<div class="gri">${[[k.adres, k.il].filter(Boolean).join(', '), [k.vd && 'V.D.: ' + k.vd, k.vno && 'V.No/TC: ' + k.vno].filter(Boolean).join(' · '), k.tel].filter(Boolean).map(esc).join('<br>')}</div>` : ''}
-    <table><thead><tr><th>Açıklama</th><th class="sg">Miktar</th><th class="sg">Fiyat</th><th class="sg">KDV</th><th class="sg">Tutar</th></tr></thead><tbody>
-      ${f.kalemler.map(x => `<tr><td>${esc(x.ad)}</td><td class="sg">${sayiFmt(x.miktar)} ${esc(x.birim || '')}</td><td class="sg">${para(x.fiyat)}</td><td class="sg">%${x.kdv || 0}</td><td class="sg">${para(Math.round(x.miktar * x.fiyat))}</td></tr>`).join('')}
+    <table><thead><tr><th>Açıklama</th><th class="sg">Miktar</th><th class="sg">Fiyat</th>${t.iskonto ? '<th class="sg">İsk.</th>' : ''}<th class="sg">KDV</th><th class="sg">Tutar</th></tr></thead><tbody>
+      ${f.kalemler.map(x => `<tr><td>${esc(x.ad)}</td><td class="sg">${sayiFmt(x.miktar)} ${esc(x.birim || '')}</td><td class="sg">${para(x.fiyat)}</td>${t.iskonto ? `<td class="sg">${x.iskonto ? '%' + sayiFmt(x.iskonto) : ''}</td>` : ''}<td class="sg">%${x.kdv || 0}</td><td class="sg">${para(kalemNet(x))}</td></tr>`).join('')}
     </tbody></table>
-    <div class="toplamlar"><div><span>Ara toplam</span><span>${para(t.ara)}</span></div>
+    <div class="toplamlar">${t.iskonto ? `<div><span>Brüt toplam</span><span>${para(t.brut)}</span></div><div><span>İskonto</span><span>−${para(t.iskonto)}</span></div>` : ''}<div><span>Ara toplam</span><span>${para(t.ara)}</span></div>
       ${Object.entries(t.oranlar).map(([o, v]) => `<div><span>KDV %${o}</span><span>${para(v)}</span></div>`).join('')}
-      <div class="genel"><span>Genel toplam</span><span>${para(t.toplam)}</span></div></div>
+      ${t.tevkif ? `<div><span>KDV tevkifatı (${f.tevkifat}/10)</span><span>−${para(t.tevkif)}</span></div>` : ''}
+      <div class="genel"><span>${t.tevkif ? 'Ödenecek tutar' : 'Genel toplam'}</span><span>${para(t.toplam)}</span></div></div>
     ${f.not || F.iban ? `<div class="gri" style="margin-top:14px">${f.not ? esc(f.not).replace(/\n/g, '<br>') : ''}${F.iban ? `${f.not ? '<br>' : ''}IBAN: ${esc(F.iban)}` : ''}</div>` : ''}
   </div>`;
 }
@@ -3656,9 +3837,11 @@ function faturaEkrani(id) {
     ${faturaliMi(f) && f.odemeler.length ? `<div class="bolum">${alis ? 'Ödemeler' : 'Tahsilatlar'}</div><div class="grup">${[...f.odemeler].sort((a, c) => c.tarih.localeCompare(a.tarih)).map(o =>
       `<button class="hucre kareli" data-odeme="${o.id}">${kare(o.odeme === 'kart' ? 'kart' : o.odeme === 'nakit' ? 'para' : 'banka', alis ? 'turuncu' : 'yesil')}<div class="ic"><b>${esc(odemeAdi[o.odeme] || 'Ödeme')}</b><small>${esc(tarihYaz(o.tarih, true))}</small></div><span class="tutar ${alis ? 'gider' : 'gelir'}">${para(o.tutar)}</span></button>`).join('')}</div>` : ''}
     ${f.servisId && servis(f.servisId) ? `<div class="grup"><a class="hucre kareli" href="#/servis/${f.servisId}">${kare('alet', 'mor')}<div class="ic"><b>Servis ${esc(servis(f.servisId).no)}</b><small>Bu fatura servisten oluşturuldu</small></div>${CHEV}</a></div>` : ''}
+    ${ekListesiHtml(f)}
     <div class="bolum">Önizleme</div>
     <div class="kagit-kap">${faturaKagit(f)}</div>`;
   $('#icerik').innerHTML = h;
+  ekListesiBagla(f);
   if ($('#fDuzenle')) $('#fDuzenle').onclick = () => faturaFormu(f);
   const yenile = () => { faturaTuret(f); kaydet(); ciz(); };
   if ($('#fOdeme')) $('#fOdeme').onclick = () => odemeFormu(f);
@@ -3698,7 +3881,7 @@ function faturaEkrani(id) {
       f.durum = 'iptal'; yenile();
     } else if (s === 'sil') {
       if (!await onay(`${f.no} silinsin mi?`, 'Cari, stok ve kasa etkileri de silinir.')) return;
-      turetilenleriSil(f.id);
+      turetilenleriSil(f.id); ekleriSil(f);
       D.faturalar = D.faturalar.filter(x => x.id !== f.id);
       for (const y of D.faturalar) if (y.donustu === f.id) delete y.donustu;
       for (const y of D.servisler) if (y.faturaId === f.id) delete y.faturaId;
@@ -5107,10 +5290,10 @@ async function hedefIslem(g) {
 /* ================= KDV ve vergi takvimi ================= */
 function kdvAy(ay) {
   const [bas, son] = ayAraligi(ay);
-  let satisF = 0, alisF = 0, digerGelir = 0, digerGider = 0;
-  for (const f of D.faturalar) if (faturaliMi(f) && f.tarih >= bas && f.tarih <= son) f.tur === 'alis' ? alisF += faturaHesap(f).kdv : satisF += faturaHesap(f).kdv;
+  let satisF = 0, alisF = 0, digerGelir = 0, digerGider = 0, satisTevkif = 0, kdv2 = 0;
+  for (const f of D.faturalar) if (faturaliMi(f) && f.tarih >= bas && f.tarih <= son) { const t = faturaHesap(f); if (f.tur === 'alis') { alisF += t.kdv; kdv2 += t.tevkif; } else { satisF += t.kdv - t.tevkif; satisTevkif += t.tevkif; } }
   for (const i of D.islemler) if (i.tarih >= bas && i.tarih <= son && i.kdv && i.kaynak?.tip !== 'fatura') i.tur === 'gelir' ? digerGelir += i.kdv : digerGider += i.kdv;
-  return {satisF, alisF, digerGelir, digerGider, hesaplanan: satisF + digerGelir, indirilecek: alisF + digerGider};
+  return {satisF, alisF, digerGelir, digerGider, satisTevkif, kdv2, hesaplanan: satisF + digerGelir, indirilecek: alisF + digerGider};
 }
 function kdvDevir(ay) {
   const tarihler = [...D.islemler.map(i => i.tarih), ...D.faturalar.map(f => f.tarih)].filter(Boolean).sort();
@@ -5173,6 +5356,7 @@ function kdvEkrani() {
 function vergiOzet(ay) {
   const k = kdvAy(ay), fark = k.hesaplanan - k.indirilecek - kdvDevir(ay), sonraki = ayKaydir(ay, 1);
   const kalemler = [{ad: 'KDV', alt: fark >= 0 ? `Hesaplanan ${para(k.hesaplanan)}` : `${para(-fark)} sonraki aya devreder`, tutar: Math.max(0, fark), vade: `${sonraki}-28`, git: 'kdv'}];
+  if (k.kdv2) kalemler.push({ad: '2 No.lu KDV (tevkifat)', alt: 'Alış faturalarında tevkif edilen KDV', tutar: k.kdv2, vade: `${sonraki}-28`, git: 'kdv'});
   if (modulAcik('personel') && D.personeller.length) {
     const t = bordroToplam(ay);
     kalemler.push({ad: 'Muhtasar (ücret stopajı)', alt: `GV ${para(t.gv)} + DV ${para(t.dv)}`, tutar: t.muhtasar, vade: `${sonraki}-26`});
@@ -5204,6 +5388,9 @@ function kdvBolum(ay) {
       <div class="hucre"><div class="ic"><b class="k">İndirilecek KDV</b></div><span class="tutar">−${para(k.indirilecek)}</span></div>
       <div class="hucre"><div class="ic"><b>Önceki aydan devreden</b></div><span class="deger">−${para(devreden)}</span></div>
     </div>
+    ${k.satisTevkif || k.kdv2 ? `<div class="bolum">Tevkifat</div><div class="grup">
+      ${k.satisTevkif ? `<div class="hucre"><div class="ic"><b>Satışlarda alıcının ödeyeceği KDV</b><small>Satış KDV'sinden düşüldü</small></div><span class="deger">${para(k.satisTevkif)}</span></div>` : ''}
+      ${k.kdv2 ? `<div class="hucre"><div class="ic"><b class="k">2 No.lu KDV (sorumlu sıfatıyla)</b><small>Alış faturalarındaki tevkif edilen KDV, ayrıca beyan edilip ödenir</small></div><span class="tutar">${para(k.kdv2)}</span></div>` : ''}</div>` : ''}
     <p class="dipnot">Kesilen ve alınan faturaların KDV'si otomatik sayılır. Faturası olmayan kasa kayıtlarında KDV oranı seçilirse onlar da eklenir. Taslak ve iptal faturalar sayılmaz.</p>`;
 }
 function gelirVergisiBolum(ay) {
@@ -5371,7 +5558,7 @@ function karZarar(bas, son) {
   const servisHasilat = sf.filter(f => f.servisId).reduce((s, f) => s + faturaHesap(f).ara, 0);
   let smm = 0;
   for (const h of D.stokHareket) if (h.tur === 'cikis' && !h.sayim && ic(h.tarih)) { const u = urun(h.urunId); if (u) smm += Math.round(h.miktar * urunMaliyet(u)); }
-  const stoksuzAlis = af.reduce((s, f) => s + f.kalemler.filter(k => !k.urunId || !f.stokDus || !modulAcik('stok')).reduce((t, k) => t + Math.round(k.miktar * k.fiyat), 0), 0);
+  const stoksuzAlis = af.reduce((s, f) => s + f.kalemler.filter(k => !k.urunId || !f.stokDus || !modulAcik('stok')).reduce((t, k) => t + kalemNet(k), 0), 0);
   const gelirKat = {}, giderKat = {};
   let digerGelir = 0, gider = 0;
   for (const i of D.islemler) {
@@ -5493,7 +5680,7 @@ function faturaRaporlari(bas, son) {
   if (sf.length) {
     const mus = {}, ur = {};
     for (const f of sf) { const ad = faturaMusteri(f); mus[ad] = (mus[ad] || 0) + faturaHesap(f).ara;
-      for (const x of f.kalemler) { const t = Math.round(x.miktar * x.fiyat); (ur[x.ad] ||= {t: 0, m: 0, b: x.birim || ''}); ur[x.ad].t += t; ur[x.ad].m += x.miktar; } }
+      for (const x of f.kalemler) { const t = kalemNet(x); (ur[x.ad] ||= {t: 0, m: 0, b: x.birim || ''}); ur[x.ad].t += t; ur[x.ad].m += x.miktar; } }
     const liste = (o, f) => Object.entries(o).sort((a, b) => f(b[1]) - f(a[1])).slice(0, 5);
     const enb = l => Math.max(1, ...l.map(x => x[1].t ?? x[1]));
     const m5 = liste(mus, v => v), u5 = liste(ur, v => v.t);
@@ -6197,7 +6384,7 @@ async function ortakGonder() {
     for (const key of goc) if (!ozelde.has(key)) delete iz.ozet[key];
   }
   const f = ortakFarklar(iz);
-  if (!f.length && !goc.length) { if (!iz.goc27) { iz.goc27 = true; izYaz(iz); } return 0; }
+  if (!f.length && !goc.length) { if (!iz.goc27) { iz.goc27 = true; izYaz(iz); } return belgeGonder(o, s); }
   const toplu = f.length > 40 || goc.length > 0;
   if (goc.length) {
     for (let i = 0; i < goc.length; i += 400)
@@ -6218,7 +6405,7 @@ async function ortakGonder() {
     izYaz(iz);
   }
   if (!iz.goc27) { iz.goc27 = true; izYaz(iz); }
-  return f.length;
+  return f.length + await belgeGonder(o, s);
 }
 
 /* --- Çek: sunucu zamanı (z) son çekilenden büyük olan belgeler. Yerelde gönderilmemiş değişikliği olan kayıt ezilmez. --- */
@@ -6291,7 +6478,7 @@ async function ortakCekBolum(o, bolum, alan, gorulen) {
     iz = izOku();   // gönderim arada izi güncellemiş olabilir
     let son = iz[alan] || '';
     // Gizli kayıtlar yalnızca "ozel"den alınır; "kayit"teki eski kopyaları ve boşaltma işaretleri yok sayılır.
-    for (const b of l) { if (gorulen && !b.s) gorulen.add(b._ad); if ((bolum === 'ozel') === ozelMi(b.k) && ortakUygula(b, iz)) n++; const z = zNorm(b.z); if (z > son) son = z; }
+    for (const b of l) { if (gorulen && !b.s) gorulen.add(b._ad); if (b.k === 'belgeler') { if (bolum === 'ozel') await belgeAl(b); } else if ((bolum === 'ozel') === ozelMi(b.k) && ortakUygula(b, iz)) n++; const z = zNorm(b.z); if (z > son) son = z; }
     const ilerledi = son !== (iz[alan] || '');
     iz[alan] = son; izYaz(iz);
     if (l.length < 500 || !ilerledi) break;

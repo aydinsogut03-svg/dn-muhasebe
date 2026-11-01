@@ -34,6 +34,7 @@ Görsel dil iOS tarzı yumuşak görünüm (2.2): açık zemin, beyaz kartlar, b
 - **Kullanıcılar**: her modül için erişim seviyesi (kapalı, görüntüle, ekle ve düzenle, tam). Rol üst sınırdır; seviye uygulamada uygulanır, gizli finans verilerinin servis rolüne inmemesi sunucu kuralıyla korunur.
 - **Modüller** sayfasında her modül için aç/kapat anahtarı. Ayarlar sadeleşti: firma bilgileri ve servis formu ayrı formda.
 - 2.8.1: Sol menü gruplu: Satış (Teklifler, Faturalar, Satışlar), Servis (Servis fişleri, Stoklar), Muhasebe (Fatura, Banka ve kasa, Gelir/Gider, Cari, Vergi, Raporlar), Personel. Masaüstünde yana açılan kırılım (grup › modül › işlemler ve raporlar), telefonda aynı ağaç aşağı açılır. Sayfa üstündeki düğme satırları kaldırıldı.
+- 2.9.0: Fatura ve gider girişi (ticari sürüm 1. aşama). Faturada satır iskontosu ve KDV tevkifatı (2/10 ile 10/10 arası; satışta alıcının ödeyeceği KDV satış KDV'sinden düşer, alışta 2 No.lu KDV olarak vergi ekranında görünür). Faturaya ve gelir/gider kaydına PDF veya fotoğraf eki; telefonda "Fiş çek" kamerayı açar, fotoğraf ekli gider formu gelir. Giderde satıcı ve belge no. Ekler cihazda IndexedDB'de durur, ortak veritabanında yönetici ve muhasebe arasında eşitlenir (servis rolü görmez); JSON ve Drive yedeğine girmez.
 
 ## Servis modülü
 
