@@ -55,3 +55,47 @@ jobs:
           git add .
           git -c user.name="APK derle" -c user.email="actions@users.noreply.github.com" commit -qm "PowerServ+ $SURUM APK"
           git push -fq "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" apk
+
+  pc:
+    # Windows kurulum dosyası (PowerServ-Kurulum-<sürüm>.exe): masaüstü kısayolu ve DN logosu ile.
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Windows kurulum dosyası derle
+        run: |
+          SURUM=$(sed -n 's/.*versionName = "\(.*\)".*/\1/p' app/build.gradle.kts)
+          cd masaustu
+          mkdir -p app
+          cp ../web/index.html app/index.html
+          cp build/icon.png app/icon.png
+          npm pkg set version="$SURUM"
+          npm install --no-audit --no-fund
+          npx electron-builder --win --publish never
+          ls -la dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: powerserv-windows
+          path: masaustu/dist/*.exe
+
+      - name: Kurulum dosyasını "pc" dalına koy (proje dosyalarına aktarmak için)
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/pc && cp masaustu/dist/*.exe /tmp/pc/
+          cd /tmp/pc
+          git init -q -b pc
+          git add .
+          git -c user.name="APK derle" -c user.email="actions@users.noreply.github.com" commit -qm "PowerServ+ Windows kurulum dosyası"
+          git push -fq "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" pc

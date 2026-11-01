@@ -90,3 +90,7 @@ Açık faturaların vadesinden 3 gün önce ve vade günü, vergi takvimindeki b
 ## Örnek veri ve PIN kilidi
 
 Örnek veri özelliği 2.5'te kaldırıldı; daha önce açılmış örnek hesaplar ilk açılışta silinir (gerçek hesaplara dokunulmaz). Ayarlar > Güvenlik'ten 4 haneli PIN kilidi açılabilir: uygulama açılışta ve arka planda 30 saniyeden uzun kaldıktan sonra PIN sorar.
+
+## Windows uygulaması
+
+`masaustu/` klasörü programı Electron ile kurulabilir bir Windows uygulamasına çevirir (`PowerServ-Kurulum-<sürüm>.exe`). Kurulum masaüstüne ve Başlat menüsüne "PowerServ+" kısayolu ekler, simge DN logosudur. Uygulama `web/index.html`'in aynısını açar; her bilgisayarda Ayarlar > Ortak veritabanı > Mevcut firmaya bağlan ile e-posta ve şifreyle girilir, veriler Firebase üzerinden diğer bilgisayar ve telefonlarla eşitlenir. Kurulum dosyası CI'da `windows-latest` üzerinde derlenir. Dosya imzasız olduğundan Windows ilk açılışta "Windows bilgisayarınızı korudu" uyarısı verebilir: "Ek bilgi > Yine de çalıştır".
