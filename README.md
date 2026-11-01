@@ -33,7 +33,7 @@ Görsel dil iOS tarzı yumuşak görünüm (2.2): açık zemin, beyaz kartlar, b
 - **Teklif** ayrı modül: gönderilen teklifler listesi, durum (yanıt bekliyor, kabul, red, süresi doldu, faturalandı), sade okuma sayfası; resmî form "Teklif formu > Göster" veya PDF ile.
 - **Kullanıcılar**: her modül için erişim seviyesi (kapalı, görüntüle, ekle ve düzenle, tam). Rol üst sınırdır; seviye uygulamada uygulanır, gizli finans verilerinin servis rolüne inmemesi sunucu kuralıyla korunur.
 - **Modüller** sayfasında her modül için aç/kapat anahtarı. Ayarlar sadeleşti: firma bilgileri ve servis formu ayrı formda.
-- Sol menü yalnızca modüllerden oluşur; işlemler ve raporlar modül sayfasının üstünde iki satır.
+- 2.8.1: Sol menü gruplu: Satış (Teklifler, Faturalar, Satışlar), Servis (Servis fişleri, Stoklar), Muhasebe (Fatura, Banka ve kasa, Gelir/Gider, Cari, Vergi, Raporlar), Personel. Masaüstünde yana açılan kırılım (grup › modül › işlemler ve raporlar), telefonda aynı ağaç aşağı açılır. Sayfa üstündeki düğme satırları kaldırıldı.
 
 ## Servis modülü
 

@@ -1150,6 +1150,34 @@ html.apk button.bag:active{opacity:.45}
 html.apk .hucre{transition:background-color .25s;-webkit-tap-highlight-color:transparent}
 html.apk .bildirim{border-radius:14px}
 /* ================= 2.8: sıkı yerleşim ve EŞİTLE düğmesi ================= */
+/* 2.8.1: yana açılan kırılım menü */
+.uc-menu{position:fixed;left:310px;top:80px;z-index:70;display:none;align-items:flex-start;gap:0;pointer-events:none}
+.uc-menu.acik{display:flex}
+.uc-kolon{pointer-events:auto;background:var(--kart);border:1px solid var(--kenar);box-shadow:0 10px 32px rgba(15,25,45,.18);border-radius:var(--r,6px);padding:6px;min-width:230px;max-height:calc(100vh - 24px);overflow-y:auto;animation:belir .16s ease both}
+.uc-alt{display:none;margin-left:-1px;min-width:250px}
+.uc-alt.acik{display:block}
+.uc-baslik{font-size:11px;font-weight:700;color:var(--ikincil);text-transform:uppercase;letter-spacing:.06em;padding:6px 10px 4px}
+.uc-oge{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:6px 10px;border-radius:6px;font:inherit;font-size:14.5px;font-weight:500;color:var(--yazi);text-align:left;cursor:pointer;min-height:38px}
+.uc-oge .kare{width:26px;height:26px;border-radius:7px;flex:none}.uc-oge .kare svg{width:15px;height:15px}
+.uc-oge .ad{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.uc-oge .rozet{font-size:11.5px;color:var(--ikincil)}
+.uc-oge .rozet.uyar{background:var(--kirmizi);color:#fff;border-radius:99px;padding:1px 7px}
+.uc-oge .c-ok{width:14px;height:14px;color:var(--ucuncul)}
+.uc-oge:hover,.uc-oge.uc-secili{background:color-mix(in srgb,var(--mavi) 10%,transparent);color:var(--mavi)}
+.uc-kolon .c-alt-menu{margin:0;padding:0;border:0;animation:none}
+.uc-kolon .c-alt-menu a{min-height:34px!important;font-size:14px!important;color:var(--yazi)!important;text-decoration:none!important}
+.c-alt-menu a{text-decoration:none!important}
+.uc-kolon .c-alt-menu a:hover{background:color-mix(in srgb,var(--mavi) 10%,transparent)}
+.uc-kolon .c-alt-baslik,.c-agac .c-alt-baslik{font-size:10.5px;font-weight:700;color:var(--ikincil);text-transform:uppercase;letter-spacing:.06em;padding:8px 10px 3px}
+#cekmece [data-grup] .c-ok{width:15px;height:15px;color:var(--ucuncul);margin-left:auto;transition:transform .2s}
+#cekmece [data-grup].acik .c-ok{transform:rotate(90deg)}
+#cekmece [data-grup].uc-acik{background:color-mix(in srgb,var(--mavi) 12%,transparent)}
+.c-agac{margin:2px 0 6px 18px;padding-left:8px;border-left:1px solid var(--kenar)}
+.c-agac-oge{display:flex;align-items:center}
+.c-agac-oge .uc-oge{flex:1;min-width:0}
+.c-ac{border:0;background:none;padding:8px 10px;color:var(--ikincil);cursor:pointer}
+.c-ac .c-ok{width:15px;height:15px;transition:transform .2s}.c-ac .c-ok.don{transform:rotate(90deg)}
+.c-agac .c-alt-menu{margin:0 0 4px 30px}
 /* 2.8: alt menü şeridi iki satır — İşlemler ve Raporlar */
 .alt-serit{display:block!important;overflow:visible!important}
 .alt-serit .as-satir{display:flex;align-items:center;gap:10px;margin-bottom:6px;min-width:0}
@@ -1243,7 +1271,7 @@ select.secim{height:38px;border:1px solid var(--kenar);border-radius:var(--r,6px
 
 <script>
 'use strict';
-const VERSIYON = '2.8.0';
+const VERSIYON = '2.8.1';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -1780,24 +1808,97 @@ function rozet(id) {
   return '';
 }
 const grafikGenislik = (en = 330) => Math.round(Math.min(1100, Math.max(en, (($('#icerik') || {}).clientWidth || 360) - 34)));
+/* 2.8.1: ana menü grupları ve yana açılan kırılım.
+   Masaüstünde gruba dokununca yanında modüller açılır, modülün üstüne gelince işlemler ve raporlar bir sütun daha sağda açılır.
+   Telefonda aynı ağaç çekmecenin içinde aşağı doğru açılır. */
+const MENU_AGAC = [
+  {id: 'satis', ad: 'Satış', simge: 'dosya', renk: 'indigo', ogeler: [
+    {ad: 'Teklifler', modul: 'teklif', yol: 'teklif', alt: 'teklif'},
+    {ad: 'Faturalar', modul: 'fatura', yol: () => { ui.faturaFiltre = 'satis'; git('fatura', true); ciz(); }, alt: 'fatura', simge: 'dosya'},
+    {ad: 'Satışlar', modul: 'fatura', yol: 'fatura/r-satis', simge: 'grafik', renk: 'yesil'}]},
+  {id: 'servis', ad: 'Servis', simge: 'alet', renk: 'mor', ogeler: [
+    {ad: 'Servis fişleri', modul: 'servis', yol: 'servis', alt: 'servis'},
+    {ad: 'Stoklar', modul: 'stok', yol: 'stok', alt: 'stok'}]},
+  {id: 'muhasebe', ad: 'Muhasebe', simge: 'defter', renk: 'turuncu', ogeler: [
+    {ad: 'Fatura', modul: 'fatura', yol: () => { ui.faturaFiltre = 'hepsi'; git('fatura', true); ciz(); }, alt: 'fatura'},
+    {ad: 'Banka ve kasa', modul: 'banka', yol: 'banka', alt: 'banka'},
+    {ad: 'Gelir/Gider', modul: 'kasa', yol: 'kasa', alt: 'kasa'},
+    {ad: 'Cari hesaplar', modul: 'veresiye', yol: 'veresiye', alt: 'veresiye'},
+    {ad: 'Vergi', modul: 'kdv', yol: 'kdv', alt: 'kdv'},
+    {ad: 'Raporlar', modul: 'rapor', yol: 'rapor', alt: 'rapor'}]},
+  {id: 'personel', ad: 'Personel', simge: 'kisiler', renk: 'camgobegi', tek: 'personel'}
+];
+const grupOgeleri = g => g.tek ? [] : g.ogeler.filter(o => modulAcik(o.modul));
+const grupGorunur = g => g.tek ? modulAcik(g.tek) : grupOgeleri(g).length > 0;
+function grupModulu(aktif) {
+  const ic = g => g.tek ? g.tek === aktif : g.ogeler.some(o => o.modul === aktif);
+  const s = MENU_AGAC.find(g => g.id === ui.menuGrup && ic(g));
+  return (s || MENU_AGAC.find(ic) || {}).id;
+}
+function ogeGit(o) { cekmeceKapat(); ucKapat(); if (typeof o.yol === 'function') o.yol(); else git(o.yol, true); }
+const ogeSatir = (o, i, ek = '') => { const m = modul(o.modul); return `<button class="uc-oge" data-oi="${i}">${kare(o.simge || m.simge, o.renk || m.renk)}<span class="ad">${esc(o.ad)}</span>${rozet(o.modul)}${o.alt ? ikon('ileri', 'c-ok') : ''}${ek}</button>`; };
+function ucMenu() {
+  let u = $('#ucMenu');
+  if (!u) { u = document.createElement('div'); u.id = 'ucMenu'; u.className = 'uc-menu'; u.innerHTML = '<div class="uc-kolon" id="uc1"></div><div class="uc-kolon uc-alt" id="uc2"></div>'; document.body.appendChild(u);
+    document.addEventListener('pointerdown', e => { if (u.classList.contains('acik') && !u.contains(e.target) && !e.target.closest('[data-grup]')) ucKapat(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') ucKapat(); }); }
+  return u;
+}
+function ucKapat() { const u = $('#ucMenu'); if (u) { u.classList.remove('acik'); $('#uc2', u).classList.remove('acik'); } $$('#cekmece [data-grup]').forEach(b => b.classList.remove('uc-acik')); }
+function ucAc(g, el) {
+  const u = ucMenu(), c1 = $('#uc1', u), c2 = $('#uc2', u), yol = rota().join('/').split('?')[0];
+  const ust = Math.max(8, Math.min(el.getBoundingClientRect().top - 8, window.innerHeight - 120));
+  u.style.top = ust + 'px'; c2.classList.remove('acik');
+  $$('#cekmece [data-grup]').forEach(b => b.classList.toggle('uc-acik', b === el));
+  if (g.tek) { c1.innerHTML = `<div class="uc-baslik">${esc(g.ad)}</div>` + altMenuHtml(g.tek, yol); altMenuBagla(c1); }
+  else {
+    const l = grupOgeleri(g);
+    c1.innerHTML = `<div class="uc-baslik">${esc(g.ad)}</div>` + l.map((o, i) => ogeSatir(o, i)).join('');
+    $$('[data-oi]', c1).forEach(b => {
+      const o = l[+b.dataset.oi];
+      const goster = () => { $$('[data-oi]', c1).forEach(x => x.classList.toggle('uc-secili', x === b));
+        if (!o.alt) return c2.classList.remove('acik');
+        c2.innerHTML = `<div class="uc-baslik">${esc(o.ad)}</div>` + altMenuHtml(o.alt, yol); altMenuBagla(c2);
+        c2.style.marginTop = Math.max(0, b.offsetTop - 34) + 'px'; c2.classList.add('acik'); };
+      b.onmouseenter = goster;
+      b.onclick = () => { ui.menuGrup = g.id; ogeGit(o); };
+    });
+  }
+  u.classList.add('acik');
+}
 function menuCiz(aktif) {
   const p = PROFILLER[D.profil];
   const yol = rota().join('/').split('?')[0];
-  // 2.8: kenar menü sade — yalnızca modüller; işlemler ve raporlar modül sayfasının üstünde iki satır olarak durur.
+  const genis = window.matchMedia('(min-width:960px)').matches;
   const satir = (id, ad, simge, renk, ek = '') => `<a href="#/${id}" data-id="${id}" class="${id === aktif ? 'secili' : ''}">${kare(simge, renk)}<span class="ad">${esc(ad)}</span>${ek}</a>`;
   const kapali = MODULLER.filter(m => !m.zorunlu && rolModulIzin(m.id) && !modulAcik(m.id)).length;
+  const aktifGrup = grupModulu(aktif);
+  ui.acikGrup ??= aktifGrup;
+  const grupHtml = g => {
+    const acik = !genis && ui.acikGrup === g.id;
+    let ic = '';
+    if (acik) ic = g.tek ? `<div class="c-agac">${altMenuHtml(g.tek, yol)}</div>`
+      : `<div class="c-agac">${grupOgeleri(g).map((o, i) => `<div class="c-agac-oge ${modulAcik(o.modul) && o.modul === aktif && ui.menuGrup !== undefined ? '' : ''}"><button class="uc-oge ${o.modul === aktif && aktifGrup === g.id ? 'uc-secili' : ''}" data-mo="${g.id}|${i}">${kare(o.simge || modul(o.modul).simge, o.renk || modul(o.modul).renk)}<span class="ad">${esc(o.ad)}</span>${rozet(o.modul)}</button>${o.alt ? `<button class="c-ac" data-mac="${g.id}|${i}" aria-label="Alt menü">${ikon('ileri', 'c-ok' + (ui.acikOge === g.id + '|' + i ? ' don' : ''))}</button>` : ''}</div>
+          ${ui.acikOge === g.id + '|' + i ? altMenuHtml(o.alt, yol) : ''}`).join('')}</div>`;
+    return `<a href="#" data-grup="${g.id}" class="${aktifGrup === g.id ? 'secili' : ''} ${acik ? 'acik' : ''}">${kare(g.simge, g.renk)}<span class="ad">${esc(g.ad)}</span>${g.tek ? rozet(g.tek) : ''}${ikon('ileri', 'c-ok')}</a>${ic}`;
+  };
   $('#cekmece').innerHTML = `<button class="c-ust" id="cProfil">${kare(p.simge, p.renk)}<div style="min-width:0;flex:1"><b>${esc(D.ad || 'Firma hesabı')}</b><small>Hesap değiştir</small></div>${ikon('ileri', 'chev')}</button>
     ${H.liste.length > 1 ? `<div class="c-hesaplar">${H.liste.filter(x => x.id !== H.aktif).map(x => `<button data-hgec="${x.id}">${kare(x.profil ? PROFILLER[x.profil].simge : 'kisi', x.profil ? PROFILLER[x.profil].renk : 'gri')}<span>${esc(hesapAdi(x))}</span></button>`).join('')}</div>` : ''}
     <div class="c-liste">${satir('panel', 'Özet', 'ev', 'mavi')}</div>
-    <div class="c-liste">${MENU_GRUP.flatMap(([, idler]) => idler.filter(id => modulAcik(id))).map(id => { const m = modul(id); return satir(id, modulAdi(m), m.simge, m.renk, rozet(id)); }).join('')}</div>
+    <div class="c-liste c-ana">${MENU_AGAC.filter(grupGorunur).map(grupHtml).join('')}</div>
     <div class="c-ayrac"></div>
     <div class="c-liste">${satir('menu', 'Modüller', 'izgara', 'indigo', kapali ? `<span class="rozet">${kapali} kapalı</span>` : '')}${satir('ayarlar', 'Ayarlar', 'ayar', 'gri')}</div>
     <div class="c-alt">PowerServ+ ${VERSIYON}<br>${ortakBagli() ? `${esc(ortakOturum()?.ad || ortakOturum()?.eposta || '')} · <span class="ortak-durum">${esc(ortakDurumMetni())}</span>` : 'DN Marine · veriler bu cihazda'}</div>`;
-  $$('#cekmece a').forEach(a => a.onclick = e => {
-    e.preventDefault();
-    // Açık modüle yeniden tıklamak alt menüyü kapatır / açar; başka modüle tıklamak oraya gider ve alt menüsünü açar
-    cekmeceKapat(); git(a.dataset.id, true);
+  $$('#cekmece a[data-id]').forEach(a => a.onclick = e => { e.preventDefault(); cekmeceKapat(); ucKapat(); git(a.dataset.id, true); });
+  $$('#cekmece [data-grup]').forEach(a => {
+    const g = MENU_AGAC.find(x => x.id === a.dataset.grup);
+    a.onclick = e => { e.preventDefault();
+      if (genis) { if (a.classList.contains('uc-acik')) ucKapat(); else ucAc(g, a); return; }
+      ui.acikGrup = ui.acikGrup === g.id ? null : g.id; ui.acikOge = null; menuCiz(aktif); };
+    if (genis) a.onmouseenter = () => { if ($('#ucMenu.acik')) ucAc(g, a); };
   });
+  $$('#cekmece [data-mo]').forEach(b => b.onclick = () => { const [gi, i] = b.dataset.mo.split('|'), g = MENU_AGAC.find(x => x.id === gi); ui.menuGrup = gi; ogeGit(grupOgeleri(g)[+i]); });
+  $$('#cekmece [data-mac]').forEach(b => b.onclick = () => { ui.acikOge = ui.acikOge === b.dataset.mac ? null : b.dataset.mac; menuCiz(aktif); });
   altMenuBagla($('#cekmece'));
   $('#cProfil').onclick = () => { cekmeceKapat(); git('hesaplar'); };
   $$('[data-hgec]').forEach(b => b.onclick = () => hesabaGec(b.dataset.hgec));
@@ -1824,6 +1925,7 @@ function ayBagla(alan, yeniden) {
 let sonRota = '';
 function ciz() {
   while (yigin.length) yigin.pop().remove();
+  if (window.ucKapat && $('#ucMenu')) ucKapat();
   if (ortakBagli() && !ortakOturum()) girisEkrani();
   $('#icerik').className = '';
   if (location.hash !== sonRota) { window.scrollTo(0, 0); sonRota = location.hash; }
@@ -1844,7 +1946,6 @@ function ciz() {
     fatura: p1 ? () => { if (modulAcik('teklif') && D.faturalar.find(x => x.id === p1)?.tur === 'teklif') return git('teklif/' + p1, true); faturaEkrani(p1); } : faturaListeEkrani,
     personel: p1 ? () => personelDetay(p1) : personelEkrani, butce: butceEkrani, kdv: kdvEkrani, rapor: raporEkrani}[s];
   ekran();
-  if (!p1 && ALT_MENU[s]) { const b = $('#icerik > .buyuk-baslik'); const ser = altSerit(s, s); if (b) b.insertAdjacentHTML('afterend', ser); else $('#icerik').insertAdjacentHTML('afterbegin', ser); altMenuBagla($('#icerik > .alt-serit')); }
   yanDuzen();
   kaydirma();
 }
@@ -1889,7 +1990,7 @@ function altMenuBagla(kok) {
   $$('[data-alt]', kok).forEach(a => a.onclick = e => {
     e.preventDefault(); e.stopPropagation();
     const [id, gi, i] = a.dataset.alt.split('|'), hedef = ALT_MENU[id][+gi][1][+i][2];
-    cekmeceKapat();
+    cekmeceKapat(); ucKapat();
     if (typeof hedef === 'string') git(hedef); else hedef();
   });
 }
@@ -2032,7 +2133,6 @@ function raporListe(m, id, sorgu) {
   const d = ui.rl[anahtar] ||= {ara: sorgu.get('ara') || '', bas: R.tarihli ? AY_BASI() : '', son: R.tarihli ? bugun() : '', sira: null, ters: false};
   if (sorgu.has('ara')) d.ara = sorgu.get('ara');
   let h = sayfa(R.ad, {geri: m, geriAd: modulAdi(m)});
-  h += altSerit(m, m + '/r-' + id);
   h += `<div class="rapor-ust">
       <div class="arama">${ikon('ara')}<input type="search" id="rlAra" placeholder="Listede ara" value="${esc(d.ara)}"></div>
       ${R.tarihli ? `<div class="rl-tarih"><input type="date" id="rlBas" value="${d.bas}" aria-label="Başlangıç"><span>–</span><input type="date" id="rlSon" value="${d.son}" aria-label="Bitiş">
