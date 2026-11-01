@@ -26,6 +26,15 @@ Görsel dil iOS tarzı yumuşak görünüm (2.2): açık zemin, beyaz kartlar, b
 
 **Fişler (2.4):** Gelir fişi (GLR-yıl-sıra), gider fişi (GDR) ve tahsilat makbuzu (THS): firma bilgisi ve logo, ödeyen/ödenen, ödeme şekli, hesap, belge, tutar ve yazıyla tutar, imza alanları. Her gelir/gider kaydı ve her tahsilat tıklanınca fiş ekranı açılır; numara ilk görüntülemede verilir ve saklanır.
 
+## Sürüm 2.8
+
+- Üst çubukta her ekranda **Eşitle** düğmesi (ortak veritabanına bağlıyken).
+- **Personel**: tabloda satıra dokununca kart, "Düzenle" ile doğrudan form. Kimlik, iletişim, acil durum, SGK, sözleşme, banka, eğitim alanları; yıllık izin (4857 m.53 hak hesabı), zimmet, personel kartı çıktısı. Raporlar: iletişim, izin kayıtları, izin bakiyeleri, zimmet, doğum günü ve kıdem, aylık maliyet.
+- **Teklif** ayrı modül: gönderilen teklifler listesi, durum (yanıt bekliyor, kabul, red, süresi doldu, faturalandı), sade okuma sayfası; resmî form "Teklif formu > Göster" veya PDF ile.
+- **Kullanıcılar**: her modül için erişim seviyesi (kapalı, görüntüle, ekle ve düzenle, tam). Rol üst sınırdır; seviye uygulamada uygulanır, gizli finans verilerinin servis rolüne inmemesi sunucu kuralıyla korunur.
+- **Modüller** sayfasında her modül için aç/kapat anahtarı. Ayarlar sadeleşti: firma bilgileri ve servis formu ayrı formda.
+- Sol menü yalnızca modüllerden oluşur; işlemler ve raporlar modül sayfasının üstünde iki satır.
+
 ## Servis modülü
 
 Müşterinin tekne ve makineleri (ana makine, jeneratör, şanzıman, pervane/şaft, elektrik) cari kartında tutulur: marka, model, seri no, motor no, çalışma saati. Servis kaydı (iş emri) müşteri ve makineyi seçerek açılır; şikâyet, yapılan işlemler, kullanılan parçalar (stoktan seçilen parçalar stoktan düşer, müşteri malı düşmez), teknisyen işçilik saatleri, test ve teslim durumu, sonraki bakım girilir. Durumlar: açık, devam ediyor, parça bekleniyor, onay bekleniyor, tamamlandı, iptal.

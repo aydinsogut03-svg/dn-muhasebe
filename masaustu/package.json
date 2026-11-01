@@ -1,7 +1,7 @@
 {
   "name": "powerserv",
   "productName": "PowerServ+",
-  "version": "2.7.1",
+  "version": "2.8.0",
   "description": "PowerServ+ işletme programı (DN Marine)",
   "author": "DN Marine Makine ve Güç Sistemleri Ltd.Şti.",
   "main": "main.js",
