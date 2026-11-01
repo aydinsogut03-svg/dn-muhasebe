@@ -42,3 +42,16 @@ jobs:
             --title "PowerServ+ $SURUM (debug)" \
             --notes "Sürüm $SURUM, main dalı ${GITHUB_SHA::7}. Telefona kurmak için powerserv-$SURUM.apk dosyasını indir (adında sürüm olduğu için telefon eski indirmeyi kullanmaz). index.html tarayıcıda da açılır." \
             --prerelease --target "$GITHUB_SHA"
+
+      - name: APK'yı "apk" dalına koy (proje dosyalarına aktarmak için)
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          SURUM=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          mkdir -p /tmp/apk && cp app/build/outputs/apk/debug/app-debug.apk "/tmp/apk/PowerServ-$SURUM.apk"
+          cd /tmp/apk
+          git init -q -b apk
+          git add .
+          git -c user.name="APK derle" -c user.email="actions@users.noreply.github.com" commit -qm "PowerServ+ $SURUM APK"
+          git push -fq "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" apk
