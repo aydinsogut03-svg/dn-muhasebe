@@ -1272,6 +1272,34 @@ button.bag{background:none;border:0;padding:0;color:var(--mavi);font:inherit;fon
 .kod-alan{width:100%;box-sizing:border-box;border:0;background:transparent;color:var(--yazi);font:12.5px/1.45 ui-monospace,Menlo,Consolas,monospace;padding:12px;resize:vertical;word-break:break-all}
 select.secim{height:38px;border:1px solid var(--kenar);border-radius:var(--r,6px);background:var(--kart);color:var(--yazi);padding:0 10px;font:inherit;font-size:14px}
 .c-alt .ortak-durum.gider{color:var(--kirmizi)}
+/* 2.9.4: klasik görünüm. Sol menü Windows tarzı ağaç (+/- kutuları, noktalı çizgiler), sağda sık ve çizgili tablolar. */
+#cekmece{font-size:13px}
+#cekmece .c-liste{padding:0 6px!important;gap:0!important}
+#cekmece a[data-grup],#cekmece a[data-id],#cekmece .uc-oge,#cekmece .c-alt-menu a{min-height:26px!important;height:26px;padding:0 6px!important;border-radius:0!important;font-size:13.5px!important;font-weight:400!important;gap:6px!important;background:none!important;color:var(--yazi)!important;box-shadow:none!important}
+#cekmece .c-liste .kare,#cekmece .c-agac .kare,#cekmece .c-alt-menu .kare{width:18px!important;height:18px!important;background:none!important;color:var(--c)!important;box-shadow:none!important;border-radius:0!important}
+#cekmece .c-liste .kare svg,#cekmece .c-agac .kare svg,#cekmece .c-alt-menu .kare svg{width:16px!important;height:16px!important;stroke-width:1.9!important;color:var(--c)!important}
+#cekmece .c-liste .c-ok,#cekmece .c-ac .c-ok{visibility:hidden}
+#cekmece .c-ac{position:absolute;left:0;width:20px;height:26px;opacity:0}
+#cekmece .c-agac-oge{position:relative}
+#cekmece a[data-grup]::before,#cekmece .c-agac-oge .uc-oge::before{content:'+';width:11px;height:11px;border:1px solid var(--ikincil);font:600 11px/10px ui-monospace,Consolas,monospace;text-align:center;color:var(--yazi);flex:none;background:var(--kart)}
+#cekmece a[data-grup].acik::before,#cekmece .c-agac-oge:has(+ .c-alt-menu) .uc-oge::before{content:'−'}
+#cekmece .c-agac-oge:not(:has(.c-ac)) .uc-oge::before{visibility:hidden}
+#cekmece a[data-id]::before{content:'';width:11px;flex:none}
+#cekmece .ad,#cekmece .c-alt-menu a span{flex:0 1 auto!important;padding:1px 4px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#cekmece a.secili:not([data-grup]) .ad,#cekmece .c-alt-menu a.secili span,#cekmece .uc-secili .ad,#cekmece a[data-grup].secili:not(.acik) .ad{background:var(--mavi);color:#fff!important}
+#cekmece a[data-grup].acik .ad{font-weight:650}
+#cekmece .rozet{margin-left:auto}
+#cekmece .c-agac{margin:0 0 0 11px!important;padding-left:10px!important;border-left:1px dotted var(--ikincil)!important}
+#cekmece .c-agac .c-alt-menu,#cekmece .c-ana>.c-agac>.c-alt-menu{margin:0 0 0 16px!important;border-left:1px dotted var(--ikincil)!important;padding-left:8px;animation:none}
+#cekmece .c-alt-baslik{display:none}
+#cekmece .c-alt-menu a::before{content:'';width:8px;border-top:1px dotted var(--ikincil);margin-left:-8px;flex:none}
+#cekmece .m-arti{width:9px;height:9px;right:-3px;bottom:-3px}
+#cekmece .c-liste a.secili::before{position:static!important;left:auto!important;top:auto!important;bottom:auto!important;border-radius:0!important;display:block!important}
+#cekmece .c-liste a[data-grup].secili::before{width:11px!important;height:11px!important;background:var(--kart)!important}
+#cekmece .c-liste a[data-id].secili::before{width:11px!important;height:0!important;background:none!important}
+.liste-tablo{font-size:13px}.liste-tablo td,.liste-tablo th{padding:4px 8px!important}
+.liste-tablo tbody tr:nth-child(even){background:color-mix(in srgb,var(--mavi) 4%,transparent)}
+.liste-tablo tbody tr.tik:hover{background:color-mix(in srgb,var(--mavi) 12%,transparent)}
 </style>
 </head>
 <body>
@@ -1284,7 +1312,7 @@ select.secim{height:38px;border:1px solid var(--kenar);border-radius:var(--r,6px
 
 <script>
 'use strict';
-const VERSIYON = '2.9.3';
+const VERSIYON = '2.9.4';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */

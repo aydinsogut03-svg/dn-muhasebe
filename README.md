@@ -38,6 +38,7 @@ Görsel dil iOS tarzı yumuşak görünüm (2.2): açık zemin, beyaz kartlar, b
 - 2.9.1: Menü simgeleri: alt menülerdeki her işlem ve rapor için PowerServ+'a özel çizilmiş simge (fatura, teklif, tekne, parça, teknisyen, virman, terazi, fiş, cari kart, depo, puantaj, bordro, izin, zimmet...), modül renginde açık zeminli kare içinde; "Yeni" işlemlerde köşede artı rozeti. Ana menüde Satış etiket, Teklifler, Faturalar, Servis fişleri, Stoklar ve Cari hesaplar kendi simgeleriyle.
 - 2.9.2: Yana açılan kırılım menü kaldırıldı (uzun listeler ekrandan taşıyordu). Masaüstünde de menü aşağı açılır: grup › modül › işlemler ve raporlar, kenar çubuğu kaydırılır. Modüle tıklayınca sayfası açılır ve alt menüsü açık kalır.
 - 2.9.3: e-Arşiv / e-Fatura yükleme (Fatura menüsü ve Fatura ekranı). GİB portalından ya da entegratörden indirilen XML (UBL-TR), ZIP (XML + görüntü) veya PDF seçilir; XML'den no, ETTN, tarih, vade, cari (VKN/TCKN, vergi dairesi, adres), kalemler, birim, iskonto, KDV ve tevkifat okunur, fatura oluşur ve cariye işlenir. Satıcı VKN'si firmanınki değilse alış faturası olur. Cari VKN ile bulunur, yoksa açılır. Aynı ETTN veya no ikinci kez alınmaz. Orijinal XML, PDF ve görüntü faturaya eklenir; XML içindeki şablonla (XSLT) fatura görüntüsü gösterilir. Yalnızca PDF varsa form PDF ekli açılır.
+- 2.9.4: Klasik görünüm: sol menü Windows tarzı ağaç (+/- kutuları, noktalı çizgiler, küçük ikonlar, seçili satır mavi zeminli); +/- kutusu alt menüyü açar, ada tıklamak sayfayı açar. Rapor tabloları sık ve çizgili.
 
 ## Servis modülü
 
