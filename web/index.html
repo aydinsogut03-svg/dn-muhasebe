@@ -1281,7 +1281,7 @@ select.secim{height:38px;border:1px solid var(--kenar);border-radius:var(--r,6px
 
 <script>
 'use strict';
-const VERSIYON = '2.9.1';
+const VERSIYON = '2.9.2';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -1919,7 +1919,8 @@ function ucAc(g, el) {
 function menuCiz(aktif) {
   const p = PROFILLER[D.profil];
   const yol = rota().join('/').split('?')[0];
-  const genis = window.matchMedia('(min-width:960px)').matches;
+  // 2.9.2: yana açılan kırılım kaldırıldı (uzun listeler ekrandan taşıyordu); her ekranda menü aşağı açılır.
+  const genis = false;
   const satir = (id, ad, simge, renk, ek = '') => `<a href="#/${id}" data-id="${id}" class="${id === aktif ? 'secili' : ''}">${kare(simge, renk)}<span class="ad">${esc(ad)}</span>${ek}</a>`;
   const kapali = MODULLER.filter(m => !m.zorunlu && rolModulIzin(m.id) && !modulAcik(m.id)).length;
   const aktifGrup = grupModulu(aktif);
@@ -1947,7 +1948,7 @@ function menuCiz(aktif) {
       ui.acikGrup = ui.acikGrup === g.id ? null : g.id; ui.acikOge = null; menuCiz(aktif); };
     if (genis) a.onmouseenter = () => { if ($('#ucMenu.acik')) ucAc(g, a); };
   });
-  $$('#cekmece [data-mo]').forEach(b => b.onclick = () => { const [gi, i] = b.dataset.mo.split('|'), g = MENU_AGAC.find(x => x.id === gi); ui.menuGrup = gi; ogeGit(grupOgeleri(g)[+i]); });
+  $$('#cekmece [data-mo]').forEach(b => b.onclick = () => { const [gi, i] = b.dataset.mo.split('|'), g = MENU_AGAC.find(x => x.id === gi); ui.menuGrup = gi; ui.acikGrup = gi; if (grupOgeleri(g)[+i].alt) ui.acikOge = b.dataset.mo; ogeGit(grupOgeleri(g)[+i]); });
   $$('#cekmece [data-mac]').forEach(b => b.onclick = () => { ui.acikOge = ui.acikOge === b.dataset.mac ? null : b.dataset.mac; menuCiz(aktif); });
   altMenuBagla($('#cekmece'));
   $('#cProfil').onclick = () => { cekmeceKapat(); git('hesaplar'); };
