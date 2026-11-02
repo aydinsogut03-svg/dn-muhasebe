@@ -1300,16 +1300,17 @@ select.secim{height:38px;border:1px solid var(--kenar);border-radius:var(--r,6px
 /* Telefonda her kalem iki satır (üstte parça no + açıklama, altta miktar, birim, fiyat, KDV, tutar); başlık da iki satır. Sütunlar ekrana sığar, taşmaz. */
 @media (max-width:760px){
   .kt{font-size:13px}
-  .kt-bas,.kt-satir{grid-template-columns:20px minmax(0,.75fr) minmax(0,.95fr) minmax(0,1.1fr) minmax(0,.8fr) minmax(0,1.3fr) 28px;grid-template-areas:"no kod kod ad ad isk sil" "no mik birim fiyat kdv tutar tutar"}
-  .kt.kt-teklif .kt-bas,.kt.kt-teklif .kt-satir{grid-template-columns:20px minmax(0,.75fr) minmax(0,.95fr) minmax(0,1.1fr) minmax(0,.8fr) minmax(0,1.3fr) 28px;grid-template-areas:"no kod kod ad ad ad sil" "no mik birim fiyat kdv tutar tutar"}
+  .kt-bas,.kt-satir{grid-template-columns:20px minmax(0,.6fr) minmax(0,.85fr) minmax(0,1.2fr) minmax(0,.9fr) minmax(0,1.35fr) 30px;grid-template-areas:"no kod kod ad ad isk sil" "no mik birim fiyat kdv tutar tutar"}
+  .kt.kt-teklif .kt-bas,.kt.kt-teklif .kt-satir{grid-template-columns:20px minmax(0,.6fr) minmax(0,.85fr) minmax(0,1.2fr) minmax(0,.9fr) minmax(0,1.35fr) 30px;grid-template-areas:"no kod kod ad ad ad sil" "no mik birim fiyat kdv tutar tutar"}
   .kt-bas span{padding:3px 5px;font-size:10.5px}
   .kt-bas .kt-tutar{padding-right:6px}
   .kt-no{grid-area:no;border-right:1px solid var(--ayirici)}.kt-kod{grid-area:kod}.kt-ad{grid-area:ad}.kt-mik{grid-area:mik}.kt-birim{grid-area:birim}.kt-fiyat{grid-area:fiyat}.kt-isk{grid-area:isk}.kt-kdv{grid-area:kdv}.kt-tutar{grid-area:tutar}.kt-sil{grid-area:sil}
   .kt-satir .kt-tutar{padding:0 6px;font-size:12.5px}
   .kt-satir .kt-kod,.kt-satir .kt-ad,.kt-satir .kt-isk,.kt-satir .kt-sil{border-bottom:1px dotted var(--ayirici)!important}
   .kt-satir>*{min-width:0!important;max-width:100%;overflow:hidden}
-  .kt-satir input,.kt-satir select{font-size:14px!important;height:34px;padding:6px 5px!important}
-  .kt-satir select{appearance:none!important;-webkit-appearance:none!important;padding:0 5px!important;text-overflow:ellipsis}
+  .kt-satir input,.kt-satir select{font-size:15px!important;height:42px;padding:6px 6px!important;touch-action:manipulation}
+  .kt-satir select{appearance:none!important;-webkit-appearance:none!important;padding:0 3px!important;text-overflow:clip}
+  .kt-bas .kt-mik{font-size:0!important}.kt-bas .kt-mik::after{content:'Mik.';font-size:10.5px}
   .kt-bas .kt-sil,.kt-bas .kt-no{border:0}
 }
 /* 2.9.8: Apple tarzı sol menü. Ayarlar uygulaması gibi renkli yuvarlak kare ikonlar, büyük satırlar, sağda açılır ok, yumuşak seçim. */
@@ -1375,7 +1376,7 @@ html.apk #cekmece .c-alt-menu a{min-height:42px!important;font-size:15px!importa
 
 <script>
 'use strict';
-const VERSIYON = '2.9.8';
+const VERSIYON = '2.9.9';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -3946,7 +3947,7 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
       $('[data-a=birim]', el).onchange = e => { k.birim = e.target.value; };
       $('[data-a=kdv]', el).onchange = e => { k.kdv = +e.target.value; toplamCiz(); };
       // Excel gibi: hücreye girince içerik seçilir, yazılan eskisinin yerine geçer
-      $$('input', el).forEach(inp => { if (inp.dataset.a === 'ad') return; inp.onfocus = () => { inp.select(); inp._sec = true; }; inp.onmouseup = e => { if (inp._sec) { e.preventDefault(); inp._sec = false; } }; });
+      if (!dokunmatik()) $$('input', el).forEach(inp => { if (inp.dataset.a === 'ad') return; inp.onfocus = () => { inp.select(); inp._sec = true; }; inp.onmouseup = e => { if (inp._sec) { e.preventDefault(); inp._sec = false; } }; });
       $$('input, select', el).forEach(inp => inp.onkeydown = e => {
         if (e.key !== 'Enter' || e.isComposing) return;
         e.preventDefault();
@@ -6483,9 +6484,13 @@ window.bildirimAc = hedef => {
    Ayarlar > Görünüm'den sabit bir ölçek seçilebilir. Yazdırırken ölçek kaldırılır. */
 const OLCEK_ANAHTAR = 'powerserv.olcek';
 const olcekTercih = () => { try { return localStorage.getItem(OLCEK_ANAHTAR) || 'oto'; } catch (e) { return 'oto'; } };
+const dokunmatik = () => !!(window.Android || (window.matchMedia && matchMedia('(pointer:coarse)').matches));
 function olcekHesapla() {
   const t = olcekTercih();
   if (t !== 'oto') return +t || 1;
+  // 2.9.9: telefonda (APK, dokunmatik ekran) CSS zoom kullanılmaz. Android WebView'da zoom dokunma noktasını kaydırıyor,
+  // dar alanlara (teklifte Fiyat hücresi) dokunulamıyordu.
+  if (window.Android || (window.matchMedia && matchMedia('(pointer:coarse)').matches)) return 1;
   const w = window.innerWidth;
   return w < 360 ? .88 : w < 960 ? .94 : w < 1700 ? .92 : w < 2200 ? 1 : 1.12;   // 2.8: daha sıkı, ekranda daha çok bilgi
 }
