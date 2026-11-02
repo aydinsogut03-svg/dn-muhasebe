@@ -1297,21 +1297,38 @@ select.secim{height:38px;border:1px solid var(--kenar);border-radius:var(--r,6px
 .kt-sil .i,.kt-sil svg{width:15px;height:15px}
 .kt-sil:not(:disabled):hover{color:var(--kirmizi)}
 .kt-sil:disabled{opacity:.25}
-/* Telefonda her kalem iki satır (üstte parça no + açıklama, altta miktar, birim, fiyat, KDV, tutar); başlık da iki satır. Sütunlar ekrana sığar, taşmaz. */
+.kt-c{display:flex;align-items:stretch;min-width:0;margin:0}
+.kt-c>input,.kt-c>select{flex:1}
+.kt-et,.kt-no i{display:none}
+.kt-no b{font-weight:400}
+.kt-tutar,.kt-tutar *{-webkit-user-select:none;user-select:none}
+.kt-c.kt-tutar{align-items:center;justify-content:flex-end}
+/* 2.9.10: Telefonda Excel gibi eşit hücreler: her kalem iki sütunlu, etiketli büyük hücrelerden oluşan bir kart.
+   Satırlar: Kalem no + Sil | Parça no, Açıklama | Miktar, Birim | Birim fiyat, KDV | (İskonto), Tutar. */
 @media (max-width:760px){
-  .kt{font-size:13px}
-  .kt-bas,.kt-satir{grid-template-columns:20px minmax(0,.6fr) minmax(0,.85fr) minmax(0,1.2fr) minmax(0,.9fr) minmax(0,1.35fr) 30px;grid-template-areas:"no kod kod ad ad isk sil" "no mik birim fiyat kdv tutar tutar"}
-  .kt.kt-teklif .kt-bas,.kt.kt-teklif .kt-satir{grid-template-columns:20px minmax(0,.6fr) minmax(0,.85fr) minmax(0,1.2fr) minmax(0,.9fr) minmax(0,1.35fr) 30px;grid-template-areas:"no kod kod ad ad ad sil" "no mik birim fiyat kdv tutar tutar"}
-  .kt-bas span{padding:3px 5px;font-size:10.5px}
-  .kt-bas .kt-tutar{padding-right:6px}
-  .kt-no{grid-area:no;border-right:1px solid var(--ayirici)}.kt-kod{grid-area:kod}.kt-ad{grid-area:ad}.kt-mik{grid-area:mik}.kt-birim{grid-area:birim}.kt-fiyat{grid-area:fiyat}.kt-isk{grid-area:isk}.kt-kdv{grid-area:kdv}.kt-tutar{grid-area:tutar}.kt-sil{grid-area:sil}
-  .kt-satir .kt-tutar{padding:0 6px;font-size:12.5px}
-  .kt-satir .kt-kod,.kt-satir .kt-ad,.kt-satir .kt-isk,.kt-satir .kt-sil{border-bottom:1px dotted var(--ayirici)!important}
-  .kt-satir>*{min-width:0!important;max-width:100%;overflow:hidden}
-  .kt-satir input,.kt-satir select{font-size:15px!important;height:42px;padding:6px 6px!important;touch-action:manipulation}
-  .kt-satir select{appearance:none!important;-webkit-appearance:none!important;padding:0 3px!important;text-overflow:clip}
-  .kt-bas .kt-mik{font-size:0!important}.kt-bas .kt-mik::after{content:'Mik.';font-size:10.5px}
-  .kt-bas .kt-sil,.kt-bas .kt-no{border:0}
+  .kt{font-size:14px;border:0;background:none;overflow:visible}
+  .kt-bas{display:none!important}
+  .kt-satir,.kt.kt-teklif .kt-satir{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"no sil" "kod ad" "mik birim" "fiyat kdv" "isk tutar";background:var(--kart)!important;border:1px solid var(--kenar)!important;border-radius:10px!important;margin:0 0 10px!important;overflow:hidden}
+  .kt.kt-teklif .kt-satir{grid-template-areas:"no sil" "kod ad" "mik birim" "fiyat kdv" "tutar tutar"}
+  .kt-satir>*{border:0!important;border-bottom:1px solid var(--ayirici)!important;min-width:0!important}
+  .kt-satir>:nth-child(odd):not(.kt-no):not(.kt-sil){border-right:0!important}
+  .kt-kod,.kt-mik,.kt-fiyat,.kt-isk{border-right:1px solid var(--ayirici)!important}
+  .kt.kt-teklif .kt-tutar{border-right:0!important}
+  .kt-no{grid-area:no;justify-content:flex-start!important;padding:7px 12px;font-size:13px!important;font-weight:650;color:var(--yazi)!important;background:color-mix(in srgb,var(--mavi) 8%,var(--kart))}
+  .kt-no i{display:inline;font-style:normal}
+  .kt-sil{grid-area:sil;justify-content:flex-end!important;gap:4px;padding:7px 12px!important;font-size:13px;color:var(--kirmizi)!important;background:color-mix(in srgb,var(--mavi) 8%,var(--kart))!important}
+  .kt-sil .kt-et{display:inline}
+  .kt-sil:disabled{opacity:1;color:transparent!important}
+  .kt-kod{grid-area:kod}.kt-ad{grid-area:ad}.kt-mik{grid-area:mik}.kt-birim{grid-area:birim}.kt-fiyat{grid-area:fiyat}.kt-isk{grid-area:isk}.kt-kdv{grid-area:kdv}.kt-tutar{grid-area:tutar}
+  .kt-c{flex-direction:column;padding:6px 10px 2px}
+  .kt-c .kt-et{display:block;font-size:11.5px;font-weight:600;color:var(--ikincil);line-height:1.2}
+  .kt-satir .kt-c input,.kt-satir .kt-c select{height:40px;font-size:17px!important;padding:4px 0!important;text-align:left!important;touch-action:manipulation;flex:none}
+  .kt-satir .kt-c select{appearance:none!important;-webkit-appearance:none!important;background:none!important}
+  .kt-satir .kt-c input:focus,.kt-satir .kt-c select:focus{box-shadow:none!important;background:none!important}
+  .kt-c:focus-within{background:color-mix(in srgb,var(--mavi) 10%,transparent);box-shadow:inset 0 0 0 2px var(--mavi)}
+  .kt-tutar{align-items:flex-start!important;justify-content:flex-start!important;padding:6px 10px 8px!important;font-size:17px}
+  .kt-tutar [data-tutar]{line-height:40px;font-weight:700}
+  .kt-satir>:nth-last-child(2),.kt-satir>.kt-isk{border-bottom:0!important}
 }
 /* 2.9.8: Apple tarzı sol menü. Ayarlar uygulaması gibi renkli yuvarlak kare ikonlar, büyük satırlar, sağda açılır ok, yumuşak seçim. */
 #cekmece,body:not(.profilde) #cekmece{background:#f2f2f7!important;border-right:1px solid rgba(60,60,67,.14)!important;font-size:15px;padding-top:0!important}
@@ -1376,7 +1393,7 @@ html.apk #cekmece .c-alt-menu a{min-height:42px!important;font-size:15px!importa
 
 <script>
 'use strict';
-const VERSIYON = '2.9.9';
+const VERSIYON = '2.9.10';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -3922,16 +3939,16 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
   const kalemCiz = () => {
     /* 2.9.7: Excel gibi kalem tablosu. Her kalem tek satır (telefonda iki satır); Enter bir sonraki hücreye, son hücrede yeni satıra geçer. */
     $('#kalemler', m).innerHTML = `<div class="kt${teklif ? ' kt-teklif' : ''}"><div class="kt-bas"><span class="kt-no">#</span><span class="kt-kod">Parça no</span><span class="kt-ad">Açıklama</span><span class="kt-mik sg">Miktar</span><span class="kt-birim">Birim</span><span class="kt-fiyat sg">Fiyat ₺</span>${teklif ? '' : '<span class="kt-isk sg">İsk.%</span>'}<span class="kt-kdv">KDV</span><span class="kt-tutar sg">Tutar</span><span class="kt-sil"></span></div>`
-      + x.kalemler.map((k, i) => `<div class="kalem kt-satir" data-k="${i}"><span class="kt-no">${i + 1}</span>
-        <input type="text" data-a="kod" class="kt-kod" value="${esc(k.kod || (k.urunId && urun(k.urunId)?.kod) || '')}" placeholder="Parça no">
-        <input type="text" data-a="ad" class="kt-ad" value="${esc(k.ad)}" placeholder="Ürün / hizmet açıklaması">
-        <input data-a="miktar" class="kt-mik sg" inputmode="decimal" value="${k.miktar ? sayiFmt(k.miktar) : ''}" placeholder="Miktar">
-        <select data-a="birim" class="kt-birim" aria-label="Birim">${birimSecenek(k.birim || 'adet')}</select>
-        <input data-a="fiyat" class="kt-fiyat sg" inputmode="decimal" value="${tutarYaz(k.fiyat)}" placeholder="Fiyat">
-        ${teklif ? '' : `<input data-a="iskonto" class="kt-isk sg" inputmode="decimal" value="${k.iskonto ? sayiFmt(k.iskonto) : ''}" placeholder="İsk.%" aria-label="İskonto yüzdesi">`}
-        <select data-a="kdv" class="kt-kdv" aria-label="KDV">${KDV_ORAN.map(o => `<option value="${o}" ${(k.kdv || 0) === o ? 'selected' : ''}>%${o}</option>`).join('')}</select>
-        <span class="kt-tutar sayi" data-tutar>${para(kalemNet(k))}</span>
-        <button type="button" class="kt-sil" data-sil aria-label="Satırı sil" ${x.kalemler.length > 1 ? '' : 'disabled'}>${ikon('kapat')}</button></div>`).join('') + '</div>';
+      + x.kalemler.map((k, i) => `<div class="kalem kt-satir" data-k="${i}"><span class="kt-no"><b>${i + 1}</b><i>. kalem</i></span>
+        <label class="kt-c kt-kod"><span class="kt-et">Parça no</span><input type="text" data-a="kod" value="${esc(k.kod || (k.urunId && urun(k.urunId)?.kod) || '')}" placeholder="Parça no"></label>
+        <label class="kt-c kt-ad"><span class="kt-et">Açıklama</span><input type="text" data-a="ad" value="${esc(k.ad)}" placeholder="Ürün / hizmet açıklaması"></label>
+        <label class="kt-c kt-mik"><span class="kt-et">Miktar</span><input type="text" data-a="miktar" class="sg" inputmode="decimal" value="${k.miktar ? sayiFmt(k.miktar) : ''}" placeholder="Miktar"></label>
+        <label class="kt-c kt-birim"><span class="kt-et">Birim</span><select data-a="birim" aria-label="Birim">${birimSecenek(k.birim || 'adet')}</select></label>
+        <label class="kt-c kt-fiyat"><span class="kt-et">Birim fiyat ₺</span><input type="text" data-a="fiyat" class="sg" inputmode="decimal" value="${tutarYaz(k.fiyat)}" placeholder="0,00"></label>
+        ${teklif ? '' : `<label class="kt-c kt-isk"><span class="kt-et">İskonto %</span><input type="text" data-a="iskonto" class="sg" inputmode="decimal" value="${k.iskonto ? sayiFmt(k.iskonto) : ''}" placeholder="İsk.%" aria-label="İskonto yüzdesi"></label>`}
+        <label class="kt-c kt-kdv"><span class="kt-et">KDV</span><select data-a="kdv" aria-label="KDV">${KDV_ORAN.map(o => `<option value="${o}" ${(k.kdv || 0) === o ? 'selected' : ''}>%${o}</option>`).join('')}</select></label>
+        <div class="kt-c kt-tutar"><span class="kt-et">Tutar</span><span class="sayi" data-tutar>${para(kalemNet(k))}</span></div>
+        <button type="button" class="kt-sil" data-sil aria-label="Satırı sil" ${x.kalemler.length > 1 ? '' : 'disabled'}>${ikon('kapat')}<span class="kt-et">Sil</span></button></div>`).join('') + '</div>';
     $$('.kalem', m).forEach(el => {
       const k = x.kalemler[+el.dataset.k];
       $$('input[data-a]', el).forEach(inp => inp.oninput = () => {
@@ -6487,6 +6504,7 @@ const olcekTercih = () => { try { return localStorage.getItem(OLCEK_ANAHTAR) || 
 const dokunmatik = () => !!(window.Android || (window.matchMedia && matchMedia('(pointer:coarse)').matches));
 function olcekHesapla() {
   const t = olcekTercih();
+  if (window.Android) return 1;   // 2.9.10: APK'da hiçbir ölçek ayarında CSS zoom yok (dokunma noktasını kaydırıyor)
   if (t !== 'oto') return +t || 1;
   // 2.9.9: telefonda (APK, dokunmatik ekran) CSS zoom kullanılmaz. Android WebView'da zoom dokunma noktasını kaydırıyor,
   // dar alanlara (teklifte Fiyat hücresi) dokunulamıyordu.
