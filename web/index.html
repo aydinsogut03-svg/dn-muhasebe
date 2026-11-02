@@ -1300,6 +1300,31 @@ select.secim{height:38px;border:1px solid var(--kenar);border-radius:var(--r,6px
 .liste-tablo{font-size:13px}.liste-tablo td,.liste-tablo th{padding:4px 8px!important}
 .liste-tablo tbody tr:nth-child(even){background:color-mix(in srgb,var(--mavi) 4%,transparent)}
 .liste-tablo tbody tr.tik:hover{background:color-mix(in srgb,var(--mavi) 12%,transparent)}
+/* 2.9.6: kurumsal sol menü. Tek renk simgeler, bölüm başlıkları, tam satır seçim çubuğu, altta bağlantı durumu. */
+#cekmece{--c-simge:#3d5a7a;padding-top:0!important}
+@media (prefers-color-scheme:dark){#cekmece{--c-simge:#9db4cf}}
+#cekmece .c-ust{background:#1d3557!important;color:#fff!important;border:0!important;padding:12px 14px!important;margin:0 0 4px!important;border-radius:0!important;gap:10px!important;padding-top:max(env(safe-area-inset-top),12px)!important}
+#cekmece .c-ust b{font-size:13.5px;font-weight:650;white-space:normal!important;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#cekmece .c-ust small{color:rgba(255,255,255,.7)!important;font-size:11.5px;letter-spacing:.02em}
+#cekmece .c-ust .kare{background:rgba(255,255,255,.14)!important;color:#fff!important;box-shadow:none!important;border-radius:4px!important}
+#cekmece .c-ust .kare svg,#cekmece .c-ust .chev{color:#fff!important}
+#cekmece .c-bolum{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ikincil);padding:10px 14px 4px;margin-top:2px}
+#cekmece .c-bolum+.c-liste{border-top:1px solid var(--kenar);padding-top:3px!important}
+#cekmece .c-ana{padding-bottom:4px!important}
+#cekmece .c-liste .kare,#cekmece .c-agac .kare,#cekmece .c-alt-menu .kare{--c:var(--c-simge)!important;color:var(--c-simge)!important}
+#cekmece .c-liste .kare svg,#cekmece .c-agac .kare svg,#cekmece .c-alt-menu .kare svg{color:var(--c-simge)!important}
+#cekmece a[data-grup]{font-weight:650!important;margin-top:1px}
+#cekmece a[data-grup],#cekmece a[data-id],#cekmece .uc-oge,#cekmece .c-alt-menu a{height:27px;min-height:27px!important}
+@media (hover:hover){#cekmece a[data-grup]:hover,#cekmece a[data-id]:hover,#cekmece .uc-oge:hover,#cekmece .c-alt-menu a:hover{background:color-mix(in srgb,var(--mavi) 8%,transparent)!important}}
+#cekmece a.secili:not([data-grup]) .ad,#cekmece .c-alt-menu a.secili span,#cekmece .uc-secili .ad,#cekmece a[data-grup].secili:not(.acik) .ad{background:none!important;color:var(--yazi)!important;font-weight:650}
+#cekmece .c-liste a[data-id].secili,#cekmece .c-alt-menu a.secili,#cekmece .uc-oge.uc-secili,#cekmece a[data-grup].secili:not(.acik){background:color-mix(in srgb,var(--mavi) 14%,transparent)!important;box-shadow:inset 3px 0 0 var(--mavi)!important}
+#cekmece .c-baglanti{display:flex;align-items:flex-start;gap:9px;width:100%;text-align:left;border:0;border-top:1px solid var(--kenar);background:color-mix(in srgb,var(--yazi) 3%,transparent);padding:10px 14px max(env(safe-area-inset-bottom),10px)!important;margin-top:auto;font:inherit;color:var(--yazi);cursor:pointer}
+#cekmece .c-baglanti .c-nokta{width:9px;height:9px;border-radius:50%;flex:none;margin-top:4px;background:var(--yesil);box-shadow:0 0 0 3px color-mix(in srgb,var(--yesil) 22%,transparent)}
+#cekmece .c-baglanti.yok .c-nokta,#cekmece .c-baglanti.hata .c-nokta{background:var(--kirmizi);box-shadow:0 0 0 3px color-mix(in srgb,var(--kirmizi) 22%,transparent)}
+#cekmece .c-bm{display:flex;flex-direction:column;min-width:0;gap:1px}
+#cekmece .c-bm b{font-size:12.5px;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#cekmece .c-bm small{font-size:11px;color:var(--ikincil);line-height:1.35}
+#cekmece .c-baglanti.yok b{color:var(--kirmizi)}
 </style>
 </head>
 <body>
@@ -1312,7 +1337,7 @@ select.secim{height:38px;border:1px solid var(--kenar);border-radius:var(--r,6px
 
 <script>
 'use strict';
-const VERSIYON = '2.9.5';
+const VERSIYON = '2.9.6';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -1856,10 +1881,24 @@ function sayfa(baslik, {geri, geriAd, sag = '', alt = ''} = {}) {
   return (baslik ? `<h1 class="buyuk-baslik">${esc(baslik)}</h1>` : '') + (alt ? `<p class="alt-baslik">${esc(alt)}</p>` : '');
 }
 /* Her ekranın üst çubuğunda EŞİTLE düğmesi (ortak veritabanına bağlıysa) */
-const esitleBtnHtml = () => window.ortakBagli && ortakBagli() ? `<button class="nav-btn esitle-btn${ortakDurum.hata ? ' hatali' : ''}" id="esitleBtn" title="${esc(ortakDurumMetni())}">${ikon('donustur')}<span>Eşitle</span></button>` : '';
+/* 2.9.6: düğme her zaman görünür. Cihaz ortak veritabanına bağlı değilse "Bağlı değil" yazar ve bağlanma / ortak hesaba geçme ekranını açar
+   (önceden düğme hiç çıkmıyordu; cihazın bağlı olmadığı anlaşılmıyor, veriler cihazlar arasında farklı kalıyordu). */
+function esitleDurum() {
+  if (!window.ortakBagli || !D.profil) return null;
+  const o = ortak();
+  if (ortakBagli()) return 'bagli';
+  return o && o.hesap && H.liste.some(h => h.id === o.hesap) ? 'baskaHesap' : 'yok';
+}
+const esitleBtnHtml = () => { const d = esitleDurum();
+  if (!d) return '';
+  if (d !== 'bagli') return `<button class="nav-btn esitle-btn hatali" id="esitleBtn" title="${d === 'yok' ? 'Bu cihaz ortak veritabanına bağlı değil; veriler yalnız bu cihazda' : 'Açık hesap ortak veritabanını kullanmıyor'}">${ikon('bulut')}<span>${d === 'yok' ? 'Bağlı değil' : 'Ortak hesaba geç'}</span></button>`;
+  return `<button class="nav-btn esitle-btn${ortakDurum.hata ? ' hatali' : ''}" id="esitleBtn" title="${esc(ortakDurumMetni())}">${ikon('donustur')}<span>Eşitle</span></button>`; };
 function esitleBtnBagla() {
   const b = $('#esitleBtn');
   if (!b) return;
+  const d = esitleDurum();
+  if (d === 'baskaHesap') { b.onclick = () => hesabaGec(ortak().hesap); return; }
+  if (d === 'yok') { b.onclick = () => ortakKatilFormu(); return; }
   b.onclick = async () => {
     if (!ortakOturum()) return girisEkrani();
     b.classList.add('donuyor'); b.disabled = true;
@@ -1910,6 +1949,8 @@ const MENU_AGAC = [
     {ad: 'Raporlar', modul: 'rapor', yol: 'rapor', alt: 'rapor'}]},
   {id: 'personel', ad: 'Personel', simge: 'kisiler', renk: 'camgobegi', tek: 'personel'}
 ];
+/* Alt menüsü gerçekten olan öğe (Vergi, Raporlar gibi alt menüsüz öğelerde +/- kutusu çıkmaz) */
+const altVar = o => !!(o && o.alt && ALT_MENU[o.alt]);
 const grupOgeleri = g => g.tek ? [] : g.ogeler.filter(o => modulAcik(o.modul));
 const grupGorunur = g => g.tek ? modulAcik(g.tek) : grupOgeleri(g).length > 0;
 function grupModulu(aktif) {
@@ -1918,7 +1959,7 @@ function grupModulu(aktif) {
   return (s || MENU_AGAC.find(ic) || {}).id;
 }
 function ogeGit(o) { cekmeceKapat(); ucKapat(); if (typeof o.yol === 'function') o.yol(); else git(o.yol, true); }
-const ogeSatir = (o, i, ek = '') => { const m = modul(o.modul); return `<button class="uc-oge" data-oi="${i}">${kare(o.simge || m.simge, o.renk || m.renk)}<span class="ad">${esc(o.ad)}</span>${rozet(o.modul)}${o.alt ? ikon('ileri', 'c-ok') : ''}${ek}</button>`; };
+const ogeSatir = (o, i, ek = '') => { const m = modul(o.modul); return `<button class="uc-oge" data-oi="${i}">${kare(o.simge || m.simge, o.renk || m.renk)}<span class="ad">${esc(o.ad)}</span>${rozet(o.modul)}${altVar(o) ? ikon('ileri', 'c-ok') : ''}${ek}</button>`; };
 function ucMenu() {
   let u = $('#ucMenu');
   if (!u) { u = document.createElement('div'); u.id = 'ucMenu'; u.className = 'uc-menu'; u.innerHTML = '<div class="uc-kolon" id="uc1"></div><div class="uc-kolon uc-alt" id="uc2"></div>'; document.body.appendChild(u);
@@ -1961,17 +2002,20 @@ function menuCiz(aktif) {
     const acik = !genis && ui.acikGrup === g.id;
     let ic = '';
     if (acik) ic = g.tek ? `<div class="c-agac">${altMenuHtml(g.tek, yol)}</div>`
-      : `<div class="c-agac">${grupOgeleri(g).map((o, i) => `<div class="c-agac-oge ${modulAcik(o.modul) && o.modul === aktif && ui.menuGrup !== undefined ? '' : ''}"><button class="uc-oge ${o.modul === aktif && aktifGrup === g.id && grupOgeleri(g).findIndex(y => y.modul === aktif) === i ? 'uc-secili' : ''}" data-mo="${g.id}|${i}">${kare(o.simge || modul(o.modul).simge, o.renk || modul(o.modul).renk)}<span class="ad">${esc(o.ad)}</span>${rozet(o.modul)}</button>${o.alt ? `<button class="c-ac" data-mac="${g.id}|${i}" aria-label="Alt menü">${ikon('ileri', 'c-ok' + (ui.acikOge === g.id + '|' + i ? ' don' : ''))}</button>` : ''}</div>
+      : `<div class="c-agac">${grupOgeleri(g).map((o, i) => `<div class="c-agac-oge ${modulAcik(o.modul) && o.modul === aktif && ui.menuGrup !== undefined ? '' : ''}"><button class="uc-oge ${o.modul === aktif && aktifGrup === g.id && grupOgeleri(g).findIndex(y => y.modul === aktif) === i ? 'uc-secili' : ''}" data-mo="${g.id}|${i}">${kare(o.simge || modul(o.modul).simge, o.renk || modul(o.modul).renk)}<span class="ad">${esc(o.ad)}</span>${rozet(o.modul)}</button>${altVar(o) ? `<button class="c-ac" data-mac="${g.id}|${i}" aria-label="Alt menü">${ikon('ileri', 'c-ok' + (ui.acikOge === g.id + '|' + i ? ' don' : ''))}</button>` : ''}</div>
           ${ui.acikOge === g.id + '|' + i ? altMenuHtml(o.alt, yol) : ''}`).join('')}</div>`;
     return `<a href="#" data-grup="${g.id}" class="${aktifGrup === g.id ? 'secili' : ''} ${acik ? 'acik' : ''}">${kare(g.simge, g.renk)}<span class="ad">${esc(g.ad)}</span>${g.tek ? rozet(g.tek) : ''}${ikon('ileri', 'c-ok')}</a>${ic}`;
   };
   $('#cekmece').innerHTML = `<button class="c-ust" id="cProfil">${kare(p.simge, p.renk)}<div style="min-width:0;flex:1"><b>${esc(D.ad || 'Firma hesabı')}</b><small>Hesap değiştir</small></div>${ikon('ileri', 'chev')}</button>
     ${H.liste.length > 1 ? `<div class="c-hesaplar">${H.liste.filter(x => x.id !== H.aktif).map(x => `<button data-hgec="${x.id}">${kare(x.profil ? PROFILLER[x.profil].simge : 'kisi', x.profil ? PROFILLER[x.profil].renk : 'gri')}<span>${esc(hesapAdi(x))}</span></button>`).join('')}</div>` : ''}
+    <div class="c-bolum">Gezinti</div>
     <div class="c-liste">${satir('panel', 'Özet', 'ev', 'mavi')}</div>
     <div class="c-liste c-ana">${MENU_AGAC.filter(grupGorunur).map(grupHtml).join('')}</div>
-    <div class="c-ayrac"></div>
+    <div class="c-bolum">Sistem</div>
     <div class="c-liste">${satir('menu', 'Modüller', 'izgara', 'indigo', kapali ? `<span class="rozet">${kapali} kapalı</span>` : '')}${satir('ayarlar', 'Ayarlar', 'ayar', 'gri')}</div>
-    <div class="c-alt">PowerServ+ ${VERSIYON}<br>${ortakBagli() ? `${esc(ortakOturum()?.ad || ortakOturum()?.eposta || '')} · <span class="ortak-durum">${esc(ortakDurumMetni())}</span>` : 'DN Marine · veriler bu cihazda'}</div>`;
+    <button class="c-alt c-baglanti ${ortakBagli() ? (ortakDurum.hata ? 'hata' : 'ok') : 'yok'}" id="cBaglanti"><span class="c-nokta"></span><span class="c-bm">${ortakBagli()
+      ? `<b>${esc(ortakOturum()?.ad || ortakOturum()?.eposta || 'Ortak veritabanı')}</b><small class="ortak-durum">${esc(ortakDurumMetni())}</small>`
+      : `<b>Ortak veritabanına bağlı değil</b><small>Veriler yalnız bu cihazda · bağlanmak için dokunun</small>`}<small>PowerServ+ ${VERSIYON}</small></span></button>`;
   $$('#cekmece a[data-id]').forEach(a => a.onclick = e => { e.preventDefault(); cekmeceKapat(); ucKapat(); git(a.dataset.id, true); });
   $$('#cekmece [data-grup]').forEach(a => {
     const g = MENU_AGAC.find(x => x.id === a.dataset.grup);
@@ -1980,10 +2024,11 @@ function menuCiz(aktif) {
       ui.acikGrup = ui.acikGrup === g.id ? null : g.id; ui.acikOge = null; menuCiz(aktif); };
     if (genis) a.onmouseenter = () => { if ($('#ucMenu.acik')) ucAc(g, a); };
   });
-  $$('#cekmece [data-mo]').forEach(b => b.onclick = () => { const [gi, i] = b.dataset.mo.split('|'), g = MENU_AGAC.find(x => x.id === gi); ui.menuGrup = gi; ui.acikGrup = gi; if (grupOgeleri(g)[+i].alt) ui.acikOge = b.dataset.mo; ogeGit(grupOgeleri(g)[+i]); });
+  $$('#cekmece [data-mo]').forEach(b => b.onclick = () => { const [gi, i] = b.dataset.mo.split('|'), g = MENU_AGAC.find(x => x.id === gi); ui.menuGrup = gi; ui.acikGrup = gi; if (altVar(grupOgeleri(g)[+i])) ui.acikOge = b.dataset.mo; ogeGit(grupOgeleri(g)[+i]); });
   $$('#cekmece [data-mac]').forEach(b => b.onclick = () => { ui.acikOge = ui.acikOge === b.dataset.mac ? null : b.dataset.mac; menuCiz(aktif); });
   altMenuBagla($('#cekmece'));
   $('#cProfil').onclick = () => { cekmeceKapat(); git('hesaplar'); };
+  $('#cBaglanti').onclick = () => { cekmeceKapat(); const d = esitleDurum(); if (d === 'bagli') { const b = $('#esitleBtn'); if (b) b.click(); } else if (d === 'baskaHesap') hesabaGec(ortak().hesap); else ortakKatilFormu(); };
   $$('[data-hgec]').forEach(b => b.onclick = () => hesabaGec(b.dataset.hgec));
   document.body.classList.remove('profilde');
 }
@@ -2911,8 +2956,10 @@ async function belgeGonder(o, s) {
   if (!['yonetici', 'muhasebe'].includes(ortakRol())) return 0;
   const l = (await belgeHepsi()).filter(b => b.hesap === H.aktif && !b.gonderildi);
   for (const b of l) {
+    if (b.red) continue;
     const j = b.silindi ? '' : JSON.stringify({id: b.id, ad: b.ad, tip: b.tip, boyut: b.boyut, veri: b.veri});
-    await ortakIstek(o, 'POST', `${FS}/v1/${belgeKok(o)}:commit`, {writes: [{update: {name: firmaYol(o, '/ozel/belgeler~' + idTemiz(b.id)), fields: fsAlanlar({k: 'belgeler', j, s: !!b.silindi, u: s.uid})}, updateTransforms: [zYaz()]}]});
+    try { await ortakIstek(o, 'POST', `${FS}/v1/${belgeKok(o)}:commit`, {writes: [{update: {name: firmaYol(o, '/ozel/belgeler~' + idTemiz(b.id)), fields: fsAlanlar({k: 'belgeler', j, s: !!b.silindi, u: s.uid})}, updateTransforms: [zYaz()]}]}); }
+    catch (e) { if (e.ag || e.oturum || (e.durum !== 403 && e.durum !== 400)) throw e; await belgeYaz({...b, red: true}); continue; }   // 2.9.6: sunucunun kabul etmediği ek eşitlemeyi durdurmaz
     if (b.silindi) await belgeIslem('readwrite', st => st ? st.delete(b.id) : void belgeBellek.delete(b.id));
     else await belgeYaz({...b, gonderildi: true});
   }
@@ -6678,7 +6725,8 @@ function kayitEtiket(k, x) {
 /* --- Gönder: son eşitlemeden beri değişen ve silinen kayıtlar tek seferde (en çok 200'lük paketler) yazılır --- */
 function ortakFarklar(iz) {
   const m = ortakKayitlar(D), f = [], rol = ortakRol();
-  for (const [key, r] of m) { const h = ozet(r.j); if (iz.ozet[key] !== h) f.push({key, k: r.k, j: r.j, h, x: r.x, yeni: !(key in iz.ozet)}); }
+  const red = iz.red || {};
+  for (const [key, r] of m) { const h = ozet(r.j); if (iz.ozet[key] !== h && red[key] !== h) f.push({key, k: r.k, j: r.j, h, x: r.x, yeni: !(key in iz.ozet)}); }
   for (const key of Object.keys(iz.ozet)) if (!m.has(key)) f.push({key, k: anahtarKoleksiyon(key), j: '', h: null, sil: true});
   return rol === 'servis' ? f.filter(r => SERVIS_KOLEKSIYON.includes(r.k)) : f;
 }
@@ -6710,11 +6758,25 @@ async function ortakGonder() {
       if (!toplu) w.push(logYazimi(o, s, r.sil ? 'sil' : r.yeni ? 'ekle' : 'duzenle', r.k, r.sil ? iz.ad[r.key] : r.k.startsWith('_') ? '' : kayitEtiket(r.k, r.x)));
     }
     if (toplu && !i) w.push(logYazimi(o, s, 'toplu', '', goc.length ? `Güvenlik geçişi: ${goc.length} gizli kayıt ayrı bölüme taşındı` : f.length + ' kayıt gönderildi'));
-    await ortakIstek(o, 'POST', `${FS}/v1/${belgeKok(o)}:commit`, {writes: w});
+    let reddedilen = new Set();
+    try { await ortakIstek(o, 'POST', `${FS}/v1/${belgeKok(o)}:commit`, {writes: w}); }
+    catch (e) {
+      // 2.9.6: sunucu kuralı paketteki tek bir kaydı reddederse bütün paket düşer ve eşitleme kilitlenirdi.
+      // Artık kayıtlar tek tek denenir; reddedilenler atlanır, diğerleri akmaya devam eder.
+      if (e.ag || e.oturum || (e.durum !== 403 && e.durum !== 400)) throw e;
+      for (const r of p) {
+        try { await ortakIstek(o, 'POST', `${FS}/v1/${belgeKok(o)}:commit`, {writes: [{update: {name: firmaYol(o, '/' + kayitYeri(r.k) + '/' + r.key), fields: fsAlanlar({k: r.k, j: r.j, s: !!r.sil, u: s.uid})}, updateTransforms: [zYaz()]}]}); }
+        catch (x) { if (x.ag || x.oturum || (x.durum !== 403 && x.durum !== 400)) throw x; reddedilen.add(r.key); }
+      }
+    }
+    iz.red ||= {};
     for (const r of p) {
+      if (reddedilen.has(r.key)) { iz.red[r.key] = r.h; continue; }
+      delete iz.red[r.key];
       if (r.sil) { delete iz.ozet[r.key]; delete iz.ad[r.key]; }
       else { iz.ozet[r.key] = r.h; if (!r.k.startsWith('_')) iz.ad[r.key] = kayitEtiket(r.k, r.x); }
     }
+    ortakDurum.red = Object.keys(iz.red).length;
     izYaz(iz);
   }
   if (!iz.goc27) { iz.goc27 = true; izYaz(iz); }
@@ -6827,8 +6889,11 @@ async function ortakEsitle() {
     const iz = izOku();
     let c = 0;
     if (!iz.son) c += await ortakCek();     // ilk eşitlemede önce buluttaki veri alınır
-    const g = await ortakGonder();
+    // 2.9.6: gönderim hata verse de buluttaki değişiklikler yine alınır (önceden gönderim hatası çekmeyi de durduruyordu)
+    let g = 0, gHata = null;
+    try { g = await ortakGonder(); } catch (e) { if (e.ag || e.oturum) throw e; gHata = e; }
     c += await ortakCek();
+    if (gHata) { if (c) ortakCizBekle = true; throw gHata; }
     if (++ortakSayac % 6 === 1) await ortakUyelikKontrol();
     Object.assign(ortakDurum, {zaman: Date.now(), hata: '', gonderilen: ortakDurum.gonderilen + g, cekilen: ortakDurum.cekilen + c});
     if (c) ortakCizBekle = true;
@@ -6851,11 +6916,13 @@ function ortakDurumMetni() {
   if (ortakDurum.hata) return 'Eşitlenemedi: ' + ortakDurum.hata;
   const iz = izOku(), b = ortakFarklar(iz).length;
   if (!ortakDurum.zaman) return 'Eşitleniyor…';
-  return `Eşitlendi ${new Date(ortakDurum.zaman).toLocaleTimeString('tr-TR', {hour: '2-digit', minute: '2-digit'})}${b ? ` · ${b} kayıt bekliyor` : ''}`;
+  const red = Object.keys(iz.red || {}).length;
+  return `Eşitlendi ${new Date(ortakDurum.zaman).toLocaleTimeString('tr-TR', {hour: '2-digit', minute: '2-digit'})}${b ? ` · ${b} kayıt bekliyor` : ''}${red ? ` · ${red} kayıt sunucu tarafından reddedildi` : ''}`;
 }
 function ortakDurumCiz() {
   $$('.ortak-durum').forEach(e => { e.textContent = ortakDurumMetni(); e.classList.toggle('gider', !!ortakDurum.hata); });
-  const b = $('#esitleBtn'); if (b) { b.classList.toggle('hatali', !!ortakDurum.hata); b.title = ortakDurumMetni(); }
+  const b = $('#esitleBtn'); if (b && esitleDurum() === 'bagli') { b.classList.toggle('hatali', !!ortakDurum.hata); b.title = ortakDurumMetni(); }
+  const c = $('#cBaglanti'); if (c && ortakBagli()) { c.classList.toggle('hata', !!ortakDurum.hata); c.classList.toggle('ok', !ortakDurum.hata); }
 }
 async function ortakUyelikKontrol() {
   const o = ortak(), s = o?.oturum;
@@ -7429,6 +7496,9 @@ if (window.Android) {
 }
 /* ================= Başlat ================= */
 hesaplariYukle();
+/* 2.9.6: program ortak veritabanına bağlı hesapla açılır. Cihazda başka (bağlı olmayan) bir hesap açık kaldıysa
+   ekranda başka veri görünüyor ve eşitleme yapılmıyordu. */
+{ const o = ortak(); if (o && o.hesap && !o.kurulum && o.hesap !== H.aktif && H.liste.some(h => h.id === o.hesap)) { H.aktif = o.hesap; hesapKaydet(); } }
 D = yukle();
 const buAy = bugun().slice(0, 7);
 const uiBaslangic = () => ({ay: buAy, pAy: buAy, pSekme: 'liste', vSekme: 'ozet', bAy: buAy, kAy: buAy, rDonem: 'bu-ay', rSekme: 'genel', kasaTur: 'hepsi', kasaAra: '', kisiAra: '', cariTip: 'hepsi', urunAra: '', stokFiltre: 'hepsi', stokKat: '', faturaAra: '', faturaFiltre: 'hepsi', servisFiltre: 'acik', servisAra: ''});
