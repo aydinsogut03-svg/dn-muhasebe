@@ -47,6 +47,7 @@ public class MainActivity extends Activity {
 
     private WebView web;
     private ValueCallback<Uri[]> dosyaGeriDonus;
+    private Uri kameraUri;
     private String bekleyenYol;
     private boolean sayfaHazir;
     private View acilis;
@@ -130,11 +131,29 @@ public class MainActivity extends Activity {
             public boolean onShowFileChooser(WebView v, ValueCallback<Uri[]> geriDonus, FileChooserParams p) {
                 if (dosyaGeriDonus != null) dosyaGeriDonus.onReceiveValue(null);
                 dosyaGeriDonus = geriDonus;
+                kameraUri = null;
+                // Fiş fotoğrafı: <input capture> ise doğrudan kamera açılır (Android 10+, izin gerekmez; foto Resimler/PowerServ'e kaydedilir).
+                if (p.isCaptureEnabled() && Build.VERSION.SDK_INT >= 29) {
+                    try {
+                        ContentValues cv = new ContentValues();
+                        cv.put(MediaStore.Images.Media.DISPLAY_NAME, "fis-" + System.currentTimeMillis() + ".jpg");
+                        cv.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
+                        cv.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/PowerServ");
+                        kameraUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, cv);
+                        Intent kamera = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                        kamera.putExtra(MediaStore.EXTRA_OUTPUT, kameraUri);
+                        startActivityForResult(kamera, DOSYA_SEC);
+                        return true;
+                    } catch (Exception e) {
+                        kameraUri = null;
+                    }
+                }
                 Intent sec = new Intent(Intent.ACTION_GET_CONTENT);
                 sec.addCategory(Intent.CATEGORY_OPENABLE);
-                sec.setType("*/*");
+                String[] turler = p.getAcceptTypes();
+                sec.setType(turler != null && turler.length == 1 && turler[0].contains("/") ? turler[0] : "*/*");
                 try {
-                    startActivityForResult(Intent.createChooser(sec, "Yedek dosyasını seç"), DOSYA_SEC);
+                    startActivityForResult(Intent.createChooser(sec, "Dosya seç"), DOSYA_SEC);
                     return true;
                 } catch (Exception e) {
                     dosyaGeriDonus = null;
@@ -222,7 +241,11 @@ public class MainActivity extends Activity {
             return;
         }
         if (istek == DOSYA_SEC && dosyaGeriDonus != null) {
-            dosyaGeriDonus.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(sonuc, veri));
+            if (kameraUri != null) {
+                if (sonuc == RESULT_OK) dosyaGeriDonus.onReceiveValue(new Uri[]{kameraUri});
+                else { try { getContentResolver().delete(kameraUri, null, null); } catch (Exception e) { } dosyaGeriDonus.onReceiveValue(null); }
+                kameraUri = null;
+            } else dosyaGeriDonus.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(sonuc, veri));
             dosyaGeriDonus = null;
             return;
         }
@@ -252,6 +275,9 @@ public class MainActivity extends Activity {
     }
 
     private void disariAc(Uri u) {
+        // Yalnızca web, e-posta, telefon ve WhatsApp bağlantıları açılır (intent:, file:, content: gibi adresler engellenir).
+        String sema = u.getScheme() == null ? "" : u.getScheme().toLowerCase(java.util.Locale.ROOT);
+        if (!(sema.equals("https") || sema.equals("http") || sema.equals("mailto") || sema.equals("tel") || sema.equals("whatsapp") || sema.equals("geo"))) return;
         try {
             startActivity(new Intent(Intent.ACTION_VIEW, u));
         } catch (Exception e) {
@@ -412,6 +438,35 @@ public class MainActivity extends Activity {
                 }
             });
             return u != null ? "İndirilenler/PowerServ+" : "paylaşım ekranı";
+        }
+
+        /** Ekli belgeyi (base64) İndirilenler/PowerServ+ klasörüne yazar ve uygun uygulamayla açar (PDF görüntüleyici vb.). */
+        @JavascriptInterface
+        public boolean belgeAc(String ad, String base64, String tur) {
+            if (Build.VERSION.SDK_INT < 29) return false;
+            try {
+                byte[] veri = android.util.Base64.decode(base64, android.util.Base64.DEFAULT);
+                ContentValues d = new ContentValues();
+                d.put(MediaStore.MediaColumns.DISPLAY_NAME, ad);
+                d.put(MediaStore.MediaColumns.MIME_TYPE, tur);
+                d.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/PowerServ+");
+                Uri u = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, d);
+                if (u == null) return false;
+                try (OutputStream o = getContentResolver().openOutputStream(u)) {
+                    if (o == null) return false;
+                    o.write(veri);
+                }
+                runOnUiThread(() -> {
+                    Intent ac = new Intent(Intent.ACTION_VIEW);
+                    ac.setDataAndType(u, tur);
+                    ac.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    try { startActivity(Intent.createChooser(ac, ad)); }
+                    catch (Exception e) { Toast.makeText(MainActivity.this, "İndirilenler/PowerServ+ klasörüne kaydedildi", Toast.LENGTH_LONG).show(); }
+                });
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
         }
 
         /** Dosyayı İndirilenler/PowerServ+ klasörüne yazar; başarılıysa konumu, değilse boş metin döner. */

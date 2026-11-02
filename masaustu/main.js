@@ -17,12 +17,21 @@ function ac() {
   Menu.setApplicationMenu(null);
   pencere.once('ready-to-show', () => { pencere.maximize(); pencere.show(); });
   // Dış bağlantılar (web sitesi, e-posta, harita) varsayılan tarayıcıda açılır.
+  const disari = url => { if (/^(https?|mailto|tel):/i.test(url)) shell.openExternal(url); };
   pencere.webContents.setWindowOpenHandler(({url}) => {
-    if (/^(https?|mailto|tel):/i.test(url)) shell.openExternal(url);
+    disari(url);
     return {action: 'deny'};
   });
   pencere.webContents.on('will-navigate', (e, url) => {
-    if (!url.startsWith('file:')) { e.preventDefault(); shell.openExternal(url); }
+    if (!url.startsWith('file:')) { e.preventDefault(); disari(url); }
+  });
+  // İndirilen dosyalar (ekli fatura PDF'i, Excel, yedek) İndirilenler/PowerServ+ klasörüne kaydedilir; PDF varsayılan uygulamayla açılır.
+  pencere.webContents.session.on('will-download', (e, oge) => {
+    const klasor = path.join(app.getPath('downloads'), 'PowerServ+');
+    require('fs').mkdirSync(klasor, {recursive: true});
+    const yol = path.join(klasor, oge.getFilename());
+    oge.setSavePath(yol);
+    oge.once('done', (_, durum) => { if (durum === 'completed' && /\.pdf$/i.test(yol)) shell.openPath(yol); });
   });
   // Ctrl+R yenile, F11 tam ekran, Ctrl+P yazdır sayfanın kendisinde; F12 geliştirici araçları kapalı.
   pencere.webContents.on('before-input-event', (e, g) => {
