@@ -39,6 +39,7 @@ Görsel dil iOS tarzı yumuşak görünüm (2.2): açık zemin, beyaz kartlar, b
 - 2.9.2: Yana açılan kırılım menü kaldırıldı (uzun listeler ekrandan taşıyordu). Masaüstünde de menü aşağı açılır: grup › modül › işlemler ve raporlar, kenar çubuğu kaydırılır. Modüle tıklayınca sayfası açılır ve alt menüsü açık kalır.
 - 2.9.3: e-Arşiv / e-Fatura yükleme (Fatura menüsü ve Fatura ekranı). GİB portalından ya da entegratörden indirilen XML (UBL-TR), ZIP (XML + görüntü) veya PDF seçilir; XML'den no, ETTN, tarih, vade, cari (VKN/TCKN, vergi dairesi, adres), kalemler, birim, iskonto, KDV ve tevkifat okunur, fatura oluşur ve cariye işlenir. Satıcı VKN'si firmanınki değilse alış faturası olur. Cari VKN ile bulunur, yoksa açılır. Aynı ETTN veya no ikinci kez alınmaz. Orijinal XML, PDF ve görüntü faturaya eklenir; XML içindeki şablonla (XSLT) fatura görüntüsü gösterilir. Yalnızca PDF varsa form PDF ekli açılır.
 - 2.9.4: Klasik görünüm: sol menü Windows tarzı ağaç (+/- kutuları, noktalı çizgiler, küçük ikonlar, seçili satır mavi zeminli); +/- kutusu alt menüyü açar, ada tıklamak sayfayı açar. Rapor tabloları sık ve çizgili.
+- 2.9.5: Windows kurulumunda boş pencere düzeltildi: Windows'ta dosya CRLF satır sonlarıyla geldiği için CSP betik özeti tutmuyor, betik engelleniyordu. csp-ekle.js artık önce LF'ye çeviriyor; .gitattributes HTML ve JS'yi LF tutuyor.
 
 ## Servis modülü
 

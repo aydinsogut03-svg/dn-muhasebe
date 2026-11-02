@@ -5,7 +5,9 @@
 const fs = require('fs'), crypto = require('crypto');
 const dosya = process.argv[2];
 if (!dosya) { console.error('Kullanım: node araclar/csp-ekle.js <index.html>'); process.exit(2); }
-let h = fs.readFileSync(dosya, 'utf8');
+// Windows'ta (git autocrlf) satır sonları CRLF gelir; tarayıcı özeti LF'ye çevrilmiş metinden hesaplar.
+// Özet uyuşmazsa betik engellenir ve pencere boş kalır, bu yüzden önce LF'ye çevrilir.
+let h = fs.readFileSync(dosya, 'utf8').replace(/\r\n?/g, '\n');
 const dur = m => { console.error('CSP eklenemedi: ' + m); process.exit(1); };
 if (h.includes('http-equiv="Content-Security-Policy"')) dur('dosyada zaten CSP var');
 const acik = [...h.matchAll(/<script\b([^>]*)>/gi)];
