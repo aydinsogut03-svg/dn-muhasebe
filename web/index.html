@@ -1272,31 +1272,7 @@ button.bag{background:none;border:0;padding:0;color:var(--mavi);font:inherit;fon
 .kod-alan{width:100%;box-sizing:border-box;border:0;background:transparent;color:var(--yazi);font:12.5px/1.45 ui-monospace,Menlo,Consolas,monospace;padding:12px;resize:vertical;word-break:break-all}
 select.secim{height:38px;border:1px solid var(--kenar);border-radius:var(--r,6px);background:var(--kart);color:var(--yazi);padding:0 10px;font:inherit;font-size:14px}
 .c-alt .ortak-durum.gider{color:var(--kirmizi)}
-/* 2.9.4: klasik görünüm. Sol menü Windows tarzı ağaç (+/- kutuları, noktalı çizgiler), sağda sık ve çizgili tablolar. */
-#cekmece{font-size:13px}
-#cekmece .c-liste{padding:0 6px!important;gap:0!important}
-#cekmece a[data-grup],#cekmece a[data-id],#cekmece .uc-oge,#cekmece .c-alt-menu a{min-height:26px!important;height:26px;padding:0 6px!important;border-radius:0!important;font-size:13.5px!important;font-weight:400!important;gap:6px!important;background:none!important;color:var(--yazi)!important;box-shadow:none!important}
-#cekmece .c-liste .kare,#cekmece .c-agac .kare,#cekmece .c-alt-menu .kare{width:18px!important;height:18px!important;background:none!important;color:var(--c)!important;box-shadow:none!important;border-radius:0!important}
-#cekmece .c-liste .kare svg,#cekmece .c-agac .kare svg,#cekmece .c-alt-menu .kare svg{width:16px!important;height:16px!important;stroke-width:1.9!important;color:var(--c)!important}
-#cekmece .c-liste .c-ok,#cekmece .c-ac .c-ok{visibility:hidden}
-#cekmece .c-ac{position:absolute;left:0;width:20px;height:26px;opacity:0}
-#cekmece .c-agac-oge{position:relative}
-#cekmece a[data-grup]::before,#cekmece .c-agac-oge .uc-oge::before{content:'+';width:11px;height:11px;border:1px solid var(--ikincil);font:600 11px/10px ui-monospace,Consolas,monospace;text-align:center;color:var(--yazi);flex:none;background:var(--kart)}
-#cekmece a[data-grup].acik::before,#cekmece .c-agac-oge:has(+ .c-alt-menu) .uc-oge::before{content:'−'}
-#cekmece .c-agac-oge:not(:has(.c-ac)) .uc-oge::before{visibility:hidden}
-#cekmece a[data-id]::before{content:'';width:11px;flex:none}
-#cekmece .ad,#cekmece .c-alt-menu a span{flex:0 1 auto!important;padding:1px 4px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#cekmece a.secili:not([data-grup]) .ad,#cekmece .c-alt-menu a.secili span,#cekmece .uc-secili .ad,#cekmece a[data-grup].secili:not(.acik) .ad{background:var(--mavi);color:#fff!important}
-#cekmece a[data-grup].acik .ad{font-weight:650}
-#cekmece .rozet{margin-left:auto}
-#cekmece .c-agac{margin:0 0 0 11px!important;padding-left:10px!important;border-left:1px dotted var(--ikincil)!important}
-#cekmece .c-agac .c-alt-menu,#cekmece .c-ana>.c-agac>.c-alt-menu{margin:0 0 0 16px!important;border-left:1px dotted var(--ikincil)!important;padding-left:8px;animation:none}
-#cekmece .c-alt-baslik{display:none}
-#cekmece .c-alt-menu a::before{content:'';width:8px;border-top:1px dotted var(--ikincil);margin-left:-8px;flex:none}
-#cekmece .m-arti{width:9px;height:9px;right:-3px;bottom:-3px}
-#cekmece .c-liste a.secili::before{position:static!important;left:auto!important;top:auto!important;bottom:auto!important;border-radius:0!important;display:block!important}
-#cekmece .c-liste a[data-grup].secili::before{width:11px!important;height:11px!important;background:var(--kart)!important}
-#cekmece .c-liste a[data-id].secili::before{width:11px!important;height:0!important;background:none!important}
+/* 2.9.4: klasik görünüm: sağda sık ve çizgili tablolar (sol menü 2.9.8 de Apple tarzına döndü). */
 .liste-tablo{font-size:13px}.liste-tablo td,.liste-tablo th{padding:4px 8px!important}
 .liste-tablo tbody tr:nth-child(even){background:color-mix(in srgb,var(--mavi) 4%,transparent)}
 .liste-tablo tbody tr.tik:hover{background:color-mix(in srgb,var(--mavi) 12%,transparent)}
@@ -1321,40 +1297,72 @@ select.secim{height:38px;border:1px solid var(--kenar);border-radius:var(--r,6px
 .kt-sil .i,.kt-sil svg{width:15px;height:15px}
 .kt-sil:not(:disabled):hover{color:var(--kirmizi)}
 .kt-sil:disabled{opacity:.25}
-/* Telefonda her kalem iki satır: üstte parça no + açıklama, altta miktar, birim, fiyat, KDV, tutar */
+/* Telefonda her kalem iki satır (üstte parça no + açıklama, altta miktar, birim, fiyat, KDV, tutar); başlık da iki satır. Sütunlar ekrana sığar, taşmaz. */
 @media (max-width:760px){
-  .kt-bas{display:none}
-  .kt-satir{grid-template-columns:22px .65fr .95fr 1.15fr .85fr 1.35fr 30px;grid-template-areas:"no kod kod ad ad isk sil" "no mik birim fiyat kdv tutar tutar"}
-  .kt.kt-teklif .kt-satir{grid-template-areas:"no kod kod ad ad ad sil" "no mik birim fiyat kdv tutar tutar"}
-  .kt-no{grid-area:no;border-right:1px solid var(--ayirici)}.kt-kod{grid-area:kod}.kt-ad{grid-area:ad}.kt-mik{grid-area:mik}.kt-birim{grid-area:birim}.kt-fiyat{grid-area:fiyat}.kt-isk{grid-area:isk}.kt-kdv{grid-area:kdv}.kt-tutar{grid-area:tutar;padding:0 6px;font-size:13px}.kt-sil{grid-area:sil}
-  .kt-kod,.kt-ad,.kt-sil{border-bottom:1px dotted var(--ayirici)!important}
-  .kt-satir input,.kt-satir select{font-size:15px!important;height:36px}
+  .kt{font-size:13px}
+  .kt-bas,.kt-satir{grid-template-columns:20px minmax(0,.75fr) minmax(0,.95fr) minmax(0,1.1fr) minmax(0,.8fr) minmax(0,1.3fr) 28px;grid-template-areas:"no kod kod ad ad isk sil" "no mik birim fiyat kdv tutar tutar"}
+  .kt.kt-teklif .kt-bas,.kt.kt-teklif .kt-satir{grid-template-columns:20px minmax(0,.75fr) minmax(0,.95fr) minmax(0,1.1fr) minmax(0,.8fr) minmax(0,1.3fr) 28px;grid-template-areas:"no kod kod ad ad ad sil" "no mik birim fiyat kdv tutar tutar"}
+  .kt-bas span{padding:3px 5px;font-size:10.5px}
+  .kt-bas .kt-tutar{padding-right:6px}
+  .kt-no{grid-area:no;border-right:1px solid var(--ayirici)}.kt-kod{grid-area:kod}.kt-ad{grid-area:ad}.kt-mik{grid-area:mik}.kt-birim{grid-area:birim}.kt-fiyat{grid-area:fiyat}.kt-isk{grid-area:isk}.kt-kdv{grid-area:kdv}.kt-tutar{grid-area:tutar}.kt-sil{grid-area:sil}
+  .kt-satir .kt-tutar{padding:0 6px;font-size:12.5px}
+  .kt-satir .kt-kod,.kt-satir .kt-ad,.kt-satir .kt-isk,.kt-satir .kt-sil{border-bottom:1px dotted var(--ayirici)!important}
+  .kt-satir>*{min-width:0!important;max-width:100%;overflow:hidden}
+  .kt-satir input,.kt-satir select{font-size:14px!important;height:34px;padding:6px 5px!important}
+  .kt-satir select{appearance:none!important;-webkit-appearance:none!important;padding:0 5px!important;text-overflow:ellipsis}
+  .kt-bas .kt-sil,.kt-bas .kt-no{border:0}
 }
-/* 2.9.6: kurumsal sol menü. Tek renk simgeler, bölüm başlıkları, tam satır seçim çubuğu, altta bağlantı durumu. */
-#cekmece{--c-simge:#3d5a7a;padding-top:0!important}
-@media (prefers-color-scheme:dark){#cekmece{--c-simge:#9db4cf}}
-#cekmece .c-ust{background:#1d3557!important;color:#fff!important;border:0!important;padding:12px 14px!important;margin:0 0 4px!important;border-radius:0!important;gap:10px!important;padding-top:max(env(safe-area-inset-top),12px)!important}
-#cekmece .c-ust b{font-size:13.5px;font-weight:650;white-space:normal!important;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-#cekmece .c-ust small{color:rgba(255,255,255,.7)!important;font-size:11.5px;letter-spacing:.02em}
-#cekmece .c-ust .kare{background:rgba(255,255,255,.14)!important;color:#fff!important;box-shadow:none!important;border-radius:4px!important}
-#cekmece .c-ust .kare svg,#cekmece .c-ust .chev{color:#fff!important}
-#cekmece .c-bolum{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ikincil);padding:10px 14px 4px;margin-top:2px}
-#cekmece .c-bolum+.c-liste{border-top:1px solid var(--kenar);padding-top:3px!important}
-#cekmece .c-ana{padding-bottom:4px!important}
-#cekmece .c-liste .kare,#cekmece .c-agac .kare,#cekmece .c-alt-menu .kare{--c:var(--c-simge)!important;color:var(--c-simge)!important}
-#cekmece .c-liste .kare svg,#cekmece .c-agac .kare svg,#cekmece .c-alt-menu .kare svg{color:var(--c-simge)!important}
-#cekmece a[data-grup]{font-weight:650!important;margin-top:1px}
-#cekmece a[data-grup],#cekmece a[data-id],#cekmece .uc-oge,#cekmece .c-alt-menu a{height:27px;min-height:27px!important}
-@media (hover:hover){#cekmece a[data-grup]:hover,#cekmece a[data-id]:hover,#cekmece .uc-oge:hover,#cekmece .c-alt-menu a:hover{background:color-mix(in srgb,var(--mavi) 8%,transparent)!important}}
-#cekmece a.secili:not([data-grup]) .ad,#cekmece .c-alt-menu a.secili span,#cekmece .uc-secili .ad,#cekmece a[data-grup].secili:not(.acik) .ad{background:none!important;color:var(--yazi)!important;font-weight:650}
-#cekmece .c-liste a[data-id].secili,#cekmece .c-alt-menu a.secili,#cekmece .uc-oge.uc-secili,#cekmece a[data-grup].secili:not(.acik){background:color-mix(in srgb,var(--mavi) 14%,transparent)!important;box-shadow:inset 3px 0 0 var(--mavi)!important}
-#cekmece .c-baglanti{display:flex;align-items:flex-start;gap:9px;width:100%;text-align:left;border:0;border-top:1px solid var(--kenar);background:color-mix(in srgb,var(--yazi) 3%,transparent);padding:10px 14px max(env(safe-area-inset-bottom),10px)!important;margin-top:auto;font:inherit;color:var(--yazi);cursor:pointer}
-#cekmece .c-baglanti .c-nokta{width:9px;height:9px;border-radius:50%;flex:none;margin-top:4px;background:var(--yesil);box-shadow:0 0 0 3px color-mix(in srgb,var(--yesil) 22%,transparent)}
+/* 2.9.8: Apple tarzı sol menü. Ayarlar uygulaması gibi renkli yuvarlak kare ikonlar, büyük satırlar, sağda açılır ok, yumuşak seçim. */
+#cekmece,body:not(.profilde) #cekmece{background:#f2f2f7!important;border-right:1px solid rgba(60,60,67,.14)!important;font-size:15px;padding-top:0!important}
+@media (prefers-color-scheme:dark){#cekmece,body:not(.profilde) #cekmece{background:#1c1c1e!important;border-right-color:rgba(255,255,255,.08)!important}}
+#cekmece .c-ust{margin:10px 10px 4px!important;width:calc(100% - 20px)!important;padding:12px!important;border:0!important;border-radius:14px!important;background:var(--kart)!important;box-shadow:0 1px 2px rgba(0,0,0,.05);gap:12px!important;padding-top:max(env(safe-area-inset-top),12px)!important}
+#cekmece .c-ust .kare{width:40px!important;height:40px!important;border-radius:10px!important}
+#cekmece .c-ust .kare svg{width:22px!important;height:22px!important}
+#cekmece .c-ust b{font-size:14.5px;font-weight:600;white-space:normal!important;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#cekmece .c-ust small{font-size:12.5px;color:var(--ikincil)}
+#cekmece .c-bolum{font-size:12.5px;font-weight:600;color:var(--ikincil);padding:14px 22px 5px;letter-spacing:0;text-transform:none}
+#cekmece .c-liste{padding:0 10px!important;gap:1px!important;display:flex;flex-direction:column}
+#cekmece a[data-grup],#cekmece a[data-id],#cekmece .uc-oge{min-height:40px!important;padding:5px 10px!important;border-radius:10px!important;gap:12px!important;font-size:15px!important;font-weight:500!important;color:var(--yazi)!important;background:none!important;box-shadow:none!important}
+#cekmece .c-liste .kare,#cekmece .c-agac>.c-agac-oge .kare{width:30px!important;height:30px!important;border-radius:8px!important;flex:none}
+#cekmece .c-liste .kare svg,#cekmece .c-agac>.c-agac-oge .kare svg{width:18px!important;height:18px!important}
+#cekmece .c-agac{margin:1px 0 4px 0!important;padding:0 0 0 14px!important;border:0!important}
+#cekmece .c-agac .uc-oge{min-height:38px!important;font-size:14.5px!important}
+#cekmece .c-alt-menu{margin:2px 0 6px 30px!important;padding:0!important;border:0!important;animation:none}
+#cekmece .c-alt-baslik{font-size:11.5px!important;font-weight:600;color:var(--ikincil);padding:8px 10px 3px!important;letter-spacing:0!important;text-transform:none!important}
+#cekmece .c-alt-menu a{min-height:36px!important;padding:4px 10px!important;border-radius:9px!important;gap:11px!important;font-size:14px!important;color:var(--yazi)!important}
+#cekmece .c-alt-menu .kare{width:26px!important;height:26px!important;border-radius:7px!important}
+#cekmece .c-alt-menu .kare svg{width:16px!important;height:16px!important}
+@media (hover:hover){#cekmece a[data-grup]:hover,#cekmece a[data-id]:hover,#cekmece .uc-oge:hover,#cekmece .c-alt-menu a:hover{background:rgba(120,120,128,.12)!important}}
+#cekmece .c-liste a[data-id].secili,#cekmece .c-alt-menu a.secili,#cekmece .uc-oge.uc-secili,#cekmece a[data-grup].secili:not(.acik){background:color-mix(in srgb,var(--mavi) 15%,transparent)!important;color:var(--mavi)!important;font-weight:600!important}
+#cekmece a.secili::before{display:none!important}
+#cekmece [data-grup] .c-ok,#cekmece .c-ac .c-ok{width:16px!important;height:16px!important;color:var(--ucuncul)!important}
+#cekmece .c-baglanti{display:flex;align-items:flex-start;gap:10px;width:calc(100% - 20px);margin:auto 10px max(env(safe-area-inset-bottom),10px)!important;text-align:left;border:0;border-radius:14px;background:var(--kart);box-shadow:0 1px 2px rgba(0,0,0,.05);padding:11px 13px!important;font:inherit;color:var(--yazi);cursor:pointer}
+#cekmece .c-baglanti .c-nokta{width:10px;height:10px;border-radius:50%;flex:none;margin-top:4px;background:var(--yesil);box-shadow:0 0 0 3px color-mix(in srgb,var(--yesil) 22%,transparent)}
 #cekmece .c-baglanti.yok .c-nokta,#cekmece .c-baglanti.hata .c-nokta{background:var(--kirmizi);box-shadow:0 0 0 3px color-mix(in srgb,var(--kirmizi) 22%,transparent)}
 #cekmece .c-bm{display:flex;flex-direction:column;min-width:0;gap:1px}
-#cekmece .c-bm b{font-size:12.5px;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#cekmece .c-bm small{font-size:11px;color:var(--ikincil);line-height:1.35}
+#cekmece .c-bm b{font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#cekmece .c-bm small{font-size:12px;color:var(--ikincil);line-height:1.35}
 #cekmece .c-baglanti.yok b{color:var(--kirmizi)}
+html.apk #cekmece a[data-grup],html.apk #cekmece a[data-id],html.apk #cekmece .uc-oge{min-height:46px!important;font-size:16px!important}
+html.apk #cekmece .c-alt-menu a{min-height:42px!important;font-size:15px!important}
+/* 2.9.8: Özet ekranı. Sade üst bant ve bekleyenler kutuları */
+.kahraman.kompakt{padding:12px 16px 12px!important;border-radius:16px}
+.kahraman.kompakt .k-alt{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.kahraman.kompakt .k-etiket{margin-top:8px!important}
+.kahraman.kompakt .k-tutar{font-size:26px!important;margin-top:2px}
+.kahraman.kompakt .k-satir{margin-top:0!important;padding-bottom:3px}
+.bekleyenler{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-bottom:14px}
+@media (max-width:1000px){.bekleyenler{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.bk-kutu{display:flex;flex-direction:column;gap:1px;min-width:0;background:var(--kart);border:1px solid var(--kenar);border-radius:14px;padding:10px 10px 9px;color:var(--yazi);text-decoration:none}
+.bk-kutu:active{opacity:.7}
+.bk-ust{display:flex;align-items:center;gap:6px;min-width:0}
+.bk-ust svg{width:18px;height:18px;flex:none;color:var(--c)}
+.bk-ust b{font-size:19px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.bk-ad{font-size:12.5px;font-weight:600;line-height:1.2;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bk-kutu small{font-size:11.5px;color:var(--ikincil);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bk-kutu.uyar{border-color:color-mix(in srgb,var(--kirmizi) 45%,var(--kenar))}
+.bk-kutu.uyar .bk-ust b{color:var(--kirmizi)}
+@media (max-width:420px){.bekleyenler{gap:6px}.bk-kutu{padding:8px 8px 7px;border-radius:12px}.bk-ust b{font-size:16.5px}.bk-ust svg{width:16px;height:16px}.bk-ad{font-size:11.5px}.bk-kutu small{font-size:10.5px}}
 </style>
 </head>
 <body>
@@ -1367,7 +1375,7 @@ select.secim{height:38px;border:1px solid var(--kenar);border-radius:var(--r,6px
 
 <script>
 'use strict';
-const VERSIYON = '2.9.7';
+const VERSIYON = '2.9.8';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -2655,16 +2663,11 @@ function panelEkrani() {
   const saat = new Date().getHours(), selam = saat < 6 ? 'İyi geceler' : saat < 12 ? 'Günaydın' : saat < 18 ? 'İyi günler' : 'İyi akşamlar';
   const bos = hesapBosMu();
   {
-    const o = ayToplam(ay), aylar = [...Array(6)].map((_, i) => ayKaydir(ay, i - 5)), netler = aylar.map(a => ayToplam(a).net);
-    const mn = Math.min(0, ...netler), mx = Math.max(1, ...netler), W = 340, Hs = 58;
-    const nokta = netler.map((n, i) => [i / 5 * W, 8 + (1 - (n - mn) / (mx - mn || 1)) * (Hs - 16)]);
-    const yol = nokta.map(([x, y], i) => (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1)).join(' ');
-    h += `<section class="kahraman"><div class="k-ust"><span><b>${selam}</b> · <span style="text-transform:capitalize">${esc(tarih)}</span></span><span class="k-surum">PowerServ+ · v${VERSIYON}</span></div>
-      ${ac('kasa') ? `<div class="k-etiket">${esc(ayAdi(ay))} · net</div><div class="k-tutar ${o.net < 0 ? 'eksi' : ''}" data-sayac="${o.net}">${para(o.net)}</div>
-      <div class="k-satir"><span><i style="background:#6cc398"></i>${esc(t.gelir)}<b>${kisaPara(o.gelir)}</b></span><span><i style="background:#e2806a"></i>${esc(t.gider)}<b>${kisaPara(o.gider)}</b></span></div>
-      ${netler.every(n => !n) ? '' : `<svg viewBox="0 0 ${W} ${Hs}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="kAlan" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d2ad66" stop-opacity=".35"/><stop offset="1" stop-color="#d2ad66" stop-opacity="0"/></linearGradient></defs>
-        <path class="alan" d="${yol} L${W} ${Hs} L0 ${Hs} Z" fill="url(#kAlan)"/><path class="cizgi" d="${yol}" fill="none" stroke="#d2ad66" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-        </svg>`}` : ''}${!ac('kasa') || netler.every(n => !n) ? '<div style="height:16px"></div>' : ''}</section>`;
+    // 2.9.8: sade üst bant (grafik kaldırıldı; aylık grafik Raporlar'da)
+    const o = ayToplam(ay);
+    h += `<section class="kahraman kompakt"><div class="k-ust"><span><b>${selam}</b> · <span style="text-transform:capitalize">${esc(tarih)}</span></span><span class="k-surum">v${VERSIYON}</span></div>
+      ${ac('kasa') ? `<div class="k-alt"><div><div class="k-etiket">${esc(ayAdi(ay))} · net</div><div class="k-tutar ${o.net < 0 ? 'eksi' : ''}" data-sayac="${o.net}">${para(o.net)}</div></div>
+      <div class="k-satir"><span><i style="background:#6cc398"></i>${esc(t.gelir)}<b>${kisaPara(o.gelir)}</b></span><span><i style="background:#e2806a"></i>${esc(t.gider)}<b>${kisaPara(o.gider)}</b></span></div></div>` : ''}</section>`;
   }
   if (bos) {
     const ad = [];
@@ -2683,51 +2686,30 @@ function panelEkrani() {
   if (ac('stok')) yeni.push(['stok', 'kutu', 'kahve', 'Stok']);
   if (yeni.length) h += `<div class="yeni-satir">${yeni.map(([id, sm, rk, ad]) => `<button data-h="${id}" style="--c:var(--${rk})">${ikon(sm)}${esc(ad)}</button>`).join('')}</div>`;
 
-  // Metrik kutuları
-  const o = ayToplam(ay), m = [];
-  const metrik = (yol, sm, renk, baslik, deger, alt, sinif = '') => `<a class="metrik" href="#/${yol}" style="--c:var(--${renk})"><div class="ust">${ikon(sm)}${esc(baslik)}</div><b class="${sinif}">${deger}</b><small>${esc(alt)}</small></a>`;
-  if (false) {
-    m.push(metrik('kasa', 'giris', 'yesil', `${ayAdi(ay).split(" ")[0]} ${t.gelir}`, para(o.gelir), `${D.islemler.filter(i => i.tur === 'gelir' && i.tarih.startsWith(ay)).length} kayıt`, 'gelir'));
-    m.push(metrik('kasa', 'cikis', 'kirmizi', `${ayAdi(ay).split(" ")[0]} ${t.gider}`, para(o.gider), `${D.islemler.filter(i => i.tur === 'gider' && i.tarih.startsWith(ay)).length} kayıt`, 'gider'));
-  }
+  // 2.9.8: Bekleyenler. Tek bakışta açık işler, teklifler, alacak ve borçlar (telefonda 3, geniş ekranda 6 kutu yan yana)
   const acikSatis = D.faturalar.filter(f => f.tur === 'fatura' && f.durum === 'gonderildi' && !f.odendi);
   const acikAlis = D.faturalar.filter(f => f.tur === 'alis' && f.durum === 'gonderildi' && !f.odendi);
+  const kutu = (yol, sm, renk, deger, ad, alt = '', uyar = false) => `<a class="bk-kutu${uyar ? ' uyar' : ''}" href="#/${yol}" style="--c:var(--${renk})"><span class="bk-ust">${ikon(sm)}<b>${deger}</b></span><span class="bk-ad">${esc(ad)}</span>${alt ? `<small>${esc(alt)}</small>` : ''}</a>`;
+  const bk = [];
+  if (ac('servis')) { const n = D.servisler.filter(servisAcikMi).length; bk.push(kutu('servis', 'pano', 'mor', n, 'Bekleyen iş', n ? 'açık iş emri' : 'iş yok')); }
+  if (ac('teklif')) { const l = D.faturalar.filter(f => f.tur === 'teklif' && teklifDurumKod(f) === 'bekliyor'); bk.push(kutu('teklif', 'teklif', 'indigo', l.length, 'Bekleyen teklif', l.length ? kisaPara(l.reduce((x, f) => x + faturaHesap(f).toplam, 0)) : 'yanıt beklenmiyor')); }
   if (ac('veresiye') || ac('fatura')) {
-    // Cariye işlenmiş faturalar zaten bakiyede; cari bağlantısı olmayan açık faturalar ayrıca eklenir.
-    const cariAlacak = ac('veresiye') ? D.kisiler.reduce((s, k) => s + Math.max(0, kisiBakiye(k.id)), 0) : 0;
-    const disi = acikSatis.filter(f => !(f.kisiId && f.cariyeIsle && ac('veresiye'))).reduce((s, f) => s + faturaKalan(f), 0);
-    const borcluSay = D.kisiler.filter(k => kisiBakiye(k.id) > 0).length;
-    m.push(metrik(ac('veresiye') ? 'veresiye' : 'fatura', 'para', 'mavi', 'Tahsil edilecek', para(cariAlacak + disi), ac('veresiye') ? `${borcluSay} ${kucult(t.kisi)} borçlu` : `${acikSatis.length} açık fatura`));
+    const cariAlacak = ac('veresiye') ? D.kisiler.reduce((x, k) => x + Math.max(0, kisiBakiye(k.id)), 0) : 0;
+    const disi = acikSatis.filter(f => !(f.kisiId && f.cariyeIsle && ac('veresiye'))).reduce((x, f) => x + faturaKalan(f), 0);
+    const cariSay = ac('veresiye') ? D.kisiler.filter(k => kisiBakiye(k.id) > 0).length : 0, fSay = acikSatis.filter(f => !(f.kisiId && f.cariyeIsle && ac('veresiye'))).length;
+    bk.push(kutu(cariSay || !ac('fatura') ? 'veresiye' : 'fatura', 'banknot', 'yesil', kisaPara(cariAlacak + disi), 'Alacaklar', [cariSay ? cariSay + ' cari' : '', fSay ? fSay + ' fatura' : ''].filter(Boolean).join(' · ') || 'alacak yok'));
   }
   if (ac('fatura') || ac('personel')) {
     const bekleyen = ac('personel') ? D.personeller.filter(x => x.aktif !== false && x.maas > 0 && !maasOdendiMi(x.id, ay)) : [];
-    const odenecek = acikAlis.reduce((s, f) => s + faturaKalan(f), 0) + bekleyen.reduce((s, x) => s + Math.max(0, bordro(x, ay).net - avansToplam(x.id, ay)), 0);
-    m.push(metrik(ac('fatura') ? 'fatura' : 'personel', 'saat', 'turuncu', 'Ödenecek', para(odenecek), [acikAlis.length ? acikAlis.length + ' alış faturası' : '', bekleyen.length ? bekleyen.length + ' maaş' : ''].filter(Boolean).join(' · ') || 'Bekleyen ödeme yok'));
+    const odenecek = acikAlis.reduce((x, f) => x + faturaKalan(f), 0) + bekleyen.reduce((x, y) => x + Math.max(0, bordro(y, ay).net - avansToplam(y.id, ay)), 0);
+    bk.push(kutu(ac('fatura') ? 'fatura' : 'personel', 'kumSaati', 'turuncu', kisaPara(odenecek), 'Bekleyen ödeme', [acikAlis.length ? acikAlis.length + ' fatura' : '', bekleyen.length ? bekleyen.length + ' maaş' : ''].filter(Boolean).join(' · ') || 'ödeme yok'));
   }
-  if (ac('butce')) {
-    const limit = Object.values(D.butceler).reduce((a, b) => a + b, 0), har = butceHarcama(ay);
-    const harcanan = Object.keys(D.butceler).reduce((a, k) => a + (har[k] || 0), 0);
-    m.push(metrik('butce', 'hedef', 'mor', 'Bütçe', limit ? para(limit - harcanan) : '—', limit ? `kalan · %${Math.round(harcanan / limit * 100)} harcandı` : 'Limit eklemek için dokunun', limit && harcanan > limit ? 'gider' : ''));
-  }
-  if (false) m.push(metrik('kasa', 'cuzdan', o.net < 0 ? 'kirmizi' : 'nane', `${ayAdi(ay).split(" ")[0]} net`, para(o.net), o.gelir ? `Gelirin %${Math.round(Math.abs(o.net) / o.gelir * 100)} kadarı` : 'Bu ay gelir yok', o.net < 0 ? 'gider' : ''));
-  if (m.length && !bos) h += `<div class="metrikler">${m.join('')}</div>`;
-
-  // Son 6 ay grafiği
-  if (ac('kasa') && !bos) {
-    const aylar = [...Array(6)].map((_, i) => ayKaydir(ay, i - 5)), v = aylar.map(ayToplam);
-    // Grafik ekran genişliğinde çizilir: geniş ekranda yazılar büyümez, çubuklar yayılır.
-    const W = grafikGenislik(), Hh = W > 600 ? 170 : 110, enb = Math.max(1, ...v.flatMap(x => [x.gelir, x.gider])), bw = W / 6;
-    h += `<div class="kart grafik"><div class="kart-ust">${ikon('grafik', 'kucuk-simge')}Son 6 ay<span class="sagda"><a href="#/rapor" class="mavi" style="text-decoration:none">Raporlar</a></span></div>
-      ${enb === 1 ? '<div class="grafik-bos"><span>Kayıt girdikçe aylık akış burada çizilir</span></div>' : `<svg viewBox="0 0 ${W} ${Hh + 16}" role="img" aria-label="Son 6 ay gelir ve gider">${[.5, 1].map(f => `<line x1="0" x2="${W}" y1="${Hh - f * (Hh - 4)}" y2="${Hh - f * (Hh - 4)}" stroke="var(--ayirici)" stroke-width=".6"/>`).join('')}
-      ${v.map((x, i) => { const gx = i * bw, hg = x.gelir / enb * (Hh - 4), hd = x.gider / enb * (Hh - 4);
-        const cg = W > 600 ? .17 : .28, x1 = .5 - cg - .02, x2 = .52;
-        return `<rect class="bar" style="animation-delay:${i * 50}ms" x="${gx + bw * x1}" y="${Hh - hg}" width="${bw * cg}" height="${hg}" rx="3" fill="var(--yesil)"/><rect class="bar" style="animation-delay:${i * 50 + 25}ms" x="${gx + bw * x2}" y="${Hh - hd}" width="${bw * cg}" height="${hd}" rx="3" fill="var(--kirmizi)" opacity=".85"/>
-          <text class="ek" x="${gx + bw / 2}" y="${Hh + 12}" text-anchor="middle">${esc(ayKisa(aylar[i]).slice(0, 3))}</text>`; }).join('')}</svg>`}
-      <div class="lejant"><span><i style="background:var(--yesil)"></i>${esc(t.gelir)}</span><span><i style="background:var(--kirmizi)"></i>${esc(t.gider)}</span><span style="margin-left:auto">En yüksek ${kisaPara(enb)}</span></div></div>`;
-  }
+  if (ac('fatura')) { const l = [...acikSatis, ...acikAlis].filter(f => f.vade && f.vade < bugun()); bk.push(kutu('fatura', 'takvimX', 'kirmizi', l.length, 'Vadesi geçen', l.length ? kisaPara(l.reduce((x, f) => x + faturaKalan(f), 0)) : 'gecikme yok', l.length > 0)); }
+  if (ac('stok')) { const n = D.urunler.filter(u => u.kritik > 0 && urunMiktar(u.id) <= u.kritik).length; bk.push(kutu('stok', 'depoUyari', 'kahve', n, 'Kritik stok', n ? 'ürün azaldı' : 'stok yeterli', n > 0)); }
+  if (bk.length && !bos) h += `<div class="bolum">Bekleyenler</div><div class="bekleyenler">${bk.join('')}</div>`;
 
   // Yaklaşan ödemeler ve tahsilatlar
-  const yak = [...acikSatis, ...acikAlis].map(f => ({f, g: f.vade ? gunFark(f.vade) : null})).sort((a, b) => (a.g ?? 999) - (b.g ?? 999)).slice(0, 5);
+  const yak = [...acikSatis, ...acikAlis].map(f => ({f, g: f.vade ? gunFark(f.vade) : null})).sort((a, b) => (a.g ?? 999) - (b.g ?? 999)).slice(0, 3);
   if (ac('fatura') && yak.length) h += `<div class="bolum">Vadesi yaklaşan faturalar<a href="#/fatura">Tümü</a></div><div class="grup">${yak.map(({f, g}) => {
       const alis = f.tur === 'alis';
       return `<button class="hucre kareli" data-fatura="${f.id}">${kare(alis ? 'giris' : 'dosya', alis ? 'turuncu' : 'indigo')}<div class="ic"><b>${esc(faturaMusteri(f))}</b><small>${alis ? 'Ödenecek' : 'Tahsil edilecek'} · ${esc(f.no)}</small></div>
@@ -2740,17 +2722,14 @@ function panelEkrani() {
     if (borc > 0 && g !== null && g <= 7) uy.push(`<a class="hucre kareli" href="#/banka/${k.id}">${kare('kart', 'turuncu')}<div class="ic"><b>${esc(k.ad)} son ödeme</b><small>${esc(tarihYaz(so))} · borç ${para(borc)}</small></div><span class="deger vade ${g <= 3 ? 'gider' : ''}">${g === 0 ? 'bugün' : g + ' gün'}</span></a>`);
   }
   if (ac('servis')) {
-    const ac2 = D.servisler.filter(servisAcikMi);
-    if (ac2.length) uy.push(`<a class="hucre kareli" href="#/servis">${kare('alet', 'mor')}<div class="ic"><b>${ac2.length} açık iş emri</b><small>${esc(ac2.slice(0, 3).map(servisMusteri).join(', '))}</small></div>${CHEV}</a>`);
     const bk = yaklasanBakimlar(14);
     if (bk.length) uy.push(`<a class="hucre kareli" href="#/servis">${kare('takvim', 'turuncu')}<div class="ic"><b>${bk.length} makinenin bakımı yaklaşıyor</b><small>${esc(bk.slice(0, 3).map(b => servisMusteri(b.s)).join(', '))}</small></div>${CHEV}</a>`);
   }
-  if (ac('stok')) { const k = D.urunler.filter(u => u.kritik > 0 && urunMiktar(u.id) <= u.kritik); if (k.length) uy.push(`<a class="hucre kareli" href="#/stok">${kare('kutu', 'kahve')}<div class="ic"><b>${k.length} üründe stok az</b><small>${esc(k.slice(0, 3).map(u => u.ad).join(', '))}</small></div>${CHEV}</a>`); }
   if (ac('kdv')) { const sira = vergiTakvimi(ay).concat(vergiTakvimi(ayKaydir(ay, 1))).find(v => v.tarih >= bugun()); if (sira) { const g = gunFark(sira.tarih); uy.push(`<a class="hucre kareli" href="#/kdv">${kare('takvim', 'pembe')}<div class="ic"><b>${esc(sira.ad)}</b><small>${esc(tarihYaz(sira.tarih))} · ${esc(sira.alt)}</small></div><span class="deger vade ${g <= 3 ? 'gider' : ''}">${g === 0 ? 'bugün' : g + ' gün'}</span></a>`); } }
   if (uy.length) h += `<div class="bolum">Hatırlatmalar</div><div class="grup">${uy.join('')}</div>`;
 
   if (ac('kasa') && !bos) {
-    const son = [...D.islemler].sort(islemSirala).slice(0, 6);
+    const son = [...D.islemler].sort(islemSirala).slice(0, 4);
     h += `<div class="bolum">Son işlemler${son.length ? '<a href="#/kasa">Tümü</a>' : ''}</div>`;
     h += son.length ? `<div class="grup">${son.map(i => islemSatiri(i, true)).join('')}</div>`
       : bosDurum('cuzdan', 'yesil', 'Henüz kayıt yok', `İlk ${kucult(t.gelir)} veya ${kucult(t.gider)} kaydınızı yukarıdaki düğmelerle ekleyin.`);
@@ -3941,7 +3920,7 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
   };
   const kalemCiz = () => {
     /* 2.9.7: Excel gibi kalem tablosu. Her kalem tek satır (telefonda iki satır); Enter bir sonraki hücreye, son hücrede yeni satıra geçer. */
-    $('#kalemler', m).innerHTML = `<div class="kt${teklif ? ' kt-teklif' : ''}"><div class="kt-bas"><span>#</span><span>Parça no</span><span>Açıklama</span><span class="sg">Miktar</span><span>Birim</span><span class="sg">Birim fiyat ₺</span>${teklif ? '' : '<span class="sg">İsk. %</span>'}<span>KDV</span><span class="sg">Tutar</span><span></span></div>`
+    $('#kalemler', m).innerHTML = `<div class="kt${teklif ? ' kt-teklif' : ''}"><div class="kt-bas"><span class="kt-no">#</span><span class="kt-kod">Parça no</span><span class="kt-ad">Açıklama</span><span class="kt-mik sg">Miktar</span><span class="kt-birim">Birim</span><span class="kt-fiyat sg">Fiyat ₺</span>${teklif ? '' : '<span class="kt-isk sg">İsk.%</span>'}<span class="kt-kdv">KDV</span><span class="kt-tutar sg">Tutar</span><span class="kt-sil"></span></div>`
       + x.kalemler.map((k, i) => `<div class="kalem kt-satir" data-k="${i}"><span class="kt-no">${i + 1}</span>
         <input type="text" data-a="kod" class="kt-kod" value="${esc(k.kod || (k.urunId && urun(k.urunId)?.kod) || '')}" placeholder="Parça no">
         <input type="text" data-a="ad" class="kt-ad" value="${esc(k.ad)}" placeholder="Ürün / hizmet açıklaması">
