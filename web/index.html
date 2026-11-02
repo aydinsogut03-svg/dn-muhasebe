@@ -1300,6 +1300,36 @@ select.secim{height:38px;border:1px solid var(--kenar);border-radius:var(--r,6px
 .liste-tablo{font-size:13px}.liste-tablo td,.liste-tablo th{padding:4px 8px!important}
 .liste-tablo tbody tr:nth-child(even){background:color-mix(in srgb,var(--mavi) 4%,transparent)}
 .liste-tablo tbody tr.tik:hover{background:color-mix(in srgb,var(--mavi) 12%,transparent)}
+/* 2.9.7: Excel gibi kalem tablosu (teklif ve fatura) */
+.kt{background:var(--kart);border:1px solid var(--kenar);border-radius:6px;overflow:hidden;margin-bottom:10px;font-size:13.5px}
+.kt-bas,.kt-satir{display:grid;grid-template-columns:28px minmax(80px,.8fr) minmax(140px,2.4fr) 70px 82px 104px 62px 64px 104px 30px;align-items:stretch}
+.kt.kt-teklif .kt-bas,.kt.kt-teklif .kt-satir{grid-template-columns:28px minmax(80px,.8fr) minmax(140px,2.4fr) 70px 82px 110px 64px 110px 30px}
+.kt-bas{background:color-mix(in srgb,var(--mavi) 9%,var(--kart));font-size:11.5px;font-weight:650;color:var(--ikincil);border-bottom:1px solid var(--kenar)}
+.kt-bas span{padding:6px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kt-bas .sg,.kt .sg{text-align:right}
+.kt-satir{border-bottom:1px solid var(--ayirici);margin:0!important;border-radius:0!important;background:none!important}
+.kt-satir:last-child{border-bottom:0}
+.kt-satir:nth-child(odd){background:color-mix(in srgb,var(--mavi) 3%,transparent)!important}
+.kt-satir>*{border-right:1px solid var(--ayirici);min-width:0}
+.kt-satir>:last-child{border-right:0}
+.kt-satir input,.kt-satir select{border:0!important;background:none!important;font:inherit!important;font-size:14px!important;color:var(--yazi);padding:7px 6px!important;height:34px;width:100%;min-width:0;border-radius:0!important;box-shadow:none!important;outline:0}
+.kt-satir select{appearance:auto;-webkit-appearance:auto;padding:0 2px!important}
+.kt-satir input:focus,.kt-satir select:focus{background:color-mix(in srgb,var(--mavi) 12%,transparent)!important;box-shadow:inset 0 0 0 2px var(--mavi)!important}
+.kt-no{display:flex;align-items:center;justify-content:center;font-size:11.5px;color:var(--ikincil)}
+.kt-tutar{display:flex;align-items:center;justify-content:flex-end;padding:0 8px;font-weight:600;white-space:nowrap}
+.kt-sil{border:0;background:none;color:var(--ikincil);display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
+.kt-sil .i,.kt-sil svg{width:15px;height:15px}
+.kt-sil:not(:disabled):hover{color:var(--kirmizi)}
+.kt-sil:disabled{opacity:.25}
+/* Telefonda her kalem iki satır: üstte parça no + açıklama, altta miktar, birim, fiyat, KDV, tutar */
+@media (max-width:760px){
+  .kt-bas{display:none}
+  .kt-satir{grid-template-columns:22px .65fr .95fr 1.15fr .85fr 1.35fr 30px;grid-template-areas:"no kod kod ad ad isk sil" "no mik birim fiyat kdv tutar tutar"}
+  .kt.kt-teklif .kt-satir{grid-template-areas:"no kod kod ad ad ad sil" "no mik birim fiyat kdv tutar tutar"}
+  .kt-no{grid-area:no;border-right:1px solid var(--ayirici)}.kt-kod{grid-area:kod}.kt-ad{grid-area:ad}.kt-mik{grid-area:mik}.kt-birim{grid-area:birim}.kt-fiyat{grid-area:fiyat}.kt-isk{grid-area:isk}.kt-kdv{grid-area:kdv}.kt-tutar{grid-area:tutar;padding:0 6px;font-size:13px}.kt-sil{grid-area:sil}
+  .kt-kod,.kt-ad,.kt-sil{border-bottom:1px dotted var(--ayirici)!important}
+  .kt-satir input,.kt-satir select{font-size:15px!important;height:36px}
+}
 /* 2.9.6: kurumsal sol menü. Tek renk simgeler, bölüm başlıkları, tam satır seçim çubuğu, altta bağlantı durumu. */
 #cekmece{--c-simge:#3d5a7a;padding-top:0!important}
 @media (prefers-color-scheme:dark){#cekmece{--c-simge:#9db4cf}}
@@ -1337,7 +1367,7 @@ select.secim{height:38px;border:1px solid var(--kenar);border-radius:var(--r,6px
 
 <script>
 'use strict';
-const VERSIYON = '2.9.6';
+const VERSIYON = '2.9.7';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -3539,7 +3569,8 @@ function kisiSec(fn, kayitsizSecenek = true) {
 }
 
 /* ================= Stok ================= */
-const BIRIMLER = ['adet','kg','gr','lt','m','m²','paket','kutu','koli','saat'];
+const BIRIMLER = ['adet','takım','set','çift','paket','kutu','koli','kg','gr','ton','lt','ml','m','cm','m²','m³','saat','gün','ay','sefer'];
+const birimSecenek = sec => [...BIRIMLER, ...(sec && !BIRIMLER.includes(sec) ? [sec] : [])].map(b => `<option ${b === sec ? 'selected' : ''}>${esc(b)}</option>`).join('');
 const urun = id => D.urunler.find(u => u.id === id);
 function urunMiktar(id) {
   let n = 0;
@@ -3617,7 +3648,7 @@ function urunFormu(u) {
       <label class="f-satir sol"><input type="text" id="uMarka" value="${esc(x.marka)}" placeholder="Marka (ör. Volvo Penta, MAN, Racor)"></label>
       <label class="f-satir sol"><input type="text" id="uKat" value="${esc(x.kategori)}" placeholder="Grup (ör. Filtre, Yağ, Conta, Rulman)" list="uKatListe"></label>
       <datalist id="uKatListe">${stokKategoriler().map(k => `<option value="${esc(k)}">`).join('')}</datalist>
-      <label class="f-satir"><span>Birim</span><select id="uBirim">${BIRIMLER.map(b => `<option ${b === x.birim ? 'selected' : ''}>${b}</option>`).join('')}</select></label>
+      <label class="f-satir"><span>Birim</span><select id="uBirim">${birimSecenek(x.birim)}</select></label>
     </div>
     <div class="bolum">Parça bilgileri</div>
     <div class="grup">
@@ -3909,11 +3940,18 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
       <div class="hucre"><div class="ic"><b class="k">${t.tevkif ? 'Ödenecek tutar' : 'Genel toplam'}</b></div><span class="tutar" style="font-weight:700">${para(t.toplam)}</span></div>`;
   };
   const kalemCiz = () => {
-    $('#kalemler', m).innerHTML = x.kalemler.map((k, i) => `<div class="kalem" data-k="${i}">
-      <div class="f-satir sol kalem-ad"><input type="text" data-a="kod" value="${esc(k.kod || (k.urunId && urun(k.urunId)?.kod) || '')}" placeholder="Parça no" class="kalem-kod"><input type="text" data-a="ad" value="${esc(k.ad)}" placeholder="Ürün / hizmet açıklaması"></div>
-      <div class="f-satir"><input data-a="miktar" inputmode="decimal" value="${k.miktar ? sayiFmt(k.miktar) : ''}" placeholder="Miktar" style="text-align:left;flex:0 0 22%"><span class="soluk" style="flex:none;min-width:0;margin-right:auto">${esc(k.birim || 'adet')} ×</span><input data-a="fiyat" inputmode="decimal" value="${tutarYaz(k.fiyat)}" placeholder="Birim fiyat ₺">${teklif ? '' : `<input data-a="iskonto" inputmode="decimal" value="${k.iskonto ? sayiFmt(k.iskonto) : ''}" placeholder="İsk. %" class="kalem-isk" aria-label="İskonto yüzdesi">`}</div>
-      <div class="kalem-alt"><div class="kdv-sec">${KDV_ORAN.map(o => `<button type="button" data-kdv="${o}" class="${(k.kdv || 0) === o ? 'secili' : ''}">%${o}</button>`).join('')}</div>
-        <span class="sayi" data-tutar>${para(kalemNet(k))}</span>${x.kalemler.length > 1 ? `<button type="button" data-sil>Sil</button>` : ''}</div></div>`).join('');
+    /* 2.9.7: Excel gibi kalem tablosu. Her kalem tek satır (telefonda iki satır); Enter bir sonraki hücreye, son hücrede yeni satıra geçer. */
+    $('#kalemler', m).innerHTML = `<div class="kt${teklif ? ' kt-teklif' : ''}"><div class="kt-bas"><span>#</span><span>Parça no</span><span>Açıklama</span><span class="sg">Miktar</span><span>Birim</span><span class="sg">Birim fiyat ₺</span>${teklif ? '' : '<span class="sg">İsk. %</span>'}<span>KDV</span><span class="sg">Tutar</span><span></span></div>`
+      + x.kalemler.map((k, i) => `<div class="kalem kt-satir" data-k="${i}"><span class="kt-no">${i + 1}</span>
+        <input type="text" data-a="kod" class="kt-kod" value="${esc(k.kod || (k.urunId && urun(k.urunId)?.kod) || '')}" placeholder="Parça no">
+        <input type="text" data-a="ad" class="kt-ad" value="${esc(k.ad)}" placeholder="Ürün / hizmet açıklaması">
+        <input data-a="miktar" class="kt-mik sg" inputmode="decimal" value="${k.miktar ? sayiFmt(k.miktar) : ''}" placeholder="Miktar">
+        <select data-a="birim" class="kt-birim" aria-label="Birim">${birimSecenek(k.birim || 'adet')}</select>
+        <input data-a="fiyat" class="kt-fiyat sg" inputmode="decimal" value="${tutarYaz(k.fiyat)}" placeholder="Fiyat">
+        ${teklif ? '' : `<input data-a="iskonto" class="kt-isk sg" inputmode="decimal" value="${k.iskonto ? sayiFmt(k.iskonto) : ''}" placeholder="İsk.%" aria-label="İskonto yüzdesi">`}
+        <select data-a="kdv" class="kt-kdv" aria-label="KDV">${KDV_ORAN.map(o => `<option value="${o}" ${(k.kdv || 0) === o ? 'selected' : ''}>%${o}</option>`).join('')}</select>
+        <span class="kt-tutar sayi" data-tutar>${para(kalemNet(k))}</span>
+        <button type="button" class="kt-sil" data-sil aria-label="Satırı sil" ${x.kalemler.length > 1 ? '' : 'disabled'}>${ikon('kapat')}</button></div>`).join('') + '</div>';
     $$('.kalem', m).forEach(el => {
       const k = x.kalemler[+el.dataset.k];
       $$('input[data-a]', el).forEach(inp => inp.oninput = () => {
@@ -3926,8 +3964,20 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
         $('[data-tutar]', el).textContent = para(kalemNet(k));
         toplamCiz();
       });
-      $$('[data-kdv]', el).forEach(b => b.onclick = () => { k.kdv = +b.dataset.kdv; $$('[data-kdv]', el).forEach(y => y.classList.toggle('secili', y === b)); toplamCiz(); });
-      const s = $('[data-sil]', el); if (s) s.onclick = () => { x.kalemler.splice(+el.dataset.k, 1); kalemCiz(); };
+      $('[data-a=birim]', el).onchange = e => { k.birim = e.target.value; };
+      $('[data-a=kdv]', el).onchange = e => { k.kdv = +e.target.value; toplamCiz(); };
+      // Excel gibi: hücreye girince içerik seçilir, yazılan eskisinin yerine geçer
+      $$('input', el).forEach(inp => { if (inp.dataset.a === 'ad') return; inp.onfocus = () => { inp.select(); inp._sec = true; }; inp.onmouseup = e => { if (inp._sec) { e.preventDefault(); inp._sec = false; } }; });
+      $$('input, select', el).forEach(inp => inp.onkeydown = e => {
+        if (e.key !== 'Enter' || e.isComposing) return;
+        e.preventDefault();
+        const hucre = $$('input, select', el), j = hucre.indexOf(inp);
+        if (j < hucre.length - 1) return hucre[j + 1].focus();
+        const sonraki = $(`.kalem[data-k="${+el.dataset.k + 1}"] input`, m);
+        if (sonraki) return sonraki.focus();
+        $('#kalemEkle', m).click();
+      });
+      const s = $('[data-sil]', el); if (s) s.onclick = () => { if (x.kalemler.length < 2) return; x.kalemler.splice(+el.dataset.k, 1); kalemCiz(); };
     });
     toplamCiz();
   };
@@ -3935,7 +3985,7 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
   if (ilkEk) x.ekler = [ilkEk];
   const ekler = teklif ? null : ekBagla(m, x, ilkEk ? [ilkEk.id] : []);
   if ($('#fTevkif', m)) $('#fTevkif', m).onchange = e => { x.tevkifat = +e.target.value; if (!x.tevkifat) delete x.tevkifat; toplamCiz(); };
-  $('#kalemEkle', m).onclick = () => { x.kalemler.push(yeniKalem(x.kalemler[x.kalemler.length - 1]?.kdv ?? 20)); kalemCiz(); $$('.kalem input[data-a=ad]', m).pop().focus(); };
+  $('#kalemEkle', m).onclick = () => { x.kalemler.push(yeniKalem(x.kalemler[x.kalemler.length - 1]?.kdv ?? 20)); kalemCiz(); $$('.kalem input[data-a=kod]', m).pop().focus(); };
   if ($('#stoktanEkle', m)) $('#stoktanEkle', m).onclick = () => urunSec(u => {
     const kalem = {ad: u.ad, kod: u.kod || '', urunId: u.id, miktar: 1, birim: u.birim, fiyat: alisF ? (u.alis || 0) : u.satis, kdv: u.kdvOran ?? 20};
     const bos = x.kalemler.length === 1 && !x.kalemler[0].ad && !x.kalemler[0].fiyat;
