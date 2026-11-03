@@ -1406,6 +1406,7 @@ html.apk #cekmece .c-alt-menu a{min-height:42px!important;font-size:15px!importa
 .bk-ust b{font-size:19px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .bk-ad{font-size:12.5px;font-weight:600;line-height:1.2;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bk-kutu small{font-size:11.5px;color:var(--ikincil);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rapor-hub{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:4px 14px;align-items:start}
 .kur-serit{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:8px;margin-bottom:14px}
 .kur-serit button.bk-kutu{font:inherit;text-align:left;cursor:pointer}
 .kur-serit .bk-ust b{font-size:17px}
@@ -1683,7 +1684,7 @@ body.erp .erp-form #mSerbest .yuzen{display:none}
 
 <script>
 'use strict';
-const VERSIYON = '2.13.0';
+const VERSIYON = '2.14.0';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -2378,26 +2379,46 @@ const grafikGenislik = (en = 330) => Math.round(Math.min(1100, Math.max(en, (($(
 const MENU_AGAC = [
   {id: 'satis', ad: 'Satış', simge: 'etiket', renk: 'indigo', ogeler: [
     {ad: 'Teklifler', modul: 'teklif', yol: 'teklif', alt: 'teklif', simge: 'teklif'},
-    {ad: 'Faturalar', modul: 'fatura', yol: () => { ui.faturaFiltre = 'satis'; git('fatura', true); ciz(); }, alt: 'fatura', simge: 'faturaTL'},
-    {ad: 'Satışlar', modul: 'fatura', yol: 'fatura/r-satis', simge: 'grafik', renk: 'yesil'}]},
+    {ad: 'Faturalar', modul: 'fatura', yol: () => { ui.faturaFiltre = 'hepsi'; git('fatura', true); ciz(); }, alt: 'fatura', simge: 'faturaTL'}]},
   {id: 'servis', ad: 'Servis', simge: 'alet', renk: 'mor', ogeler: [
     {ad: 'Servis fişleri', modul: 'servis', yol: 'servis', alt: 'servis', simge: 'pano'},
     {ad: 'Stoklar', modul: 'stok', yol: 'stok', alt: 'stok', simge: 'depo'}]},
   {id: 'muhasebe', ad: 'Muhasebe', simge: 'defter', renk: 'turuncu', ogeler: [
-    {ad: 'Fatura', modul: 'fatura', yol: () => { ui.faturaFiltre = 'hepsi'; git('fatura', true); ciz(); }, alt: 'fatura', simge: 'faturaTL'},
     {ad: 'Banka ve kasa', modul: 'banka', yol: 'banka', alt: 'banka'},
     {ad: 'Gelir/Gider', modul: 'kasa', yol: 'kasa', alt: 'kasa'},
     {ad: 'Cari hesaplar', modul: 'veresiye', yol: 'veresiye', alt: 'veresiye', simge: 'cariKart'},
-    {ad: 'Vergi', modul: 'kdv', yol: 'kdv', alt: 'kdv'},
-    {ad: 'Raporlar', modul: 'rapor', yol: 'rapor', alt: 'rapor'}]},
-  {id: 'personel', ad: 'Personel', simge: 'kisiler', renk: 'camgobegi', tek: 'personel'}
+    {ad: 'Vergi', modul: 'kdv', yol: 'kdv', alt: 'kdv'}]},
+  {id: 'personel', ad: 'Personel', simge: 'kisiler', renk: 'camgobegi', tek: 'personel'},
+  {id: 'raporlar', ad: 'Raporlar', simge: 'grafik', renk: 'yesil', raporlar: true}
 ];
+/* 2.14: tüm raporlar modül alt menülerinden çıkarıldı; sol menüde tek "Raporlar" başlığında modül modül toplanır */
+const RAPOR_SIRA = ['rapor', 'servis', 'teklif', 'fatura', 'veresiye', 'stok', 'banka', 'kasa', 'personel'];
+const raporModulleri = () => RAPOR_SIRA.filter(m => modulAcik(m) && ALT_MENU[m]);
+const raporModulAd = m => m === 'rapor' ? 'Genel raporlar' : modulAdi(m);
+/* Modülün rapor öğeleri: [ad, simge, hedef, gi, i] (Genel raporlarda Dönemsel analiz de dahil) */
+const raporOgeleri = m => (ALT_MENU[m] || []).flatMap(([, l], gi) => gi > 0 || m === 'rapor' ? l.map((x, i) => [...x, gi, i]).filter(x => typeof x[2] === 'string') : []);
+const raporYolu = yol => yol === 'raporlar' || yol === 'rapor' || /^[a-z]+\/r-/.test(yol);
+function raporMenuHtml(yol) {
+  return `<div class="c-agac"><div class="c-agac-oge"><button class="uc-oge ${yol === 'raporlar' ? 'uc-secili' : ''}" data-tumrapor>${kare('izgara', 'yesil')}<span class="ad">Tüm raporlar</span></button></div>`
+    + raporModulleri().map(m => `<div class="c-agac-oge"><button class="uc-oge" data-rm="${m}">${kare(modul(m).simge, modul(m).renk)}<span class="ad">${esc(raporModulAd(m))}</span><span class="rozet">${raporOgeleri(m).length}</span></button><button class="c-ac" data-rm="${m}" aria-label="Raporları aç">${ikon('ileri', 'c-ok' + (ui.acikRapor === m ? ' don' : ''))}</button></div>
+      ${ui.acikRapor === m ? altMenuHtml(m, yol, 'rapor') : ''}`).join('') + '</div>';
+}
+function raporlarEkrani() {
+  let h = sayfa('Raporlar');
+  const l = raporModulleri();
+  h += l.length ? `<div class="rapor-hub">${l.map(m => `<section><div class="bolum">${esc(raporModulAd(m))}</div><div class="grup">${raporOgeleri(m).map(([ad, simge, , gi, i]) =>
+      `<button class="hucre kareli" data-alt="${m}|${gi}|${i}">${kare(simge.replace(/\+$/, ''), modul(m).renk)}<div class="ic"><b>${esc(ad)}</b></div>${CHEV}</button>`).join('')}</div></section>`).join('')}</div>`
+    : bosDurum('grafik', 'yesil', 'Rapor yok', 'Raporlar açık modüllerden gelir. Modüller ekranından modül açabilirsiniz.');
+  $('#icerik').innerHTML = h;
+  altMenuBagla($('#icerik'));
+}
 /* Alt menüsü gerçekten olan öğe (Vergi, Raporlar gibi alt menüsüz öğelerde +/- kutusu çıkmaz) */
-const altVar = o => !!(o && o.alt && ALT_MENU[o.alt]);
-const grupOgeleri = g => g.tek ? [] : g.ogeler.filter(o => modulAcik(o.modul));
-const grupGorunur = g => g.tek ? modulAcik(g.tek) : grupOgeleri(g).length > 0;
+const altVar = o => !!(o && o.alt && ALT_MENU[o.alt] && ALT_MENU[o.alt][0][1].some(([, , h]) => h !== o.alt));
+const grupOgeleri = g => g.tek || g.raporlar ? [] : g.ogeler.filter(o => modulAcik(o.modul));
+const grupGorunur = g => g.raporlar ? raporModulleri().length > 0 : g.tek ? modulAcik(g.tek) : grupOgeleri(g).length > 0;
 function grupModulu(aktif) {
-  const ic = g => g.tek ? g.tek === aktif : g.ogeler.some(o => o.modul === aktif);
+  if (raporYolu(rota().join('/').split('?')[0])) return 'raporlar';
+  const ic = g => g.tek ? g.tek === aktif : !!g.ogeler && g.ogeler.some(o => o.modul === aktif);
   const s = MENU_AGAC.find(g => g.id === ui.menuGrup && ic(g));
   return (s || MENU_AGAC.find(ic) || {}).id;
 }
@@ -2441,12 +2462,13 @@ function menuCiz(aktif) {
   const kapali = MODULLER.filter(m => !m.zorunlu && rolModulIzin(m.id) && !modulAcik(m.id)).length;
   const aktifGrup = grupModulu(aktif);
   ui.acikGrup ??= aktifGrup;
+  if (raporYolu(yol) && yol !== 'raporlar' && ui.acikRapor === undefined) ui.acikRapor = rota()[0];
   const grupHtml = g => {
     const acik = !genis && ui.acikGrup === g.id;
     let ic = '';
-    if (acik) ic = g.tek ? `<div class="c-agac">${altMenuHtml(g.tek, yol)}</div>`
+    if (acik) ic = g.raporlar ? raporMenuHtml(yol) : g.tek ? `<div class="c-agac">${altMenuHtml(g.tek, yol)}</div>`
       : `<div class="c-agac">${grupOgeleri(g).map((o, i) => `<div class="c-agac-oge ${modulAcik(o.modul) && o.modul === aktif && ui.menuGrup !== undefined ? '' : ''}"><button class="uc-oge ${o.modul === aktif && aktifGrup === g.id && grupOgeleri(g).findIndex(y => y.modul === aktif) === i ? 'uc-secili' : ''}" data-mo="${g.id}|${i}">${kare(o.simge || modul(o.modul).simge, o.renk || modul(o.modul).renk)}<span class="ad">${esc(o.ad)}</span>${rozet(o.modul)}</button>${altVar(o) ? `<button class="c-ac" data-mac="${g.id}|${i}" aria-label="Alt menü">${ikon('ileri', 'c-ok' + (ui.acikOge === g.id + '|' + i ? ' don' : ''))}</button>` : ''}</div>
-          ${ui.acikOge === g.id + '|' + i ? altMenuHtml(o.alt, yol) : ''}`).join('')}</div>`;
+          ${ui.acikOge === g.id + '|' + i ? altMenuHtml(o.alt, yol, 'sade') : ''}`).join('')}</div>`;
     return `<a href="#" data-grup="${g.id}" class="${aktifGrup === g.id ? 'secili' : ''} ${acik ? 'acik' : ''}">${kare(g.simge, g.renk)}<span class="ad">${esc(g.ad)}</span>${g.tek ? rozet(g.tek) : ''}${ikon('ileri', 'c-ok')}</a>${ic}`;
   };
   $('#cekmece').innerHTML = `<button class="c-ust" id="cProfil">${kare(p.simge, p.renk)}<div style="min-width:0;flex:1"><b>${esc(D.ad || 'Firma hesabı')}</b><small>Hesap değiştir</small></div>${ikon('ileri', 'chev')}</button>
@@ -2468,6 +2490,8 @@ function menuCiz(aktif) {
     if (genis) a.onmouseenter = () => { if ($('#ucMenu.acik')) ucAc(g, a); };
   });
   $$('#cekmece [data-mo]').forEach(b => b.onclick = () => { const [gi, i] = b.dataset.mo.split('|'), g = MENU_AGAC.find(x => x.id === gi); ui.menuGrup = gi; ui.acikGrup = gi; if (altVar(grupOgeleri(g)[+i])) ui.acikOge = b.dataset.mo; ogeGit(grupOgeleri(g)[+i]); });
+  $$('#cekmece [data-rm]').forEach(b => b.onclick = () => { ui.acikRapor = ui.acikRapor === b.dataset.rm ? null : b.dataset.rm; menuCiz(aktif); });
+  $$('#cekmece [data-tumrapor]').forEach(b => b.onclick = () => { cekmeceKapat(); git('raporlar', true); });
   $$('#cekmece [data-mac]').forEach(b => b.onclick = () => { ui.acikOge = ui.acikOge === b.dataset.mac ? null : b.dataset.mac; menuCiz(aktif); });
   altMenuBagla($('#cekmece'));
   $('#cProfil').onclick = () => { cekmeceKapat(); git('hesaplar'); };
@@ -2510,6 +2534,7 @@ function ciz0() {
   if (s === 'ayarlar') { menuCiz('ayarlar'); ayarlarEkrani(); return kaydirma(); }
   if (s === 'kullanicilar') { menuCiz('ayarlar'); kullanicilarEkrani(); return kaydirma(); }
   if (s === 'islemkaydi') { menuCiz('ayarlar'); islemKaydiEkrani(); return kaydirma(); }
+  if (s === 'raporlar') { menuCiz('raporlar'); raporlarEkrani(); return kaydirma(); }
   if (s === 'fis') { fisEkrani(p1); yanDuzen(); return kaydirma(); }
   if (!modulAcik(s)) return git('panel', true);
   menuCiz(s);
@@ -2538,7 +2563,7 @@ const ALT_MENU = {
       ['Bakım takibi', 'bakim', 'servis/r-bakim'], ['Kullanılan parçalar', 'cark', 'servis/r-parca'], ['Teknisyen işçilik', 'teknisyen', 'servis/r-iscilik'], ['Servis kârlılığı', 'paralar', 'servis/r-karlilik']]]],
   rapor: [['İşlemler', [['Dönemsel analiz', 'grafik', 'rapor']]],
     ['Raporlar', [['Aylık ciro', 'grafik', 'rapor/r-ciro'], ['Aylık tahsilat', 'banknot', 'rapor/r-tahsilat'], ['Alacak yaşlandırma', 'kumSaati', 'rapor/r-yaslandirma'],
-      ['Teknisyen başına iş', 'teknisyen', 'rapor/r-teknisyen'], ['Servis kârlılığı', 'paralar', 'rapor/r-karlilik']]]],
+      ['Teknisyen başına iş', 'teknisyen', 'rapor/r-teknisyen']]]],
   banka: [['İşlemler', [['Hesaplar', 'banka', 'banka'], ['Yeni hesap', 'banka+', () => finansHesapFormu()], ['Virman', 'virman', () => virmanFormu()]]],
     ['Raporlar', [['Hesap bakiyeleri', 'terazi', 'banka/r-bakiye'], ['Hesap hareketleri', 'hareket', 'banka/r-hareket']]]],
   kasa: [['İşlemler', [['Gelir / gider kayıtları', 'cuzdan', 'kasa'], ['Gelir fişi', 'gelirOk', () => islemFormu(null, 'gelir', null, true)], ['Gider fişi', 'giderOk', () => islemFormu(null, 'gider', null, true)], ['Fiş fotoğrafından gider', 'kamera', fisCek]]],
@@ -2565,11 +2590,13 @@ const ALT_MENU = {
 const menuSimge = (simge, renk) => { const arti = simge.endsWith('+'), ad = arti ? simge.slice(0, -1) : simge;
   return `<span class="kare m-kare r-${renk}">${ikon(ad)}${arti ? '<i class="m-arti"><svg viewBox="0 0 10 10"><path d="M5 2v6M2 5h6"/></svg></i>' : ''}</span>`; };
 /* Kenar menüde etkin modülün alt öğeleri */
-function altMenuHtml(id, aktifYol) {
+function altMenuHtml(id, aktifYol, secim = 'islem') {
   const g = ALT_MENU[id];
   if (!g) return '';
-  return `<div class="c-alt-menu">${g.map(([baslik, l]) => `<div class="c-alt-baslik">${esc(baslik)}</div>${l.map(([ad, simge, hedef], i) =>
-    `<a href="${typeof hedef === 'string' ? '#/' + hedef : 'javascript:void 0'}" data-alt="${id}|${g.findIndex(x => x[0] === baslik)}|${i}" class="${hedef === aktifYol ? 'secili' : ''}">${menuSimge(simge, modul(id)?.renk || 'gri')}<span>${esc(ad)}</span></a>`).join('')}`).join('')}</div>`;
+  const l = secim === 'rapor' ? raporOgeleri(id) : g[0][1].map((x, i) => [...x, 0, i]).filter(x => !(secim === 'sade' && x[2] === id));
+  if (!l.length) return '';
+  return `<div class="c-alt-menu">${l.map(([ad, simge, hedef, gi, i]) =>
+    `<a href="${typeof hedef === 'string' ? '#/' + hedef : 'javascript:void 0'}" data-alt="${id}|${gi}|${i}" class="${hedef === aktifYol ? 'secili' : ''}">${menuSimge(simge, modul(id)?.renk || 'gri')}<span>${esc(ad)}</span></a>`).join('')}</div>`;
 }
 function altMenuBagla(kok) {
   $$('[data-alt]', kok).forEach(a => a.onclick = e => {
