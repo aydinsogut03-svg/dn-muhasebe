@@ -1377,6 +1377,170 @@ html.apk #cekmece .c-alt-menu a{min-height:42px!important;font-size:15px!importa
 .bk-kutu.uyar{border-color:color-mix(in srgb,var(--kirmizi) 45%,var(--kenar))}
 .bk-kutu.uyar .bk-ust b{color:var(--kirmizi)}
 @media (max-width:420px){.bekleyenler{gap:6px}.bk-kutu{padding:8px 8px 7px;border-radius:12px}.bk-ust b{font-size:16.5px}.bk-ust svg{width:16px;height:16px}.bk-ad{font-size:11.5px}.bk-kutu small{font-size:10.5px}}
+/* ================= 2.10: Masaüstü klasik ERP düzeni =================
+   Yalnız masaüstünde (body.erp) etkin: üstte pencere sekmeleri, tam sayfa fiş ve tablo pencereleri, sık ızgaralar.
+   Telefon görünümü değişmez. */
+:root{--erp-bas1:#4677c4;--erp-bas2:#24508f;--erp-cizgi:#c3cddb;--erp-th:#e8eef7;--erp-th-yazi:#1c4f9c;--erp-secili:#d3e5ff;--erp-sari:#fff3a8;--erp-turuncu:#ffcfb3;--erp-gri:#e0e2e5;--erp-yesil:#d3f0da;--erp-kirmizi:#ffd9d9;--erp-zemin:#eef2f7;--erp-giris:#fff;--erp-sekme:#2fa65a}
+@media (prefers-color-scheme:dark){:root{--erp-bas1:#2c4d82;--erp-bas2:#1a3359;--erp-cizgi:#354253;--erp-th:#1e2935;--erp-th-yazi:#8db5f2;--erp-secili:#203d66;--erp-sari:#3f3a12;--erp-turuncu:#4a2e20;--erp-gri:#2a2f36;--erp-yesil:#1b3a26;--erp-kirmizi:#4a2224;--erp-zemin:#17202a;--erp-giris:#0f151c;--erp-sekme:#258a4a}}
+body.erp #icerik>*{animation:none!important}
+main#icerik.erp-tam{max-width:none!important;padding:6px 12px 14px!important}
+.pencereler{display:flex;gap:2px;align-items:flex-end;border-bottom:2px solid var(--erp-sekme);margin:0 0 6px;overflow-x:auto;scrollbar-width:thin;font-size:12.5px}
+#icerik.yanli>.pencereler{grid-column:1/-1}
+body.erp #icerik.yanli>.btn-izgara,body.erp #icerik.yanli>.yan-arac{grid-row:2/span 40}
+.pnc{display:flex;align-items:center;flex:none;max-width:230px;min-width:0;background:var(--erp-th);border:1px solid var(--erp-cizgi);border-bottom:0;border-radius:5px 5px 0 0;color:var(--yazi)}
+.pnc:hover{background:var(--erp-secili)}
+.pnc.aktif{background:var(--erp-sekme);border-color:var(--erp-sekme);color:#fff}
+.pnc-ad{border:0;background:none;color:inherit;font:inherit;padding:5px 10px;display:flex;gap:6px;align-items:center;min-width:0;cursor:pointer}
+.pnc.aktif .pnc-ad{font-weight:700}
+.pnc-ad span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pnc-ad svg{width:14px;height:14px;flex:none}
+.pnc-x{border:0;background:none;color:inherit;opacity:.55;padding:4px 7px 4px 0;cursor:pointer;display:flex}
+.pnc-x svg{width:12px;height:12px}
+.pnc-x:hover{opacity:1}
+/* Fiş ve tablo pencereleri */
+.fis{display:flex;flex-direction:column;background:var(--kart);border:1px solid var(--erp-cizgi);font-size:12.5px;line-height:1.35;color:var(--yazi);min-height:calc(100vh - 112px)}
+.fis-bas{display:flex;align-items:stretch;justify-content:space-between;background:linear-gradient(180deg,#6a98df 0,var(--erp-bas1) 40%,var(--erp-bas2) 100%);color:#fff;min-height:56px}
+.fis-ad{display:flex;align-items:center;gap:10px;padding:0 14px;min-width:200px;flex:1 1 0;overflow:hidden}.fis-ad>div{min-width:0}
+.fis-ad>svg{width:30px;height:30px;flex:none}
+.fis-ad b{font-size:19px;font-weight:700;display:block;white-space:nowrap}
+.fis-ad small{display:block;font-size:12px;opacity:.88;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fis-durum .hap{font-size:11px;vertical-align:middle;background:#fff!important}.fis-ad b .fis-kirli{vertical-align:middle}
+.fis-kirli{background:#ffd34d;color:#3a2a00;font-weight:700;font-size:11px;padding:2px 7px;border-radius:3px;white-space:nowrap}
+.fis-arac{flex:0 1 auto;min-width:0;display:flex;align-items:stretch;background:var(--erp-zemin);color:var(--yazi);padding:2px 4px;border-left:1px solid var(--erp-cizgi);overflow-x:auto;scrollbar-width:thin}
+.fa{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:56px;padding:4px 5px;border:1px solid transparent;background:none;color:inherit;font:inherit;font-size:11px;cursor:pointer;border-radius:3px;white-space:nowrap}
+.fa svg{width:22px;height:22px;color:var(--erp-bas2)}
+@media (prefers-color-scheme:dark){.fa svg{color:var(--erp-th-yazi)}}
+.fa:hover:not(:disabled){background:var(--erp-secili);border-color:var(--erp-cizgi)}
+.fa:disabled{opacity:.38;cursor:default}
+.fa-ayir{flex:none;width:1px;background:var(--erp-cizgi);margin:6px 3px}
+.fis-uyari{display:flex;gap:10px;align-items:center;padding:6px 12px;background:var(--erp-sari);border-bottom:1px solid var(--erp-cizgi)}
+.fis-uyari.kirmizi{background:var(--erp-kirmizi)}
+.fis-uyari svg{width:16px;height:16px;flex:none}
+.fis-sekmeler,.ft-sekmeler{display:flex;align-items:flex-end;gap:1px;background:var(--erp-zemin);border-bottom:1px solid var(--erp-cizgi);padding:4px 6px 0;overflow-x:auto;scrollbar-width:thin}
+.fs-s{border:1px solid transparent;border-bottom:0;background:none;color:var(--yazi);font:inherit;font-size:12.5px;padding:4px 11px 5px;cursor:pointer;white-space:nowrap;border-radius:3px 3px 0 0;margin-bottom:-1px}
+.fs-s:hover{background:var(--erp-secili)}
+.fs-s.aktif{background:var(--kart);border-color:var(--erp-cizgi);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.fl-ara{margin-left:auto;display:flex;align-items:center;gap:5px;padding:0 0 4px 12px}
+.fl-ara svg{width:15px;height:15px;color:var(--ikincil)}
+.fl-ara input{height:25px;width:300px;border:1px solid var(--erp-cizgi);border-radius:2px;background:var(--erp-giris);color:var(--yazi);font:inherit;padding:0 7px}
+.fl-tarih{display:flex;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid var(--erp-cizgi);background:var(--kart)}
+.fl-tarih label{color:var(--ikincil)}
+.fl-tarih input{height:25px;border:1px solid var(--erp-cizgi);border-radius:2px;background:var(--erp-giris);color:var(--yazi);font:inherit;padding:0 6px}
+.fis-govde{flex:1;padding:8px;display:flex;flex-direction:column;gap:8px;min-height:0}
+.fis-ro .fis-govde{background:color-mix(in srgb,var(--erp-gri) 30%,var(--kart))}
+/* Izgara */
+.izg-kap{overflow:auto;border:1px solid var(--erp-cizgi);background:var(--kart);min-height:150px;max-height:calc(50vh - 60px)}
+.izg-kap.uzun{flex:1;max-height:calc(100vh - 290px);min-height:260px}
+.fb-hareket .izg-kap{max-height:calc(100vh - 520px);min-height:170px}
+table.izg{border-collapse:collapse;table-layout:fixed;width:max-content;min-width:100%;font-size:12.5px;margin:0}
+table.izg th{position:sticky;top:0;z-index:1;background:var(--erp-th);color:var(--erp-th-yazi);font-weight:700;text-align:left;padding:4px 6px;border:1px solid var(--erp-cizgi);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px}
+table.izg th.tik{cursor:pointer}
+table.izg th.tik:hover{text-decoration:underline}
+table.izg td{border:1px solid var(--erp-cizgi);padding:0;height:24px;color:var(--yazi);background:var(--kart)}
+table.izg tbody tr:nth-child(even) td{background:color-mix(in srgb,var(--erp-th) 45%,var(--kart))}
+table.izg td.salt{padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+table.izg .sg,table.izg input.sg{text-align:right;font-variant-numeric:tabular-nums}
+table.izg input,table.izg select{display:block;width:100%;height:24px!important;min-height:0!important;border:0!important;background:transparent!important;color:inherit;font:inherit!important;font-size:12.5px!important;padding:0 6px!important;box-sizing:border-box;outline:0;border-radius:0!important;box-shadow:none!important;margin:0}
+table.izg select{appearance:auto;-webkit-appearance:auto;padding:0 2px!important}
+table.izg input:focus,table.izg select:focus{background:var(--erp-giris)!important;box-shadow:inset 0 0 0 2px var(--mavi)!important}
+table.izg input:disabled,table.izg select:disabled{opacity:1;-webkit-text-fill-color:currentColor}
+table.izg td.izg-no{width:28px;text-align:center;color:var(--ikincil);font-size:11px;background:var(--erp-th)!important}
+table.izg tr.secili td.izg-no{color:var(--erp-th-yazi);font-weight:700}
+table.izg tr.secili td.izg-no::before{content:'▶ '}
+table.izg tr.d-yapilacak td{background:var(--erp-sari)}
+table.izg tr.d-yapildi td{background:var(--erp-turuncu)}
+table.izg tr.d-iptal td{background:var(--erp-gri);color:var(--ikincil)}
+table.izg tr.d-tamam td{background:var(--erp-yesil)}
+table.izg tr.d-uyar td{color:var(--kirmizi)}
+table.izg tr.d-musteri td{font-style:italic}
+table.izg tbody tr.secili td:not(.izg-no){background:var(--erp-secili)}
+table.izg tbody tr.tik{cursor:default}
+table.izg tbody tr.tik:hover td:not(.izg-no){background:color-mix(in srgb,var(--erp-secili) 55%,var(--kart))}
+table.izg tbody tr:focus{outline:0}
+table.izg tfoot td{background:var(--erp-th);font-weight:700;position:sticky;bottom:0}
+.izg-sil button{border:0;background:none;color:var(--ikincil);cursor:pointer;display:flex;align-items:center;justify-content:center;width:100%;height:24px;padding:0}
+.izg-sil button svg{width:13px;height:13px}
+.izg-sil button:hover{color:var(--kirmizi)}
+.izg-bos{padding:14px;color:var(--ikincil)}
+/* Fiş alanları */
+.fk-izgara{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.fk-ikili{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+fieldset.fk{border:1px solid var(--erp-cizgi);margin:0;padding:4px 10px 8px;background:var(--kart);min-width:0}
+fieldset.fk legend{font-weight:700;color:var(--erp-th-yazi);padding:0 4px;font-size:12.5px}
+.fk-satir{display:grid;grid-template-columns:118px minmax(0,1fr);align-items:center;gap:6px;margin:3px 0}
+.fk-satir.ust{align-items:start}
+.fk-satir>label{color:var(--ikincil);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fk input:not([type=checkbox]),.fk select,.fk textarea,.pers-ekle input{height:25px;min-height:0;border:1px solid var(--erp-cizgi)!important;border-radius:2px!important;background:var(--erp-giris)!important;color:var(--yazi);font:inherit;font-size:12.5px;padding:0 6px;width:100%;box-sizing:border-box;box-shadow:none!important;margin:0}
+.fk select{appearance:auto;-webkit-appearance:auto}
+.fk input[readonly]{background:var(--erp-zemin)!important}
+.fk input:focus,.fk select:focus,.fk textarea:focus,.pers-ekle input:focus{outline:0;border-color:var(--mavi)!important;box-shadow:0 0 0 1px var(--mavi)!important}
+.fk textarea{height:auto;min-height:110px;padding:5px 6px;resize:vertical;line-height:1.4}
+.fk input:disabled,.fk select:disabled,.fk textarea:disabled{opacity:.8}
+.fk-bul{display:flex;gap:3px;min-width:0}
+.fk-bul input{flex:1;min-width:0}
+.fk-kutular{display:flex;flex-wrap:wrap;gap:4px 18px;padding:2px 0}
+.fk-kutular label,.fb-not{display:flex;gap:6px;align-items:center;cursor:pointer;white-space:nowrap}
+.fk input[type=checkbox],.fb-not input{display:inline-block!important;width:15px;height:15px;margin:0;accent-color:var(--erp-bas1)}
+.fk-not{color:var(--ikincil);font-size:11.5px;margin:6px 0 0}
+fieldset.fk-sade,.fk.fk-sade{border:0;padding:0;background:none}
+.fb-not{color:var(--ikincil);padding:4px 2px 0}
+/* Bölümler */
+.fb{display:flex;flex-direction:column;min-width:0}
+.fb-bas{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 1px 4px;font-weight:700;color:var(--erp-th-yazi)}
+.fb-bas small{font-weight:400;color:var(--ikincil)}
+.fb-bas>span{display:flex;gap:4px}
+.fb-ust{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:8px}
+.fb-alt{display:flex;justify-content:flex-end;gap:22px;padding:4px 8px;background:var(--erp-zemin);border:1px solid var(--erp-cizgi);border-top:0}
+.fb-alt b{font-variant-numeric:tabular-nums}
+.fb-pers{gap:5px}
+.pers-liste{list-style:none;margin:0;padding:0;border:1px solid var(--erp-cizgi);min-height:96px;max-height:180px;overflow:auto;background:var(--kart)}
+.pers-liste li{display:flex;justify-content:space-between;align-items:center;padding:3px 4px 3px 8px;border-bottom:1px solid var(--erp-cizgi);font-weight:700}
+.pers-liste li:nth-child(odd){background:var(--erp-secili)}
+.pers-liste li.bos{font-weight:400;color:var(--ikincil);background:none}
+.pers-liste button{border:0;background:none;color:var(--ikincil);cursor:pointer;display:flex;padding:2px}
+.pers-liste button svg{width:12px;height:12px}
+.pers-liste button:hover{color:var(--kirmizi)}
+.pers-ekle{display:flex;gap:4px}
+.kb{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:25px;border:1px solid var(--erp-cizgi);background:linear-gradient(var(--kart),var(--erp-zemin));color:var(--yazi);font:inherit;font-size:12px;padding:0 10px;border-radius:2px;cursor:pointer;white-space:nowrap;flex:none}
+.kb svg{width:14px;height:14px}
+.kb:hover:not(:disabled){border-color:var(--erp-bas1);background:var(--erp-secili)}
+.kb:disabled{opacity:.4;cursor:default}
+.kb.tam{width:100%}
+.kb.ince{height:20px;padding:0 5px;margin:1px 0}
+/* Alt toplamlar */
+.fis-alt{border-top:1px solid var(--erp-cizgi);background:var(--erp-zemin)}
+.ft{display:flex;flex-wrap:wrap;gap:8px 30px;padding:7px 14px;align-items:center}
+.ft-kolon{display:grid;grid-template-columns:auto auto;gap:2px 16px;align-content:start}
+.ft-kolon span{color:var(--ikincil);white-space:nowrap}
+.ft-kolon b{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ft-genel{margin-left:auto;border:1px solid var(--erp-cizgi);background:var(--kart);padding:3px 14px 5px;text-align:right;min-width:210px}
+.ft-genel small{display:block;color:var(--ikincil);font-size:11.5px}
+.ft-genel b{font-size:22px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ft-ipucu{font-size:11.5px}
+.ft-tablo{border-collapse:collapse;font-size:12.5px;margin:0;min-width:360px}
+.ft-tablo th,.ft-tablo td{border:1px solid var(--erp-cizgi);padding:3px 10px;text-align:left}
+.ft-tablo th{background:var(--erp-th);color:var(--erp-th-yazi)}
+.ft-tablo .sg{text-align:right;font-variant-numeric:tabular-nums}
+.fis .kagit-kap{display:flex;justify-content:center;padding:6px;background:var(--erp-zemin);border:1px solid var(--erp-cizgi)}
+/* Çerçeveye alınan kayıt kartları ve ekranlar: köşesiz, çizgili, sık */
+.erp-icerik{font-size:13px;overflow:auto}
+.erp-icerik>*{max-width:1280px}
+.erp-icerik .kart,.erp-icerik .grup,.erp-icerik .metrik,.erp-icerik .bk-kutu{border-radius:0!important;box-shadow:none!important;border:1px solid var(--erp-cizgi)!important;margin-bottom:8px!important}
+.erp-icerik .kart{padding:8px 10px}
+.erp-icerik .grup .hucre{min-height:30px!important;padding-top:2px!important;padding-bottom:2px!important;border-radius:0!important;font-size:13px}
+.erp-icerik .grup .hucre:nth-child(even){background:color-mix(in srgb,var(--erp-th) 40%,var(--kart))}
+.erp-icerik .grup .hucre:hover{background:var(--erp-secili)}
+.erp-icerik .hucre .kare,.erp-icerik .hucre .avatar{width:22px!important;height:22px!important;border-radius:3px!important;font-size:10px}
+.erp-icerik .hucre .kare svg,.erp-icerik .hucre .avatar svg{width:14px;height:14px}
+.erp-icerik .bolum{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:10px 0 0!important;padding:4px 8px;background:var(--erp-th);color:var(--erp-th-yazi)!important;border:1px solid var(--erp-cizgi);border-bottom:0;font-size:12px!important;letter-spacing:0!important;text-transform:none!important;font-weight:700}
+.erp-icerik .bolum+.grup,.erp-icerik .bolum+.kart{margin-top:0!important}
+.erp-icerik .btn,.erp-icerik .segment,.erp-icerik .segment button,.erp-icerik .cip,.erp-icerik .arama{border-radius:2px!important}
+.erp-icerik .ikili{gap:8px}
+.erp-icerik table{font-size:12.5px}
+.fis-kart .fis-govde{background:var(--erp-zemin)}
+.fis-kart .fa{font-size:11px}
+.fis-kart .fa svg{width:20px;height:20px}
+@media (max-width:1180px){.fk-izgara{grid-template-columns:repeat(2,minmax(0,1fr))}.fl-ara input{width:200px}.fa{min-width:50px}}
 </style>
 </head>
 <body>
@@ -1389,7 +1553,7 @@ html.apk #cekmece .c-alt-menu a{min-height:42px!important;font-size:15px!importa
 
 <script>
 'use strict';
-const VERSIYON = '2.9.12';
+const VERSIYON = '2.10.0';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -2190,7 +2354,9 @@ function ayBagla(alan, yeniden) {
 }
 
 let sonRota = '';
-function ciz() {
+/* 2.10: her çizimden sonra masaüstünde üstteki pencere sekmeleri yenilenir */
+function ciz() { ciz0(); erpSonrasi(); }
+function ciz0() {
   while (yigin.length) yigin.pop().remove();
   if (window.ucKapat && $('#ucMenu')) ucKapat();
   if (ortakBagli() && !ortakOturum()) girisEkrani();
@@ -2207,8 +2373,10 @@ function ciz() {
   if (s === 'fis') { fisEkrani(p1); yanDuzen(); return kaydirma(); }
   if (!modulAcik(s)) return git('panel', true);
   menuCiz(s);
-  if (p1 && p1.startsWith('r-')) { const [r, q = ''] = p1.slice(2).split('?'); raporListe(s, r, new URLSearchParams(q)); yanDuzen(); return kaydirma(); }
-  const ekran = {panel: panelEkrani, servis: p1 ? () => servisEkrani1(p1) : servisEkrani, banka: p1 ? () => finansHesapEkrani(p1) : bankaEkrani, kasa: kasaEkrani, veresiye: p1 ? () => kisiEkrani(p1) : veresiyeEkrani,
+  if (p1 && p1.startsWith('r-')) { const [r, q = ''] = p1.slice(2).split('?'); if (masaustuMu()) erpModul(s, r, new URLSearchParams(q)); else raporListe(s, r, new URLSearchParams(q)); yanDuzen(); return kaydirma(); }
+  // 2.10: masaüstünde modül ana ekranı tam sayfa tablo penceresidir
+  if (!p1 && masaustuMu() && ERP_ANA[s] && raporTanim(s, ERP_ANA[s])) { erpModul(s, ERP_ANA[s]); yanDuzen(); return kaydirma(); }
+  const ekran = {panel: panelEkrani, servis: p1 ? () => masaustuMu() ? servisFisi(p1) : servisEkrani1(p1) : () => masaustuMu() ? servisListesiErp() : servisEkrani, banka: p1 ? () => finansHesapEkrani(p1) : bankaEkrani, kasa: kasaEkrani, veresiye: p1 ? () => kisiEkrani(p1) : veresiyeEkrani,
     stok: p1 ? () => urunEkrani(p1) : stokEkrani, teklif: p1 ? () => teklifEkrani(p1) : teklifListeEkrani,
     fatura: p1 ? () => { if (modulAcik('teklif') && D.faturalar.find(x => x.id === p1)?.tur === 'teklif') return git('teklif/' + p1, true); faturaEkrani(p1); } : faturaListeEkrani,
     personel: p1 ? () => personelDetay(p1) : personelEkrani, butce: butceEkrani, kdv: kdvEkrani, rapor: raporEkrani}[s];
@@ -2223,7 +2391,7 @@ function yanDuzen() { $('#icerik').classList.toggle('yanli', !!$('#icerik > .btn
    Her modülün kenar menüde açılan alt menüsü vardır: işlemler ve raporlar. Raporlar tablo olarak listelenir,
    satıra tıklayınca kaydın detayı açılır; yazdırılır (PDF) ve Excel'e (CSV) aktarılır. */
 const ALT_MENU = {
-  servis: [['İşlemler', [['Servis kayıtları', 'pano', 'servis'], ['Yeni servis / iş emri', 'pano+', () => servisFormu()]]],
+  servis: [['İşlemler', [['Servis kayıtları', 'pano', 'servis'], ['Yeni servis / iş emri', 'pano+', () => yeniServis()]]],
     ['Raporlar', [['Servis listesi', 'tablo', 'servis/r-servisler'], ['Açık iş emirleri', 'panoSaat', 'servis/r-acik'], ['Tekne ve makineler', 'tekne', 'servis/r-ekipman'],
       ['Yaklaşan bakımlar', 'bakim', 'servis/r-bakim'], ['Kullanılan parçalar', 'cark', 'servis/r-parca'], ['Teknisyen işçilik', 'teknisyen', 'servis/r-iscilik']]]],
   banka: [['İşlemler', [['Hesaplar', 'banka', 'banka'], ['Yeni hesap', 'banka+', () => finansHesapFormu()], ['Virman', 'virman', () => virmanFormu()]]],
@@ -2304,6 +2472,9 @@ function raporTanim(m, id) {
           return {d: [fisNo('tahsilat', h, false), h.tarih, kisi(h.kisiId)?.ad, h.aciklama, i ? odemeAdi[i.odeme] || '' : '', h.tutar], yol: 'fis/' + h.id, fis: h.id}; })}
     },
     kasa: {
+      hepsi: {ad: 'Gelir ve gider hareketleri', tarihli: true, k: [['Fiş no'], ['Tarih', 'tarih'], ['Tür'], ['Kategori'], ['Açıklama'], ['Ödeme'], ['Hesap'], ['Gelir', 'para', 1], ['Gider', 'para', 1]],
+        veri: r => D.islemler.filter(i => tarihAraliginda(i.tarih, r)).sort((a, b) => b.tarih.localeCompare(a.tarih) || (b.olusturma || 0) - (a.olusturma || 0))
+          .map(i => ({d: [fisNo(i.tur, i, false), i.tarih, i.tur === 'gelir' ? 'Gelir' : 'Gider', i.kategori, i.aciklama, odemeAdi[i.odeme] || '', finHesapAdi(islemHesapId(i)), i.tur === 'gelir' ? i.tutar : 0, i.tur === 'gelir' ? 0 : i.tutar], yol: 'fis/' + i.id, fis: i.id}))},
       gelir: {ad: 'Gelir listesi', tarihli: true, k: [['Fiş no'], ['Tarih', 'tarih'], ['Kategori'], ['Açıklama'], ['Ödeme'], ['Hesap'], ['KDV', 'para', 1], ['Tutar', 'para', 1]], veri: r => islemSatirlari('gelir', r)},
       gider: {ad: 'Gider listesi', tarihli: true, k: [['Fiş no'], ['Tarih', 'tarih'], ['Kategori'], ['Açıklama'], ['Ödeme'], ['Hesap'], ['KDV', 'para', 1], ['Tutar', 'para', 1]], veri: r => islemSatirlari('gider', r)},
       kategori: {ad: 'Kategori özeti', tarihli: true, k: [['Tür'], ['Kategori'], ['Kayıt', 'sayi', 1], ['Tutar', 'para', 1]],
@@ -4732,7 +4903,7 @@ const servis = id => D.servisler.find(s => s.id === id);
 const ekipmanAd = e => e ? [EKIPMAN_TUR[e.tur] === 'Diğer' ? e.turDiger : EKIPMAN_TUR[e.tur], [e.marka, e.model].filter(Boolean).join(' ')].filter(Boolean).join(' · ') : '';
 const servisMusteri = s => (s.kisiId && kisi(s.kisiId)?.ad) || s.musteriAd || 'Müşteri belirtilmedi';
 const servisAcikMi = s => !['tamam', 'iptal'].includes(s.durum);
-const iscilikSaat = s => Math.round(s.iscilik.reduce((t, i) => t + (i.sure || 0), 0) * 100) / 100;
+const iscilikSaat = s => Math.round(s.iscilik.reduce((t, i) => t + (i.durum === 'iptal' ? 0 : i.sure || 0), 0) * 100) / 100;
 function sonrakiIsEmriNo() {
   const yil = bugun().slice(0, 4), on = `IE-${yil}-`;
   const n = D.servisler.filter(s => (s.isEmriNo || '').startsWith(on)).map(s => parseInt(s.isEmriNo.slice(on.length)) || 0);
@@ -4780,7 +4951,7 @@ function servisEkrani() {
     <div class="segment" id="servisSec">${[['acik', 'Açık'], ['tamam', 'Tamamlanan'], ['hepsi', 'Tümü']].map(([v, a]) => `<button data-v="${v}" class="${ui.servisFiltre === v ? 'secili' : ''}">${a}</button>`).join('')}</div>
     <div class="arama">${ikon('ara')}<input type="search" id="servisAra" placeholder="Müşteri, tekne, seri no ara" value="${esc(ui.servisAra)}"></div><div id="servisListe"></div>`;
   $('#icerik').innerHTML = h;
-  $('#ekleBtn').onclick = () => servisFormu();
+  $('#ekleBtn').onclick = () => yeniServis();
   $('#servisAra').oninput = e => { ui.servisAra = e.target.value; servisListe(); };
   $$('#servisSec button').forEach(b => b.onclick = () => { ui.servisFiltre = b.dataset.v; $$('#servisSec button').forEach(x => x.classList.toggle('secili', x === b)); servisListe(); });
   servisTiklari();
@@ -4795,7 +4966,7 @@ function servisListe() {
   kap.innerHTML = l.length ? `<div class="grup">${l.map(servisSatiri).join('')}</div>` : bosDurum('alet', 'mor', bos ? 'Henüz servis kaydı yok' : 'Sonuç yok', bos ? 'İş emrini açın; parça ve işçiliği girin, servis formunu PDF olarak indirin veya yazdırın.' : 'Bu filtreye uyan servis yok.',
     bos ? `<button class="btn kucuk" id="bosEkle">${ikon('arti')} Yeni servis</button>` : '');
   servisTiklari(kap);
-  const b = $('#bosEkle'); if (b) b.onclick = () => servisFormu();
+  const b = $('#bosEkle'); if (b) b.onclick = () => yeniServis();
 }
 /* Her ekipmanın son tamamlanan servisindeki "sonraki bakım" tarihi */
 function yaklasanBakimlar(gun = 30) {
@@ -4855,14 +5026,19 @@ function ekipmanSec(kisiId, fn) {
   $('#esYeni', m).onclick = () => { kapat(); ekipmanFormu(null, kisiId, e => fn(e)); };
 }
 
+/* Yeni servis kaydının başlangıç hâli (telefondaki form ve masaüstü fişi aynı yapıyı kullanır) */
+function yeniServisKaydi(on = {}) {
+  const x = {no: sonrakiServisNo(), isEmriNo: sonrakiIsEmriNo(), teklifRef: musteriSonTeklif(on.kisiId)?.no || '', tarih: bugun(), kisiId: on.kisiId || null, musteriAd: '', yetkili: '', tel: '', eposta: '',
+    ekipmanId: on.ekipmanId || null, tekne: '', liman: '', servisYeri: '', calismaSaati: 0, turler: [], sikayet: '', islemler: '', parcalar: [], iscilik: [],
+    teslim: '', testler: [], testSure: '', sonrakiBakim: '', sonrakiBakimSaat: '', oneriler: '', durum: 'acik', stokDus: true};
+  if (x.kisiId) { const k = kisi(x.kisiId); if (k) { x.tel = k.tel || ''; x.eposta = k.eposta || ''; x.yetkili = k.yetkili || ''; } }
+  if (x.ekipmanId) { const e = ekipman(x.ekipmanId); if (e) { x.tekne = e.tekne; x.liman = e.liman; x.calismaSaati = e.saat || 0; } }
+  return x;
+}
 /* ---- Servis formu (giriş) ---- */
 function servisFormu(s, on = {}) {
   const yeni = !s;
-  const x = s ? JSON.parse(JSON.stringify(s)) : {no: sonrakiServisNo(), isEmriNo: sonrakiIsEmriNo(), teklifRef: musteriSonTeklif(on.kisiId)?.no || '', tarih: bugun(), kisiId: on.kisiId || null, musteriAd: '', yetkili: '', tel: '', eposta: '',
-    ekipmanId: on.ekipmanId || null, tekne: '', liman: '', servisYeri: '', calismaSaati: 0, turler: [], sikayet: '', islemler: '', parcalar: [], iscilik: [],
-    teslim: '', testler: [], testSure: '', sonrakiBakim: '', sonrakiBakimSaat: '', oneriler: '', durum: 'acik', stokDus: true};
-  if (yeni && x.kisiId) { const k = kisi(x.kisiId); if (k) { x.tel = k.tel || ''; x.eposta = k.eposta || ''; x.yetkili = k.yetkili || ''; } }
-  if (yeni && x.ekipmanId) { const e = ekipman(x.ekipmanId); if (e) { x.tekne = e.tekne; x.liman = e.liman; x.calismaSaati = e.saat || 0; } }
+  const x = s ? JSON.parse(JSON.stringify(s)) : yeniServisKaydi(on);
   const ver = modulAcik('veresiye'), stok = modulAcik('stok');
   const teknisyenler = D.personeller.filter(p => p.aktif !== false).map(p => p.ad);
   const m = modal(yeni ? 'Yeni servis' : `Servis ${x.no}`, `
@@ -5045,7 +5221,7 @@ function servisEkrani1(id) {
   };
   $('#sDiger').onclick = async () => {
     const v = await eylemSayfa(s.no, null, [{ad: 'Bu makineye yeni servis aç', deger: 'yeni'}, {ad: 'Kopyasını oluştur', deger: 'kopya'}, {ad: 'Sil', deger: 'sil', tehlike: true}]);
-    if (v === 'yeni') servisFormu(null, {kisiId: s.kisiId, ekipmanId: s.ekipmanId});
+    if (v === 'yeni') yeniServis({kisiId: s.kisiId, ekipmanId: s.ekipmanId});
     else if (v === 'kopya') {
       const y = {...JSON.parse(JSON.stringify(s)), id: kimlik(), no: sonrakiServisNo(), tarih: bugun(), durum: 'acik', olusturma: Date.now()};
       delete y.imzaMusteri; delete y.imzaTeknisyen; delete y.faturaId; delete y.bitis;
@@ -5059,18 +5235,850 @@ function servisEkrani1(id) {
     }
   };
 }
-/* Servisten taslak fatura: parçalar satış fiyatıyla, işçilik saat olarak. Stok servisten düştüğü için faturada stok düşülmez. */
+/* Servisten taslak fatura (2.10): fişteki fiyatlarla. Parçalar birim fiyat, KDV ve iskontosuyla (dövizli satır kurla TL'ye çevrilir),
+   yapılan her işlem ayrı satır, dış servis ücretleri ayrı satır. Genel iskonto satır iskontolarına eklenir.
+   Stok servisten düştüğü için faturada stok düşülmez. */
 function servisFaturala(s) {
-  const kalemler = s.parcalar.filter(p => p.durum !== 'musteri').map(p => { const u = p.urunId && urun(p.urunId);
-    return {ad: p.ad || p.parcaNo, kod: p.parcaNo || '', miktar: p.adet || 1, birim: p.birim || 'adet', fiyat: u ? u.satis || 0 : 0, kdv: u ? u.kdvOran ?? 20 : 20}; });
-  const saat = iscilikSaat(s);
-  if (saat) kalemler.push({ad: `İşçilik · Servis ${s.no}`, miktar: saat, birim: 'saat', fiyat: D.servisAyar.saatUcret || 0, kdv: 20});
+  const g = Math.min(100, Math.max(0, s.iskonto || 0));
+  const isk = a => Math.round(100 * (1 - (1 - (a || 0) / 100) * (1 - g / 100)) * 100) / 100 || 0;
+  const ik = s.iscilikKdv ?? 20, dovizli = [];
+  const kalemler = s.parcalar.filter(p => p.durum !== 'musteri' || parcaFiyat(p)).map(p => {
+    if (parcaDoviz(p) !== 'TL') dovizli.push(`${p.parcaNo || p.ad}: ${tutarFmt(parcaFiyat(p))} ${parcaDoviz(p)} × ${sayiFmt(parcaKur(p))}`);
+    return {ad: p.ad || p.parcaNo, kod: p.parcaNo || '', miktar: p.adet || 1, birim: p.birim || 'adet', fiyat: Math.round(parcaFiyat(p) * parcaKur(p)), kdv: parcaKdv(p), iskonto: isk(p.isk)};
+  });
+  for (const w of s.iscilik) {
+    if (islemDurum(w) !== 'yapildi') continue;
+    const t = islemTutar(w), ad = [w.kod, w.is || `İşçilik · Servis ${s.no}`].filter(Boolean).join(' ');
+    if (!t && !w.sure) continue;
+    kalemler.push(w.tutar == null && w.sure ? {ad, miktar: w.sure, birim: 'saat', fiyat: islemUcret(w), kdv: ik, iskonto: isk(0)} : {ad, miktar: 1, birim: 'adet', fiyat: t, kdv: ik, iskonto: isk(0)});
+  }
+  for (const d of s.disServis || []) if (d.durum !== 'iptal' && d.tutar)
+    kalemler.push({ad: 'Dış servis: ' + [d.firma, d.is].filter(Boolean).join(' · '), miktar: 1, birim: 'adet', fiyat: d.tutar, kdv: d.kdv ?? 20, iskonto: isk(0)});
   if (!kalemler.length) kalemler.push({ad: `Servis hizmeti · ${s.no}`, miktar: 1, birim: 'adet', fiyat: 0, kdv: 20});
   const f = {id: kimlik(), tur: 'fatura', no: sonrakiNo('fatura'), tarih: bugun(), vade: '', kisiId: s.kisiId, musteriAd: s.kisiId ? '' : servisMusteri(s), kalemler,
-    not: `Servis form no: ${s.no}${s.isEmriNo ? ' · İş emri: ' + s.isEmriNo : ''}${s.tekne ? ' · Tekne: ' + s.tekne : ''}`, durum: 'taslak', odendi: false, odemeler: [], cariyeIsle: true, stokDus: false, servisId: s.id, olusturma: Date.now()};
+    not: `Servis form no: ${s.no}${s.isEmriNo ? ' · İş emri: ' + s.isEmriNo : ''}${s.tekne ? ' · Tekne: ' + s.tekne : ''}${dovizli.length ? '\nDöviz: ' + dovizli.join('; ') : ''}`,
+    durum: 'taslak', odendi: false, odemeler: [], cariyeIsle: true, stokDus: false, servisId: s.id, olusturma: Date.now()};
   D.faturalar.push(f); s.faturaId = f.id;
   kaydet(); bildir('Taslak fatura oluşturuldu; fiyatları kontrol edip kesin');
   git('fatura/' + f.id);
+}
+
+/* ================= Masaüstü: klasik ERP düzeni (2.10) =================
+   Bilgisayarda (Windows uygulaması ya da tarayıcı; geniş ekran ve fare) program klasik ticari yazılım gibi çalışır:
+   - Üstte açık pencere sekmeleri: her açılan ekran bir sekme olur, Özet hep ilk sekmedir. Sekmeler program kapansa da kalır.
+   - Servis fişi: araç çubuğu, sekmeler (Genel Bilgiler, Arıza, Servis İşlemleri, Dış Servis, Sonuç ve Teslim, Bağlantılar, Form),
+     renkli İşlemler ızgarası (Yapılacak / Yapıldı / İptal), Personeller, stok Hareketleri ızgarası ve alt toplamlar.
+   - Fiş, kaydedilene kadar ayrı bir taslakta düzenlenir; taslak bu bilgisayarda saklanır, program kapanınca kaybolmaz.
+   - Ortak veritabanında fiş açıkken kayıt kilitlenir; başka cihazda değişirse uyarı çıkar.
+   Telefonda (APK, dokunmatik ekran) eski ekranlar aynen kalır. Veri aynıdır: masaüstünün eklediği alanlar
+   (fiyat, KDV, döviz, işlem durumu, personel, dış servis) telefonda düzenlenen kayıtta korunur. */
+const masaustuMu = () => !window.Android && !dokunmatik() && window.innerWidth >= 1000;
+const kopya = o => JSON.parse(JSON.stringify(o));
+const tutarFmt = k => ((k || 0) / 100).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+/* --- Servis fişi hesapları. Tutarlar kuruş; dövizli satırda fiyat döviz cinsindendir, kur ile TL'ye çevrilir. --- */
+const DOVIZLER = ['TL', 'USD', 'EUR', 'GBP'];
+const ISLEM_DURUM = {yapilacak: 'Yapılacak', yapildi: 'Yapıldı', iptal: 'İptal'};
+const DIS_DURUM = {gonderildi: 'Gönderildi', dondu: 'Döndü', iptal: 'İptal'};
+const islemDurum = w => ISLEM_DURUM[w.durum] ? w.durum : 'yapildi';
+const islemUcret = w => w.ucret ?? (D.servisAyar.saatUcret || 0);
+const islemTutar = w => islemDurum(w) === 'iptal' ? 0 : w.tutar ?? Math.round((w.sure || 0) * islemUcret(w));
+const parcaUrun = p => p.urunId ? urun(p.urunId) : null;
+const parcaFiyat = p => p.fiyat ?? (p.durum === 'musteri' ? 0 : parcaUrun(p)?.satis || 0);
+const parcaKdv = p => p.kdv ?? parcaUrun(p)?.kdvOran ?? 20;
+const parcaDoviz = p => DOVIZLER.includes(p.doviz) ? p.doviz : 'TL';
+const parcaKur = p => parcaDoviz(p) === 'TL' ? 1 : p.kur || 0;
+const parcaDovizTutar = p => (p.adet || 0) * parcaFiyat(p) * (1 - Math.min(100, p.isk || 0) / 100);
+const parcaTutar = p => Math.round(parcaDovizTutar(p) * parcaKur(p));
+function servisHesap(s) {
+  const satir = [], doviz = {};
+  let parca = 0, iscilik = 0, dis = 0;
+  for (const p of s.parcalar || []) {
+    const t = parcaTutar(p), d = parcaDoviz(p);
+    parca += t; satir.push([t, parcaKdv(p)]);
+    if (d !== 'TL') { const o = (doviz[d] ||= {tutar: 0, tl: 0}); o.tutar += parcaDovizTutar(p); o.tl += t; }
+  }
+  const ik = s.iscilikKdv ?? 20;
+  for (const w of s.iscilik || []) { const t = islemTutar(w); iscilik += t; satir.push([t, ik]); }
+  for (const d of s.disServis || []) if (d.durum !== 'iptal') { const t = d.tutar || 0; dis += t; satir.push([t, d.kdv ?? 20]); }
+  const ara = parca + iscilik + dis, g = Math.min(100, Math.max(0, s.iskonto || 0)), iskonto = Math.round(ara * g / 100);
+  const oranlar = {};
+  let kdv = 0;
+  for (const [t, o] of satir) {
+    if (!t) continue;
+    const m = Math.round(t * (1 - g / 100)), k = Math.round(m * o / 100);
+    kdv += k; const r = (oranlar[o] ||= {matrah: 0, kdv: 0}); r.matrah += m; r.kdv += k;
+  }
+  return {parca, iscilik, dis, ara, iskonto, iskontoOran: g, net: ara - iskonto, kdv, oranlar, toplam: ara - iskonto + kdv, doviz, saat: iscilikSaat(s)};
+}
+/* Teknisyen adları: personel kartları + daha önce fişlere yazılan adlar (servis yetkilisi personel kartlarını göremez) */
+function teknisyenAdlari() {
+  const s = new Set(D.personeller.filter(p => p.aktif !== false).map(p => p.ad));
+  for (const x of D.servisler) { for (const a of x.personeller || []) s.add(a); for (const w of x.iscilik || []) if (w.teknisyen) s.add(w.teknisyen); }
+  return [...s].filter(Boolean).sort((a, b) => a.localeCompare(b, 'tr'));
+}
+
+/* --- Açık pencereler: üstte sekmeler. Her hesap kendi sekmelerini bu bilgisayarda saklar. --- */
+const pencereAnahtar = () => 'powerserv.pencereler.' + H.aktif;
+function pencereListe() {
+  try { const l = JSON.parse(localStorage.getItem(pencereAnahtar())); if (Array.isArray(l)) return l.filter(p => p && typeof p.yol === 'string' && typeof p.ad === 'string'); } catch (e) {}
+  return [];
+}
+function pencereYaz(l) { try { localStorage.setItem(pencereAnahtar(), JSON.stringify(l)); } catch (e) {} }
+const KAYIT_KOLEKSIYON = {servis: 'servisler', veresiye: 'kisiler', stok: 'urunler', fatura: 'faturalar', teklif: 'faturalar', banka: 'finansHesap', personel: 'personeller'};
+const PENCERESIZ = ['panel', 'profil'];
+function pencereGecerli(yol) {
+  const [m, id] = yol.split('/');
+  if (!m || PENCERESIZ.includes(m)) return false;
+  if (modul(m) && !modulAcik(m)) return false;
+  if (!id || id.startsWith('r-')) return true;
+  if (id === 'yeni') return m === 'servis' && !!taslakHepsi()[yol];
+  const k = KAYIT_KOLEKSIYON[m];
+  return !k || (D[k] || []).some(x => x.id === id);
+}
+const aktifYol = () => rota().join('/') || 'panel';
+function pencereCubugu() {
+  const masa = masaustuMu() && !!D.profil;
+  document.body.classList.toggle('erp', masa);
+  if (!masa || $('#pencereler')) return;
+  const yol = aktifYol(), l = pencereListe().filter(p => pencereGecerli(p.yol));
+  if (pencereGecerli(yol)) {
+    const ad = ($('#ust .orta-baslik')?.textContent || '').trim() || 'Pencere';
+    const p = l.find(x => x.yol === yol);
+    if (p) p.ad = ad;
+    else {
+      // Yeni ekran, açık olduğu sekmenin hemen sağına eklenir; en çok 14 sekme (kaydedilmemiş fiş sekmesi kapanmaz).
+      const i = l.findIndex(x => x.yol === pencereCubugu.son);
+      l.splice(i < 0 ? l.length : i + 1, 0, {yol, ad});
+      while (l.length > 14) { const j = l.findIndex(x => x.yol !== yol && !taslakKirli(x.yol)); if (j < 0) break; l.splice(j, 1); }
+    }
+  }
+  pencereCubugu.son = yol;
+  pencereYaz(l);
+  const sekme = (p, ev) => `<div class="pnc ${p.yol === yol ? 'aktif' : ''}" data-pyol="${esc(p.yol)}" title="${esc(p.ad)}">
+    <button class="pnc-ad" data-pgit>${ev ? ikon('ev') : ''}<span>${taslakKirli(p.yol) ? '● ' : ''}${esc(p.ad)}</span></button>${ev ? '' : `<button class="pnc-x" data-pkapat title="Kapat" aria-label="Kapat">${ikon('kapat')}</button>`}</div>`;
+  $('#icerik').insertAdjacentHTML('afterbegin', `<nav class="pencereler" id="pencereler">${sekme({yol: 'panel', ad: 'Özet'}, true)}${l.map(p => sekme(p)).join('')}</nav>`);
+  $$('#pencereler .pnc').forEach(el => {
+    const y = el.dataset.pyol;
+    $('[data-pgit]', el).onclick = () => git(y);
+    if ($('[data-pkapat]', el)) $('[data-pkapat]', el).onclick = e => { e.stopPropagation(); pencereKapat(y); };
+    el.addEventListener('auxclick', e => { if (e.button === 1 && y !== 'panel') { e.preventDefault(); pencereKapat(y); } });
+  });
+  $('#pencereler .pnc.aktif')?.scrollIntoView({block: 'nearest', inline: 'nearest'});
+}
+function pencereEtiket(yol) {
+  const el = $$('#pencereler .pnc').find(e => e.dataset.pyol === yol), s = el && $('.pnc-ad span', el);
+  if (s) s.textContent = (taslakKirli(yol) ? '● ' : '') + s.textContent.replace(/^● /, '');
+}
+async function pencereKapat(yol) {
+  if (taslakKirli(yol) && !await onay('Kaydedilmemiş değişiklikler var', 'Pencere kapatılırsa bu fişte yaptığınız değişiklikler silinir.', 'Kaydetmeden kapat')) return;
+  taslakSil(yol); fisKilitBirak(yol);
+  const l = pencereListe(), i = l.findIndex(p => p.yol === yol);
+  if (i >= 0) l.splice(i, 1);
+  pencereYaz(l);
+  if (aktifYol() === yol) git(l[Math.min(Math.max(i, 0), l.length - 1)]?.yol || 'panel', true); else ciz();
+}
+/* Kayıt kartları ve diğer ekranlar (cari kartı, stok kartı, fatura, personel, ayarlar...) masaüstünde aynı pencere çerçevesine alınır:
+   başlık şeridi, sağdaki düğmeler üstte araç çubuğu olur, içerik sık ve çizgili görünür. Ekranların kendi kodu değişmez. */
+const ERP_CERCEVESIZ = ['panel', 'profil'];
+function erpCercevele() {
+  const k = $('#icerik'), [m = 'panel'] = rota();
+  if (!document.body.classList.contains('erp') || k.classList.contains('erp-tam') || ERP_CERCEVESIZ.includes(m) || !D.profil || $('.karsilama', k)) return;
+  const md = modul(m), baslik = ($('#ust .orta-baslik')?.textContent || '').trim();
+  const cerceve = document.createElement('div');
+  cerceve.className = 'fis fis-kart';
+  cerceve.innerHTML = `<div class="fis-bas"><div class="fis-ad">${ikon(md?.simge || ({ayarlar: 'ayar', fis: 'fis', kullanicilar: 'kisiler', islemkaydi: 'liste', hesaplar: 'sirket', menu: 'izgara'})[m] || 'dosya')}<div><b></b><small></small></div></div><div class="fis-arac"></div></div><div class="fis-govde erp-icerik"></div>`;
+  $('.fis-ad b', cerceve).textContent = baslik || modulAdi(m) || '';
+  $('.fis-ad small', cerceve).textContent = md ? modulAdi(m) : '';
+  const arac = $('.fis-arac', cerceve), govde = $('.fis-govde', cerceve);
+  // Ekranın sağ üst düğmesi (Düzenle vb.) ve sağdaki düğme ızgarası araç çubuğuna alınır (olayları korunur)
+  for (const b of $$('#ust .sag > .nav-btn:not(#esitleBtn)')) {
+    const y = document.createElement('button');
+    y.className = 'fa'; y.innerHTML = ikon('kalem') + '<span></span>'; $('span', y).textContent = b.textContent.trim() || 'Düzenle';
+    y.onclick = () => b.click(); arac.append(y);
+  }
+  for (const kap of $$(':scope > .btn-izgara, :scope > .yan-arac', k)) { for (const b of [...kap.children]) { b.classList.add('fa'); arac.append(b); } kap.replaceWith(); }
+  if (!arac.children.length) arac.replaceWith();
+  for (const c of [...k.children]) { if (c.id === 'pencereler') continue; if (c.matches('h1.buyuk-baslik')) { c.replaceWith(); continue; } govde.append(c); }
+  k.classList.remove('yanli'); k.classList.add('erp-tam', 'erp-kartli');
+  k.append(cerceve);
+}
+function erpSonrasi() {
+  pencereCubugu();
+  erpCercevele();
+  const y = aktifYol();
+  for (const k in fisKilit) if (k !== y && !taslakKirli(k)) fisKilitBirak(k);
+}
+/* Pencere genişliği masaüstü sınırını geçince ekran yeniden çizilir (telefon ↔ masaüstü düzeni) */
+{ let son = null, z = 0;
+  window.addEventListener('resize', () => { clearTimeout(z); z = setTimeout(() => { const m = masaustuMu(); if (son !== null && m !== son && !yigin.length && D && D.profil) ciz(); son = m; }, 200); });
+  setTimeout(() => { son = masaustuMu(); }, 0); }
+
+/* --- Fiş taslakları: fiş kaydedilene kadar ayrı kopyada düzenlenir; kaydedilmemiş taslaklar bu bilgisayarda saklanır. --- */
+const taslakAnahtar = () => 'powerserv.taslak.' + H.aktif;
+let taslakDepo = null, taslakZaman = 0;
+function taslakHepsi() {
+  if (!taslakDepo || taslakDepo.h !== H.aktif) {
+    let o = {};
+    try { o = JSON.parse(localStorage.getItem(taslakAnahtar())) || {}; } catch (e) {}
+    for (const k in o) if (!o[k] || typeof o[k] !== 'object' || !o[k].x || typeof o[k].x !== 'object') delete o[k];
+    taslakDepo = {h: H.aktif, l: o};
+  }
+  return taslakDepo.l;
+}
+function taslakHemenYaz() {
+  clearTimeout(taslakZaman); taslakZaman = 0;
+  if (!taslakDepo || !H) return;
+  const l = taslakHepsi(), kirli = {};
+  for (const k in l) if (l[k].kirli) kirli[k] = l[k];
+  try { localStorage.setItem(taslakAnahtar(), JSON.stringify(kirli)); } catch (e) {}
+}
+function taslakYaz() { clearTimeout(taslakZaman); taslakZaman = setTimeout(taslakHemenYaz, 250); }
+// Program kapanırken ya da yenilenirken bekleyen taslak hemen yazılır
+window.addEventListener('pagehide', () => { if (taslakZaman) taslakHemenYaz(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && taslakZaman) taslakHemenYaz(); });
+const taslakKirli = yol => !!taslakHepsi()[yol]?.kirli;
+function taslakSil(yol) { delete taslakHepsi()[yol]; taslakYaz(); }
+function servisTaslak(id) {
+  const yol = 'servis/' + id, l = taslakHepsi();
+  let t = l[yol];
+  if (id === 'yeni') {
+    if (!t) t = l[yol] = {x: yeniServisKaydi(ui.yeniServisOn || {}), taban: null, kirli: false};
+    delete ui.yeniServisOn;
+    return t;
+  }
+  const s = servis(id);
+  if (!s) { if (t) taslakSil(yol); return null; }
+  const j = JSON.stringify(s);
+  if (!t) t = l[yol] = {x: kopya(s), taban: j, kirli: false};
+  else if (t.taban !== j) { if (t.kirli) t.degisti = true; else { t.x = kopya(s); t.taban = j; t.degisti = false; } }
+  return t;
+}
+/* Yeni servis fişi: masaüstünde fiş penceresi, telefonda form */
+function yeniServis(on = {}) {
+  if (!masaustuMu()) return servisFormu(null, on);
+  const l = taslakHepsi();
+  if (l['servis/yeni']?.kirli) { bildir('Kaydedilmemiş yeni fiş açık; önce onu kaydedin ya da kapatın'); return git('servis/yeni'); }
+  delete l['servis/yeni'];
+  ui.yeniServisOn = on;
+  git('servis/yeni');
+}
+
+/* --- Fiş kilidi: ortak veritabanında fiş açıkken kayıt kilitlenir (3 dk, her dakika uzatılır).
+   Fişten çıkılınca (değişiklik yoksa) ya da pencere kapanınca kilit açılır. Başkası kilitlediyse fiş yalnız görüntülenir. --- */
+const fisKilit = {};
+async function fisKilitle(yol, key) {
+  if (fisKilit[yol]) { const k = fisKilit[yol]; if (k.durum !== 'baskasi' || k.bitis > Date.now()) return; delete fisKilit[yol]; }
+  const o = ortak(), s = o?.oturum;
+  if (!s || saltOkunur('servis')) return;
+  const k0 = fisKilit[yol] = {durum: 'bekle'}, url = fsUrl(o, '/kilit/' + key);
+  try {
+    let k = null;
+    try { k = fsOku(await ortakIstek(o, 'GET', url)); } catch (e) { if (e.durum !== 404) throw e; }
+    if (fisKilit[yol] !== k0) return;
+    if (k && k.u !== s.uid && k.bitis > Date.now()) {
+      Object.assign(k0, {durum: 'baskasi', ad: k.a || 'Başka bir kullanıcı', bitis: k.bitis});
+      if (aktifYol() === yol && ortakCizilebilir()) ciz();
+      return;
+    }
+    const yaz = () => ortakIstek(ortak(), 'PATCH', url, {fields: fsAlanlar({u: s.uid, a: s.ad || s.eposta, bitis: Date.now() + 180000})}).catch(() => {});
+    await yaz();
+    if (fisKilit[yol] !== k0) return void ortakIstek(ortak(), 'DELETE', url).catch(() => {});
+    k0.durum = 'benim';
+    k0.birak = () => ortakIstek(ortak(), 'DELETE', url).catch(() => {});
+    k0.t = setInterval(() => { if (aktifYol() !== yol && !taslakKirli(yol)) fisKilitBirak(yol); else yaz(); }, 60000);
+  } catch (e) { if (fisKilit[yol] === k0) delete fisKilit[yol]; }   // internet yoksa kilitsiz devam edilir
+}
+function fisKilitBirak(yol) {
+  const k = fisKilit[yol];
+  if (!k) return;
+  clearInterval(k.t);
+  if (k.durum === 'benim' && k.birak) k.birak();
+  delete fisKilit[yol];
+}
+
+/* --- Izgara: Excel gibi düzenlenen tablo. Enter sağdaki hücreye geçer, son hücrede yeni satır açar; ↑ ↓ satır değiştirir.
+   kolon: {a, ad, gen, tip: metin|sayi|para|secim|tarih|saat|salt, secenek {deger: ad}, liste (datalist), oku(satir), deger(satir) (salt), sg (sağa yasla)}
+   Hesaplanan hücreler, odaktaki hücre dışında, her değişiklikte yenilenir; satır rengi satirSinif ile verilir. --- */
+function izgara(kap, {kolonlar, satirlar, salt = false, satirSinif = () => '', degisti = () => {}, yeniSatir, silindi = () => {}, bosMetin = ''}) {
+  const okunan = (r, k) => k.oku ? k.oku(r) : r[k.a];
+  const goster = (r, k) => {
+    const v = okunan(r, k);
+    if (v === undefined || v === null || v === '') return '';
+    if (k.tip === 'sayi') return sayiFmt(v);
+    if (k.tip === 'para') return tutarFmt(v);
+    return String(v);
+  };
+  const hucre = (r, k) => {
+    if (k.tip === 'salt') return `<td class="salt ${k.sg ? 'sg' : ''}" data-h="${k.a}">${esc(k.deger(r))}</td>`;
+    const dis = salt ? 'disabled' : '';
+    if (k.tip === 'secim') return `<td><select data-a="${k.a}" ${dis}>${Object.entries(k.secenek).map(([v, a]) => `<option value="${esc(v)}" ${String(okunan(r, k)) === v ? 'selected' : ''}>${esc(a)}</option>`).join('')}</select></td>`;
+    const tur = k.tip === 'tarih' ? 'date' : k.tip === 'saat' ? 'time' : 'text';
+    const sayisal = k.tip === 'sayi' || k.tip === 'para';
+    return `<td><input type="${tur}" data-a="${k.a}" value="${esc(goster(r, k))}" ${sayisal ? 'inputmode="decimal" class="sg"' : ''} ${k.liste ? `list="${k.liste}"` : ''} autocomplete="off" spellcheck="false" ${dis}></td>`;
+  };
+  const satirHtml = (r, i) => `<tr data-i="${i}" class="${satirSinif(r)}"><td class="izg-no">${i + 1}</td>${kolonlar.map(k => hucre(r, k)).join('')}${salt ? '' : `<td class="izg-sil"><button type="button" data-sil title="Satırı sil" aria-label="Satırı sil">${ikon('kapat')}</button></td>`}</tr>`;
+  const oku = (k, el) => {
+    const v = el.value.trim();
+    if (k.tip === 'sayi') { if (!v) return undefined; const n = sayiOku(v); return isFinite(n) ? n : undefined; }
+    if (k.tip === 'para') { if (!v) return undefined; const n = tutarOku(v); return isFinite(n) ? n : undefined; }
+    return el.value;
+  };
+  const tazele = tr => {
+    const r = satirlar[+tr.dataset.i];
+    if (!r) return;
+    tr.className = satirSinif(r) + (tr.classList.contains('secili') ? ' secili' : '');
+    for (const k of kolonlar) {
+      if (k.tip === 'salt') { const td = $(`[data-h="${k.a}"]`, tr); if (td) td.textContent = k.deger(r); continue; }
+      const el = $(`[data-a="${k.a}"]`, tr);
+      if (!el || el === document.activeElement) continue;
+      if (k.tip === 'secim') el.value = String(okunan(r, k)); else el.value = goster(r, k);
+    }
+  };
+  const odakla = (i, a) => { const el = $(`tr[data-i="${i}"] [data-a="${a}"]`, kap); if (el) { el.focus(); if (el.select && el.type === 'text') el.select(); } };
+  const ciz1 = () => {
+    kap.innerHTML = `<table class="izg"><colgroup><col style="width:28px">${kolonlar.map(k => `<col style="width:${k.gen}px">`).join('')}${salt ? '' : '<col style="width:26px">'}</colgroup>
+      <thead><tr><th></th>${kolonlar.map(k => `<th class="${k.sg || k.tip === 'sayi' || k.tip === 'para' ? 'sg' : ''}" title="${esc(k.ad)}">${esc(k.ad)}</th>`).join('')}${salt ? '' : '<th></th>'}</tr></thead>
+      <tbody>${satirlar.map(satirHtml).join('')}</tbody></table>${!satirlar.length && bosMetin ? `<div class="izg-bos">${esc(bosMetin)}</div>` : ''}`;
+    $$('tbody tr', kap).forEach(tr => {
+      const i = +tr.dataset.i, r = satirlar[i];
+      $$('[data-a]', tr).forEach(el => {
+        const k = kolonlar.find(x => x.a === el.dataset.a);
+        const isle = () => {
+          const v = oku(k, el);
+          if (v === undefined) delete r[k.a]; else r[k.a] = v;
+          degisti(r, k.a, el);
+          $$('tbody tr', kap).forEach(tazele);
+        };
+        el.addEventListener(k.tip === 'secim' || k.tip === 'tarih' || k.tip === 'saat' ? 'change' : 'input', isle);
+        // Sayı ve tutar hücresi odaktan çıkınca düzgün biçimde yazılır (1250,5 → 1.250,50)
+        if (k.tip === 'sayi' || k.tip === 'para') el.addEventListener('blur', () => { el.value = goster(r, k); });
+        el.addEventListener('keydown', e => {
+          const j = kolonlar.filter(x => x.tip !== 'salt').findIndex(x => x.a === k.a), duz = kolonlar.filter(x => x.tip !== 'salt');
+          if (e.key === 'Enter' && !e.isComposing) {
+            e.preventDefault();
+            if (j < duz.length - 1) return odakla(i, duz[j + 1].a);
+            if (i < satirlar.length - 1) return odakla(i + 1, duz[0].a);
+            if (yeniSatir && !salt) { yeniSatir(); ciz1(); odakla(i + 1, duz[0].a); }
+          } else if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && el.tagName === 'INPUT' && el.type === 'text') {
+            const n = i + (e.key === 'ArrowDown' ? 1 : -1);
+            if (n >= 0 && n < satirlar.length) { e.preventDefault(); odakla(n, k.a); }
+          }
+        });
+      });
+      tr.addEventListener('focusin', () => { $$('tr.secili', kap).forEach(x => x !== tr && x.classList.remove('secili')); tr.classList.add('secili'); });
+      const sil = $('[data-sil]', tr);
+      if (sil) sil.onclick = () => { satirlar.splice(i, 1); silindi(r); ciz1(); };
+    });
+  };
+  ciz1();
+  return {ciz: ciz1, ekle(r) { satirlar.push(r); ciz1(); const duz = kolonlar.filter(x => x.tip !== 'salt'); odakla(satirlar.length - 1, duz[0].a); }};
+}
+
+/* --- Servis fişi penceresi --- */
+const FIS_SEKMELER = [['genel', 'Genel Bilgiler'], ['ariza', 'Arıza'], ['islem', 'Servis İşlemleri'], ['dis', 'Dış Servis'], ['sonuc', 'Sonuç ve Teslim'], ['bag', 'Bağlantılar'], ['form', 'Form Önizleme']];
+const simdiYerel = () => { const d = new Date(); return `${tarihStr(d)}T${iki(d.getHours())}:${iki(d.getMinutes())}`; };
+const zamanYaz = z => z ? `${tarihYaz(z.slice(0, 10), true)} ${z.slice(11, 16)}` : '';
+function servisFisi(id) {
+  const yol = 'servis/' + id, t = servisTaslak(id);
+  if (!t) return git('servis', true);
+  const x = t.x, yeni = id === 'yeni';
+  x.parcalar ||= []; x.iscilik ||= []; x.disServis ||= []; x.personeller ||= []; x.turler ||= []; x.testler ||= [];
+  if (!yeni) fisKilitle(yol, 'servisler~' + idTemiz(id));
+  const kl = fisKilit[yol], baskasi = kl?.durum === 'baskasi', ro = saltOkunur() || baskasi;
+  sayfa(yeni ? 'Yeni servis fişi' : 'Servis fişi ' + x.no, {geri: 'servis', geriAd: 'Servis fişleri'});
+  ui.fisSekme ||= {}; ui.fisAlt ||= 'alt';
+  const sk = FIS_SEKMELER.some(([v]) => v === ui.fisSekme[yol]) ? ui.fisSekme[yol] : yeni ? 'genel' : 'islem';
+  const kayitli = yeni ? null : servis(id), f = kayitli?.faturaId && D.faturalar.find(y => y.id === kayitli.faturaId);
+  const fat = modulAcik('fatura');
+  const A = (k, simge, ad, {kapali = false, ipucu = ''} = {}) => `<button class="fa" data-arac="${k}" ${kapali ? 'disabled' : ''} title="${esc(ipucu || ad)}">${ikon(simge)}<span>${esc(ad)}</span></button>`;
+  const ayir = '<span class="fa-ayir"></span>';
+  const arac = [A('kaydet', 'tamam', 'Kaydet', {kapali: ro, ipucu: 'Kaydet (Ctrl+S)'}), A('yeni', 'arti', 'Yeni'), ayir,
+    A('cariBul', 'ara', 'Cari bul', {kapali: ro}), A('cariAc', 'cariKart', 'Cari aç', {kapali: !x.kisiId || !modulAcik('veresiye')}), A('makine', 'tekne', 'Makine', {kapali: ro}), ayir,
+    A('giris', 'giris', 'Giriş', {kapali: ro, ipucu: 'Makinenin servise giriş zamanını yaz'}), A('teslim', 'cikis', 'Teslim', {kapali: ro || x.durum === 'tamam', ipucu: 'Tamamla, teslim et ve kaydet'}), A('durum', 'donustur', 'Durum', {kapali: ro}), ayir,
+    fat ? A('fatura', 'faturaTL', f ? 'Fatura' : 'Faturala', {kapali: yeni || (!f && ro)}) : '', A('pdf', 'indir', 'PDF'), A('yazdir', 'yazici', 'Yazdır'), ayir,
+    A('kopya', 'kayitlar', 'Kopyala', {kapali: yeni || ro}), A('sil', 'cop', 'Sil', {kapali: yeni || ro}), A('kapat', 'kapat', 'Kapat')].join('');
+  const uyari = [];
+  if (baskasi) uyari.push(`<div class="fis-uyari">${ikon('kilit')}<span><b>${esc(kl.ad)}</b> bu fişi düzenliyor. Fiş şu an yalnızca görüntülenebilir.</span></div>`);
+  else if (saltOkunur()) uyari.push(`<div class="fis-uyari">${ikon('kilit')}<span>Yalnızca görüntüleme yetkiniz var; değişiklik yapamazsınız.</span></div>`);
+  if (t.degisti && t.kirli) uyari.push(`<div class="fis-uyari kirmizi">${ikon('uyari')}<span>Bu fiş siz düzenlerken başka bir cihazda değiştirildi. Kaydederseniz oradaki değişikliklerin üzerine yazılır.</span><button class="kb" id="fisYenidenYukle">Değişikliklerimi at, yeniden yükle</button></div>`);
+  $('#icerik').classList.add('erp-tam');
+  $('#icerik').innerHTML = `<div class="fis ${ro ? 'fis-ro' : ''}" id="fis">
+    <div class="fis-bas"><div class="fis-ad">${ikon('pano')}<div><b>Servis Fişi <span class="fis-durum">${servisRozet(x)}</span> <span class="fis-kirli ${t.kirli ? '' : 'gizli'}" id="fisKirli" title="Kaydedilmemiş değişiklik var">● Kaydedilmedi</span></b><small>${esc(x.no)}${x.isEmriNo ? ' · İE ' + esc(x.isEmriNo) : ''} · ${esc(x.kisiId || x.musteriAd ? servisMusteri(x) : 'Müşteri seçilmedi')}</small></div></div>
+      <div class="fis-arac">${arac}</div></div>
+    ${uyari.join('')}
+    <div class="fis-sekmeler" role="tablist">${FIS_SEKMELER.map(([v, a]) => `<button class="fs-s ${v === sk ? 'aktif' : ''}" data-sk="${v}" role="tab">${esc(a)}</button>`).join('')}</div>
+    <div class="fis-govde" id="fisGovde"></div>
+    <div class="fis-alt"><div class="ft-sekmeler">${[['alt', 'Alt Toplamlar'], ['kdv', 'KDV Detayları'], ['doviz', 'Döviz Alt Toplam']].map(([v, a]) => `<button class="fs-s ${ui.fisAlt === v ? 'aktif' : ''}" data-fa="${v}">${a}</button>`).join('')}</div><div id="fisToplam"></div></div>
+  </div>
+  <datalist id="teknisyenler">${teknisyenAdlari().map(a => `<option value="${esc(a)}">`).join('')}</datalist>
+  <datalist id="birimler">${['adet', 'takım', 'lt', 'kg', 'm', 'saat', 'set', 'paket'].map(a => `<option value="${a}">`).join('')}</datalist>`;
+  const degis = () => {
+    if (!t.kirli) { t.kirli = true; $('#fisKirli')?.classList.remove('gizli'); pencereEtiket(yol); }
+    taslakYaz(); toplamCiz();
+  };
+  const toplamCiz = () => {
+    const h = servisHesap(x), kap = $('#fisToplam');
+    if (!kap) return;
+    const sat = (a, v, c = '') => `<span>${a}</span><b class="${c}">${v}</b>`;
+    const genel = `<div class="ft-genel"><small>Genel Toplam</small><b>${tutarFmt(h.toplam)} TL</b></div>`;
+    if (ui.fisAlt === 'kdv') {
+      const o = Object.entries(h.oranlar).sort((a, b) => +a[0] - +b[0]);
+      kap.innerHTML = `<div class="ft"><table class="ft-tablo"><thead><tr><th>KDV oranı</th><th class="sg">Matrah</th><th class="sg">KDV</th></tr></thead><tbody>${o.length ? o.map(([r, v]) => `<tr><td>%${esc(r)}</td><td class="sg">${tutarFmt(v.matrah)}</td><td class="sg">${tutarFmt(v.kdv)}</td></tr>`).join('') : '<tr><td colspan="3" class="soluk">Tutar girilmedi</td></tr>'}</tbody></table>${genel}</div>`;
+    } else if (ui.fisAlt === 'doviz') {
+      const d = Object.entries(h.doviz);
+      kap.innerHTML = `<div class="ft"><table class="ft-tablo"><thead><tr><th>Döviz</th><th class="sg">Döviz tutarı</th><th class="sg">TL karşılığı</th></tr></thead><tbody>${d.length ? d.map(([a, v]) => `<tr><td>${esc(a)}</td><td class="sg">${tutarFmt(v.tutar)} ${esc(a)}</td><td class="sg">${tutarFmt(v.tl)}</td></tr>`).join('') : '<tr><td colspan="3" class="soluk">Dövizli satır yok</td></tr>'}</tbody></table>${genel}</div>`;
+    } else {
+      kap.innerHTML = `<div class="ft"><div class="ft-kolon">${sat('Parça toplamı', tutarFmt(h.parca) + ' TL')}${sat('İşçilik toplamı', tutarFmt(h.iscilik) + ' TL')}${sat('Dış servis', tutarFmt(h.dis) + ' TL')}</div>
+        <div class="ft-kolon">${sat('Ara toplam', tutarFmt(h.ara) + ' TL')}${sat('İskonto' + (h.iskontoOran ? ' %' + sayiFmt(h.iskontoOran) : ''), tutarFmt(h.iskonto) + ' TL')}${sat('KDV', tutarFmt(h.kdv) + ' TL')}</div>
+        <div class="ft-kolon">${sat('İşçilik süresi', sayiFmt(h.saat) + ' saat')}${sat('Parça satırı', x.parcalar.length)}${sat('İşlem satırı', x.iscilik.length)}</div>${genel}</div>`;
+    }
+  };
+  // Basit alanlar: data-f = alan adı, data-t = sayi | dizi (onay kutuları)
+  const alanBagla = kok => {
+    $$('[data-f]', kok).forEach(el => {
+      const a = el.dataset.f, tip = el.dataset.t;
+      if (ro) { el.disabled = true; return; }
+      if (tip === 'dizi') { el.addEventListener('change', () => { const d = x[a] ||= [], i = d.indexOf(el.value); if (el.checked && i < 0) d.push(el.value); if (!el.checked && i >= 0) d.splice(i, 1); degis(); }); return; }
+      if (el.type === 'checkbox') { el.addEventListener('change', () => { x[a] = el.checked; degis(); }); return; }
+      el.addEventListener(el.tagName === 'SELECT' || el.type === 'date' || el.type === 'datetime-local' ? 'change' : 'input', () => {
+        if (tip === 'sayi') { const n = sayiOku(el.value); x[a] = isFinite(n) ? n : el.dataset.bos === 'sil' ? undefined : 0; if (x[a] === undefined) delete x[a]; }
+        else x[a] = el.value;
+        degis();
+        if (a === 'durum') { $('.fis-durum').innerHTML = servisRozet(x); }
+      });
+    });
+  };
+  const S = (etiket, ic) => `<div class="fk-satir"><label>${esc(etiket)}</label>${ic}</div>`;
+  const G = (a, {tip = 'text', ph = '', liste = '', t: dt = ''} = {}) => `<input type="${tip}" data-f="${a}" ${dt ? `data-t="${dt}"` : ''} value="${esc(dt === 'sayi' ? (x[a] ? sayiFmt(x[a]) : '') : x[a] ?? '')}" placeholder="${esc(ph)}" ${liste ? `list="${liste}"` : ''} ${dt === 'sayi' ? 'inputmode="decimal"' : ''} autocomplete="off">`;
+  const kutular = (a, sozluk) => `<div class="fk-kutular">${Object.entries(sozluk).map(([v, ad]) => `<label><input type="checkbox" data-f="${a}" data-t="dizi" value="${v}" ${x[a].includes(v) ? 'checked' : ''}><span>${esc(ad)}</span></label>`).join('')}</div>`;
+  const e = ekipman(x.ekipmanId) || x.ekipmanKopya, k = x.kisiId && kisi(x.kisiId);
+
+  const SEKME = {
+    genel: g => {
+      g.innerHTML = `<div class="fk-izgara">
+        <fieldset class="fk"><legend>Fiş</legend>
+          ${S('Servis form no', G('no'))}${S('İş emri no', G('isEmriNo', {ph: 'Kayıtta verilir'}))}
+          ${S('Teklif ref. no', G('teklifRef', {liste: 'fkTeklif', ph: 'Teklif yok'}))}
+          <datalist id="fkTeklif">${D.faturalar.filter(y => y.tur === 'teklif' && y.durum !== 'iptal').sort((a, b) => b.tarih.localeCompare(a.tarih)).slice(0, 50).map(y => `<option value="${esc(y.no)}">${esc(faturaMusteri(y))}</option>`).join('')}</datalist>
+          ${S('Fiş tarihi', G('tarih', {tip: 'date'}))}
+          ${S('Durum', `<select data-f="durum">${Object.entries(SERVIS_DURUM).map(([v, [a]]) => `<option value="${v}" ${v === x.durum ? 'selected' : ''}>${a}</option>`).join('')}</select>`)}
+          ${S('Giriş zamanı', G('giris', {tip: 'datetime-local'}))}${S('Teslim zamanı', G('teslimZaman', {tip: 'datetime-local'}))}
+        </fieldset>
+        <fieldset class="fk"><legend>Müşteri</legend>
+          ${S('Cari', `<div class="fk-bul"><input type="text" readonly value="${esc(k ? k.ad : '')}" placeholder="Cari seçilmedi"><button class="kb" data-arac="cariBul" ${ro ? 'disabled' : ''} title="Cari bul">${ikon('ara')}</button>${x.kisiId && !ro ? `<button class="kb" id="fkCariSil" title="Cari bağlantısını kaldır">${ikon('kapat')}</button>` : ''}</div>`)}
+          ${x.kisiId ? '' : S('Müşteri adı', G('musteriAd', {ph: 'Kayıtsız müşteri adı'}))}
+          ${S('Yetkili kişi', G('yetkili'))}${S('Telefon', G('tel', {tip: 'tel'}))}${S('E-posta', G('eposta', {tip: 'email'}))}
+        </fieldset>
+        <fieldset class="fk"><legend>Tekne / makine</legend>
+          ${S('Makine', `<div class="fk-bul"><input type="text" readonly value="${esc(e ? ekipmanAd(e) || e.tekne || 'Makine' : '')}" placeholder="Makine seçilmedi"><button class="kb" data-arac="makine" ${ro ? 'disabled' : ''} title="Makine seç">${ikon('ara')}</button></div>`)}
+          ${S('Seri / motor no', `<input type="text" readonly value="${esc(e ? [e.seriNo && 'SN ' + e.seriNo, e.motorNo && 'Motor ' + e.motorNo].filter(Boolean).join(' · ') : '')}">`)}
+          ${S('Tekne adı', G('tekne'))}${S('Bağlama limanı', G('liman'))}${S('Servis yeri', G('servisYeri', {ph: 'Marina, tersane, atölye'}))}${S('Çalışma saati', G('calismaSaati', {t: 'sayi'}))}
+        </fieldset></div>
+        <fieldset class="fk"><legend>Servis türü</legend>${kutular('turler', SERVIS_TUR)}</fieldset>`;
+      alanBagla(g);
+      if ($('#fkCariSil', g)) $('#fkCariSil', g).onclick = () => { x.musteriAd = x.musteriAd || k?.ad || ''; x.kisiId = null; degis(); ciz(); };
+    },
+    ariza: g => {
+      g.innerHTML = `<div class="fk-ikili"><fieldset class="fk"><legend>Müşteri şikâyeti / arıza tanımı</legend><textarea data-f="sikayet" rows="12" placeholder="Müşterinin bildirdiği arıza">${esc(x.sikayet)}</textarea></fieldset>
+        <fieldset class="fk"><legend>Tespitler ve yapılan işlemler</legend><textarea data-f="islemler" rows="12" placeholder="Tespit edilenler ve yapılan işler (servis formuna yazılır)">${esc(x.islemler)}</textarea></fieldset></div>`;
+      alanBagla(g);
+    },
+    islem: g => {
+      const stok = modulAcik('stok');
+      g.innerHTML = `<div class="fb-ust">
+        <section class="fb"><div class="fb-bas"><b>İşlemler</b><span>${ro ? '' : `<button class="kb" id="isEkle">${ikon('arti')}Satır ekle</button>`}</span></div><div class="izg-kap" id="izIslem"></div>
+          <div class="fb-alt" id="isAlt"></div></section>
+        <section class="fb fb-pers"><div class="fb-bas"><b>Personeller</b></div>
+          <div class="fk fk-sade">${S('Servis aracı', G('arac', {ph: 'Plaka'}))}</div>
+          <ul class="pers-liste" id="persListe"></ul>
+          ${ro ? '' : `<div class="pers-ekle"><input type="text" id="persYeni" list="teknisyenler" placeholder="Ad soyad" autocomplete="off"><button class="kb" id="persEkle">Ekle</button></div>
+          <button class="kb tam" id="persAktar" title="Teknisyeni boş işlem satırlarına ilk personeli yazar">İşlemlere aktar</button>`}</section></div>
+        <section class="fb fb-hareket"><div class="fb-bas"><b>Hareketler <small>(kullanılan parça ve malzemeler)</small></b><span>${ro ? '' : `${stok && D.urunler.length ? `<button class="kb" id="hrStok">${ikon('kutu')}Stoktan ekle</button>` : ''}<button class="kb" id="hrEkle">${ikon('arti')}Satır ekle</button>`}</span></div>
+          <div class="izg-kap" id="izHareket"></div>
+          ${stok ? `<label class="fb-not"><input type="checkbox" data-f="stokDus" ${x.stokDus !== false ? 'checked' : ''}> Stok kodu bağlı parçaları stoktan düş (müşteri malı düşmez)</label>` : ''}</section>`;
+      alanBagla(g);
+      const isAlt = () => { const h = servisHesap(x); $('#isAlt', g).innerHTML = `<span>Toplam süre <b>${sayiFmt(h.saat)} saat</b></span><span>Ücret toplamı <b>${tutarFmt(h.iscilik)} TL</b></span>`; };
+      const is = izgara($('#izIslem', g), {salt: ro, satirlar: x.iscilik, bosMetin: 'İşlem yok. "Satır ekle" ile ekleyin.',
+        satirSinif: w => 'd-' + islemDurum(w),
+        kolonlar: [
+          {a: 'durum', ad: 'Durumu', gen: 96, tip: 'secim', secenek: ISLEM_DURUM, oku: islemDurum},
+          {a: 'kod', ad: 'İşlem kodu', gen: 78},
+          {a: 'is', ad: 'İşlem tanımı', gen: 230},
+          {a: 'teknisyen', ad: 'Teknisyen', gen: 140, liste: 'teknisyenler'},
+          {a: 'tarih', ad: 'Tarih', gen: 120, tip: 'tarih'},
+          {a: 'bas', ad: 'Başlangıç', gen: 82, tip: 'saat'},
+          {a: 'bit', ad: 'Bitiş', gen: 82, tip: 'saat'},
+          {a: 'sure', ad: 'Süre (saat)', gen: 76, tip: 'sayi'},
+          {a: 'ucret', ad: 'Saat ücreti', gen: 92, tip: 'para', oku: islemUcret},
+          {a: 'tutar', ad: 'İşlem ücreti', gen: 100, tip: 'para', oku: islemTutar},
+          {a: 'aciklama', ad: 'Açıklama', gen: 200}],
+        degisti: (w, a) => {
+          if ((a === 'bas' || a === 'bit') && w.bas && w.bit) w.sure = saatFark(w.bas, w.bit);
+          if (['sure', 'ucret', 'bas', 'bit'].includes(a)) delete w.tutar;   // işlem ücreti yeniden hesaplanır
+          degis(); isAlt();
+        },
+        silindi: () => { degis(); isAlt(); },
+        yeniSatir: () => yeniIslem()});
+      const yeniIslem = () => { const o = x.iscilik[x.iscilik.length - 1]; const w = {durum: 'yapilacak', kod: '', is: '', teknisyen: o?.teknisyen || x.personeller[0] || '', tarih: x.tarih || bugun(), bas: '', bit: '', sure: 0}; x.iscilik.push(w); degis(); return w; };
+      if ($('#isEkle', g)) $('#isEkle', g).onclick = () => { const w = yeniIslem(); x.iscilik.pop(); is.ekle(w); isAlt(); };
+      isAlt();
+      // Personeller
+      const persCiz = () => {
+        $('#persListe', g).innerHTML = x.personeller.length ? x.personeller.map((a, i) => `<li><span>${esc(a)}</span>${ro ? '' : `<button data-pi="${i}" title="Çıkar" aria-label="Çıkar">${ikon('kapat')}</button>`}</li>`).join('') : '<li class="bos">Personel eklenmedi</li>';
+        $$('[data-pi]', g).forEach(b => b.onclick = () => { x.personeller.splice(+b.dataset.pi, 1); degis(); persCiz(); });
+      };
+      persCiz();
+      if (!ro) {
+        const ekle = () => { const v = $('#persYeni', g).value.trim(); if (!v) return; if (!x.personeller.includes(v)) x.personeller.push(v); $('#persYeni', g).value = ''; degis(); persCiz(); };
+        $('#persEkle', g).onclick = ekle;
+        $('#persYeni', g).addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); ekle(); } });
+        $('#persAktar', g).onclick = () => {
+          if (!x.personeller.length) return bildir('Önce personel ekleyin', true);
+          let n = 0; for (const w of x.iscilik) if (!(w.teknisyen || '').trim()) { w.teknisyen = x.personeller[0]; n++; }
+          if (n) { degis(); is.ciz(); bildir(`${n} işlem satırına yazıldı`); } else bildir('Teknisyeni boş işlem satırı yok');
+        };
+      }
+      // Hareketler (parçalar)
+      const kolonlar = [
+        {a: 'parcaNo', ad: 'Stok kodu', gen: 128},
+        {a: 'ad', ad: 'Stok adı / açıklama', gen: 230},
+        {a: 'adet', ad: 'Miktar', gen: 70, tip: 'sayi'},
+        {a: 'birim', ad: 'Birimi', gen: 66, liste: 'birimler'},
+        {a: 'durum', ad: 'Parça durumu', gen: 108, tip: 'secim', secenek: PARCA_DURUM, oku: p => PARCA_DURUM[p.durum] ? p.durum : 'yeni'},
+        {a: 'fiyat', ad: 'Birim fiyat', gen: 96, tip: 'para', oku: parcaFiyat},
+        {a: 'doviz', ad: 'Döviz', gen: 62, tip: 'secim', secenek: Object.fromEntries(DOVIZLER.map(d => [d, d])), oku: parcaDoviz},
+        {a: 'kur', ad: 'Kur', gen: 72, tip: 'sayi', oku: p => parcaDoviz(p) === 'TL' ? '' : p.kur},
+        {a: 'isk', ad: 'İsk. %', gen: 58, tip: 'sayi'},
+        {a: 'kdv', ad: 'KDV %', gen: 58, tip: 'sayi', oku: parcaKdv},
+        {a: '_tutar', ad: 'Tutar (TL)', gen: 104, tip: 'salt', sg: true, deger: p => tutarFmt(parcaTutar(p))}];
+      if (stok) kolonlar.push({a: '_stok', ad: 'Eldeki', gen: 64, tip: 'salt', sg: true, deger: p => parcaUrun(p) ? sayiFmt(urunMiktar(p.urunId)) : ''});
+      const hr = izgara($('#izHareket', g), {salt: ro, satirlar: x.parcalar, kolonlar, bosMetin: 'Parça yok. Stok kodunu yazın ya da "Stoktan ekle" ile seçin.',
+        satirSinif: p => p.durum === 'musteri' ? 'd-musteri' : '',
+        degisti: (p, a) => {
+          if (a === 'parcaNo') {
+            // Stok kodu yazılınca ürün kartı bulunur: ad, birim, fiyat ve KDV karttan gelir
+            const kod = kucult((p.parcaNo || '').trim()), u = kod && D.urunler.find(y => kucult(y.kod) === kod);
+            if (u && p.urunId !== u.id) { p.urunId = u.id; p.ad = u.ad; p.birim = u.birim || p.birim; delete p.fiyat; delete p.kdv; delete p.doviz; delete p.kur; }
+            else if (!u && p.urunId && kucult(parcaUrun(p)?.kod) !== kod) p.urunId = null;
+          }
+          if (a === 'doviz') { if (parcaDoviz(p) === 'TL') delete p.kur; else if (!p.kur) p.kur = x.parcalar.find(y => y !== p && parcaDoviz(y) === p.doviz && y.kur)?.kur; }
+          degis();
+        },
+        silindi: degis,
+        yeniSatir: () => { const p = {ad: '', parcaNo: '', birim: 'adet', adet: 1, durum: 'yeni'}; x.parcalar.push(p); degis(); return p; }});
+      if ($('#hrEkle', g)) $('#hrEkle', g).onclick = () => { hr.ekle({ad: '', parcaNo: '', birim: 'adet', adet: 1, durum: 'yeni'}); degis(); };
+      if ($('#hrStok', g)) $('#hrStok', g).onclick = () => urunSec(u => { x.parcalar.push({urunId: u.id, ad: u.ad, parcaNo: u.kod || '', birim: u.birim, adet: 1, durum: 'yeni'}); degis(); ciz(); });
+    },
+    dis: g => {
+      g.innerHTML = `<section class="fb"><div class="fb-bas"><b>Dış servis <small>(başka firmaya gönderilen işler)</small></b><span>${ro ? '' : `<button class="kb" id="dsEkle">${ikon('arti')}Satır ekle</button>`}</span></div><div class="izg-kap uzun" id="izDis"></div></section>`;
+      const yeniDis = () => ({firma: '', is: '', gonderim: bugun(), donus: '', durum: 'gonderildi'});
+      const ds = izgara($('#izDis', g), {salt: ro, satirlar: x.disServis, bosMetin: 'Dış servis yok.',
+        satirSinif: d => d.durum === 'iptal' ? 'd-iptal' : d.durum === 'dondu' ? 'd-yapildi' : 'd-yapilacak',
+        kolonlar: [
+          {a: 'firma', ad: 'Firma', gen: 190}, {a: 'is', ad: 'Yapılacak iş', gen: 240},
+          {a: 'gonderim', ad: 'Gönderim', gen: 122, tip: 'tarih'}, {a: 'donus', ad: 'Dönüş', gen: 122, tip: 'tarih'},
+          {a: 'durum', ad: 'Durumu', gen: 104, tip: 'secim', secenek: DIS_DURUM, oku: d => DIS_DURUM[d.durum] ? d.durum : 'gonderildi'},
+          {a: 'tutar', ad: 'Müşteriye ücret', gen: 110, tip: 'para'}, {a: 'kdv', ad: 'KDV %', gen: 58, tip: 'sayi', oku: d => d.kdv ?? 20},
+          {a: 'aciklama', ad: 'Açıklama', gen: 220}],
+        degisti: (d, a) => { if (a === 'durum' && d.durum === 'dondu' && !d.donus) d.donus = bugun(); degis(); }, silindi: degis,
+        yeniSatir: () => { const d = yeniDis(); x.disServis.push(d); degis(); return d; }});
+      if ($('#dsEkle', g)) $('#dsEkle', g).onclick = () => { ds.ekle(yeniDis()); degis(); };
+    },
+    sonuc: g => {
+      g.innerHTML = `<div class="fk-izgara">
+        <fieldset class="fk"><legend>Teslim</legend>
+          ${S('Teslim durumu', `<select data-f="teslim"><option value="">—</option>${Object.entries(TESLIM).map(([v, a]) => `<option value="${v}" ${v === x.teslim ? 'selected' : ''}>${a}</option>`).join('')}</select>`)}
+          ${S('Test süresi (dk)', G('testSure'))}
+          <div class="fk-satir ust"><label>Test / deneme</label>${kutular('testler', TESTLER)}</div>
+        </fieldset>
+        <fieldset class="fk"><legend>Sonraki bakım</legend>${S('Bakım tarihi', G('sonrakiBakim', {tip: 'date'}))}${S('Bakım saati', G('sonrakiBakimSaat', {ph: 'Çalışma saati'}))}</fieldset>
+        <fieldset class="fk"><legend>Fiyatlandırma</legend>
+          ${S('Genel iskonto %', G('iskonto', {t: 'sayi', ph: '0'}))}
+          ${S('İşçilik KDV %', `<input type="text" data-f="iscilikKdv" data-t="sayi" data-bos="sil" value="${esc(x.iscilikKdv ?? '')}" placeholder="20" inputmode="decimal">`)}
+          <p class="fk-not">Fiyatlar yalnız bu ekranda ve faturada görünür; servis formu fiyatsızdır.</p>
+        </fieldset></div>
+        <fieldset class="fk"><legend>Öneriler</legend><textarea data-f="oneriler" rows="5" placeholder="Müşteriye öneriler (servis formuna yazılır)">${esc(x.oneriler)}</textarea></fieldset>`;
+      alanBagla(g);
+    },
+    bag: g => {
+      const tk = x.teklifRef && D.faturalar.find(y => y.tur === 'teklif' && y.no === x.teklifRef);
+      const gecmis = e && x.ekipmanId ? D.servisler.filter(y => y.ekipmanId === x.ekipmanId && y.id !== x.id).sort((a, b) => b.tarih.localeCompare(a.tarih)) : [];
+      const satir = (ad, deger, yolu) => `<tr ${yolu ? `data-git="${esc(yolu)}" class="tik"` : ''}><td>${esc(ad)}</td><td>${esc(deger)}</td><td class="sg">${yolu ? 'Aç ›' : ''}</td></tr>`;
+      g.innerHTML = `<div class="fk-ikili"><section class="fb"><div class="fb-bas"><b>Bağlı kayıtlar</b></div><div class="izg-kap"><table class="izg salt-tablo"><colgroup><col style="width:150px"><col><col style="width:60px"></colgroup><tbody>
+          ${satir('Cari kartı', k ? k.ad : 'Bağlı değil', k && modulAcik('veresiye') ? 'veresiye/' + k.id : '')}
+          ${satir('Teklif', tk ? `${tk.no} · ${tarihYaz(tk.tarih, true)}` : x.teklifRef || 'Yok', tk && modulAcik('teklif') ? 'teklif/' + tk.id : '')}
+          ${satir('Fatura', f ? `${f.no} · ${faturaDurum(f)[0]} · ${para(faturaHesap(f).toplam)}` : 'Faturalanmadı', f ? 'fatura/' + f.id : '')}
+          ${satir('Makine', e ? [x.tekne || e.tekne, ekipmanAd(e), e.seriNo && 'SN ' + e.seriNo].filter(Boolean).join(' · ') : 'Bağlı değil', '')}
+          ${satir('Giriş / teslim', [zamanYaz(x.giris), zamanYaz(x.teslimZaman)].filter(Boolean).join(' → ') || '—', '')}
+        </tbody></table></div></section>
+        <section class="fb"><div class="fb-bas"><b>Bu makinenin servis geçmişi</b></div><div class="izg-kap"><table class="izg salt-tablo"><thead><tr><th>Fiş no</th><th>Tarih</th><th>Durum</th><th class="sg">İşçilik</th></tr></thead><tbody>
+          ${gecmis.length ? gecmis.map(y => `<tr class="tik" data-git="servis/${esc(y.id)}"><td>${esc(y.no)}</td><td>${esc(tarihYaz(y.tarih, true))}</td><td>${esc((SERVIS_DURUM[y.durum] || [''])[0])}</td><td class="sg">${sayiFmt(iscilikSaat(y))} saat</td></tr>`).join('') : '<tr><td colspan="4" class="soluk">Kayıt yok</td></tr>'}
+        </tbody></table></div></section></div>`;
+      $$('[data-git]', g).forEach(tr => tr.ondblclick = tr.onclick = () => git(tr.dataset.git));
+    },
+    form: g => {
+      g.innerHTML = `<div class="kagit-kap">${servisKagit(x)}</div>`;
+    }
+  };
+  SEKME[sk]($('#fisGovde'));
+  toplamCiz();
+  $$('[data-sk]').forEach(b => b.onclick = () => { ui.fisSekme[yol] = b.dataset.sk; ciz(); });
+  $$('[data-fa]').forEach(b => b.onclick = () => { ui.fisAlt = b.dataset.fa; $$('[data-fa]').forEach(y => y.classList.toggle('aktif', y === b)); toplamCiz(); });
+  if ($('#fisYenidenYukle')) $('#fisYenidenYukle').onclick = async () => {
+    if (!await onay('Değişiklikleriniz silinsin mi?', 'Fiş, kayıtlı son hâliyle yeniden açılır.', 'Sil ve yeniden yükle')) return;
+    taslakSil(yol); ciz();
+  };
+  // Araç çubuğu
+  const EYLEM = {
+    kaydet: () => servisFisKaydet(t, id),
+    yeni: () => yeniServis(),
+    cariBul: () => kisiSec(kk => {
+      x.kisiId = kk ? kk.id : null;
+      if (kk) {
+        x.musteriAd = '';
+        if (kk.tel && !x.tel) x.tel = kk.tel; if (kk.eposta && !x.eposta) x.eposta = kk.eposta; if (kk.yetkili && !x.yetkili) x.yetkili = kk.yetkili;
+        const es = D.ekipmanlar.filter(y => y.kisiId === kk.id);
+        if (es.length === 1 && !x.ekipmanId) makineYaz(es[0]);
+        const tk = musteriSonTeklif(kk.id); if (tk && !x.teklifRef) x.teklifRef = tk.no;
+      }
+      degis(); ciz();
+    }),
+    cariAc: () => x.kisiId && git('veresiye/' + x.kisiId),
+    makine: () => ekipmanSec(x.kisiId, y => { makineYaz(y); degis(); ciz(); }),
+    giris: () => { x.giris = simdiYerel(); if (x.durum === 'acik') x.durum = 'devam'; degis(); ciz(); bildir('Giriş zamanı yazıldı: ' + zamanYaz(x.giris)); },
+    teslim: async () => {
+      if (!await onay('Fiş tamamlanıp teslim edilsin mi?', 'Durum Tamamlandı olur, teslim zamanı yazılır ve fiş kaydedilir.', 'Teslim et')) return;
+      x.durum = 'tamam'; x.teslimZaman = simdiYerel(); x.teslim ||= 'calisir';
+      for (const w of x.iscilik) if (islemDurum(w) === 'yapilacak') w.durum = 'yapildi';
+      degis(); servisFisKaydet(t, id);
+    },
+    durum: async () => {
+      const v = await eylemSayfa('Servis durumu', null, Object.entries(SERVIS_DURUM).map(([d, [a]]) => ({ad: (d === x.durum ? '✓ ' : '') + a, deger: d, tehlike: d === 'iptal'})));
+      if (!v || v === x.durum) return;
+      x.durum = v; degis(); ciz();
+    },
+    fatura: async () => {
+      if (f) return git('fatura/' + f.id);
+      if (t.kirli) { if (!await onay('Önce fiş kaydedilsin mi?', 'Fatura, fişin kayıtlı hâlinden oluşturulur.', 'Kaydet ve faturala')) return; if (!servisFisKaydet(t, id, true)) return; }
+      const s = servis(id); if (s) { taslakSil(yol); servisFaturala(s); }
+    },
+    pdf: () => kagitPdf(`Servis-formu-${x.no}.pdf`, servisKagit(x)),
+    yazdir: () => yazdir(`Servis formu ${x.no}`, servisKagit(x)),
+    kopya: () => {
+      const s = servis(id); if (!s) return;
+      const y = {...kopya(s), id: kimlik(), no: sonrakiServisNo(), isEmriNo: sonrakiIsEmriNo(), tarih: bugun(), durum: 'acik', olusturma: Date.now()};
+      for (const a of ['imzaMusteri', 'imzaTeknisyen', 'faturaId', 'bitis', 'giris', 'teslimZaman']) delete y[a];
+      for (const w of y.iscilik) w.durum = 'yapilacak';
+      D.servisler.push(y); servisTuret(y); kaydet(); bildir('Kopya oluşturuldu'); git('servis/' + y.id);
+    },
+    sil: async () => {
+      const s = servis(id); if (!s) return;
+      if (!await onay(`${s.no} silinsin mi?`, 'Stoktan düşülen parçalar stoğa geri döner. Oluşturulan fatura silinmez.')) return;
+      turetilenleriSil(s.id);
+      D.servisler = D.servisler.filter(y => y.id !== s.id);
+      for (const y of D.faturalar) if (y.servisId === s.id) delete y.servisId;
+      kaydet(); taslakSil(yol); fisKilitBirak(yol);
+      pencereYaz(pencereListe().filter(p => p.yol !== yol));
+      bildir('Silindi'); git('servis', true);
+    },
+    kapat: () => pencereKapat(yol)
+  };
+  const makineYaz = y => {
+    x.ekipmanId = y ? y.id : null;
+    if (y) { if (y.tekne) x.tekne = y.tekne; if (y.liman) x.liman = y.liman; if (y.saat && !x.calismaSaati) x.calismaSaati = y.saat; if (!x.kisiId && y.kisiId) x.kisiId = y.kisiId; }
+  };
+  $$('[data-arac]').forEach(b => b.onclick = () => { if (!b.disabled) EYLEM[b.dataset.arac](); });
+}
+/* Fişi kaydet: taslak doğrulanır, fiyatlar sabitlenir (ürün fiyatı ya da saat ücreti sonradan değişse de fiş değişmez). */
+function servisFisKaydet(t, id, sessiz) {
+  const yol = 'servis/' + id, yeni = id === 'yeni';
+  if (saltOkunur('servis') || fisKilit[yol]?.durum === 'baskasi') { bildir('Bu fişi kaydedemezsiniz (yetki ya da kilit)', true); return false; }
+  const x = kopya(t.x), tam = s => String(s || '').trim();
+  x.no = tam(x.no) || sonrakiServisNo();
+  if (D.servisler.some(y => y.no === x.no && y.id !== x.id)) { bildir('Bu servis form no başka fişte kullanılıyor', true); ui.fisSekme[yol] = 'genel'; ciz(); return false; }
+  if (x.kisiId && !kisi(x.kisiId)) x.kisiId = null;
+  x.musteriAd = x.kisiId ? '' : tam(x.musteriAd);
+  if (!x.kisiId && !x.musteriAd) { bildir('Cari seçin ya da müşteri adını yazın', true); ui.fisSekme[yol] = 'genel'; ciz(); return false; }
+  for (const a of ['isEmriNo', 'teklifRef', 'yetkili', 'tel', 'eposta', 'tekne', 'liman', 'servisYeri', 'arac', 'sikayet', 'islemler', 'oneriler', 'testSure', 'sonrakiBakimSaat']) if (typeof x[a] === 'string') x[a] = x[a].trim();
+  x.isEmriNo ||= yeni ? sonrakiIsEmriNo() : '';
+  x.tarih ||= bugun();
+  x.parcalar = x.parcalar.filter(p => tam(p.ad) || tam(p.parcaNo));
+  x.iscilik = x.iscilik.filter(w => tam(w.teknisyen) || tam(w.is) || tam(w.kod) || w.sure);
+  x.disServis = (x.disServis || []).filter(d => tam(d.firma) || tam(d.is) || d.tutar);
+  if (!x.disServis.length) delete x.disServis;
+  if (!x.personeller?.length) delete x.personeller;
+  for (const p of x.parcalar) { p.adet = p.adet || 0; if (p.fiyat == null) p.fiyat = parcaFiyat(p); if (p.kdv == null) p.kdv = parcaKdv(p); if (!PARCA_DURUM[p.durum]) p.durum = 'yeni'; }
+  for (const w of x.iscilik) { w.durum = islemDurum(w); if (w.ucret == null) w.ucret = islemUcret(w); w.sure = w.sure || 0; }
+  const eski = yeni ? null : servis(id);
+  if (!yeni && !eski) { bildir('Bu fiş başka bir cihazda silinmiş', true); return false; }
+  if (x.durum === 'tamam' && eski?.durum !== 'tamam') x.bitis = bugun();
+  const e = ekipman(x.ekipmanId);
+  if (e && x.calismaSaati > (e.saat || 0)) e.saat = x.calismaSaati;
+  if (yeni) { x.id = kimlik(); x.olusturma = Date.now(); D.servisler.push(x); }
+  else D.servisler[D.servisler.indexOf(eski)] = x;
+  servisTuret(x);
+  kaydet();
+  if (!D.servisler.some(y => y.id === x.id)) return false;   // yetki yüzünden geri alındı
+  const yeniYol = 'servis/' + x.id, l = taslakHepsi();
+  delete l[yol];
+  l[yeniYol] = {x: kopya(x), taban: JSON.stringify(x), kirli: false};
+  taslakYaz();
+  if (yeni) { pencereYaz(pencereListe().map(p => p.yol === yol ? {yol: yeniYol, ad: 'Servis fişi ' + x.no} : p)); pencereCubugu.son = yeniYol; }
+  if (!sessiz) { bildir(yeni ? 'Servis fişi kaydedildi' : 'Kaydedildi'); if (yeni) git(yeniYol, true); else ciz(); }
+  return true;
+}
+/* Ctrl+S: açık servis fişini kaydeder */
+document.addEventListener('keydown', e => {
+  if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 's' || !document.body.classList.contains('erp')) return;
+  const [m, id] = rota();
+  if (m !== 'servis' || !id || id.startsWith('r-') || yigin.length) return;
+  e.preventDefault();
+  const t = taslakHepsi()['servis/' + id];
+  if (t) { document.activeElement?.blur?.(); servisFisKaydet(t, id); }
+});
+
+/* --- Servis fişleri listesi (masaüstü): sık tablo, durum renkleri, sütuna tıklayınca sıralama, çift tık ile açılır --- */
+function servisListesiErp() {
+  sayfa('Servis fişleri');
+  ui.servisFiltre = ['acik', 'tamam', 'iptal', 'hepsi'].includes(ui.servisFiltre) ? ui.servisFiltre : 'acik';
+  ui.slSira ||= {a: 'tarih', ters: true};
+  const K = [['no', 'Fiş no', 110], ['isEmriNo', 'İş emri', 110], ['tarih', 'Tarih', 100], ['musteri', 'Müşteri', 220], ['tekne', 'Tekne', 140], ['makine', 'Makine', 180],
+    ['teknisyen', 'Personel', 160], ['durum', 'Durum', 120], ['saat', 'İşçilik (saat)', 96, 1], ['toplam', 'Genel toplam', 120, 1]];
+  const satirVeri = s => {
+    const e = ekipman(s.ekipmanId) || s.ekipmanKopya || {}, h = servisHesap(s);
+    const pers = [...new Set([...(s.personeller || []), ...s.iscilik.map(w => w.teknisyen).filter(Boolean)])];
+    return {s, no: s.no, isEmriNo: s.isEmriNo || '', tarih: s.tarih, musteri: servisMusteri(s), tekne: s.tekne || e.tekne || '', makine: ekipmanAd(e), seri: e.seriNo || '',
+      teknisyen: pers.join(', '), durum: (SERVIS_DURUM[s.durum] || SERVIS_DURUM.acik)[0], saat: h.saat, toplam: h.toplam};
+  };
+  const tum = D.servisler.map(satirVeri);
+  const n = d => tum.filter(r => d === 'hepsi' || (d === 'acik' ? servisAcikMi(r.s) : r.s.durum === d)).length;
+  $('#icerik').classList.add('erp-tam');
+  $('#icerik').innerHTML = `<div class="fis fis-liste">
+    <div class="fis-bas"><div class="fis-ad">${ikon('pano')}<div><b>Servis Fişleri</b><small>${tum.length} fiş · ${n('acik')} açık</small></div></div>
+      <div class="fis-arac"><button class="fa" data-l="yeni" title="Yeni servis fişi">${ikon('arti')}<span>Yeni</span></button><button class="fa" data-l="ac" title="Seçili fişi aç (Enter)">${ikon('dosya')}<span>Aç</span></button><span class="fa-ayir"></span>
+        <button class="fa" data-l="r-servisler">${ikon('yazici')}<span>Liste yazdır</span></button><button class="fa" data-l="r-bakim">${ikon('bakim')}<span>Bakımlar</span></button>
+        <button class="fa" data-l="r-parca">${ikon('cark')}<span>Parçalar</span></button><button class="fa" data-l="r-iscilik">${ikon('teknisyen')}<span>İşçilik</span></button><button class="fa" data-l="r-ekipman">${ikon('tekne')}<span>Makineler</span></button></div></div>
+    <div class="fis-sekmeler">${[['acik', 'Açık'], ['tamam', 'Tamamlanan'], ['iptal', 'İptal'], ['hepsi', 'Tümü']].map(([v, a]) => `<button class="fs-s ${ui.servisFiltre === v ? 'aktif' : ''}" data-df="${v}">${a} (${n(v)})</button>`).join('')}
+      <span class="fl-ara">${ikon('ara')}<input type="search" id="slAra" placeholder="Fiş no, müşteri, tekne, seri no, personel ara" value="${esc(ui.servisAra)}"></span></div>
+    <div class="fis-govde"><div class="izg-kap uzun" id="slTablo"></div></div>
+    <div class="fis-alt"><div class="ft" id="slAlt"></div></div></div>`;
+  let secili = null;
+  const tablo = () => {
+    const a = kucult((ui.servisAra || '').trim()), f = ui.servisFiltre, {a: sa, ters} = ui.slSira;
+    const l = tum.filter(r => f === 'hepsi' || (f === 'acik' ? servisAcikMi(r.s) : r.s.durum === f))
+      .filter(r => !a || kucult([r.no, r.isEmriNo, r.musteri, r.tekne, r.makine, r.seri, r.teknisyen, r.s.teklifRef].join(' ')).includes(a))
+      .sort((x, y) => { const v = typeof x[sa] === 'number' ? x[sa] - y[sa] : String(x[sa]).localeCompare(String(y[sa]), 'tr'); return (ters ? -v : v) || (y.s.olusturma || 0) - (x.s.olusturma || 0); });
+    const sinif = s => ({parca: 'd-yapilacak', onay: 'd-yapilacak', tamam: 'd-tamam', iptal: 'd-iptal'})[s.durum] || '';
+    $('#slTablo').innerHTML = `<table class="izg salt-tablo liste"><colgroup>${K.map(k => `<col style="width:${k[2]}px">`).join('')}</colgroup>
+      <thead><tr>${K.map(([k, ad, , sg]) => `<th class="tik ${sg ? 'sg' : ''}" data-sira="${k}">${esc(ad)}${k === sa ? (ters ? ' ▼' : ' ▲') : ''}</th>`).join('')}</tr></thead>
+      <tbody>${l.map(r => `<tr class="tik ${sinif(r.s)} ${r.s.id === secili ? 'secili' : ''}" data-id="${esc(r.s.id)}" tabindex="-1">${K.map(([k, , , sg]) => `<td class="salt ${sg ? 'sg' : ''}">${esc(k === 'tarih' ? tarihYaz(r.tarih, true) : k === 'saat' ? (r.saat ? sayiFmt(r.saat) : '') : k === 'toplam' ? (r.toplam ? tutarFmt(r.toplam) : '') : r[k])}</td>`).join('')}</tr>`).join('')}</tbody></table>
+      ${l.length ? '' : `<div class="izg-bos">${D.servisler.length ? 'Bu filtreye uyan fiş yok.' : 'Henüz servis fişi yok. "Yeni" ile ilk fişi açın.'}</div>`}`;
+    $('#slAlt').innerHTML = `<div class="ft-kolon"><span>Listelenen</span><b>${l.length} fiş</b><span>İşçilik</span><b>${sayiFmt(l.reduce((t, r) => t + r.saat, 0))} saat</b></div>
+      <div class="ft-genel"><small>Listelenen toplam</small><b>${tutarFmt(l.reduce((t, r) => t + r.toplam, 0))} TL</b></div><span class="soluk ft-ipucu">Açmak için satıra çift tıklayın ya da seçip Enter'a basın.</span>`;
+    $$('#slTablo th[data-sira]').forEach(th => th.onclick = () => { const k = th.dataset.sira; ui.slSira = {a: k, ters: ui.slSira.a === k ? !ui.slSira.ters : k === 'tarih' || k === 'toplam' || k === 'saat'}; tablo(); });
+    $$('#slTablo tbody tr').forEach(tr => {
+      tr.onclick = () => { secili = tr.dataset.id; $$('#slTablo tr.secili').forEach(x => x.classList.remove('secili')); tr.classList.add('secili'); tr.focus(); };
+      tr.ondblclick = () => git('servis/' + tr.dataset.id);
+      tr.onkeydown = e => {
+        if (e.key === 'Enter') git('servis/' + tr.dataset.id);
+        else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const y = e.key === 'ArrowDown' ? tr.nextElementSibling : tr.previousElementSibling; if (y) y.click(); }
+      };
+    });
+  };
+  tablo();
+  $('#slAra').oninput = e => { ui.servisAra = e.target.value; tablo(); };
+  $$('[data-df]').forEach(b => b.onclick = () => { ui.servisFiltre = b.dataset.df; $$('[data-df]').forEach(y => y.classList.toggle('aktif', y === b)); tablo(); });
+  $$('[data-l]').forEach(b => b.onclick = () => {
+    const v = b.dataset.l;
+    if (v === 'yeni') yeniServis();
+    else if (v === 'ac') { if (secili) git('servis/' + secili); else bildir('Önce listeden bir fiş seçin'); }
+    else git('servis/' + v);
+  });
+}
+
+
+/* --- Modül pencereleri (masaüstü): her modül tam sayfa tablo penceresi olarak açılır.
+   Üstte modülün işlemleri (araç çubuğu), altında rapor sekmeleri, ortada sık tablo, altta toplamlar.
+   Satıra çift tıklayınca (ya da seçip Enter) kayıt açılır. Tablolar mevcut liste raporlarından gelir. --- */
+const ERP_ANA = {veresiye: 'bakiye', stok: 'eldeki', teklif: 'liste', fatura: 'satis', banka: 'bakiye', kasa: 'hepsi', personel: 'liste'};
+const ERP_ANA_AD = {kasa: 'Tüm hareketler'};
+const simgeAdi = s => String(s || '').replace(/\+$/, '');
+function erpModul(m, ilkId, sorgu = new URLSearchParams()) {
+  const yol = aktifYol(), grup = ALT_MENU[m] || [], islemler = (grup[0]?.[1] || []).filter(([, , h]) => h !== m);
+  const raporlar = (grup[1]?.[1] || []).filter(([, , h]) => typeof h === 'string').map(([ad, , h]) => [h.split('/r-')[1], ad]);
+  if (ERP_ANA[m] && !raporlar.some(([r]) => r === ERP_ANA[m])) raporlar.unshift([ERP_ANA[m], ERP_ANA_AD[m] || raporTanim(m, ERP_ANA[m])?.ad || 'Liste']);
+  ui.erpSekme ||= {};
+  const id = raporlar.some(([r]) => r === ui.erpSekme[yol]) ? ui.erpSekme[yol] : ilkId;
+  const R = raporTanim(m, id);
+  if (!R) return git('panel', true);
+  ui.rl ||= {};
+  const d = ui.rl[m + '/' + id] ||= {ara: '', bas: R.tarihli ? AY_BASI() : '', son: R.tarihli ? bugun() : '', sira: null, ters: false};
+  if (sorgu.has('ara')) d.ara = sorgu.get('ara');
+  sayfa(yol === m ? modulAdi(m) : R.ad, yol === m ? {} : {geri: m, geriAd: modulAdi(m)});
+  const ro = saltOkunur(m), md = modul(m);
+  $('#icerik').classList.add('erp-tam');
+  $('#icerik').innerHTML = `<div class="fis fis-liste">
+    <div class="fis-bas"><div class="fis-ad">${ikon(md?.simge || 'tablo')}<div><b>${esc(modulAdi(m))}</b><small>${esc(R.ad)}</small></div></div>
+      <div class="fis-arac">${islemler.map(([ad, simge], i) => `<button class="fa" data-is="${i}" ${ro ? 'disabled' : ''} title="${esc(ad)}">${ikon(simgeAdi(simge))}<span>${esc(ad)}</span></button>`).join('')}
+        ${islemler.length ? '<span class="fa-ayir"></span>' : ''}<button class="fa" data-l="ac" title="Seçili kaydı aç (Enter)">${ikon('dosya')}<span>Aç</span></button>
+        <button class="fa" data-l="yaz">${ikon('yazici')}<span>Yazdır</span></button><button class="fa" data-l="csv">${ikon('indir')}<span>Excel</span></button><button class="fa" data-l="yenile">${ikon('donustur')}<span>Yenile</span></button></div></div>
+    <div class="fis-sekmeler">${raporlar.map(([r, ad]) => `<button class="fs-s ${r === id ? 'aktif' : ''}" data-rs="${esc(r)}">${esc(ad)}</button>`).join('')}
+      <span class="fl-ara">${ikon('ara')}<input type="search" id="emAra" placeholder="Listede ara" value="${esc(d.ara)}"></span></div>
+    ${R.tarihli ? `<div class="fl-tarih"><label>Tarih aralığı</label><input type="date" id="emBas" value="${d.bas}" aria-label="Başlangıç"><span>–</span><input type="date" id="emSon" value="${d.son}" aria-label="Bitiş">
+      ${[['ay', 'Bu ay'], ['yil', 'Bu yıl'], ['gecen', 'Geçen yıl'], ['tum', 'Tümü']].map(([v, a]) => `<button class="kb" data-donem="${v}">${a}</button>`).join('')}</div>` : ''}
+    <div class="fis-govde"><div class="izg-kap uzun" id="emTablo"></div></div>
+    <div class="fis-alt"><div class="ft" id="emAlt"></div></div></div>`;
+  let son = [], secili = -1;
+  const sg = t => t === 'para' || t === 'sayi';
+  const yaz = (v, t) => v === undefined || v === null || v === '' ? '' : t === 'para' ? tutarFmt(v) : hucreYaz(v, t);
+  const ciz1 = () => {
+    let l = R.veri(d);
+    const a = kucult(d.ara.trim());
+    if (a) l = l.filter(r => kucult(r.d.map((v, i) => hucreYaz(v, R.k[i][1])).join(' ')).includes(a));
+    if (d.sira !== null && R.k[d.sira]) { const t = R.k[d.sira][1]; l = [...l].sort((x, y) => { const p = x.d[d.sira] ?? '', q = y.d[d.sira] ?? ''; const c = sg(t) ? (+p || 0) - (+q || 0) : String(p).localeCompare(String(q), 'tr'); return d.ters ? -c : c; }); }
+    son = l; secili = -1;
+    const top = R.k.map(([, , topla], i) => topla ? l.reduce((s, r) => s + (+r.d[i] || 0), 0) : null);
+    const fisli = l.some(r => r.fis);
+    $('#emTablo').innerHTML = `<table class="izg salt-tablo liste"><thead><tr><th class="izg-no"></th>${R.k.map(([ad, t], i) => `<th class="tik ${sg(t) ? 'sg' : ''}" data-sira="${i}">${esc(ad)}${d.sira === i ? (d.ters ? ' ▼' : ' ▲') : ''}</th>`).join('')}${fisli ? '<th></th>' : ''}</tr></thead>
+      <tbody>${l.map((r, n) => `<tr data-n="${n}" tabindex="-1" class="${r.yol ? 'tik' : ''} ${r.uyar ? 'd-uyar' : ''}"><td class="izg-no">${n + 1}</td>${r.d.map((v, i) => `<td class="salt ${sg(R.k[i]?.[1]) ? 'sg' : ''}">${esc(yaz(v, R.k[i]?.[1]))}</td>`).join('')}${fisli ? `<td class="salt">${r.fis ? `<button class="kb ince" data-fisyaz="${esc(r.fis)}" title="Fişi yazdır">${ikon('yazici')}</button>` : ''}</td>` : ''}</tr>`).join('')}</tbody>
+      ${top.some(x => x !== null) && l.length ? `<tfoot><tr><td class="izg-no"></td>${R.k.map(([, t], i) => `<td class="salt ${sg(t) ? 'sg' : ''}">${i === 0 ? 'Toplam' : top[i] !== null ? esc(yaz(top[i], t)) : ''}</td>`).join('')}${fisli ? '<td></td>' : ''}</tr></tfoot>` : ''}</table>
+      ${l.length ? '' : `<div class="izg-bos">${R.tarihli ? 'Seçilen tarih aralığında kayıt yok.' : 'Kayıt yok.'}</div>`}`;
+    $('#emAlt').innerHTML = `<div class="ft-kolon"><span>Kayıt</span><b>${l.length}</b></div>${R.k.map(([ad, t], i) => top[i] !== null && t === 'para' ? `<div class="ft-kolon"><span>${esc(ad)}</span><b>${tutarFmt(top[i])} TL</b></div>` : '').join('')}
+      <span class="soluk ft-ipucu">Açmak için satıra çift tıklayın ya da seçip Enter'a basın. Sütun başlığına tıklayınca sıralanır.</span>`;
+    $$('#emTablo th[data-sira]').forEach(th => th.onclick = () => { const i = +th.dataset.sira; d.ters = d.sira === i ? !d.ters : false; d.sira = i; ciz1(); });
+    $$('#emTablo tbody tr').forEach(tr => {
+      const r = son[+tr.dataset.n];
+      tr.onclick = e => { if (e.target.closest('[data-fisyaz]')) return; secili = +tr.dataset.n; $$('#emTablo tr.secili').forEach(x => x.classList.remove('secili')); tr.classList.add('secili'); tr.focus(); };
+      tr.ondblclick = () => { if (r.yol) git(r.yol); };
+      tr.onkeydown = e => {
+        if (e.key === 'Enter' && r.yol) git(r.yol);
+        else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const y = e.key === 'ArrowDown' ? tr.nextElementSibling : tr.previousElementSibling; if (y) y.click(); }
+      };
+    });
+    $$('#emTablo [data-fisyaz]').forEach(b => b.onclick = e => { e.stopPropagation(); fisYazdir(b.dataset.fisyaz); });
+  };
+  ciz1();
+  $('#emAra').oninput = e => { d.ara = e.target.value; ciz1(); };
+  if (R.tarihli) {
+    $('#emBas').onchange = e => { d.bas = e.target.value; ciz1(); };
+    $('#emSon').onchange = e => { d.son = e.target.value; ciz1(); };
+    $$('[data-donem]').forEach(b => b.onclick = () => { const y = bugun().slice(0, 4), v = b.dataset.donem;
+      [d.bas, d.son] = v === 'ay' ? ayAraligi(bugun().slice(0, 7)) : v === 'yil' ? [y + '-01-01', y + '-12-31'] : v === 'gecen' ? [(y - 1) + '-01-01', (y - 1) + '-12-31'] : ['', ''];
+      $('#emBas').value = d.bas; $('#emSon').value = d.son; ciz1(); });
+  }
+  $$('[data-rs]').forEach(b => b.onclick = () => { ui.erpSekme[yol] = b.dataset.rs; ciz(); });
+  $$('[data-is]').forEach(b => b.onclick = () => { const h = islemler[+b.dataset.is][2]; typeof h === 'function' ? h() : git(h); });
+  $$('[data-l]').forEach(b => b.onclick = () => {
+    const v = b.dataset.l;
+    if (v === 'ac') { const r = son[secili]; if (r?.yol) git(r.yol); else bildir('Önce listeden bir kayıt seçin'); }
+    else if (v === 'yaz') yazdir(R.ad, listeKagit(R, son, d));
+    else if (v === 'csv') {
+      if (!son.length) return bildir('Aktarılacak kayıt yok', true);
+      const csv = csvYap(R.k.map(x => x[0]), son.map(r => r.d.map((x, i) => R.k[i][1] === 'tarih' ? x || '' : csvYaz(x, R.k[i][1]))));
+      try { bildir('Kaydedildi: ' + dosyaPaylas(`powerserv-${m}-${id}-${bugun()}.csv`, csv, 'text/csv')); } catch (e) { bildir('Kaydedilemedi', true); }
+    } else ciz1();
+  });
 }
 
 /* ---- Servis formu kâğıdı (fiyatsız, yasal bilgilendirmeli) ---- */
@@ -5095,7 +6103,7 @@ function servisKagit(s) {
   const bar = t => `<div class="sf-bar">${esc(t)}</div>`;
   const metin = (t, n) => `<div class="sf-metin" style="min-height:${n * 1.5}em">${esc(t || '').replace(/\n/g, '<br>')}</div>`;
   const parca = [...s.parcalar]; while (parca.length < 3) parca.push(null);
-  const isc = [...s.iscilik]; while (isc.length < 2) isc.push(null);
+  const iscG = s.iscilik.filter(w => w.durum !== 'iptal'), isc = [...iscG]; while (isc.length < 2) isc.push(null);
   const F = [['ADRES', firmaAlan('adres')], [(firmaAlan('vd') ? firmaAlan('vd').toLocaleUpperCase('tr-TR') + ' VD' : 'VD'), firmaAlan('vno')], ['MERSİS', firmaAlan('mersis')], ['TEL', firmaAlan('tel')], ['SERVİS', firmaAlan('servisTel')], ['E-POSTA', firmaAlan('eposta')], ['WEB', firmaAlan('web')]].filter(([, v]) => v);
   return `<div class="kagit servis-kagit">
     <div class="sf-ust"><div class="sf-firma"><b>${esc(firmaUnvan()).replace(/ (Makine)/, '<br>$1')}</b>
@@ -5118,7 +6126,7 @@ function servisKagit(s) {
     ${bar('İŞÇİLİK KAYDI')}
     <table class="sf-tablo"><thead><tr><th style="width:24%">Teknisyen</th><th style="width:13%">Tarih</th><th>Yapılan İş</th><th style="width:10%">Başlangıç</th><th style="width:9%">Bitiş</th><th style="width:10%">Süre (Saat)</th></tr></thead>
       <tbody>${isc.map(w => w ? `<tr><td>${esc(w.teknisyen)}</td><td>${w.tarih ? esc(tarihYaz(w.tarih, true)) : ''}</td><td>${esc(w.is)}</td><td>${esc(w.bas)}</td><td>${esc(w.bit)}</td><td class="sg">${w.sure ? sayiFmt(w.sure) : ''}</td></tr>` : '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>').join('')}
-      ${s.iscilik.length > 1 ? `<tr class="top"><td colspan="5">Toplam</td><td class="sg">${sayiFmt(iscilikSaat(s))}</td></tr>` : ''}</tbody></table>
+      ${iscG.length > 1 ? `<tr class="top"><td colspan="5">Toplam</td><td class="sg">${sayiFmt(iscilikSaat(s))}</td></tr>` : ''}</tbody></table>
     ${bar('SONUÇ VE ÖNERİLER')}
     <div class="sf-satir"><span class="sf-l">Teslim Durumu:</span>${Object.entries(TESLIM).map(([v, a]) => kutu(s.teslim === v, a)).join('')}</div>
     <div class="sf-satir"><span class="sf-l">Test / Deneme:</span>${Object.entries(TESTLER).map(([v, a]) => kutu(s.testler.includes(v), a)).join('')}<span class="sf-kutu">Test süresi: ${s.testSure ? esc(s.testSure) : '______'} dk</span></div>
@@ -5146,7 +6154,7 @@ function cariServisBagla(k) {
   $$('[data-ekipman]').forEach(b => b.onclick = async () => {
     const e = ekipman(b.dataset.ekipman);
     const v = await eylemSayfa(e.tekne || ekipmanAd(e), ekipmanAd(e), [{ad: 'Yeni servis aç', deger: 'servis'}, {ad: 'Bilgileri düzenle', deger: 'duzenle'}]);
-    if (v === 'servis') servisFormu(null, {kisiId: k.id, ekipmanId: e.id});
+    if (v === 'servis') yeniServis({kisiId: k.id, ekipmanId: e.id});
     else if (v === 'duzenle') ekipmanFormu(e);
   });
   servisTiklari();
