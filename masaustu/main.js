@@ -66,6 +66,22 @@ ipcMain.handle('kur-getir', async () => {
   } catch (e) { return ''; }
 });
 
+// Günlük otomatik yedek: Belgeler\PowerServ+\Yedekler klasörüne yazılır, en yeni 30 yedek tutulur.
+const yedekKlasor = () => path.join(app.getPath('documents'), 'PowerServ+', 'Yedekler');
+ipcMain.handle('gunluk-yedek', async (e, ad, icerik) => {
+  const fs = require('fs');
+  try {
+    if (!/^powerserv-yedek-\d{4}-\d{2}-\d{2}\.json$/.test(ad) || !icerik) return '';
+    const k = yedekKlasor();
+    fs.mkdirSync(k, {recursive: true});
+    fs.writeFileSync(path.join(k, ad), icerik, 'utf8');
+    const eski = fs.readdirSync(k).filter(x => /^powerserv-yedek-\d{4}-\d{2}-\d{2}\.json$/.test(x)).sort().reverse().slice(30);
+    for (const x of eski) fs.unlinkSync(path.join(k, x));
+    return 'Belgeler\\PowerServ+\\Yedekler';
+  } catch (err) { return ''; }
+});
+ipcMain.handle('yedek-klasoru', async () => { const fs = require('fs'); const k = yedekKlasor(); fs.mkdirSync(k, {recursive: true}); return shell.openPath(k); });
+
 app.on('second-instance', () => { if (pencere) { if (pencere.isMinimized()) pencere.restore(); pencere.focus(); } });
 app.whenReady().then(ac);
 app.on('window-all-closed', () => app.quit());

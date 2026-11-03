@@ -297,6 +297,13 @@ public class MainActivity extends Activity {
 
     /** Sayfadaki JavaScript'in "Android" adıyla çağırdığı yöntemler. */
     private class Kopru {
+        /** Günlük otomatik yedek: İndirilenler/PowerServ+/Yedek klasörüne aynı adla (haftanın günü) üzerine yazar. Yer adını, hata olursa "" döner. */
+        @JavascriptInterface
+        public String gunlukYedekYaz(String ad, String icerik) {
+            if (Build.VERSION.SDK_INT < 29) return "";
+            return gunlukYedekDosyasi(ad, icerik) ? "İndirilenler/PowerServ+/Yedek" : "";
+        }
+
         /** TCMB döviz kurlarını (today.xml) arka planda indirir; sonuç window.kurGeldi(xml) ile sayfaya döner.
          *  WebView'deki sayfa TCMB'ye doğrudan bağlanamaz (CORS); bu yüzden uygulama kendi bağlantısını kullanır. */
         @JavascriptInterface
@@ -512,6 +519,34 @@ public class MainActivity extends Activity {
                 return "paylaşım ekranı";
             }
             return indirilenlereYaz(ad, icerik, tur) != null ? "İndirilenler/PowerServ+" : "";
+        }
+    }
+
+    /** Android 10+ : yedek dosyasını adına göre bulur (yoksa oluşturur) ve içeriğini baştan yazar. */
+    @android.annotation.TargetApi(29)
+    private boolean gunlukYedekDosyasi(String ad, String icerik) {
+        String klasor = Environment.DIRECTORY_DOWNLOADS + "/PowerServ+/Yedek/";
+        try {
+            Uri u = null;
+            try (Cursor c = getContentResolver().query(MediaStore.Downloads.EXTERNAL_CONTENT_URI, new String[]{MediaStore.MediaColumns._ID},
+                    MediaStore.MediaColumns.DISPLAY_NAME + "=? AND " + MediaStore.MediaColumns.RELATIVE_PATH + "=?", new String[]{ad, klasor}, null)) {
+                if (c != null && c.moveToFirst()) u = android.content.ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, c.getLong(0));
+            }
+            if (u == null) {
+                ContentValues d = new ContentValues();
+                d.put(MediaStore.MediaColumns.DISPLAY_NAME, ad);
+                d.put(MediaStore.MediaColumns.MIME_TYPE, "application/json");
+                d.put(MediaStore.MediaColumns.RELATIVE_PATH, klasor);
+                u = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, d);
+            }
+            if (u == null) return false;
+            try (OutputStream o = getContentResolver().openOutputStream(u, "wt")) {
+                if (o == null) return false;
+                o.write(icerik.getBytes(StandardCharsets.UTF_8));
+            }
+            return true;
+        } catch (Exception e) {
+            return false;
         }
     }
 

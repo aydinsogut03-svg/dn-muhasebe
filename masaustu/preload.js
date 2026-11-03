@@ -2,5 +2,7 @@
 const {contextBridge, ipcRenderer} = require('electron');
 contextBridge.exposeInMainWorld('PowerServ', {
   pdfKaydet: ad => ipcRenderer.invoke('pdf-kaydet', String(ad || 'belge.pdf')),
-  kurGetir: () => ipcRenderer.invoke('kur-getir')
+  kurGetir: () => ipcRenderer.invoke('kur-getir'),
+  gunlukYedek: (ad, icerik) => ipcRenderer.invoke('gunluk-yedek', String(ad || ''), String(icerik || '')),
+  yedekKlasoru: () => ipcRenderer.invoke('yedek-klasoru')
 });

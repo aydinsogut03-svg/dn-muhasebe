@@ -1406,6 +1406,11 @@ html.apk #cekmece .c-alt-menu a{min-height:42px!important;font-size:15px!importa
 .bk-ust b{font-size:19px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .bk-ad{font-size:12.5px;font-weight:600;line-height:1.2;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bk-kutu small{font-size:11.5px;color:var(--ikincil);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kur-serit{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:8px;margin-bottom:14px}
+.kur-serit button.bk-kutu{font:inherit;text-align:left;cursor:pointer}
+.kur-serit .bk-ust b{font-size:17px}
+.kur-serit .kur-yenile{display:flex;align-items:center;justify-content:center;padding:0 12px}
+.kur-serit .kur-yenile svg{width:18px;height:18px;color:var(--mavi)}
 .bk-kutu.uyar{border-color:color-mix(in srgb,var(--kirmizi) 45%,var(--kenar))}
 .bk-kutu.uyar .bk-ust b{color:var(--kirmizi)}
 @media (max-width:420px){.bekleyenler{gap:6px}.bk-kutu{padding:8px 8px 7px;border-radius:12px}.bk-ust b{font-size:16.5px}.bk-ust svg{width:16px;height:16px}.bk-ad{font-size:11.5px}.bk-kutu small{font-size:10.5px}}
@@ -1678,7 +1683,7 @@ body.erp .erp-form #mSerbest .yuzen{display:none}
 
 <script>
 'use strict';
-const VERSIYON = '2.12.0';
+const VERSIYON = '2.13.0';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -1921,6 +1926,8 @@ function kaydet() {
   if (h && (h.ad !== D.ad || h.profil !== D.profil)) { h.ad = D.ad; h.profil = D.profil; hesapKaydet(); }
   try { localStorage.setItem(veriAnahtari(), JSON.stringify(D)); }
   catch (e) { bildir('Kaydedilemedi. Depolama dolu olabilir.', true); }
+  if (window.gecmisTaban) { try { gecmisYaz(); } catch (e) {} }
+  if (window.gunlukPlanla) gunlukPlanla();
   if (window.bulutPlanla) bulutPlanla();
   if (window.ortakPlanla) ortakPlanla();
 }
@@ -2327,7 +2334,8 @@ function esitleDurum() {
 const esitleBtnHtml = () => { const d = esitleDurum();
   if (!d) return '';
   if (d !== 'bagli') return `<button class="nav-btn esitle-btn hatali" id="esitleBtn" title="${d === 'yok' ? 'Bu cihaz ortak veritabanına bağlı değil; veriler yalnız bu cihazda' : 'Açık hesap ortak veritabanını kullanmıyor'}">${ikon('bulut')}<span>${d === 'yok' ? 'Bağlı değil' : 'Ortak hesaba geç'}</span></button>`;
-  return `<button class="nav-btn esitle-btn${ortakDurum.hata ? ' hatali' : ''}" id="esitleBtn" title="${esc(ortakDurumMetni())}">${ikon('donustur')}<span>Eşitle</span></button>`; };
+  return `<button class="nav-btn esitle-btn${ortakDurum.hata ? ' hatali' : ''}" id="esitleBtn" title="${esc(ortakDurumMetni())}">${ikon('donustur')}<span>${esitleEtiket()}</span></button>`; };
+const esitleEtiket = () => { if (!ortakDurum.cevrimdisi) return 'Eşitle'; const n = ortakFarklar(izOku()).length; return 'Çevrimdışı' + (n ? ' · ' + n : ''); };
 function esitleBtnBagla() {
   const b = $('#esitleBtn');
   if (!b) return;
@@ -3155,6 +3163,14 @@ function panelEkrani() {
   if (ac('stok')) { const n = D.urunler.filter(u => u.kritik > 0 && urunMiktar(u.id) <= u.kritik).length; bk.push(kutu('stok', 'depoUyari', 'kahve', n, 'Kritik stok', n ? 'ürün azaldı' : 'stok yeterli', n > 0)); }
   if (bk.length && !bos) h += `<div class="bolum">Bekleyenler</div><div class="bekleyenler">${bk.join('')}</div>`;
 
+  // 2.13: güncel döviz kurları (TCMB satış); dokununca kur penceresi açılır
+  {
+    const k = kurlar();
+    h += `<div class="bolum">Döviz kurları<small style="font-weight:500;text-transform:none;letter-spacing:0;color:var(--ikincil);margin-left:auto">${k ? `${k.kaynak === 'TCMB' ? 'TCMB satış' : 'elle girildi'} · ${esc(tarihYaz(k.tarih || bugun(), true))}` : 'henüz alınmadı'}</small></div>
+      <div class="kur-serit">${['USD', 'EUR', 'GBP'].map(d => `<button class="bk-kutu" data-kur="${d}"><span class="bk-ust"><b>${k && k[d] ? kurYaz(k[d].satis) : '—'}</b></span><span class="bk-ad">${d}</span><small>${esc(DOVIZ_AD[d])}</small></button>`).join('')}
+      <button class="bk-kutu kur-yenile" id="kurYenile" aria-label="Kurları TCMB'den yenile" title="TCMB'den yenile">${ikon('donustur')}</button></div>`;
+  }
+
   // Yaklaşan ödemeler ve tahsilatlar
   const yak = [...acikSatis, ...acikAlis].map(f => ({f, g: f.vade ? gunFark(f.vade) : null})).sort((a, b) => (a.g ?? 999) - (b.g ?? 999)).slice(0, 3);
   if (ac('fatura') && yak.length) h += `<div class="bolum">Vadesi yaklaşan faturalar<a href="#/fatura">Tümü</a></div><div class="grup">${yak.map(({f, g}) => {
@@ -3184,6 +3200,8 @@ function panelEkrani() {
 
   $('#icerik').innerHTML = h;
   $('#ayarBtn').onclick = () => git('ayarlar');
+  $$('[data-kur]').forEach(b => b.onclick = kurFormu);
+  if ($('#kurYenile')) $('#kurYenile').onclick = async () => { if (await kurGuncelle()) ciz(); };
   sayacBaslat($('#icerik'));
   $$('[data-bas]').forEach(b => b.onclick = () => { const x = b.dataset.bas; x === 'gelir' ? islemFormu(null, 'gelir') : x === 'fatura' ? faturaFormu(null, 'fatura') : x === 'cari' ? git('veresiye') : ornekSor(); });
   faturaTiklari();
@@ -5653,7 +5671,7 @@ async function kurGuncelle(sessiz) {
   return k;
 }
 /* Açılışta ve 4 saatte bir sessizce güncellenir */
-function kurOtomatik() { const k = kurlar(); if (!(window.PowerServ && PowerServ.kurGetir) && !(window.Android && Android.kurIste)) return; if (!k || k.kaynak === 'TCMB' && Date.now() - (k.zaman || 0) > 4 * 3600e3) kurGuncelle(true); }
+function kurOtomatik() { const k = kurlar(); if (!(window.PowerServ && PowerServ.kurGetir) && !(window.Android && Android.kurIste)) return; if (!k || k.kaynak === 'TCMB' && Date.now() - (k.zaman || 0) > 4 * 3600e3) kurGuncelle(true).then(y => { if (y && location.hash.replace(/^#\/?/, '').split('/')[0] === 'panel' && !document.querySelector('.sayfa-modal')) ciz(); }); }
 function kurOzet() { const k = kurlar(); return k ? ['USD', 'EUR', 'GBP'].filter(d => k[d]).map(d => `${d} ${kurYaz(k[d].satis)}`).join(' · ') + ` (${k.kaynak === 'TCMB' ? 'TCMB' : 'elle'} ${tarihYaz(k.tarih || bugun(), true)})` : 'Henüz alınmadı'; }
 function kurFormu() {
   const k = kurlar() || {};
@@ -5833,6 +5851,92 @@ function siparisEkrani(id) {
     if (!await onay('Sipariş silinsin mi?', `${f.no} · ${faturaMusteri(f)}`)) return;
     D.faturalar = D.faturalar.filter(y => y.id !== f.id); kaydet(); bildir('Silindi'); git('stok/r-siparis', true);
   };
+}
+
+/* ================= 2.13: İşlem geçmişi (bu cihaz), günlük otomatik yedek, masaüstü bildirimleri ================= */
+/* İşlem geçmişi: her kayıtta önceki hâlle karşılaştırılır; eklenen, değiştirilen (hangi alanlar) ve silinen kayıtlar
+   kim ve ne zaman bilgisiyle bu cihazda saklanır (hesap başına son 3000 işlem). Başka modülden otomatik türeyen kayıtlar yazılmaz.
+   Ortak veritabanında ayrıca buluttaki değiştirilemez işlem kaydı tutulur. */
+const GECMIS_SINIR = 3000;
+const gecmisAnahtar = () => 'powerserv.gecmis.' + H.aktif;
+const gecmisOku = () => { try { return JSON.parse(localStorage.getItem(gecmisAnahtar())) || []; } catch (e) { return []; } };
+const gecmisKullanici = () => { const s = ortakOturum(); return s ? (s.ad || s.eposta || 'Kullanıcı') : (window.PowerServ ? 'Bu bilgisayar' : window.Android ? 'Bu telefon' : 'Bu cihaz'); };
+const ALAN_AD = {ad: 'ad', tutar: 'tutar', tarih: 'tarih', vade: 'vade', durum: 'durum', kalemler: 'kalemler', not: 'not', aciklama: 'açıklama', kisiId: 'cari', musteriAd: 'müşteri',
+  odemeler: 'ödemeler', no: 'numara', fiyat: 'fiyat', miktar: 'miktar', satis: 'satış fiyatı', alis: 'alış fiyatı', kritik: 'kritik seviye', kod: 'parça no', tel: 'telefon', eposta: 'e-posta',
+  adres: 'adres', parcalar: 'parçalar', iscilik: 'işçilik', disServis: 'dış servis', kategori: 'kategori', tur: 'tür', maas: 'maaş', odeme: 'ödeme şekli', hesapId: 'hesap', doviz: 'döviz', kur: 'kur',
+  sartlar: 'şartlar', teklifDurum: 'teklif durumu', stokDus: 'stok', cariyeIsle: 'cari', saat: 'çalışma saati', calismaSaati: 'çalışma saati', bakimKiti: 'bakım kiti', depo: 'depo', seriNo: 'seri no', barkod: 'barkod'};
+let gecmisIz = null, gecmisHesap = null;
+function gecmisHarita() {
+  const m = new Map();
+  for (const [key, r] of ortakKayitlar(D)) if (!(r.x && typeof r.x === 'object' && r.x.kaynak)) m.set(key, r);
+  return m;
+}
+function gecmisFark(eski, yeni) {
+  try {
+    const a = JSON.parse(eski), b = JSON.parse(yeni);
+    if (!a || !b || typeof a !== 'object' || typeof b !== 'object' || Array.isArray(a)) return '';
+    return [...new Set([...Object.keys(a), ...Object.keys(b)])].filter(k => !['olusturma', 'odendi', 'odemeTarihi', 'odemeSekli', 'islemId'].includes(k) && JSON.stringify(a[k]) !== JSON.stringify(b[k]))
+      .map(k => ALAN_AD[k] || k).slice(0, 8).join(', ');
+  } catch (e) { return ''; }
+}
+/* Karşılaştırma tabanı: hesap değişince ya da buluttan veri gelince yeniden alınır (başkasının değişikliği bu cihaza yazılmasın) */
+window.gecmisTaban = () => { try { gecmisIz = gecmisHarita(); gecmisHesap = H.aktif; } catch (e) { gecmisIz = null; } };
+function gecmisYaz() {
+  if (!D || !D.profil) return;
+  let yeni;
+  try { yeni = gecmisHarita(); } catch (e) { return; }
+  if (!gecmisIz || gecmisHesap !== H.aktif) { gecmisIz = yeni; gecmisHesap = H.aktif; return; }
+  const l = [], z = Date.now(), a = gecmisKullanici();
+  for (const [key, r] of yeni) {
+    const o = gecmisIz.get(key);
+    if (!o) l.push({z, a, i: 'ekle', k: r.k, d: kayitEtiket(r.k, r.x)});
+    else if (o.j !== r.j) l.push({z, a, i: 'duzenle', k: r.k, d: kayitEtiket(r.k, r.x), f: gecmisFark(o.j, r.j)});
+  }
+  for (const [key, o] of gecmisIz) if (!yeni.has(key)) l.push({z, a, i: 'sil', k: o.k, d: kayitEtiket(o.k, o.x)});
+  gecmisIz = yeni;
+  if (!l.length) return;
+  const g = gecmisOku();
+  if (l.length > 50) g.push({z, a, i: 'toplu', k: '', d: `${l.length} kayıt birlikte değişti (geri yükleme / toplu işlem)`}); else g.push(...l);
+  try { localStorage.setItem(gecmisAnahtar(), JSON.stringify(g.slice(-GECMIS_SINIR))); } catch (e) {}
+}
+
+/* Günlük otomatik yedek: günde bir kez tüm hesaplar tek dosyaya yazılır.
+   Windows: Belgeler\PowerServ+\Yedekler (son 30 gün). Android: İndirilenler/PowerServ+/Yedek (haftanın her günü için bir dosya, 7 gün geriye). */
+const GUNLUK_ANAHTAR = 'powerserv.gunlukYedek';
+const gunlukYedekVar = () => !!((window.PowerServ && PowerServ.gunlukYedek) || (window.Android && Android.gunlukYedekYaz));
+const gunlukDurum = () => { try { return JSON.parse(localStorage.getItem(GUNLUK_ANAHTAR)) || {}; } catch (e) { return {}; } };
+const GUN_ADI = ['pazar', 'pazartesi', 'sali', 'carsamba', 'persembe', 'cuma', 'cumartesi'];
+let gunlukZaman = 0;
+async function gunlukYedekAl(zorla) {
+  if (!gunlukYedekVar() || !D || !D.profil) { if (zorla) bildir('Günlük otomatik yedek Windows ve Android uygulamasında çalışır', true); return; }
+  const d = gunlukDurum(), gun = bugun();
+  if (!zorla && d.tarih === gun) return;
+  let yer = '';
+  try {
+    const icerik = JSON.stringify(tumYedek());
+    yer = window.PowerServ && PowerServ.gunlukYedek ? await PowerServ.gunlukYedek(`powerserv-yedek-${gun}.json`, icerik)
+      : Android.gunlukYedekYaz(`powerserv-gunluk-yedek-${GUN_ADI[tarihNesne(gun).getDay()]}.json`, icerik);
+  } catch (e) { console.warn(e); yer = ''; }
+  const y = yer ? {tarih: gun, zaman: Date.now(), yer} : {...d, hata: Date.now()};
+  try { localStorage.setItem(GUNLUK_ANAHTAR, JSON.stringify(y)); } catch (e) {}
+  if (zorla) bildir(yer ? 'Yedek alındı: ' + yer : 'Yedek alınamadı', !yer);
+  if (zorla && rota()[0] === 'ayarlar') ayarlarEkrani();
+}
+window.gunlukPlanla = () => { if (!gunlukYedekVar() || gunlukDurum().tarih === bugun()) return; clearTimeout(gunlukZaman); gunlukZaman = setTimeout(gunlukYedekAl, 8000); };
+
+/* Masaüstü (Windows) bildirimleri: telefondaki hatırlatmalar bilgisayarda da Windows bildirimi olarak gösterilir */
+const GOSTERILEN_ANAHTAR = 'powerserv.gosterilen';
+function masaustuBildirimleri() {
+  if (!window.PowerServ || !('Notification' in window) || !bildirimAcik() || Notification.permission === 'denied') return;
+  if (Notification.permission !== 'granted') { Notification.requestPermission().then(p => { if (p === 'granted') masaustuBildirimleri(); }); return; }
+  let g; try { g = JSON.parse(localStorage.getItem(GOSTERILEN_ANAHTAR)) || {}; } catch (e) { g = {}; }
+  const b = bugun(), l = hatirlaticilar().filter(h => h.gun <= b && !g[h.id]);
+  for (const k of Object.keys(g)) if (g[k] < tarihStr(new Date(Date.now() - 40 * 864e5))) delete g[k];
+  const goster = (baslik, metin, yol) => { try { const n = new Notification(baslik, {body: metin}); n.onclick = () => { window.focus(); if (yol) bildirimAc(yol); }; } catch (e) {} };
+  if (l.length > 4) goster(`PowerServ+ · ${l.length} hatırlatma`, l.slice(0, 4).map(h => h.baslik + ': ' + h.metin).join('\n'), 'panel');
+  else for (const h of l) goster(h.baslik, h.metin, h.yol);
+  for (const h of l) g[h.id] = b;
+  try { localStorage.setItem(GOSTERILEN_ANAHTAR, JSON.stringify(g)); } catch (e) {}
 }
 
 /* ---- Ekipman (tekne / makine) ---- */
@@ -8108,6 +8212,7 @@ function ayarlarEkrani() {
     <p class="dipnot">Tema varsayılan olarak açıktır; koyu temada da yüzeyler gri tonda kalır. Ölçek Otomatik iken ekran boyutuna göre yazıları ve düğmeleri büyütür ya da küçültür. Tarayıcıda Ctrl + / Ctrl − de çalışır.</p>
     ${ortakAyarHtml()}
     <div class="bolum">Güvenlik</div>
+    ${anaKullanici() ? `<div class="grup"><button class="hucre kareli" id="gecmisGit">${kare('liste', 'turuncu')}<div class="ic"><b>İşlem geçmişi</b><small>Kim, ne zaman, neyi ekledi, değiştirdi, sildi</small></div>${CHEV}</button></div>` : ''}
     <div class="grup"><label class="hucre kareli">${kare('kilit', 'indigo')}<div class="ic"><b>PIN kilidi</b><small>Açılışta ve 30 sn sonra dönüşte PIN sorar</small></div><span class="anahtar"><input type="checkbox" id="pinAnahtar" ${kilitAyar() ? 'checked' : ''}><span></span></span></label>
       ${kilitAyar() ? `<button class="hucre kareli" id="pinDegis">${kare('kilit', 'gri')}<div class="ic"><b>PIN'i değiştir</b></div>${CHEV}</button>` : ''}</div>
     <p class="dipnot">PIN tüm hesaplar için geçerlidir. Unutulursa kaldırılamaz; önce yedek alın.</p>
@@ -8121,9 +8226,13 @@ function ayarlarEkrani() {
         <p class="dipnot">Açılan pencerede sol üstteki menüden <b>Drive</b>'ı seçin, bir klasör seçip <b>Kaydet</b>'e basın. Bir kez yapılır.</p>`; })()
       : '<p class="dipnot">Bulut yedeği Android uygulamasında çalışır.</p>'}
     <div class="bolum">Bildirimler</div>
-    <div class="grup"><label class="hucre kareli">${kare('zil', 'turuncu')}<div class="ic"><b>Vade ve vergi hatırlatmaları</b><small>Her sabah 09.00'da, 3 gün önce ve son gün</small></div><span class="anahtar"><input type="checkbox" id="bildirimAnahtar" ${bildirimAcik() ? 'checked' : ''}><span></span></span></label>
+    <div class="grup"><label class="hucre kareli">${kare('zil', 'turuncu')}<div class="ic"><b>Hatırlatmalar</b><small>Vade, vergi, kritik stok, bekleyen iş, bakım ve teklif · ${window.PowerServ ? 'Windows bildirimi' : 'her sabah 09.00'}</small></div><span class="anahtar"><input type="checkbox" id="bildirimAnahtar" ${bildirimAcik() ? 'checked' : ''}><span></span></span></label>
+      ${window.PowerServ && 'Notification' in window ? `<button class="hucre kareli" id="bildirimDenePc">${kare('zil', 'gri')}<div class="ic"><b>Deneme bildirimi gönder</b><small>${hatirlaticilar().filter(h => h.gun <= bugun()).length} bugünkü hatırlatma</small></div>${CHEV}</button>` : ''}
       ${bildirimVar() ? `<button class="hucre kareli" id="bildirimDene">${kare('zil', 'gri')}<div class="ic"><b>Deneme bildirimi gönder</b><small>${hatirlaticilar().length} hatırlatma planlandı</small></div>${CHEV}</button>` : ''}</div>
     <div class="bolum">Yedekleme</div>
+    ${gunlukYedekVar() ? (() => { const g = gunlukDurum(); return `<div class="grup"><button class="hucre kareli" id="gunlukYedek">${kare('takvim', 'nane')}<div class="ic"><b>Günlük otomatik yedek</b><small>${g.tarih ? `Son: ${esc(tarihYaz(g.tarih, true))} · ${esc(g.yer || '')}` : 'Bugün ilk açılışta alınacak'}${g.hata && (!g.zaman || g.hata > g.zaman) ? ' · <span class="gider">son deneme başarısız</span>' : ''}</small></div><span class="deger">Şimdi al</span>${CHEV}</button>
+      ${window.PowerServ && PowerServ.yedekKlasoru ? `<button class="hucre kareli" id="yedekKlasor">${kare('dosya', 'gri')}<div class="ic"><b>Yedek klasörünü aç</b><small>Belgeler\\PowerServ+\\Yedekler · son 30 gün</small></div>${CHEV}</button>` : ''}</div>
+      <p class="dipnot">Program her gün ilk açılışta tüm hesapları tek dosyaya yedekler${window.Android ? ' (İndirilenler/PowerServ+/Yedek, haftanın her günü için ayrı dosya)' : ''}. Geri yüklemek için "Yedekten geri yükle"de bu dosyayı seçin.</p>`; })() : ''}
     <div class="grup">
       <button class="hucre kareli" id="disaAktar">${kare('indir', 'mavi')}<div class="ic"><b>Yedeği kaydet ve paylaş</b><small>${D.sonYedek ? 'Son yedek ' + esc(tarihYaz(D.sonYedek.slice(0, 10), true)) : 'Henüz yedek alınmadı'}</small></div>${CHEV}</button>
       <button class="hucre kareli" id="iceAktar">${kare('yukle', 'yesil')}<div class="ic"><b>Yedekten geri yükle</b><small>Mevcut verilerin yerine geçer</small></div>${CHEV}</button>
@@ -8141,6 +8250,9 @@ function ayarlarEkrani() {
   $$('[data-firma]').forEach(i => i.onchange = () => { D.firma[i.dataset.firma] = i.value.trim(); kaydet(); bildir('Kaydedildi'); });
   if ($('#servisAyarGit')) $('#servisAyarGit').onclick = servisAyarFormu;
   $('#kurAyarGit').onclick = kurFormu;
+  if ($('#gunlukYedek')) $('#gunlukYedek').onclick = () => gunlukYedekAl(true);
+  if ($('#yedekKlasor')) $('#yedekKlasor').onclick = () => PowerServ.yedekKlasoru();
+  if ($('#gecmisGit')) $('#gecmisGit').onclick = () => git('islemkaydi');
   $('#firmaBilgi').onclick = firmaBilgiFormu;
   $('#modulGit').onclick = () => git('menu');
   $('#pinAnahtar').onchange = async e => { e.target.checked = !e.target.checked; await (kilitAyar() ? pinKaldir() : pinKur()); ayarlarEkrani(); };
@@ -8149,6 +8261,8 @@ function ayarlarEkrani() {
   if ($('#bulutSimdi')) $('#bulutSimdi').onclick = () => { const h = bulutYaz(); bildir(h ? 'Yedeklenemedi: ' + h : 'Yedeklendi', !!h); ayarlarEkrani(); };
   if ($('#bulutKaldir')) $('#bulutKaldir').onclick = async () => { if (!await onay('Otomatik yedek kapatılsın mı?', 'Drive\'daki dosya silinmez, yalnızca güncellenmez.', 'Kapat')) return; Android.yedekKaldir(); ayarlarEkrani(); };
   $('#bildirimAnahtar').onchange = e => { try { localStorage.setItem(BILDIRIM_ANAHTAR, e.target.checked ? 'acik' : 'kapali'); } catch (x) {} if (e.target.checked && window.Android && Android.bildirimIzni) Android.bildirimIzni(); hatirlaticiPlanla(); bildir(e.target.checked ? 'Hatırlatmalar açık' : 'Hatırlatmalar kapalı'); };
+  if ($('#bildirimDenePc')) $('#bildirimDenePc').onclick = () => { try { localStorage.removeItem(GOSTERILEN_ANAHTAR); } catch (e) {}
+    if (Notification.permission === 'granted') { new Notification('PowerServ+', {body: 'Bildirimler çalışıyor.'}); masaustuBildirimleri(); } else Notification.requestPermission().then(() => masaustuBildirimleri()); };
   if ($('#bildirimDene')) $('#bildirimDene').onclick = () => { Android.bildirimDene('PowerServ+', 'Bildirimler çalışıyor. Vade ve vergi günlerinde sabah 09.00\'da hatırlatılacaksınız.'); };
   $('#disaAktar').onclick = yedekAl;
   $('#iceAktar').onclick = () => { if (ortakBagli() && ortakRol() !== 'yonetici') return bildir('Ortak veritabanında yedekten geri yüklemeyi yalnızca yönetici yapabilir.', true); $('#dosya').click(); };
@@ -8433,6 +8547,23 @@ function hatirlaticilar() {
         ekle(gunOnce(t.tarih, 3), `v3-${h.id}-${t.tarih}-${t.ad}`, t.ad, `3 gün sonra son gün · ${t.alt}${hesap}`, `${h.id}|kdv`);
         ekle(t.tarih, `v0-${h.id}-${t.tarih}-${t.ad}`, t.ad, `Bugün son gün · ${t.alt}${hesap}`, `${h.id}|kdv`);
       }
+      // 2.13: duruma bağlı günlük hatırlatmalar (bugün ve yarın için; her kayıtta yeniden hesaplanır)
+      const yarin = (() => { const d = tarihNesne(bugunT); d.setDate(d.getDate() + 1); return tarihStr(d); })();
+      const durum = (on, baslik, metin, yol) => { for (const g of [bugunT, yarin]) ekle(g, `${on}-${h.id}-${g}`, baslik, metin + hesap, `${h.id}|${yol}`); };
+      if (modulAcik('fatura')) { const vg = D.faturalar.filter(f => faturaliMi(f) && !f.odendi && f.vade && f.vade < bugunT);
+        const al = vg.filter(f => f.tur === 'alis'), st = vg.filter(f => f.tur !== 'alis'), top = l => para(l.reduce((t, f) => t + faturaKalan(f), 0));
+        if (st.length) durum('vgs', `${st.length} faturanın vadesi geçti`, `Tahsil edilecek ${top(st)}`, 'fatura/r-vade');
+        if (al.length) durum('vga', `${al.length} ödemenin vadesi geçti`, `Ödenecek ${top(al)}`, 'fatura/r-vade'); }
+      if (modulAcik('stok')) { const ks = D.urunler.filter(u => u.kritik > 0 && urunMiktar(u.id) <= u.kritik);
+        if (ks.length) durum('ks', `${ks.length} ürün kritik stokta`, ks.slice(0, 3).map(u => u.ad).join(', ') + (ks.length > 3 ? ` ve ${ks.length - 3} ürün daha` : ''), 'stok/r-kritik'); }
+      if (modulAcik('servis')) {
+        const ac = D.servisler.filter(servisAcikMi), pb = ac.filter(s => s.durum === 'parca').length, es = ac.filter(s => gunFark(s.tarih) <= -7).length;
+        if (ac.length) durum('is', `${ac.length} bekleyen iş emri`, [pb ? pb + ' parça bekliyor' : '', es ? es + ' iş 7 günden eski' : ''].filter(Boolean).join(' · ') || 'Açık iş emirlerini kontrol edin', 'servis/r-acik');
+        const bk = yaklasanBakimlar(), gec = bk.filter(b => b.durum === 'gecikti').length;
+        if (bk.length) durum('bk', `${bk.length} makinenin bakımı ${gec ? 'geldi' : 'yaklaşıyor'}`, bk.slice(0, 3).map(b => kisi(b.e.kisiId)?.ad || b.e.tekne || ekipmanAd(b.e)).join(', '), 'servis/r-bakim');
+      }
+      if (modulAcik('teklif')) for (const f of D.faturalar) if (f.tur === 'teklif' && f.vade && teklifDurumKod(f) === 'bekliyor')
+        ekle(gunOnce(f.vade, 1), `t1-${f.id}`, 'Teklif geçerliliği bitiyor', `${faturaMusteri(f)} · ${f.no} · yarın son gün${hesap}`, `${h.id}|teklif/${f.id}`);
     }
   } finally { D = asil; }
   return l.sort((a, b) => a.gun.localeCompare(b.gun));
@@ -8856,6 +8987,7 @@ async function ortakCek() {
   if (ortakRol() !== 'servis') n += await ortakCekBolum(o, 'ozel', 'sonOzel');
   if (n) {
     try { localStorage.setItem(veriAnahtari(), JSON.stringify(D)); } catch (e) {}
+    if (window.gecmisTaban) gecmisTaban();
     const hx = H.liste.find(x => x.id === H.aktif);
     if (hx && (hx.ad !== D.ad || hx.profil !== D.profil)) { hx.ad = D.ad; hx.profil = D.profil; hesapKaydet(); }
   }
@@ -8900,10 +9032,10 @@ async function ortakEsitle() {
     c += await ortakCek();
     if (gHata) { if (c) ortakCizBekle = true; throw gHata; }
     if (++ortakSayac % 6 === 1) await ortakUyelikKontrol();
-    Object.assign(ortakDurum, {zaman: Date.now(), hata: '', gonderilen: ortakDurum.gonderilen + g, cekilen: ortakDurum.cekilen + c});
+    Object.assign(ortakDurum, {zaman: Date.now(), hata: '', cevrimdisi: false, gonderilen: ortakDurum.gonderilen + g, cekilen: ortakDurum.cekilen + c});
     if (c) ortakCizBekle = true;
   } catch (e) {
-    ortakDurum.hata = e.message;
+    ortakDurum.hata = e.message; ortakDurum.cevrimdisi = !!e.ag;
     if (e.oturum && !e.ag) ortakOturumKapat('Oturum süresi doldu. Yeniden giriş yapın.');
   } finally {
     ortakMesgul = false;
@@ -8915,9 +9047,11 @@ async function ortakEsitle() {
 window.ortakPlanla = () => { if (!ortakOturum()) return; clearTimeout(ortakZaman); ortakZaman = setTimeout(ortakEsitle, 1500); };
 setInterval(() => { if (!document.hidden) ortakEsitle(); }, 20000);
 window.addEventListener('online', () => ortakEsitle());
+window.addEventListener('offline', () => { if (!ortakOturum()) return; ortakDurum.cevrimdisi = true; ortakDurum.hata = 'İnternet bağlantısı yok'; ortakDurumCiz(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) ortakEsitle(); else setTimeout(ortakEsitle, 400); });
 function ortakDurumMetni() {
   if (!ortakOturum()) return 'Giriş yapılmadı';
+  if (ortakDurum.cevrimdisi) { const n = ortakFarklar(izOku()).length; return `Çevrimdışı çalışılıyor${n ? ` · ${n} değişiklik bu cihazda saklı, internet gelince kendiliğinden gönderilir` : ' · değişiklikler bu cihazda saklanır'}`; }
   if (ortakDurum.hata) return 'Eşitlenemedi: ' + ortakDurum.hata;
   const iz = izOku(), b = ortakFarklar(iz).length;
   if (!ortakDurum.zaman) return 'Eşitleniyor…';
@@ -8926,7 +9060,7 @@ function ortakDurumMetni() {
 }
 function ortakDurumCiz() {
   $$('.ortak-durum').forEach(e => { e.textContent = ortakDurumMetni(); e.classList.toggle('gider', !!ortakDurum.hata); });
-  const b = $('#esitleBtn'); if (b && esitleDurum() === 'bagli') { b.classList.toggle('hatali', !!ortakDurum.hata); b.title = ortakDurumMetni(); }
+  const b = $('#esitleBtn'); if (b && esitleDurum() === 'bagli') { b.classList.toggle('hatali', !!ortakDurum.hata); b.title = ortakDurumMetni(); const sp = $('span', b); if (sp) sp.textContent = esitleEtiket(); }
   const c = $('#cBaglanti'); if (c && ortakBagli()) { c.classList.toggle('hata', !!ortakDurum.hata); c.classList.toggle('ok', !ortakDurum.hata); }
 }
 async function ortakUyelikKontrol() {
@@ -9405,18 +9539,21 @@ function kullaniciFormu(u, o, liste = []) {
 
 /* --- İşlem kaydı (yönetici ve muhasebe): en yeni 500 kayıt, kullanıcı ve metin filtresi --- */
 async function islemKaydiEkrani() {
-  const r = ortakRol();
-  if (r !== 'yonetici' && r !== 'muhasebe') return git('ayarlar', true);
+  const r = ortakRol(), bulut = r === 'yonetici' || r === 'muhasebe';
+  if (!bulut && !anaKullanici()) return git('ayarlar', true);
   const o = ortak();
-  ui.logAra ??= ''; ui.logKisi ??= '';
-  $('#icerik').innerHTML = sayfa('İşlem kaydı', {geri: 'ayarlar', geriAd: 'Ayarlar'}) + `<div class="rapor-ust"><div class="arama">${ikon('ara')}<input type="search" id="logAra" placeholder="Kayıtta ara" value="${esc(ui.logAra)}"></div>
+  ui.logAra ??= ''; ui.logKisi ??= ''; ui.logKaynak ??= bulut ? 'bulut' : 'cihaz';
+  if (!bulut) ui.logKaynak = 'cihaz';
+  $('#icerik').innerHTML = sayfa('İşlem geçmişi', {geri: 'ayarlar', geriAd: 'Ayarlar'}) + (bulut ? `<div class="segment" id="logKaynak">${[['bulut', 'Tüm kullanıcılar (bulut)'], ['cihaz', 'Bu cihaz (alan ayrıntılı)']].map(([v, a]) => `<button data-v="${v}" class="${ui.logKaynak === v ? 'secili' : ''}">${a}</button>`).join('')}</div>` : '') + `<div class="rapor-ust"><div class="arama">${ikon('ara')}<input type="search" id="logAra" placeholder="Kayıtta ara" value="${esc(ui.logAra)}"></div>
       <select id="logKisi" class="secim"><option value="">Tüm kullanıcılar</option></select></div>
     <div class="yan-arac"><button id="logYaz">${ikon('yazici')}Yazdır</button><button id="logYeni">${ikon('donustur')}Yenile</button></div>
     <div id="logTablo"><p class="soluk">Yükleniyor…</p></div>`;
   yanDuzen();
   $('#logYeni').onclick = islemKaydiEkrani;
+  $$('#logKaynak button').forEach(b => b.onclick = () => { ui.logKaynak = b.dataset.v; ui.logKisi = ''; islemKaydiEkrani(); });
   let l;
-  try {
+  if (ui.logKaynak === 'cihaz') l = gecmisOku().reverse();
+  else try {
     const q = {structuredQuery: {from: [{collectionId: 'log'}], orderBy: [{field: {fieldPath: 'z'}, direction: 'DESCENDING'}], limit: 500}};
     l = ((await ortakIstek(o, 'POST', `${FS}/v1/${firmaYol(o)}:runQuery`, q)) || []).filter(x => x.document).map(x => fsOku(x.document));
   } catch (e) { if ($('#logTablo')) $('#logTablo').innerHTML = `<p class="gider">${esc(e.message)}</p>`; return; }
@@ -9424,20 +9561,20 @@ async function islemKaydiEkrani() {
   const kisiler = [...new Set(l.map(x => x.a))].sort((a, b) => String(a).localeCompare(String(b), 'tr'));
   $('#logKisi').innerHTML += kisiler.map(k => `<option ${ui.logKisi === k ? 'selected' : ''}>${esc(k)}</option>`).join('');
   const zaman = z => { const d = new Date(z); return isNaN(d) ? '' : d.toLocaleString('tr-TR', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'}); };
-  const satir = x => [zaman(x.z), x.a || '', ISLEM_AD[x.i] || x.i || '', KOLEKSIYON_AD[x.k] || x.k || '', x.d || ''];
+  const satir = x => [zaman(x.z), x.a || '', ISLEM_AD[x.i] || x.i || '', KOLEKSIYON_AD[x.k] || x.k || '', x.d || '', x.f || ''];
   let son = [];
   const ciz1 = () => {
     const a = kucult(ui.logAra.trim());
     son = l.filter(x => (!ui.logKisi || x.a === ui.logKisi) && (!a || kucult(satir(x).join(' ')).includes(a)));
-    $('#logTablo').innerHTML = son.length ? `<div class="liste-kap"><table class="liste-tablo"><thead><tr><th>Tarih</th><th>Kullanıcı</th><th>İşlem</th><th>Bölüm</th><th>Kayıt</th></tr></thead>
+    $('#logTablo').innerHTML = son.length ? `<div class="liste-kap"><table class="liste-tablo"><thead><tr><th>Tarih</th><th>Kullanıcı</th><th>İşlem</th><th>Bölüm</th><th>Kayıt</th><th>Değişen alanlar</th></tr></thead>
       <tbody>${son.map(x => `<tr class="${x.i === 'sil' ? 'uyar' : ''}">${satir(x).map(v => `<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
-      <p class="dipnot">${son.length} kayıt gösteriliyor (en yeni ${l.length} kayıt içinden). İşlem kaydı silinemez ve değiştirilemez.</p>`
+      <p class="dipnot">${son.length} kayıt gösteriliyor (en yeni ${l.length} kayıt içinden). ${ui.logKaynak === 'cihaz' ? 'Bu cihazda yapılan son ' + GECMIS_SINIR + ' işlem saklanır.' : 'İşlem kaydı silinemez ve değiştirilemez.'}</p>`
       : bosDurum('liste', 'gri', 'Kayıt yok', 'Bu filtreye uyan işlem bulunamadı.');
   };
   ciz1();
   $('#logAra').oninput = e => { ui.logAra = e.target.value; ciz1(); };
   $('#logKisi').onchange = e => { ui.logKisi = e.target.value; ciz1(); };
-  $('#logYaz').onclick = () => yazdir('Islem kaydi', listeKagit({ad: 'İşlem kaydı', k: [['Tarih'], ['Kullanıcı'], ['İşlem'], ['Bölüm'], ['Kayıt']]}, son.map(x => ({d: satir(x)})), {ara: ui.logAra}));
+  $('#logYaz').onclick = () => yazdir('Islem kaydi', listeKagit({ad: 'İşlem geçmişi', k: [['Tarih'], ['Kullanıcı'], ['İşlem'], ['Bölüm'], ['Kayıt'], ['Değişen alanlar']]}, son.map(x => ({d: satir(x)})), {ara: ui.logAra}));
 }
 
 /* --- Belge kilidi: düzenleme formu açılınca kayıt 3 dk kilitlenir (her dakika uzatılır), form kapanınca açılır --- */
@@ -9511,6 +9648,9 @@ ui = uiBaslangic();
 if (!location.hash) history.replaceState(null, '', '#/panel');
 ciz();
 setTimeout(kurOtomatik, 3000);
+gecmisTaban();
+setTimeout(gunlukYedekAl, 12000);
+setTimeout(masaustuBildirimleri, 20000); setInterval(masaustuBildirimleri, 30 * 60000);
 kilitle();
 hatirlaticiPlanla();
 ortakBaslat();
