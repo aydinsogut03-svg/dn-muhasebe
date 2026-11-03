@@ -1678,7 +1678,7 @@ body.erp .erp-form #mSerbest .yuzen{display:none}
 
 <script>
 'use strict';
-const VERSIYON = '2.10.4';
+const VERSIYON = '2.11.0';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -2505,6 +2505,7 @@ function ciz0() {
   if (s === 'fis') { fisEkrani(p1); yanDuzen(); return kaydirma(); }
   if (!modulAcik(s)) return git('panel', true);
   menuCiz(s);
+  if (s === 'servis' && p1 && p1.startsWith('b-')) { bakimEkrani(p1.slice(2)); yanDuzen(); return kaydirma(); }
   if (p1 && p1.startsWith('r-')) { const [r, q = ''] = p1.slice(2).split('?'); if (masaustuMu()) erpModul(s, r, new URLSearchParams(q)); else raporListe(s, r, new URLSearchParams(q)); yanDuzen(); return kaydirma(); }
   // 2.10: masaüstünde modül ana ekranı tam sayfa tablo penceresidir
   if (!p1 && masaustuMu() && ERP_ANA[s] && raporTanim(s, ERP_ANA[s])) { erpModul(s, ERP_ANA[s]); yanDuzen(); return kaydirma(); }
@@ -2523,9 +2524,12 @@ function yanDuzen() { $('#icerik').classList.toggle('yanli', !!$('#icerik > .btn
    Her modülün kenar menüde açılan alt menüsü vardır: işlemler ve raporlar. Raporlar tablo olarak listelenir,
    satıra tıklayınca kaydın detayı açılır; yazdırılır (PDF) ve Excel'e (CSV) aktarılır. */
 const ALT_MENU = {
-  servis: [['İşlemler', [['Servis kayıtları', 'pano', 'servis'], ['Yeni servis / iş emri', 'pano+', () => yeniServis()]]],
+  servis: [['İşlemler', [['Servis kayıtları', 'pano', 'servis'], ['Yeni servis / iş emri', 'pano+', () => yeniServis()], ['Bakım teklifleri oluştur', 'teklif+', () => bakimTeklifleriOlustur()]]],
     ['Raporlar', [['Servis listesi', 'tablo', 'servis/r-servisler'], ['Açık iş emirleri', 'panoSaat', 'servis/r-acik'], ['Tekne ve makineler', 'tekne', 'servis/r-ekipman'],
-      ['Yaklaşan bakımlar', 'bakim', 'servis/r-bakim'], ['Kullanılan parçalar', 'cark', 'servis/r-parca'], ['Teknisyen işçilik', 'teknisyen', 'servis/r-iscilik']]]],
+      ['Bakım takibi', 'bakim', 'servis/r-bakim'], ['Kullanılan parçalar', 'cark', 'servis/r-parca'], ['Teknisyen işçilik', 'teknisyen', 'servis/r-iscilik'], ['Servis kârlılığı', 'paralar', 'servis/r-karlilik']]]],
+  rapor: [['İşlemler', [['Dönemsel analiz', 'grafik', 'rapor']]],
+    ['Raporlar', [['Aylık ciro', 'grafik', 'rapor/r-ciro'], ['Aylık tahsilat', 'banknot', 'rapor/r-tahsilat'], ['Alacak yaşlandırma', 'kumSaati', 'rapor/r-yaslandirma'],
+      ['Teknisyen başına iş', 'teknisyen', 'rapor/r-teknisyen'], ['Servis kârlılığı', 'paralar', 'rapor/r-karlilik']]]],
   banka: [['İşlemler', [['Hesaplar', 'banka', 'banka'], ['Yeni hesap', 'banka+', () => finansHesapFormu()], ['Virman', 'virman', () => virmanFormu()]]],
     ['Raporlar', [['Hesap bakiyeleri', 'terazi', 'banka/r-bakiye'], ['Hesap hareketleri', 'hareket', 'banka/r-hareket']]]],
   kasa: [['İşlemler', [['Gelir / gider kayıtları', 'cuzdan', 'kasa'], ['Gelir fişi', 'gelirOk', () => islemFormu(null, 'gelir', null, true)], ['Gider fişi', 'giderOk', () => islemFormu(null, 'gider', null, true)], ['Fiş fotoğrafından gider', 'kamera', fisCek]]],
@@ -2643,15 +2647,40 @@ function raporTanim(m, id) {
       ekipman: {ad: 'Tekne ve makineler', k: [['Tekne'], ['Makine'], ['Seri no'], ['Motor no'], ['Çalışma saati', 'sayi'], ['Müşteri'], ['Servis sayısı', 'sayi', 1], ['Son servis', 'tarih']],
         veri: () => D.ekipmanlar.map(e => { const ss = D.servisler.filter(s => s.ekipmanId === e.id).sort((a, b) => b.tarih.localeCompare(a.tarih));
           return {d: [e.tekne, ekipmanAd(e), e.seriNo, e.motorNo, e.saat, kisi(e.kisiId)?.ad, ss.length, ss[0]?.tarih || ''], yol: ss[0] ? 'servis/' + ss[0].id : e.kisiId ? 'veresiye/' + e.kisiId : ''}; })},
-      bakim: {ad: 'Yaklaşan bakımlar', k: [['Bakım tarihi', 'tarih'], ['Kalan gün', 'sayi'], ['Müşteri'], ['Tekne'], ['Makine'], ['Bakım saati'], ['Son servis']],
-        veri: () => D.servisler.filter(s => s.sonrakiBakim && s.durum !== 'iptal').sort((a, b) => a.sonrakiBakim.localeCompare(b.sonrakiBakim))
-          .map(s => { const e = ekipman(s.ekipmanId) || s.ekipmanKopya || {}, g = gunFark(s.sonrakiBakim); return {d: [s.sonrakiBakim, g, servisMusteri(s), s.tekne || e.tekne, ekipmanAd(e), s.sonrakiBakimSaat, s.no], yol: 'servis/' + s.id, uyar: g < 0}; })},
+      bakim: {ad: 'Bakım takibi', k: [['Durum'], ['Müşteri'], ['Tekne'], ['Makine'], ['Seri no'], ['Çalışma saati', 'sayi'], ['Bakım saati', 'sayi'], ['Kalan saat', 'sayi'], ['Tahmini tarih', 'tarih'], ['Kalan gün', 'sayi'], ['Son bakım', 'tarih'], ['Teklif']],
+        veri: () => bakimPlani().map(b => { const tk = bakimTeklifiVar(b.e);
+          return {d: [BAKIM_DURUM[b.durum], kisi(b.e.kisiId)?.ad, b.e.tekne, ekipmanAd(b.e), b.e.seriNo, b.simdi || '', b.hedefSaat || '', b.kalanSaat ?? '', b.tarih, b.kalanGun ?? '', b.sonTarih, tk ? tk.no : ''], yol: 'servis/b-' + b.e.id, uyar: b.durum === 'gecikti'}; })},
+      karlilik: SERVIS_KARLILIK(),
       parca: {ad: 'Kullanılan parçalar', tarihli: true, k: [['Parça no'], ['Parça'], ['Birim'], ['Toplam adet', 'sayi', 1], ['Servis sayısı', 'sayi', 1]],
         veri: r => { const g = {}; for (const s of D.servisler.filter(s => tarihAraliginda(s.tarih, r))) for (const p of s.parcalar) { const k = (p.parcaNo || '') + '|' + (p.ad || ''); (g[k] ||= {p, n: 0, s: new Set()}); g[k].n += p.adet || 0; g[k].s.add(s.id); }
           return Object.values(g).sort((a, b) => b.n - a.n).map(x => ({d: [x.p.parcaNo, x.p.ad, x.p.birim, x.n, x.s.size], yol: x.p.urunId ? 'stok/' + x.p.urunId : ''})); }},
       iscilik: {ad: 'Teknisyen işçilik', tarihli: true, k: [['Teknisyen'], ['Servis sayısı', 'sayi', 1], ['Toplam saat', 'sayi', 1]],
         veri: r => { const g = {}; for (const s of D.servisler) for (const w of s.iscilik) { const t = w.tarih || s.tarih; if (!tarihAraliginda(t, r)) continue; const k = w.teknisyen || 'Belirtilmedi'; (g[k] ||= {s: new Set(), h: 0}); g[k].s.add(s.id); g[k].h += w.sure || 0; }
           return Object.entries(g).sort((a, b) => b[1].h - a[1].h).map(([k, v]) => ({d: [k, v.s.size, Math.round(v.h * 100) / 100], yol: 'servis/r-servisler?ara=' + encodeURIComponent(k)})); }}
+    },
+    rapor: {
+      ciro: {ad: 'Aylık ciro', tarihli: true, k: [['Ay'], ['Fatura', 'sayi', 1], ['Satış (KDV hariç)', 'para', 1], ['KDV', 'para', 1], ['Satış toplamı', 'para', 1], ['Alış (KDV hariç)', 'para', 1], ['Genel giderler', 'para', 1], ['Fark', 'para', 1]],
+        veri: r => { const sat = D.faturalar.filter(f => faturaliMi(f) && tarihAraliginda(f.tarih, r)), gid = D.islemler.filter(i => i.tur === 'gider' && i.kaynak?.tip !== 'fatura' && tarihAraliginda(i.tarih, r));
+          return raporAylari(r, [...sat.map(f => f.tarih), ...gid.map(i => i.tarih)]).map(ay => {
+            const fs = sat.filter(f => f.tur === 'fatura' && f.tarih.startsWith(ay)), as = sat.filter(f => f.tur === 'alis' && f.tarih.startsWith(ay));
+            const h = fs.map(faturaHesap), ara = h.reduce((t, x) => t + x.ara, 0), alis = as.reduce((t, f) => t + faturaHesap(f).ara, 0), g = gid.filter(i => i.tarih.startsWith(ay)).reduce((t, i) => t + i.tutar, 0);
+            return {d: [ayAdi(ay), fs.length, ara, h.reduce((t, x) => t + x.kdv, 0), h.reduce((t, x) => t + x.toplam, 0), alis, g, ara - alis - g], yol: `fatura/r-satis`, uyar: ara - alis - g < 0}; }).reverse(); }},
+      tahsilat: {ad: 'Aylık tahsilat', tarihli: true, k: [['Ay'], ['Cari tahsilat', 'para', 1], ['Peşin tahsilat', 'para', 1], ['Toplam tahsilat', 'para', 1], ['Tedarikçi ödemesi', 'para', 1], ['Net nakit', 'para', 1], ['Tahsilat adedi', 'sayi', 1]],
+        veri: r => { const hr = D.hareketler.filter(h => (h.tur === 'tahsilat' || h.tur === 'odeme') && tarihAraliginda(h.tarih, r)), pes = D.islemler.filter(i => i.tur === 'gelir' && i.kaynak?.tip === 'fatura' && !i.hareketId && tarihAraliginda(i.tarih, r));
+          return raporAylari(r, [...hr.map(h => h.tarih), ...pes.map(i => i.tarih)]).map(ay => {
+            const t = hr.filter(h => h.tur === 'tahsilat' && h.tarih.startsWith(ay)), o = hr.filter(h => h.tur === 'odeme' && h.tarih.startsWith(ay)), p = pes.filter(i => i.tarih.startsWith(ay));
+            const ct = t.reduce((a, h) => a + h.tutar, 0), pt = p.reduce((a, i) => a + i.tutar, 0), od = o.reduce((a, h) => a + h.tutar, 0);
+            return {d: [ayAdi(ay), ct, pt, ct + pt, od, ct + pt - od, t.length + p.length], yol: 'veresiye/r-tahsilat'}; }).reverse(); }},
+      yaslandirma: {ad: 'Alacak yaşlandırma', k: [['Cari'], ['Telefon'], ['Vadesi gelmemiş', 'para', 1], ['1-30 gün', 'para', 1], ['31-60 gün', 'para', 1], ['61-90 gün', 'para', 1], ['90 gün üstü', 'para', 1], ['Faturasız bakiye', 'para', 1], ['Toplam alacak', 'para', 1], ['En eski gecikme (gün)', 'sayi']],
+        veri: () => cariYaslandirma().sort((a, b) => (b.a90p + b.a90 + b.a60) - (a.a90p + a.a90 + a.a60) || (b.fatura + b.diger) - (a.fatura + a.diger))
+          .map(x => ({d: [x.k.ad, x.k.tel, x.gelmemis, x.a30, x.a60, x.a90, x.a90p, x.diger, x.fatura + x.diger, x.enEski > 0 ? x.enEski : ''], yol: 'veresiye/' + x.k.id, uyar: x.a90p > 0}))},
+      teknisyen: {ad: 'Teknisyen başına iş', tarihli: true, k: [['Teknisyen'], ['Servis', 'sayi', 1], ['Tamamlanan', 'sayi', 1], ['Saat', 'sayi', 1], ['İşçilik geliri', 'para', 1], ['İşçilik maliyeti', 'para', 1], ['Katkı', 'para', 1], ['Saat başı gelir', 'para']],
+        veri: r => { const g = {};
+          for (const s of D.servisler) { if (s.durum === 'iptal') continue; for (const w of s.iscilik || []) { if (islemDurum(w) === 'iptal') continue; const t = w.tarih || s.tarih; if (!tarihAraliginda(t, r)) continue;
+            const k = w.teknisyen || 'Belirtilmedi', o = (g[k] ||= {s: new Set(), b: new Set(), h: 0, gel: 0, mal: 0}); o.s.add(s.id); if (s.durum === 'tamam') o.b.add(s.id);
+            o.h += w.sure || 0; o.gel += islemTutar(w); o.mal += Math.round((w.sure || 0) * saatMaliyet(k, t.slice(0, 7))); } }
+          return Object.entries(g).sort((a, b) => b[1].gel - a[1].gel || b[1].h - a[1].h).map(([k, o]) => ({d: [k, o.s.size, o.b.size, Math.round(o.h * 100) / 100, o.gel, o.mal, o.gel - o.mal, o.h ? Math.round(o.gel / o.h) : ''], yol: 'servis/r-servisler?ara=' + encodeURIComponent(k === 'Belirtilmedi' ? '' : k)})); }},
+      karlilik: SERVIS_KARLILIK()
     },
     personel: {
       liste: {ad: 'Personel listesi', k: [['Ad soyad'], ['Görev'], ['Bölüm'], ['Sözleşme'], ['TC kimlik no'], ['Telefon'], ['İşe giriş', 'tarih'], ['Kıdem'], ['Ücret', 'para', 1], ['Ücret tipi'], ['Durum']],
@@ -2678,6 +2707,10 @@ function raporTanim(m, id) {
   };
   return R[m]?.[id];
 }
+/* Servis başına kârlılık: gelir (bağlı fatura ya da servis tutarı) ile parça, dış servis ve işçilik maliyeti */
+const SERVIS_KARLILIK = () => ({ad: 'Servis kârlılığı', tarihli: true, k: [['Form no'], ['Tarih', 'tarih'], ['Müşteri'], ['Tekne'], ['Durum'], ['Gelir', 'para', 1], ['Parça maliyeti', 'para', 1], ['Dış servis', 'para', 1], ['İşçilik maliyeti', 'para', 1], ['Kâr', 'para', 1], ['Kâr %', 'sayi'], ['Fatura']],
+  veri: r => D.servisler.filter(s => s.durum !== 'iptal' && tarihAraliginda(s.tarih, r)).sort((a, b) => b.tarih.localeCompare(a.tarih)).map(s => { const k = servisKarlilik(s);
+    return {d: [s.no, s.tarih, servisMusteri(s), s.tekne, (SERVIS_DURUM[s.durum] || [''])[0], k.gelir, k.parca, k.dis, k.isc, k.kar, k.oran ?? '', k.faturali ? 'Faturalı' : 'Faturasız'], yol: 'servis/' + s.id, uyar: k.kar < 0}; })});
 function cariSatirlari(kosul) {
   return [...D.kisiler].sort((a, b) => a.ad.localeCompare(b.ad, 'tr')).map(k => {
     let borc = 0, alacak = 0; for (const h of D.hareketler) if (h.kisiId === k.id) hareketArti(h.tur) ? borc += h.tutar : alacak += h.tutar;
@@ -2711,7 +2744,7 @@ function raporListe(m, id, sorgu) {
       ${R.tarihli ? `<div class="rl-tarih"><input type="date" id="rlBas" value="${d.bas}" aria-label="Başlangıç"><span>–</span><input type="date" id="rlSon" value="${d.son}" aria-label="Bitiş">
         <div class="cipler">${[['ay', 'Bu ay'], ['yil', 'Bu yıl'], ['gecen', 'Geçen yıl'], ['tum', 'Tümü']].map(([v, a]) => `<button class="cip" data-donem="${v}">${a}</button>`).join('')}</div></div>` : ''}
     </div>
-    <div class="yan-arac"><button id="rlYaz" title="Yazdır / PDF">${ikon('yazici')}Yazdır</button><button id="rlCsv" title="Excel (CSV)">${ikon('indir')}Excel</button><button id="rlYeni" title="Yenile">${ikon('donustur')}Yenile</button></div>
+    <div class="yan-arac"><button id="rlYaz" title="Yazdır / PDF">${ikon('yazici')}Yazdır</button><button id="rlCsv" title="Excel (.xlsx)">${ikon('indir')}Excel</button><button id="rlYeni" title="Yenile">${ikon('donustur')}Yenile</button></div>
     <div id="rlOzet"></div><div id="rlTablo"></div>`;
   $('#icerik').innerHTML = h;
   let son = [];
@@ -2743,11 +2776,7 @@ function raporListe(m, id, sorgu) {
   }
   $('#rlYeni').onclick = () => ciz1();
   $('#rlYaz').onclick = () => yazdir(R.ad, listeKagit(R, son, d));
-  $('#rlCsv').onclick = () => {
-    if (!son.length) return bildir('Aktarılacak kayıt yok', true);
-    const csv = csvYap(R.k.map(x => x[0]), son.map(r => r.d.map((v, i) => R.k[i][1] === 'tarih' ? v || '' : csvYaz(v, R.k[i][1]))));
-    try { bildir('Kaydedildi: ' + dosyaPaylas(`powerserv-${m}-${id}-${bugun()}.csv`, csv, 'text/csv')); } catch (e) { bildir('Kaydedilemedi', true); }
-  };
+  $('#rlCsv').onclick = () => raporExcel(R, son, d, `powerserv-${m}-${id}-${bugun()}`);
   altMenuBagla($('#icerik'));
 }
 function listeKagit(R, l, d) {
@@ -3127,8 +3156,8 @@ function panelEkrani() {
     if (borc > 0 && g !== null && g <= 7) uy.push(`<a class="hucre kareli" href="#/banka/${k.id}">${kare('kart', 'turuncu')}<div class="ic"><b>${esc(k.ad)} son ödeme</b><small>${esc(tarihYaz(so))} · borç ${para(borc)}</small></div><span class="deger vade ${g <= 3 ? 'gider' : ''}">${g === 0 ? 'bugün' : g + ' gün'}</span></a>`);
   }
   if (ac('servis')) {
-    const bk = yaklasanBakimlar(14);
-    if (bk.length) uy.push(`<a class="hucre kareli" href="#/servis">${kare('takvim', 'turuncu')}<div class="ic"><b>${bk.length} makinenin bakımı yaklaşıyor</b><small>${esc(bk.slice(0, 3).map(b => servisMusteri(b.s)).join(', '))}</small></div>${CHEV}</a>`);
+    const bk = yaklasanBakimlar(), gec = bk.filter(b => b.durum === 'gecikti').length;
+    if (bk.length) uy.push(`<a class="hucre kareli" href="#/servis/r-bakim">${kare('takvim', gec ? 'kirmizi' : 'turuncu')}<div class="ic"><b>${bk.length} makinenin bakımı ${gec ? `yaklaşıyor (${gec} gecikti)` : 'yaklaşıyor'}</b><small>${esc(bk.slice(0, 3).map(b => kisi(b.e.kisiId)?.ad || b.e.tekne || ekipmanAd(b.e)).join(', '))}</small></div>${CHEV}</a>`);
   }
   if (ac('kdv')) { const sira = vergiTakvimi(ay).concat(vergiTakvimi(ayKaydir(ay, 1))).find(v => v.tarih >= bugun()); if (sira) { const g = gunFark(sira.tarih); uy.push(`<a class="hucre kareli" href="#/kdv">${kare('takvim', 'pembe')}<div class="ic"><b>${esc(sira.ad)}</b><small>${esc(tarihYaz(sira.tarih))} · ${esc(sira.alt)}</small></div><span class="deger vade ${g <= 3 ? 'gider' : ''}">${g === 0 ? 'bugün' : g + ' gün'}</span></a>`); } }
   if (uy.length) h += `<div class="bolum">Hatırlatmalar</div><div class="grup">${uy.join('')}</div>`;
@@ -4459,6 +4488,7 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
       if ($('#fStok', m)) x.stokDus = $('#fStok', m).checked;
       if (x.durum !== 'iptal') x.durum = $('#fTaslak', m).checked ? 'taslak' : 'gonderildi';
     }
+    if (yeni && teklif && m._bakimEkipman) { x.ekipmanId = m._bakimEkipman; x.bakimTeklif = true; }
     if (yeni) { x.id = kimlik(); x.olusturma = Date.now(); D.faturalar.push(x); }
     else D.faturalar[D.faturalar.findIndex(y => y.id === x.id)] = x;
     faturaTuret(x);
@@ -5274,7 +5304,7 @@ function servisEkrani() {
   const bakim = yaklasanBakimlar();
   h += `<div class="ikili"><div class="kart"><div class="k-ust">Açık iş emri</div><div class="dev orta">${acik.length}</div><div class="k-alt">${parca ? `<span class="turuncu">${parca} parça bekliyor</span>` : 'parça bekleyen yok'}</div></div>
     <div class="kart"><div class="k-ust">Bu ay tamamlanan</div><div class="dev orta">${buAyBiten.length}</div><div class="k-alt">${sayiFmt(buAyBiten.reduce((t, s) => t + iscilikSaat(s), 0))} saat işçilik</div></div></div>
-    ${bakim.length ? `<div class="bolum">Yaklaşan bakımlar</div><div class="grup">${bakim.slice(0, 4).map(b => `<button class="hucre kareli" data-servis="${b.s.id}">${kare('takvim', b.g < 0 ? 'kirmizi' : 'turuncu')}<div class="ic"><b>${esc(servisMusteri(b.s))}</b><small>${esc([b.s.tekne, ekipmanAd(ekipman(b.s.ekipmanId))].filter(Boolean).join(' · '))}</small></div><span class="deger vade ${b.g < 0 ? 'gider' : ''}">${b.g < 0 ? -b.g + ' gün geçti' : b.g === 0 ? 'bugün' : b.g + ' gün'}</span></button>`).join('')}</div>` : ''}
+    ${bakim.length ? `<div class="bolum">Bakım takibi<a href="#/servis/r-bakim">Tümü</a></div><div class="grup">${bakim.slice(0, 4).map(b => `<a class="hucre kareli" href="#/servis/b-${b.e.id}">${kare('takvim', b.durum === 'gecikti' ? 'kirmizi' : 'turuncu')}<div class="ic"><b>${esc(kisi(b.e.kisiId)?.ad || b.e.tekne || ekipmanAd(b.e))}</b><small>${esc([b.e.tekne, ekipmanAd(b.e)].filter(Boolean).join(' · '))}</small></div><span class="deger vade ${b.durum === 'gecikti' ? 'gider' : ''}">${esc(bakimKalanYazi(b))}</span></a>`).join('')}</div>` : ''}
     <div class="segment" id="servisSec">${[['acik', 'Açık'], ['tamam', 'Tamamlanan'], ['hepsi', 'Tümü']].map(([v, a]) => `<button data-v="${v}" class="${ui.servisFiltre === v ? 'secili' : ''}">${a}</button>`).join('')}</div>
     <div class="arama">${ikon('ara')}<input type="search" id="servisAra" placeholder="Müşteri, tekne, seri no ara" value="${esc(ui.servisAra)}"></div><div id="servisListe"></div>`;
   $('#icerik').innerHTML = h;
@@ -5295,11 +5325,225 @@ function servisListe() {
   servisTiklari(kap);
   const b = $('#bosEkle'); if (b) b.onclick = () => yeniServis();
 }
-/* Her ekipmanın son tamamlanan servisindeki "sonraki bakım" tarihi */
-function yaklasanBakimlar(gun = 30) {
-  const son = {};
-  for (const s of D.servisler) if (s.durum === 'tamam' && s.ekipmanId && s.sonrakiBakim && (!son[s.ekipmanId] || son[s.ekipmanId].tarih < s.tarih)) son[s.ekipmanId] = s;
-  return Object.values(son).map(s => ({s, g: gunFark(s.sonrakiBakim)})).filter(b => b.g <= gun).sort((a, b) => a.g - b.g);
+/* 2.11: bakımı geciken ya da yaklaşan makineler (bakım planından) */
+const yaklasanBakimlar = () => bakimPlani().filter(b => b.durum === 'gecikti' || b.durum === 'yakin');
+const bakimKalanYazi = b => b.durum === 'gecikti' ? (b.kalanGun !== null && b.kalanGun < 0 ? -b.kalanGun + ' gün geçti' : -b.kalanSaat + ' saat geçti') : b.kalanGun !== null ? (b.kalanGun === 0 ? 'bugün' : b.kalanGun + ' gün') : sayiFmt(b.kalanSaat) + ' saat';
+
+/* ================= 2.11: Yönetim raporları, gerçek Excel aktarımı, bakım takibi ================= */
+/* İkili dosyayı indirir: Android'de İndirilenler/PowerServ+ klasörüne yazıp açar, bilgisayarda indirir (Windows programı açar). */
+function ikiliIndir(ad, bayt, tur, mesaj) {
+  if (window.Android && Android.belgeAc) {
+    let ikili = ''; for (let i = 0; i < bayt.length; i += 0x8000) ikili += String.fromCharCode.apply(null, bayt.subarray(i, i + 0x8000));
+    if (!Android.belgeAc(ad, btoa(ikili), tur)) return bildir('Dosya kaydedilemedi', true);
+    return bildir((mesaj || 'Dosya') + ' İndirilenler/PowerServ+ klasörüne kaydedildi');
+  }
+  const url = URL.createObjectURL(new Blob([bayt], {type: tur}));
+  const a = document.createElement('a'); a.href = url; a.download = ad; document.body.appendChild(a); a.click(); a.replaceWith();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  bildir((mesaj || 'Dosya') + ' indirildi');
+}
+const XLSX_TUR = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+const xlKolon = n => { let s = ''; n++; while (n) { const r = (n - 1) % 26; s = String.fromCharCode(65 + r) + s; n = Math.floor((n - 1) / 26); } return s; };
+const xlTarih = t => { const d = /^\d{4}-\d{2}-\d{2}$/.test(t || '') ? Date.UTC(+t.slice(0, 4), +t.slice(5, 7) - 1, +t.slice(8, 10)) : NaN; return isNaN(d) ? null : d / 864e5 + 25569; };
+/* Rapor tablosundan biçimli .xlsx: firma ve rapor başlığı, kalın başlık satırı, TL ve tarih biçimleri, toplam satırı, filtre ve sabit başlık. */
+function tabloXlsx(baslik, alt, k, satirlar) {
+  const n = k.length, bas = 4, son = bas + satirlar.length;
+  const h = (r, c, v, s, tip) => {
+    const ref = xlKolon(c) + r;
+    if (v === null || v === undefined || v === '') return s ? `<c r="${ref}" s="${s}"/>` : '';
+    if (tip === 'para') return `<c r="${ref}" s="${s || 2}"><v>${(+v || 0) / 100}</v></c>`;
+    if (tip === 'sayi') return isFinite(+v) ? `<c r="${ref}" s="${s || 3}"><v>${+v}</v></c>` : `<c r="${ref}" s="${s || 0}" t="inlineStr"><is><t>${xmlEsc(v)}</t></is></c>`;
+    if (tip === 'tarih') { const t = xlTarih(v); if (t !== null) return `<c r="${ref}" s="4"><v>${t}</v></c>`; }
+    return `<c r="${ref}"${s ? ` s="${s}"` : ''} t="inlineStr"><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`;
+  };
+  const gen = k.map(([ad, t], i) => Math.min(60, Math.max(t === 'para' ? 14 : t === 'tarih' ? 12 : 8, String(ad).length + 2, ...satirlar.slice(0, 300).map(r => String(t === 'para' ? tutarFmt(r[i]) : r[i] ?? '').length + 1))));
+  let x = `<row r="1"><c r="A1" s="5" t="inlineStr"><is><t xml:space="preserve">${xmlEsc(baslik)}</t></is></c></row><row r="2"><c r="A2" s="6" t="inlineStr"><is><t xml:space="preserve">${xmlEsc(alt)}</t></is></c></row>`;
+  x += `<row r="${bas}">${k.map(([ad], i) => h(bas, i, ad, 1)).join('')}</row>`;
+  satirlar.forEach((r, j) => { x += `<row r="${bas + 1 + j}">${k.map(([, t], i) => h(bas + 1 + j, i, r[i], 0, t)).join('')}</row>`; });
+  const topla = k.some(([, , tp]) => tp);
+  if (topla && satirlar.length) x += `<row r="${son + 1}">${k.map(([, t, tp], i) => i === 0 ? h(son + 1, 0, 'Toplam', 7) : tp ? `<c r="${xlKolon(i)}${son + 1}" s="${t === 'para' ? 8 : 9}"><f>SUBTOTAL(9,${xlKolon(i)}${bas + 1}:${xlKolon(i)}${son})</f><v>${satirlar.reduce((s, r) => s + (+r[i] || 0), 0) / (t === 'para' ? 100 : 1)}</v></c>` : h(son + 1, i, '', 7)).join('')}</row>`;
+  const sayfa = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><dimension ref="A1:${xlKolon(n - 1)}${son + 1}"/><sheetViews><sheetView workbookViewId="0"><pane ySplit="${bas}" topLeftCell="A${bas + 1}" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight="15"/><cols>${gen.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('')}</cols><sheetData>${x}</sheetData>${satirlar.length ? `<autoFilter ref="A${bas}:${xlKolon(n - 1)}${son}"/>` : ''}<pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.3" footer="0.3"/><pageSetup paperSize="9" orientation="${n > 7 ? 'landscape' : 'portrait'}" fitToWidth="1" fitToHeight="0"/></worksheet>`;
+  const stil = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="3"><numFmt numFmtId="164" formatCode="#,##0.00 &quot;TL&quot;"/><numFmt numFmtId="165" formatCode="#,##0.##"/><numFmt numFmtId="166" formatCode="dd.mm.yyyy"/></numFmts>`
+    + `<fonts count="4"><font><sz val="10"/><name val="Arial"/></font><font><b/><sz val="10"/><color rgb="FFFFFFFF"/><name val="Arial"/></font><font><b/><sz val="14"/><color rgb="FF1F2F5A"/><name val="Arial"/></font><font><b/><sz val="10"/><name val="Arial"/></font></fonts>`
+    + `<fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF1F2F5A"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE8EEF7"/><bgColor indexed="64"/></patternFill></fill></fills>`
+    + `<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFC3CDDB"/></left><right style="thin"><color rgb="FFC3CDDB"/></right><top style="thin"><color rgb="FFC3CDDB"/></top><bottom style="thin"><color rgb="FFC3CDDB"/></bottom><diagonal/></border></borders>`
+    + `<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="10">`
+    + `<xf numFmtId="0" fontId="0" fillId="0" borderId="1" applyBorder="1"/>`
+    + `<xf numFmtId="0" fontId="1" fillId="2" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf>`
+    + `<xf numFmtId="164" fontId="0" fillId="0" borderId="1" applyNumberFormat="1" applyBorder="1"/>`
+    + `<xf numFmtId="165" fontId="0" fillId="0" borderId="1" applyNumberFormat="1" applyBorder="1"/>`
+    + `<xf numFmtId="166" fontId="0" fillId="0" borderId="1" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left"/></xf>`
+    + `<xf numFmtId="0" fontId="2" fillId="0" borderId="0" applyFont="1"/>`
+    + `<xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>`
+    + `<xf numFmtId="0" fontId="3" fillId="3" borderId="1" applyFont="1" applyFill="1" applyBorder="1"/>`
+    + `<xf numFmtId="164" fontId="3" fillId="3" borderId="1" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/>`
+    + `<xf numFmtId="165" fontId="3" fillId="3" borderId="1" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/>`
+    + `</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+  const sayfaAd = xmlEsc(baslik.replace(/[\\/?*[\]:]/g, ' ').slice(0, 31) || 'Rapor');
+  return zipYap([
+    ['[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'],
+    ['_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+    ['xl/workbook.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${sayfaAd}" sheetId="1" r:id="rId1"/></sheets>${satirlar.length ? `<definedNames><definedName name="_xlnm._FilterDatabase" localSheetId="0" hidden="1">'${sayfaAd.replace(/'/g, "''")}'!$A$${bas}:$${xlKolon(n - 1)}$${son}</definedName></definedNames>` : ''}</workbook>`],
+    ['xl/_rels/workbook.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
+    ['xl/styles.xml', stil], ['xl/worksheets/sheet1.xml', sayfa]]);
+}
+/* Rapor listesini Excel'e aktarır (raporListe ve masaüstü modül pencereleri) */
+function raporExcel(R, son, d, dosya) {
+  if (!son.length) return bildir('Aktarılacak kayıt yok', true);
+  const donem = R.tarihli ? (d.bas || d.son ? `${d.bas ? tarihYaz(d.bas, true) : '…'} – ${d.son ? tarihYaz(d.son, true) : '…'}` : 'Tüm kayıtlar') : 'Rapor tarihi ' + tarihYaz(bugun(), true);
+  try { ikiliIndir(`${dosya}.xlsx`, tabloXlsx(R.ad, `${firmaUnvan()} · ${donem}${d.ara ? ' · Filtre: ' + d.ara : ''} · ${son.length} kayıt`, R.k, son.map(r => r.d)), XLSX_TUR, 'Excel'); }
+  catch (e) { console.warn(e); bildir('Excel oluşturulamadı', true); }
+}
+
+/* --- Yönetim raporları için hesaplar --- */
+const aylarArasi = (bas, son) => { const l = []; let [y, a] = [+bas.slice(0, 4), +bas.slice(5, 7)]; const [y2, a2] = [+son.slice(0, 4), +son.slice(5, 7)]; while (y < y2 || (y === y2 && a <= a2)) { l.push(`${y}-${iki(a)}`); if (++a > 12) { a = 1; y++; } } return l; };
+function raporAylari(r, tarihler) {
+  const t = tarihler.filter(Boolean).sort();
+  const bas = (r.bas || t[0] || bugun()).slice(0, 7), son = (r.son || t[t.length - 1] || bugun()).slice(0, 7);
+  return bas <= son ? aylarArasi(bas + '-01', son + '-01').slice(-120) : [];
+}
+/* Personelin bir saatlik işveren maliyeti (aylık bordro maliyeti / 225 saat); personel kartı yoksa 0 */
+function saatMaliyet(ad, ay) {
+  const p = D.personeller.find(x => x.ad === ad);
+  if (!p || !p.maas) return 0;
+  try { return Math.round(bordro(p, ay || bugun().slice(0, 7)).maliyet / 225); } catch (e) { return 0; }
+}
+/* Servisin geliri (bağlı fatura varsa faturanın KDV hariç tutarı) ve maliyeti (stok maliyeti, dış servis, işçilik maliyeti) */
+function servisKarlilik(s) {
+  const f = s.faturaId && D.faturalar.find(x => x.id === s.faturaId && x.durum !== 'iptal');
+  const h = servisHesap(s), gelir = f ? faturaHesap(f).ara : h.net;
+  let parca = 0;
+  for (const p of s.parcalar || []) if (p.durum !== 'musteri') { const u = parcaUrun(p); parca += Math.round((p.adet || 0) * (u ? urunMaliyet(u) : 0)); }
+  const dis = (s.disServis || []).filter(d => d.durum !== 'iptal').reduce((t, d) => t + (d.maliyet || 0), 0);
+  const isc = (s.iscilik || []).filter(w => islemDurum(w) !== 'iptal').reduce((t, w) => t + Math.round((w.sure || 0) * saatMaliyet(w.teknisyen, (w.tarih || s.tarih).slice(0, 7))), 0);
+  const maliyet = parca + dis + isc;
+  return {gelir, parca, dis, isc, maliyet, kar: gelir - maliyet, oran: gelir ? Math.round((gelir - maliyet) / gelir * 1000) / 10 : null, faturali: !!f};
+}
+/* Alacak yaşlandırma: ödenmemiş satış faturaları vade gününe göre; faturasız cari borcu ayrı sütunda */
+function cariYaslandirma() {
+  const g = {};
+  for (const f of D.faturalar) {
+    if (f.tur !== 'fatura' || !faturaliMi(f) || !f.kisiId) continue;
+    const kalan = faturaKalan(f); if (kalan <= 0) continue;
+    const gun = -gunFark(f.vade || f.tarih), o = (g[f.kisiId] ||= {gelmemis: 0, a30: 0, a60: 0, a90: 0, a90p: 0, fatura: 0, enEski: 0});
+    o[gun <= 0 ? 'gelmemis' : gun <= 30 ? 'a30' : gun <= 60 ? 'a60' : gun <= 90 ? 'a90' : 'a90p'] += kalan;
+    o.fatura += kalan; o.enEski = Math.max(o.enEski, gun);
+  }
+  for (const k of D.kisiler) { const b = kisiBakiye(k.id); if (b > 0 || g[k.id]) { const o = (g[k.id] ||= {gelmemis: 0, a30: 0, a60: 0, a90: 0, a90p: 0, fatura: 0, enEski: 0}); o.bakiye = b; } }
+  return Object.entries(g).map(([id, o]) => ({k: kisi(id), ...o, diger: Math.max(0, (o.bakiye ?? o.fatura) - o.fatura)})).filter(x => x.k && (x.fatura > 0 || x.diger > 0));
+}
+
+/* --- Bakım takibi: çalışma saatine ve süreye göre periyodik bakım planı ---
+   Makine kartında bakım aralığı (saat ve/veya ay), bakım işçiliği ve bakım kiti tanımlanır. Son periyodik bakım
+   servis kayıtlarından bulunur; günlük ortalama kullanım son servislerdeki saat okumalarından hesaplanır. */
+const BAKIM_UYARI_GUN = 30, BAKIM_UYARI_SAAT = 50;
+function ekipmanServisleri(e) { return D.servisler.filter(s => s.ekipmanId === e.id && s.durum !== 'iptal').sort((a, b) => a.tarih.localeCompare(b.tarih)); }
+function bakimDurumu(e) {
+  const ss = ekipmanServisleri(e), tamam = ss.filter(s => s.durum === 'tamam');
+  const sonBakim = [...tamam].reverse().find(s => (s.turler || []).includes('periyodik')) || null;
+  // Günlük kullanım: saat okuması olan ilk ve son kayıt (makine kartındaki güncel saat bugüne sayılır)
+  const okuma = ss.filter(s => s.calismaSaati > 0).map(s => [s.tarih, +s.calismaSaati]);
+  if (e.saat > 0) okuma.push([e.saatTarih || ss[ss.length - 1]?.tarih || bugun(), +e.saat]);
+  okuma.sort((a, b) => a[0].localeCompare(b[0]));
+  let gunluk = 0;
+  if (okuma.length >= 2) { const [t1, h1] = okuma[0], [t2, h2] = okuma[okuma.length - 1]; const gun = (tarihNesne(t2) - tarihNesne(t1)) / 864e5; if (gun >= 7 && h2 > h1) gunluk = (h2 - h1) / gun; }
+  const simdi = Math.max(+e.saat || 0, ...okuma.map(o => o[1]));
+  const sonSaat = sonBakim ? +sonBakim.calismaSaati || 0 : 0, sonTarih = sonBakim?.tarih || '';
+  const adaylar = [];
+  // Serviste elle yazılan "sonraki bakım" önceliklidir
+  const elle = [...tamam].reverse().find(s => (s.sonrakiBakim || s.sonrakiBakimSaat) && s.tarih >= sonTarih);
+  if (elle?.sonrakiBakim) adaylar.push({tarih: elle.sonrakiBakim, neden: 'Serviste yazılan tarih'});
+  let hedefSaat = elle?.sonrakiBakimSaat ? +String(elle.sonrakiBakimSaat).replace(/\D/g, '') || 0 : 0;
+  if (!hedefSaat && e.bakimSaat > 0) hedefSaat = (sonSaat || (simdi >= e.bakimSaat ? Math.floor(simdi / e.bakimSaat) * e.bakimSaat : 0)) + +e.bakimSaat;
+  if (hedefSaat) {
+    const kalan = hedefSaat - simdi;
+    const t = new Date(tarihNesne(bugun())); if (gunluk > 0) t.setDate(t.getDate() + Math.round(kalan / gunluk));
+    adaylar.push({tarih: gunluk > 0 || kalan <= 0 ? tarihStr(t) : '', neden: `${sayiFmt(hedefSaat)} saat`});
+  }
+  if (e.bakimAy > 0) { const t = tarihNesne(sonTarih || e.olusturmaTarih || bugun()); t.setMonth(t.getMonth() + +e.bakimAy); adaylar.push({tarih: tarihStr(t), neden: `${e.bakimAy} ayda bir`}); }
+  const tarihli = adaylar.filter(a => a.tarih).sort((a, b) => a.tarih.localeCompare(b.tarih));
+  const ilk = tarihli[0] || adaylar[0] || null;
+  const kalanSaat = hedefSaat ? hedefSaat - simdi : null, kalanGun = ilk?.tarih ? gunFark(ilk.tarih) : null;
+  const durum = !ilk ? 'tanimsiz' : (kalanGun !== null && kalanGun < 0) || (kalanSaat !== null && kalanSaat < 0) ? 'gecikti'
+    : (kalanGun !== null && kalanGun <= BAKIM_UYARI_GUN) || (kalanSaat !== null && kalanSaat <= BAKIM_UYARI_SAAT) ? 'yakin' : 'normal';
+  return {e, sonBakim, sonSaat, sonTarih, simdi, gunluk, hedefSaat, kalanSaat, tarih: ilk?.tarih || '', kalanGun, neden: ilk?.neden || '', durum};
+}
+const BAKIM_DURUM = {gecikti: 'Gecikti', yakin: 'Yaklaşıyor', normal: 'Planlı', tanimsiz: 'Aralık tanımsız'};
+const bakimPlani = () => D.ekipmanlar.map(bakimDurumu).sort((a, b) => ({gecikti: 0, yakin: 1, normal: 2, tanimsiz: 3}[a.durum] - {gecikti: 0, yakin: 1, normal: 2, tanimsiz: 3}[b.durum]) || (a.tarih || '9').localeCompare(b.tarih || '9'));
+const bakimTeklifiVar = e => D.faturalar.find(f => f.tur === 'teklif' && f.ekipmanId === e.id && f.durum !== 'iptal' && !f.donustu && teklifDurumKod(f) === 'bekliyor');
+/* Bakım teklifi kalemleri: makinenin bakım kiti (stoktan) + bakım işçiliği */
+function bakimKalemleri(e) {
+  const l = [];
+  for (const k of e.bakimKiti || []) { const u = urun(k.urunId); if (u) l.push({ad: u.ad, kod: u.kod || '', urunId: u.id, miktar: k.adet || 1, birim: u.birim || 'adet', fiyat: u.satis || 0, kdv: u.kdvOran ?? 20}); }
+  if (e.bakimIscilik > 0) l.push({ad: `Periyodik bakım işçiliği (${ekipmanAd(e)})`, kod: '', miktar: +e.bakimIscilik, birim: 'saat', fiyat: D.servisAyar.saatUcret || 0, kdv: 20});
+  return l;
+}
+function bakimTeklifNotu(b) {
+  const e = b.e;
+  return [`${e.tekne ? e.tekne + ' · ' : ''}${ekipmanAd(e)}${e.seriNo ? ' · SN ' + e.seriNo : ''}`,
+    `Periyodik bakım${b.hedefSaat ? ' · ' + sayiFmt(b.hedefSaat) + ' saat bakımı' : ''}${b.tarih ? ' · planlanan ' + tarihYaz(b.tarih, true) : ''}`].join('\n');
+}
+/* Tek makine için teklif formunu bakım kalemleriyle açar */
+function bakimTeklifAc(eid) {
+  const e = ekipman(eid); if (!e) return;
+  const b = bakimDurumu(e), l = bakimKalemleri(e);
+  faturaFormu(null, 'teklif', e.kisiId || null, l.length ? l : null);
+  setTimeout(() => { const m = $$('.sayfa-modal').pop(); if (!m) return; const n = $('#fNot', m); if (n && !n.value) n.value = bakimTeklifNotu(b); m._bakimEkipman = e.id; }, 50);
+}
+/* Bakımı yaklaşan / geciken makineler için teklif kayıtlarını topluca oluşturur (müşteriye gönderilmeye hazır) */
+async function bakimTeklifleriOlustur() {
+  const l = bakimPlani().filter(b => (b.durum === 'gecikti' || b.durum === 'yakin') && b.e.kisiId && !bakimTeklifiVar(b.e) && bakimKalemleri(b.e).length);
+  if (!l.length) return bildir('Teklif hazırlanacak makine yok: bakımı yaklaşan, müşterisi ve bakım kiti / işçiliği tanımlı olmalı', true);
+  if (!await onay(`${l.length} bakım teklifi oluşturulsun mu?`, l.slice(0, 6).map(b => `${kisi(b.e.kisiId)?.ad || ''} · ${b.e.tekne || ekipmanAd(b.e)}`).join('\n') + (l.length > 6 ? `\n… ve ${l.length - 6} makine daha` : ''), 'Oluştur')) return;
+  for (const b of l) {
+    const gec = new Date(tarihNesne(bugun())); gec.setDate(gec.getDate() + 7);
+    D.faturalar.push({id: kimlik(), tur: 'teklif', no: sonrakiNo('teklif'), tarih: bugun(), vade: tarihStr(gec), kisiId: b.e.kisiId, musteriAd: '', kalemler: bakimKalemleri(b.e),
+      not: bakimTeklifNotu(b), durum: 'gonderildi', odemeler: [], ekipmanId: b.e.id, bakimTeklif: true, olusturma: Date.now()});
+  }
+  kaydet(); bildir(`${l.length} bakım teklifi oluşturuldu; Teklif modülünde "Yanıt bekleyenler" listesinde`);
+  ciz();
+}
+/* Makinenin bakım ekranı: durum, geçmiş servisler, bakım kiti; teklif ve servis düğmeleri */
+function bakimEkrani(eid) {
+  const e = ekipman(eid); if (!e) return git('servis/r-bakim', true);
+  const b = bakimDurumu(e), k = kisi(e.kisiId), ss = ekipmanServisleri(e).reverse(), tk = bakimTeklifiVar(e);
+  let h = sayfa(e.tekne || ekipmanAd(e), {geri: 'servis/r-bakim', geriAd: 'Bakım takibi'});
+  const renk = {gecikti: 'kirmizi', yakin: 'turuncu', normal: 'yesil', tanimsiz: ''}[b.durum];
+  h += `<div class="btn-izgara"><button id="bkTeklif">${ikon('teklif')}Bakım teklifi</button><button id="bkServis">${ikon('alet')}Servis aç</button><button id="bkAyar">${ikon('ayar')}Bakım ayarları</button>${k ? `<button id="bkCari">${ikon('cariKart')}Cari</button>` : ''}</div>
+    <div class="kart fatura-ozet"><div class="fo-ust"><div style="flex:1;min-width:0"><small>${esc(ekipmanAd(e))}${e.seriNo ? ' · SN ' + esc(e.seriNo) : ''}</small><b class="fo-ad">${esc(k?.ad || 'Müşteri yok')}</b>
+      <span class="fo-vade">${esc(e.tekne || '')}${e.liman ? ' · ' + esc(e.liman) : ''}</span></div><span class="hap ${renk}">${BAKIM_DURUM[b.durum]}</span></div>
+      <div class="fo-alt"><div><small>Çalışma saati</small><b>${sayiFmt(b.simdi)}</b></div><div><small>Sonraki bakım</small><b>${b.hedefSaat ? sayiFmt(b.hedefSaat) + ' saat' : '—'}</b></div>
+        <div><small>Kalan</small><b class="${b.durum === 'gecikti' ? 'gider' : ''}">${b.kalanSaat !== null ? sayiFmt(b.kalanSaat) + ' saat' : '—'}${b.kalanGun !== null ? ' · ' + b.kalanGun + ' gün' : ''}</b></div>
+        <div style="text-align:right"><small>Tahmini tarih</small><b>${b.tarih ? esc(tarihYaz(b.tarih, true)) : '—'}</b></div></div></div>
+    <div class="bolum">Plan</div><div class="grup">
+      <div class="hucre"><div class="ic"><b>Bakım aralığı</b></div><span class="deger">${[e.bakimSaat ? sayiFmt(e.bakimSaat) + ' saat' : '', e.bakimAy ? e.bakimAy + ' ay' : ''].filter(Boolean).join(' ya da ') || 'Tanımlı değil'}</span></div>
+      <div class="hucre"><div class="ic"><b>Son periyodik bakım</b></div><span class="deger">${b.sonBakim ? `${esc(tarihYaz(b.sonTarih, true))}${b.sonSaat ? ' · ' + sayiFmt(b.sonSaat) + ' saat' : ''}` : 'Kayıt yok'}</span></div>
+      <div class="hucre"><div class="ic"><b>Günlük ortalama kullanım</b></div><span class="deger">${b.gunluk ? sayiFmt(Math.round(b.gunluk * 10) / 10) + ' saat' : 'Hesaplanamadı (en az iki saat okuması gerekir)'}</span></div>
+      ${tk ? `<a class="hucre kareli" href="#/teklif/${tk.id}">${kare('teklif', 'camgobegi')}<div class="ic"><b>Bekleyen bakım teklifi ${esc(tk.no)}</b><small>${esc(tarihYaz(tk.tarih, true))} · ${para(faturaHesap(tk).toplam)}</small></div>${CHEV}</a>` : ''}</div>
+    <div class="bolum">Bakım kiti</div>${(e.bakimKiti || []).length || e.bakimIscilik ? `<div class="grup">${(e.bakimKiti || []).map(x => { const u = urun(x.urunId); return u ? `<div class="hucre"><div class="ic"><b>${esc(u.ad)}</b><small>${esc(u.kod || '')}</small></div><span class="deger">${sayiFmt(x.adet || 1)} ${esc(u.birim || '')}</span></div>` : ''; }).join('')}
+      ${e.bakimIscilik ? `<div class="hucre"><div class="ic"><b>Bakım işçiliği</b></div><span class="deger">${sayiFmt(e.bakimIscilik)} saat</span></div>` : ''}</div>` : '<p class="dipnot">Bakım kiti tanımlı değil. "Bakım ayarları" ile filtre, yağ, empeller gibi parçaları ekleyin; teklif kendiliğinden dolar.</p>'}
+    <div class="bolum">Servis geçmişi</div>${ss.length ? `<div class="grup">${ss.slice(0, 12).map(servisSatiri).join('')}</div>` : '<p class="dipnot">Bu makineye servis kaydı yok.</p>'}`;
+  $('#icerik').innerHTML = h;
+  servisTiklari($('#icerik'));
+  $('#bkTeklif').onclick = () => tk ? git('teklif/' + tk.id) : bakimTeklifAc(e.id);
+  if (tk) $('#bkTeklif').lastChild.textContent = 'Bakım teklifini aç';
+  $('#bkServis').onclick = () => yeniServis({kisiId: e.kisiId, ekipmanId: e.id, turler: ['periyodik']});
+  $('#bkAyar').onclick = () => ekipmanFormu(e, e.kisiId);
+  if ($('#bkCari')) $('#bkCari').onclick = () => git('veresiye/' + k.id);
+}
+/* Makine kartındaki bakım kiti düzenleyicisi */
+function bakimKitiBagla(m, e) {
+  const x = {bakimKiti: (e.bakimKiti || []).map(k => ({...k}))};
+  const ciz1 = () => {
+    $('#eKit', m).innerHTML = x.bakimKiti.length ? x.bakimKiti.map((k, i) => { const u = urun(k.urunId); return `<div class="f-satir"><span style="flex:1">${esc(u ? u.ad + (u.kod ? ' · ' + u.kod : '') : 'Silinmiş ürün')}</span>
+      <input data-kit="${i}" inputmode="decimal" value="${sayiFmt(k.adet || 1)}" style="max-width:70px" aria-label="Adet"><button type="button" class="nav-btn" data-kitsil="${i}" aria-label="Kaldır">${ikon('kapat')}</button></div>`; }).join('')
+      : '<div class="f-satir"><span class="soluk" style="flex:1">Kit boş</span></div>';
+    $$('[data-kit]', m).forEach(inp => inp.oninput = () => { x.bakimKiti[+inp.dataset.kit].adet = sayiOku(inp.value) || 1; });
+    $$('[data-kitsil]', m).forEach(btn => btn.onclick = () => { x.bakimKiti.splice(+btn.dataset.kitsil, 1); ciz1(); });
+  };
+  ciz1();
+  $('#eKitEkle', m).onclick = () => urunSec(u => { const v = x.bakimKiti.find(k => k.urunId === u.id); if (v) v.adet = (v.adet || 1) + 1; else x.bakimKiti.push({urunId: u.id, adet: 1}); ciz1(); });
+  return () => x.bakimKiti.filter(k => urun(k.urunId));
 }
 
 /* ---- Ekipman (tekne / makine) ---- */
@@ -5324,10 +5568,23 @@ function ekipmanFormu(e, kisiId, sonra) {
       <label class="f-satir"><span>Üretim yılı</span><input id="eYil" inputmode="numeric" value="${esc(x.yil)}" placeholder="—"></label>
       <label class="f-satir sol"><input type="text" id="eNot" value="${esc(x.not)}" placeholder="Not"></label>
     </div>
+    <div class="bolum">Periyodik bakım</div>
+    <div class="grup">
+      <label class="f-satir"><span>Bakım aralığı (saat)</span><input id="eBakimSaat" inputmode="decimal" value="${x.bakimSaat || ''}" placeholder="ör. 250"></label>
+      <label class="f-satir"><span>Bakım aralığı (ay)</span><input id="eBakimAy" inputmode="numeric" value="${x.bakimAy || ''}" placeholder="ör. 12"></label>
+      <label class="f-satir"><span>Bakım işçiliği (saat)</span><input id="eBakimIscilik" inputmode="decimal" value="${x.bakimIscilik || ''}" placeholder="ör. 4"></label>
+    </div>
+    <div class="bolum">Bakım kiti <small class="soluk">(teklife otomatik eklenir)</small></div>
+    <div class="grup" id="eKit"></div>
+    <div class="btn-grup"><button type="button" class="btn renkli" id="eKitEkle">${ikon('kutu')} Stoktan parça ekle</button></div>
     ${yeni ? '' : `<div class="grup"><button class="hucre tehlike" id="eSil">Makineyi sil</button></div>`}`, {kaydet: () => {
       const kayit = {...x, tekne: $('#eTekne', m).value.trim(), liman: $('#eLiman', m).value.trim(), tur: $('#eTur', m).value, turDiger: $('#eDiger', m).value.trim(),
         marka: $('#eMarka', m).value.trim(), model: $('#eModel', m).value.trim(), seriNo: $('#eSeri', m).value.trim(), motorNo: $('#eMotor', m).value.trim(),
-        saat: sayiOku($('#eSaat', m).value) || 0, yil: $('#eYil', m).value.trim(), not: $('#eNot', m).value.trim()};
+        saat: sayiOku($('#eSaat', m).value) || 0, yil: $('#eYil', m).value.trim(), not: $('#eNot', m).value.trim(),
+        bakimSaat: sayiOku($('#eBakimSaat', m).value) || 0, bakimAy: Math.round(sayiOku($('#eBakimAy', m).value) || 0), bakimIscilik: sayiOku($('#eBakimIscilik', m).value) || 0, bakimKiti: kitAl()};
+      if (kayit.saat !== (x.saat || 0)) kayit.saatTarih = bugun();
+      for (const a of ['bakimSaat', 'bakimAy', 'bakimIscilik']) if (!kayit[a]) delete kayit[a];
+      if (!kayit.bakimKiti.length) delete kayit.bakimKiti;
       if (!kayit.tekne && !kayit.marka && !kayit.seriNo) { bildir('Tekne adı, marka ya da seri no girin', true); return false; }
       if (yeni) { kayit.id = kimlik(); kayit.olusturma = Date.now(); D.ekipmanlar.push(kayit); }
       else D.ekipmanlar[D.ekipmanlar.findIndex(y => y.id === x.id)] = kayit;
@@ -5335,6 +5592,7 @@ function ekipmanFormu(e, kisiId, sonra) {
       setTimeout(() => sonra ? sonra(kayit) : ciz(), 10);
     }, kaydetAd: yeni ? 'Ekle' : 'Kaydet'});
   $('#eTur', m).onchange = () => $('#eDigerSatir', m).classList.toggle('gizli', $('#eTur', m).value !== 'diger');
+  const kitAl = bakimKitiBagla(m, x);
   if (!yeni) $('#eSil', m).onclick = async () => {
     const n = D.servisler.filter(s => s.ekipmanId === x.id).length;
     if (!await onay('Makine silinsin mi?', n ? `${n} servis kaydı silinmez, makine bilgisi servis formlarında kalır.` : 'Bu makineye ait servis kaydı yok.')) return;
@@ -6108,7 +6366,7 @@ function servisFisi(id) {
           {a: 'firma', ad: 'Firma', gen: 190}, {a: 'is', ad: 'Yapılacak iş', gen: 240},
           {a: 'gonderim', ad: 'Gönderim', gen: 122, tip: 'tarih'}, {a: 'donus', ad: 'Dönüş', gen: 122, tip: 'tarih'},
           {a: 'durum', ad: 'Durumu', gen: 104, tip: 'secim', secenek: DIS_DURUM, oku: d => DIS_DURUM[d.durum] ? d.durum : 'gonderildi'},
-          {a: 'tutar', ad: 'Müşteriye ücret', gen: 110, tip: 'para'}, {a: 'kdv', ad: 'KDV %', gen: 58, tip: 'sayi', oku: d => d.kdv ?? 20},
+          {a: 'maliyet', ad: 'Maliyet', gen: 100, tip: 'para'}, {a: 'tutar', ad: 'Müşteriye ücret', gen: 110, tip: 'para'}, {a: 'kdv', ad: 'KDV %', gen: 58, tip: 'sayi', oku: d => d.kdv ?? 20},
           {a: 'aciklama', ad: 'Açıklama', gen: 220}],
         degisti: (d, a) => { if (a === 'durum' && d.durum === 'dondu' && !d.donus) d.donus = bugun(); degis(); }, silindi: degis,
         yeniSatir: () => { const d = yeniDis(); x.disServis.push(d); degis(); return d; }});
@@ -6404,11 +6662,8 @@ function erpModul(m, ilkId, sorgu = new URLSearchParams()) {
     const v = b.dataset.l;
     if (v === 'ac') { const r = son[secili]; if (r?.yol) git(r.yol); else bildir('Önce listeden bir kayıt seçin'); }
     else if (v === 'yaz') yazdir(R.ad, listeKagit(R, son, d));
-    else if (v === 'csv') {
-      if (!son.length) return bildir('Aktarılacak kayıt yok', true);
-      const csv = csvYap(R.k.map(x => x[0]), son.map(r => r.d.map((x, i) => R.k[i][1] === 'tarih' ? x || '' : csvYaz(x, R.k[i][1]))));
-      try { bildir('Kaydedildi: ' + dosyaPaylas(`powerserv-${m}-${id}-${bugun()}.csv`, csv, 'text/csv')); } catch (e) { bildir('Kaydedilemedi', true); }
-    } else ciz1();
+    else if (v === 'csv') raporExcel(R, son, d, `powerserv-${m}-${id}-${bugun()}`);
+    else ciz1();
   });
 }
 
