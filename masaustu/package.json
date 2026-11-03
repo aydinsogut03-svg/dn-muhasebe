@@ -17,6 +17,7 @@
     "compression": "maximum",
     "files": [
       "main.js",
+      "preload.js",
       "app/**"
     ],
     "directories": {
