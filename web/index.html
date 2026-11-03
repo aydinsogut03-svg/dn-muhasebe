@@ -1541,6 +1541,99 @@ fieldset.fk-sade,.fk.fk-sade{border:0;padding:0;background:none}
 .fis-kart .fa{font-size:11px}
 .fis-kart .fa svg{width:20px;height:20px}
 @media (max-width:1180px){.fk-izgara{grid-template-columns:repeat(2,minmax(0,1fr))}.fl-ara input{width:200px}.fa{min-width:50px}}
+/* 2.10.1 PC giriş ekranları: ERP formu. Tam sayfa, sık satırlar, solda etiket sağda kutulu alan, çizgili tablolar.
+   Telefonda (body.erp yok) hiçbir kural etkin değildir. */
+.erp-yalniz{display:none!important}
+.ff-ust,.ff-b,.ff-kalem,.ff-alt,.ff-sol,.ff-sag{display:contents}
+body.erp .erp-form .erp-yalniz{display:block!important}
+body.erp .erp-form .bolum .erp-yalniz{display:inline!important}
+body.erp .sayfa-modal.erp-form{font-size:12.5px;transition:none!important;box-shadow:none;border-left:1px solid var(--erp-cizgi)}
+body.erp .erp-form .modal-ust{min-height:38px!important;padding:0 10px 0 4px!important;background:linear-gradient(180deg,#6a98df 0,var(--erp-bas1) 40%,var(--erp-bas2) 100%)!important;color:#fff!important;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;border:0}
+body.erp .erp-form .modal-ust b{font-size:15px!important;color:#fff!important;letter-spacing:0}
+body.erp .erp-form .modal-ust .nav-btn{color:#fff!important;padding:4px 6px}
+body.erp .erp-form .modal-govde{padding:8px 10px 14px!important;background:var(--erp-zemin)!important;font-size:12.5px}
+body.erp .erp-form .modal-alt{display:flex;justify-content:flex-end;gap:8px;padding:6px 10px!important;background:var(--erp-zemin)!important;border-top:1px solid var(--erp-cizgi)!important;box-shadow:none}
+body.erp .erp-form .modal-alt .btn{width:auto;min-width:170px;min-height:30px!important;height:30px;border-radius:2px!important;font-size:13px;font-weight:700;background:linear-gradient(180deg,var(--erp-bas1),var(--erp-bas2));color:#fff}
+body.erp .erp-form .modal-alt::before{content:"Ctrl+S ile kaydet";align-self:center;margin-right:auto;color:var(--ikincil);font-size:11.5px}
+/* Bölüm başlığı: tablo başlığı gibi şerit */
+body.erp .erp-form .bolum{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:8px 0 0!important;padding:4px 8px;background:var(--erp-th);color:var(--erp-th-yazi)!important;border:1px solid var(--erp-cizgi);border-bottom:0;font-size:12px!important;letter-spacing:0!important;text-transform:none!important;font-weight:700}
+body.erp .erp-form .modal-govde>.bolum:first-child,body.erp .erp-form .ff-b>.bolum:first-child{margin-top:0!important}
+body.erp .erp-form .ff-ipucu{font-weight:400;color:var(--ikincil);font-size:11.5px}
+/* Gruplar: köşesiz, gölgesiz, çizgili */
+body.erp .erp-form .grup{border-radius:0!important;box-shadow:none!important;border:1px solid var(--erp-cizgi);margin:0 0 8px!important;background:var(--kart);overflow:visible}
+body.erp .erp-form .bolum+.grup,body.erp .erp-form .bolum+.kart,body.erp .erp-form .bolum+div>.kt{margin-top:0!important}
+body.erp .erp-form .grup.cift{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:0;background:var(--kart)}
+body.erp .erp-form .grup.cift>*{border-bottom:1px solid var(--erp-cizgi);border-right:1px solid var(--erp-cizgi)}
+body.erp .erp-form .grup.cift>.tam{grid-column:auto}
+body.erp .erp-form .grup.cift>.tam:only-child{grid-column:1/-1}
+/* Satırlar: solda etiket, sağda kutulu giriş */
+body.erp .erp-form .f-satir,body.erp .erp-form .grup.cift>.f-satir:not(.sol):has(>input,>select){display:flex;flex-direction:row!important;align-items:center!important;gap:8px!important;min-height:31px!important;padding:3px 8px!important;font-size:12.5px}
+body.erp .erp-form .f-satir+.f-satir::before,body.erp .erp-form .hucre+.hucre::before,body.erp .erp-form .grup>*::before{display:none!important}
+body.erp .erp-form .grup:not(.cift)>.f-satir+.f-satir,body.erp .erp-form .grup:not(.cift)>.hucre+.hucre,body.erp .erp-form .grup:not(.cift)>.f-satir+.hucre,body.erp .erp-form .grup:not(.cift)>.hucre+.f-satir{border-top:1px solid var(--erp-cizgi)}
+body.erp .erp-form .f-satir>span:first-child,body.erp .erp-form .grup.cift>.f-satir:not(.sol):has(>input,>select)>span:first-child{flex:none;width:140px;min-width:140px;color:var(--ikincil);font-size:12.5px!important;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.erp .erp-form .f-satir>span[style*="flex:1"]{width:auto;min-width:0;flex:1!important;color:var(--yazi)}
+body.erp .erp-form .f-satir.sol .yuzen{position:static!important;opacity:1!important;transform:none!important;flex:none;width:140px;font-size:12.5px!important;line-height:1.25;color:var(--ikincil);overflow:hidden;text-overflow:ellipsis}
+body.erp .erp-form .f-satir.sol{align-items:flex-start!important}
+body.erp .erp-form .f-satir.sol .yuzen{padding-top:5px}
+body.erp .erp-form .f-satir>input:not([type=checkbox]),body.erp .erp-form .f-satir>select,body.erp .erp-form .f-satir>textarea,body.erp .erp-form .f-satir .tutar-giris input,body.erp .erp-form .grup.cift>.f-satir:not(.sol)>input,body.erp .erp-form .grup.cift>.f-satir:not(.sol)>select{flex:1;min-width:0;height:25px;min-height:0!important;border:1px solid var(--erp-cizgi)!important;border-radius:2px!important;background:var(--erp-giris)!important;color:var(--yazi)!important;font:inherit;font-size:12.5px!important;padding:0 6px!important;text-align:left!important;text-align-last:left!important;box-shadow:none!important;margin:0}
+body.erp .erp-form .f-satir>select{appearance:auto;-webkit-appearance:auto}
+body.erp .erp-form .f-satir.sol:has(.yuzen)>input:not(:placeholder-shown){padding:0 6px!important}
+body.erp .erp-form .f-satir>textarea,body.erp .erp-form .f-satir.sol:has(.yuzen)>textarea:not(:placeholder-shown){height:auto;min-height:62px!important;padding:4px 6px!important;resize:vertical;line-height:1.4}
+body.erp .erp-form .f-satir>input:focus,body.erp .erp-form .f-satir>select:focus,body.erp .erp-form .f-satir>textarea:focus{outline:0;border-color:var(--mavi)!important;box-shadow:0 0 0 1px var(--mavi)!important}
+body.erp .erp-form .f-satir input::placeholder,body.erp .erp-form .f-satir textarea::placeholder{color:var(--ucuncul);font-size:12px}
+body.erp .erp-form .f-satir .anahtar{transform:scale(.72);transform-origin:right center;margin:-5px 0}
+/* Seçim satırları (cari seç vb.) ve bilgi satırları */
+body.erp .erp-form .hucre{min-height:31px!important;padding:3px 8px!important;gap:8px;font-size:12.5px;border-radius:0!important}
+body.erp .erp-form .hucre .ic b{font-weight:600;font-size:12.5px}
+body.erp .erp-form .hucre .ic small{font-size:11.5px}
+body.erp .erp-form button.hucre{background:var(--erp-giris)}
+body.erp .erp-form button.hucre:hover{background:var(--erp-secili)}
+body.erp .erp-form .hucre .kare,body.erp .erp-form .hucre .avatar{width:22px!important;height:22px!important;border-radius:3px!important;font-size:10px}
+body.erp .erp-form .hucre .kare svg,body.erp .erp-form .hucre .avatar svg{width:14px;height:14px}
+body.erp .erp-form .dipnot{margin:-4px 2px 8px!important;font-size:11.5px}
+body.erp .erp-form .btn{min-height:28px!important;border-radius:2px!important;font-size:12.5px;padding:0 12px}
+body.erp .erp-form .btn.renkli{background:linear-gradient(var(--kart),var(--erp-zemin));color:var(--yazi);border:1px solid var(--erp-cizgi)}
+body.erp .erp-form .btn.renkli:hover{border-color:var(--erp-bas1);background:var(--erp-secili)}
+body.erp .erp-form .btn svg{width:15px;height:15px}
+body.erp .erp-form .btn-grup{justify-content:flex-start;gap:4px;margin:0 0 8px}
+body.erp .erp-form .btn-grup .btn{flex:none;width:auto}
+body.erp .erp-form .segment{border-radius:2px!important;margin-bottom:8px;padding:2px}
+body.erp .erp-form .segment button,body.erp .erp-form .segment label,body.erp .erp-form .segment label span{border-radius:2px!important;padding-top:3px;padding-bottom:3px;font-size:12.5px}
+body.erp .erp-form .kart{border-radius:0!important;box-shadow:none!important;border:1px solid var(--erp-cizgi)}
+body.erp .erp-form .kilit-uyari{border-radius:0}
+/* Kalem tablosu: Excel ızgarası, satırlar sabit yükseklik, başlık sabit */
+body.erp .erp-form .kt{border-radius:0;border-color:var(--erp-cizgi);margin-bottom:6px;font-size:12.5px;max-height:calc(100vh - 360px);min-height:200px;overflow:auto;background:var(--kart)}
+body.erp .erp-form .kt-bas{position:sticky;top:0;z-index:1;background:var(--erp-th);color:var(--erp-th-yazi);font-size:12px;font-weight:700;border-bottom:1px solid var(--erp-cizgi)}
+body.erp .erp-form .kt-bas span{padding:4px 6px;border-right:1px solid var(--erp-cizgi)}
+body.erp .erp-form .kt-satir{border-bottom:1px solid var(--erp-cizgi)}
+body.erp .erp-form .kt-satir:last-child{border-bottom:1px solid var(--erp-cizgi)}
+body.erp .erp-form .kt-satir:nth-child(odd){background:color-mix(in srgb,var(--erp-th) 45%,var(--kart))!important}
+body.erp .erp-form .kt-satir>*{border-right:1px solid var(--erp-cizgi)}
+body.erp .erp-form .kt-satir input,body.erp .erp-form .kt-satir select{height:25px;font-size:12.5px!important;padding:2px 6px!important}
+body.erp .erp-form .kt-satir select{padding:0 2px!important}
+body.erp .erp-form .kt-satir .kt-no{display:flex;align-items:center;justify-content:center;background:var(--erp-th);color:var(--ikincil);font-size:11px}
+body.erp .erp-form .kt-satir .kt-no b{font-weight:400}
+body.erp .erp-form .kt-satir .kt-tutar{display:flex;align-items:center;justify-content:flex-end;padding:0 6px;font-weight:700}
+body.erp .erp-form .kt-satir input::placeholder{color:transparent}
+body.erp .erp-form .kt-bas+.kt-satir input::placeholder{color:var(--ucuncul)}
+/* Fatura / teklif formu yerleşimi */
+body.erp .erp-form .ff-ust{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:start}
+body.erp .erp-form .ff-b,body.erp .erp-form .ff-kalem,body.erp .erp-form .ff-sol,body.erp .erp-form .ff-sag{display:block;min-width:0}
+body.erp .erp-form .ff-b>.grup{margin-bottom:6px!important}
+body.erp .erp-form .ff-b>.grup.cift{grid-template-columns:repeat(2,minmax(0,1fr))}
+body.erp .erp-form .ff-b .f-satir>span:first-child,body.erp .erp-form .ff-b .f-satir.sol .yuzen,body.erp .erp-form .ff-b .grup.cift>.f-satir:not(.sol):has(>input,>select)>span:first-child{width:96px;min-width:96px}
+body.erp .erp-form .ff-alt{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:8px;align-items:start}
+body.erp .erp-form .ff-sag{grid-column:2;grid-row:1}
+body.erp .erp-form .ff-sol{grid-column:1;grid-row:1}
+body.erp .erp-form #toplamlar .hucre{min-height:26px!important}
+body.erp .erp-form #toplamlar .hucre .deger{color:var(--yazi);font-variant-numeric:tabular-nums}
+body.erp .erp-form #toplamlar .hucre:last-child{background:var(--erp-th);min-height:36px!important}
+body.erp .erp-form #toplamlar .hucre:last-child .tutar{font-size:18px}
+body.erp .erp-form .tutar-kutu{display:flex;align-items:center;gap:8px;padding:5px 8px!important;margin:0 0 8px!important;border:1px solid var(--erp-cizgi)!important;border-radius:0!important;box-shadow:none!important;background:var(--kart)!important;text-align:left}
+body.erp .erp-form .tutar-kutu small{width:140px;flex:none;font-size:12.5px;color:var(--ikincil);margin:0}
+body.erp .erp-form .tutar-kutu input{flex:none;width:260px;height:32px;font-size:20px!important;font-weight:700;text-align:right!important;border:1px solid var(--erp-cizgi)!important;border-radius:2px;background:var(--erp-giris)!important;padding:0 8px!important;margin:0}
+body.erp .erp-form #mSerbest .yuzen{display:none}
+@media (max-width:1180px){body.erp .erp-form .ff-alt{grid-template-columns:minmax(0,1fr) 320px}}
 </style>
 </head>
 <body>
@@ -1553,7 +1646,7 @@ fieldset.fk-sade,.fk.fk-sade{border:0;padding:0;background:none}
 
 <script>
 'use strict';
-const VERSIYON = '2.10.0';
+const VERSIYON = '2.10.1';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -2092,6 +2185,8 @@ function modal(baslik, govde, {kaydet: kaydetFn, kaydetAd = 'Kaydet', tam = fals
     <div class="modal-govde">${govde}</div>
     ${kaydetFn ? `<div class="modal-alt"><button class="btn" data-sag>${esc(kaydetAd)}</button></div>` : ''}</div>`, 'sayfa-perde');
   const m = $('.modal', el);
+  // 2.10.1: PC'de giriş ekranları ERP formu gibi: tam sayfa, sık, çizgili, her alan tek bakışta
+  if (masaustuMu()) m.classList.add('erp-form');
   $('[data-sol]', m).onclick = () => kapat();
   if (kaydetFn) $('[data-sag]', m).onclick = () => { if (kaydetFn(m) !== false) kapat(); };
   if (kaydetFn && saltOkunur()) { $('.modal-govde', m).insertAdjacentHTML('afterbegin', `<div class="kilit-uyari">${ikon('kilit')}<div><b>Yalnızca görüntüleme</b><small>${ortakRol() === 'izleyici' ? 'Yetkiniz İzleyici' : 'Bu modülde yalnızca görüntüleme yetkiniz var'}; değişiklik yapamazsınız.</small></div></div>`); formuKilitle(m); }
@@ -4156,29 +4251,32 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
   if (yeni && alisF) x.no = '';
   if (yeni && x.tur !== 'teklif' && x.kisiId && kisi(x.kisiId)?.vadeGun) { const d = tarihNesne(x.tarih); d.setDate(d.getDate() + kisi(x.kisiId).vadeGun); x.vade = tarihStr(d); }
   const m = modal(yeni ? (teklif ? 'Yeni teklif' : alisF ? 'Alış faturası' : 'Yeni fatura') : (teklif ? 'Teklifi düzenle' : 'Faturayı düzenle'), `
+    <div class="ff-ust"><div class="ff-b">
     <div class="bolum">${alisF ? 'Satıcı (tedarikçi)' : 'Müşteri'}</div>
-    <div class="grup">
+    <div class="grup tek-sutun">
       ${ver ? `<button class="hucre" id="mSec"><div class="ic"><b id="mAd">${esc(x.kisiId ? kisi(x.kisiId)?.ad : alisF ? 'Kayıtlı cari seç' : 'Kayıtlı müşteri seç')}</b></div>${CHEV}</button>` : ''}
       <label class="f-satir sol ${x.kisiId ? 'gizli' : ''}" id="mSerbest"><input type="text" id="mMusteri" value="${esc(x.musteriAd)}" placeholder="${alisF ? (ver ? 'veya satıcı adı yazın' : 'Satıcı adı') : ver ? 'veya müşteri adı yazın' : 'Müşteri adı'}"></label>
-    </div>
+    </div></div><div class="ff-b">
+    <div class="bolum erp-yalniz">Belge bilgileri</div>
     <div class="grup">
       <label class="f-satir"><span>${teklif ? 'Teklif no' : 'Fatura no'}</span><input type="text" id="fNo" value="${esc(x.no)}" placeholder="${alisF ? 'Satıcının fatura no' : ''}"></label>
       <label class="f-satir"><span>Tarih</span><input type="date" id="fTarih" value="${x.tarih}"></label>
       <label class="f-satir"><span>${teklif ? 'Geçerlilik' : 'Vade'}</span><input type="date" id="fVade" value="${x.vade || ''}"></label>
       ${teklif ? `<label class="f-satir"><span>ID / referans</span><input type="text" id="fRef" value="${esc(x.ref || '')}" placeholder="—"></label>` : ''}
-    </div>
-    <div class="bolum">Kalemler</div>
+    </div></div></div>
+    <div class="ff-kalem"><div class="bolum">Kalemler<span class="erp-yalniz ff-ipucu">Enter: sonraki hücre · son hücrede yeni satır · boş satırlar kaydedilmez</span></div>
     <div id="kalemler"></div>
-    <div class="btn-grup">${stok && D.urunler.length ? `<button class="btn renkli" id="stoktanEkle">${ikon('kutu')} Stoktan</button>` : ''}<button class="btn renkli" id="kalemEkle">${ikon('arti')} Kalem ekle</button></div>
+    <div class="btn-grup">${stok && D.urunler.length ? `<button class="btn renkli" id="stoktanEkle">${ikon('kutu')} Stoktan</button>` : ''}<button class="btn renkli" id="kalemEkle">${ikon('arti')} Kalem ekle</button></div></div>
+    <div class="ff-alt"><div class="ff-sag">
     ${!teklif ? `<div class="grup"><label class="f-satir"><span>KDV tevkifatı</span><select id="fTevkif">${TEVKIFAT.map(o => `<option value="${o}" ${(x.tevkifat || 0) === o ? 'selected' : ''}>${o ? o + '/10' : 'Yok'}</option>`).join('')}</select></label></div>` : ''}
-    <div class="grup" id="toplamlar"></div>
+    <div class="grup tek-sutun" id="toplamlar"></div></div><div class="ff-sol">
     <div class="grup"><label class="f-satir sol"><textarea id="fNot" placeholder="Not (ödeme koşulları vb.)">${esc(x.not)}</textarea></label></div>
     ${!teklif ? ekAlani(alisF ? 'Fatura belgesi (PDF veya fotoğraf)' : 'Ekler') : ''}
     ${!teklif ? `<div class="grup">
       ${ver ? `<label class="f-satir" id="cariSatir"><span style="flex:1">${alisF ? 'Cari hesaba alacak yaz' : 'Cari hesaba borç yaz'}</span>${anahtar('fCari', x.cariyeIsle)}</label>` : ''}
       ${stok ? `<label class="f-satir"><span style="flex:1">${alisF ? 'Stoğa ekle' : 'Stoktan düş'}</span>${anahtar('fStok', x.stokDus)}</label>` : ''}
       <label class="f-satir"><span style="flex:1">Taslak olarak sakla</span>${anahtar('fTaslak', x.durum === 'taslak')}</label>
-    </div><p class="dipnot">Taslak faturalar cariye, stoğa ve KDV hesabına yansımaz.</p>` : ''}`,
+    </div><p class="dipnot">Taslak faturalar cariye, stoğa ve KDV hesabına yansımaz.</p>` : ''}</div></div>`,
     {kaydet: kaydetF, kaydetAd: yeni ? 'Oluştur' : 'Kaydet', tam: true});
   const cariGoster = () => { const c = $('#cariSatir', m); if (c) c.classList.toggle('gizli', !x.kisiId); };
   cariGoster();
@@ -4190,18 +4288,22 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
       ${t.tevkif ? `<div class="hucre"><div class="ic"><b>KDV tevkifatı (${x.tevkifat}/10)</b><small>${alisF ? '2 No.lu KDV ile siz ödersiniz' : 'Alıcı öder'}</small></div><span class="deger sayi">−${para(t.tevkif)}</span></div>` : ''}
       <div class="hucre"><div class="ic"><b class="k">${t.tevkif ? 'Ödenecek tutar' : 'Genel toplam'}</b></div><span class="tutar" style="font-weight:700">${para(t.toplam)}</span></div>`;
   };
+  const kalemBos = k => !(k.ad || '').trim() && !k.fiyat && !k.kod && !k.urunId && !k.iskonto && (k.miktar || 1) === 1;
+  // PC'de Excel gibi: en az 12 satır hep görünür; boş satırlar kaydedilmez
+  const doldur = () => { if (!m.classList.contains('erp-form')) return; while (x.kalemler.length < 12) x.kalemler.push(yeniKalem(x.kalemler[x.kalemler.length - 1]?.kdv ?? 20)); };
   const kalemCiz = () => {
+    doldur();
     /* 2.9.7: Excel gibi kalem tablosu. Her kalem tek satır (telefonda iki satır); Enter bir sonraki hücreye, son hücrede yeni satıra geçer. */
     $('#kalemler', m).innerHTML = `<div class="kt${teklif ? ' kt-teklif' : ''}"><div class="kt-bas"><span class="kt-no">#</span><span class="kt-kod">Parça no</span><span class="kt-ad">Açıklama</span><span class="kt-mik sg">Miktar</span><span class="kt-birim">Birim</span><span class="kt-fiyat sg">Fiyat ₺</span>${teklif ? '' : '<span class="kt-isk sg">İsk.%</span>'}<span class="kt-kdv">KDV</span><span class="kt-tutar sg">Tutar</span><span class="kt-sil"></span></div>`
       + x.kalemler.map((k, i) => `<div class="kalem kt-satir" data-k="${i}"><span class="kt-no"><b>${i + 1}</b><i>. kalem</i></span>
         <label class="kt-c kt-kod"><span class="kt-et">Parça no</span><input type="text" data-a="kod" value="${esc(k.kod || (k.urunId && urun(k.urunId)?.kod) || '')}" placeholder="Parça no"></label>
         <label class="kt-c kt-ad"><span class="kt-et">Açıklama</span><input type="text" data-a="ad" value="${esc(k.ad)}" placeholder="Ürün / hizmet açıklaması"></label>
-        <label class="kt-c kt-mik"><span class="kt-et">Miktar</span><input type="text" data-a="miktar" class="sg" inputmode="decimal" value="${k.miktar ? sayiFmt(k.miktar) : ''}" placeholder="Miktar"></label>
+        <label class="kt-c kt-mik"><span class="kt-et">Miktar</span><input type="text" data-a="miktar" class="sg" inputmode="decimal" value="${k.miktar && !(kalemBos(k) && m.classList.contains('erp-form')) ? sayiFmt(k.miktar) : ''}" placeholder="Miktar"></label>
         <label class="kt-c kt-birim"><span class="kt-et">Birim</span><select data-a="birim" aria-label="Birim">${birimSecenek(k.birim || 'adet')}</select></label>
         <label class="kt-c kt-fiyat"><span class="kt-et">Birim fiyat ₺</span><input type="text" data-a="fiyat" class="sg" inputmode="decimal" value="${tutarYaz(k.fiyat)}" placeholder="0,00"></label>
         ${teklif ? '' : `<label class="kt-c kt-isk"><span class="kt-et">İskonto %</span><input type="text" data-a="iskonto" class="sg" inputmode="decimal" value="${k.iskonto ? sayiFmt(k.iskonto) : ''}" placeholder="İsk.%" aria-label="İskonto yüzdesi"></label>`}
         <label class="kt-c kt-kdv"><span class="kt-et">KDV</span><select data-a="kdv" aria-label="KDV">${KDV_ORAN.map(o => `<option value="${o}" ${(k.kdv || 0) === o ? 'selected' : ''}>%${o}</option>`).join('')}</select></label>
-        <div class="kt-c kt-tutar"><span class="kt-et">Tutar</span><span class="sayi" data-tutar>${para(kalemNet(k))}</span></div>
+        <div class="kt-c kt-tutar"><span class="kt-et">Tutar</span><span class="sayi" data-tutar>${kalemBos(k) && m.classList.contains('erp-form') ? '' : para(kalemNet(k))}</span></div>
         <button type="button" class="kt-sil" data-sil aria-label="Satırı sil" ${x.kalemler.length > 1 ? '' : 'disabled'}>${ikon('kapat')}<span class="kt-et">Sil</span></button></div>`).join('') + '</div>';
     $$('.kalem', m).forEach(el => {
       const k = x.kalemler[+el.dataset.k];
@@ -4212,7 +4314,7 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
         else if (a === 'miktar') k.miktar = sayiOku(inp.value) || 0;
         else if (a === 'iskonto') { const v = Math.min(100, Math.max(0, sayiOku(inp.value) || 0)); if (v) k.iskonto = v; else delete k.iskonto; }
         else k.fiyat = tutarOku(inp.value) || 0;
-        $('[data-tutar]', el).textContent = para(kalemNet(k));
+        $('[data-tutar]', el).textContent = kalemBos(k) && m.classList.contains('erp-form') ? '' : para(kalemNet(k));
         toplamCiz();
       });
       $('[data-a=birim]', el).onchange = e => { k.birim = e.target.value; };
@@ -4239,8 +4341,8 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
   $('#kalemEkle', m).onclick = () => { x.kalemler.push(yeniKalem(x.kalemler[x.kalemler.length - 1]?.kdv ?? 20)); kalemCiz(); $$('.kalem input[data-a=kod]', m).pop().focus(); };
   if ($('#stoktanEkle', m)) $('#stoktanEkle', m).onclick = () => urunSec(u => {
     const kalem = {ad: u.ad, kod: u.kod || '', urunId: u.id, miktar: 1, birim: u.birim, fiyat: alisF ? (u.alis || 0) : u.satis, kdv: u.kdvOran ?? 20};
-    const bos = x.kalemler.length === 1 && !x.kalemler[0].ad && !x.kalemler[0].fiyat;
-    if (bos) x.kalemler[0] = kalem; else x.kalemler.push(kalem);
+    const bi = x.kalemler.findIndex(kalemBos);
+    if (bi >= 0) x.kalemler[bi] = kalem; else x.kalemler.push(kalem);
     kalemCiz();
   });
   if ($('#mSec', m)) $('#mSec', m).onclick = () => kisiSec(k => {
@@ -5931,6 +6033,8 @@ function servisFisKaydet(t, id, sessiz) {
 /* Ctrl+S: açık servis fişini kaydeder */
 document.addEventListener('keydown', e => {
   if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 's' || !document.body.classList.contains('erp')) return;
+  const form = $$('.sayfa-modal.erp-form').pop();
+  if (form) { e.preventDefault(); const k = $('[data-sag]', form); if (k) { document.activeElement?.blur?.(); k.click(); } return; }
   const [m, id] = rota();
   if (m !== 'servis' || !id || id.startsWith('r-') || yigin.length) return;
   e.preventDefault();
