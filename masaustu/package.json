@@ -15,10 +15,29 @@
     "productName": "PowerServ+",
     "copyright": "DN Marine Makine ve Güç Sistemleri Ltd.Şti.",
     "compression": "maximum",
-    "files": ["main.js", "app/**"],
-    "directories": {"buildResources": "build", "output": "dist"},
+    "files": [
+      "main.js",
+      "app/**"
+    ],
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
     "win": {
-      "target": [{"target": "nsis", "arch": ["x64"]}],
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "icon": "build/icon.ico",
       "artifactName": "PowerServ-Kurulum-${version}.${ext}"
     },
@@ -32,6 +51,10 @@
       "installerIcon": "build/icon.ico",
       "uninstallerIcon": "build/icon.ico",
       "language": "1055"
+    },
+    "portable": {
+      "artifactName": "PowerServ-Tasinabilir-${version}.${ext}",
+      "requestExecutionLevel": "user"
     }
   }
 }
