@@ -297,6 +297,35 @@ public class MainActivity extends Activity {
 
     /** Sayfadaki JavaScript'in "Android" adıyla çağırdığı yöntemler. */
     private class Kopru {
+        /** TCMB döviz kurlarını (today.xml) arka planda indirir; sonuç window.kurGeldi(xml) ile sayfaya döner.
+         *  WebView'deki sayfa TCMB'ye doğrudan bağlanamaz (CORS); bu yüzden uygulama kendi bağlantısını kullanır. */
+        @JavascriptInterface
+        public void kurIste() {
+            new Thread(() -> {
+                String xml = "";
+                java.net.HttpURLConnection c = null;
+                try {
+                    c = (java.net.HttpURLConnection) new java.net.URL("https://www.tcmb.gov.tr/kurlar/today.xml").openConnection();
+                    c.setConnectTimeout(10000); c.setReadTimeout(10000);
+                    c.setRequestProperty("User-Agent", "PowerServ+");
+                    if (c.getResponseCode() == 200) {
+                        java.io.InputStream in = c.getInputStream();
+                        java.io.ByteArrayOutputStream b = new java.io.ByteArrayOutputStream();
+                        byte[] t = new byte[8192]; int n;
+                        while ((n = in.read(t)) > 0 && b.size() < 2_000_000) b.write(t, 0, n);
+                        in.close();
+                        xml = new String(b.toByteArray(), StandardCharsets.ISO_8859_1);
+                    }
+                } catch (Exception e) {
+                    xml = "";
+                } finally {
+                    if (c != null) c.disconnect();
+                }
+                final String sonuc = xml;
+                runOnUiThread(() -> { if (web != null) web.evaluateJavascript("window.kurGeldi && window.kurGeldi(" + JSONObject.quote(sonuc) + ")", null); });
+            }).start();
+        }
+
         /** Düğmeye dokununca kısa dokunma titreşimi (telefonun dokunma geri bildirimi ayarına uyar). */
         @JavascriptInterface
         public void titret() {

@@ -56,6 +56,16 @@ ipcMain.handle('pdf-kaydet', async (e, ad) => {
   return yol;
 });
 
+// TCMB döviz kurları: sayfa TCMB'ye doğrudan bağlanamaz (CORS, içerik güvenlik politikası); yalnız bu sabit adres okunur.
+ipcMain.handle('kur-getir', async () => {
+  try {
+    const {net} = require('electron');
+    const c = await net.fetch('https://www.tcmb.gov.tr/kurlar/today.xml', {headers: {'User-Agent': 'PowerServ+'}});
+    if (!c.ok) return '';
+    return Buffer.from(await c.arrayBuffer()).toString('latin1').slice(0, 2000000);
+  } catch (e) { return ''; }
+});
+
 app.on('second-instance', () => { if (pencere) { if (pencere.isMinimized()) pencere.restore(); pencere.focus(); } });
 app.whenReady().then(ac);
 app.on('window-all-closed', () => app.quit());
