@@ -1417,9 +1417,12 @@ html.apk #cekmece .c-alt-menu a{min-height:42px!important;font-size:15px!importa
   .kahraman.kompakt .k-tutar{font-size:30px!important}
 }
 /* 2.14.8: Takvim */
-.tk-ozet{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:12px;margin-bottom:14px;align-items:start}
+.tk-ozet{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin-bottom:14px}
+.tk-ozet .tk-ekle{margin:0}
+.tk-15 .bolum{margin-top:4px}
+.ozet-selam{padding-top:10px!important;padding-bottom:10px!important}
+@media (min-width:1000px){.ozet-alt{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px;align-items:start}.ozet-alt>section>.bolum:first-child{margin-top:0}}
 .tk-ozet .grup{margin:0}
-.tk-ozet .tk-ekle{margin-top:8px}
 .tk-kap{background:var(--kart);border:1px solid var(--kenar);border-radius:var(--r,10px);padding:8px}
 .tk-izgara{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
 .tk-ga{font-size:11px;font-weight:700;color:var(--ikincil);text-align:center;padding:2px 0 4px;text-transform:uppercase}
@@ -1756,7 +1759,7 @@ body.erp .erp-form #mSerbest .yuzen{display:none}
 
 <script>
 'use strict';
-const VERSIYON = '2.14.8';
+const VERSIYON = '2.14.9';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -2499,12 +2502,18 @@ function grupOgeleri(g) {
     }
     if (mi > 0 && l[0]) l[0].ayrac = true;
     return l;
-  });
+  }).reduce((l, o, i, t) => {
+    // 2.14.9: Finans başlığının ilk öğesi Finans özeti (başlığa basınca o açılır)
+    if (i === 0 && g.id === 'finans' && finansOzetVar()) { l.push({ad: 'Finans özeti', simge: 'grafik', hedef: 'finans', m: o.m}); o.ayrac = true; }
+    l.push(o); return l;
+  }, []);
 }
+const finansOzetVar = () => ['banka', 'kasa', 'fatura', 'veresiye'].some(m => modulAcik(m));
 const grupGorunur = g => grupOgeleri(g).length > 0;
 function grupModulu() {
   const yol = aktifYol().split('?')[0];
   if (raporYolu(yol)) return 'raporlar';
+  if (rota()[0] === 'finans') return 'finans';
   return (MENU_AGAC.find(g => g.moduller && g.moduller.includes(rota()[0])) || {}).id;
 }
 /* Etkin ekrana karşılık gelen öğe: tam yol eşleşmesi, yoksa modülün listesi (kayıt detayında) */
@@ -2613,6 +2622,7 @@ function ciz0() {
   if (s === 'islemkaydi') { menuCiz('ayarlar'); islemKaydiEkrani(); return kaydirma(); }
   if (s === 'raporlar') { menuCiz('raporlar'); raporlarEkrani(p1); return kaydirma(); }
   if (s === 'takvim') { menuCiz('takvim'); takvimEkrani(); yanDuzen(); return kaydirma(); }
+  if (s === 'finans') { if (!finansOzetVar()) return git('panel', true); menuCiz('finans'); finansOzetEkrani(); yanDuzen(); return kaydirma(); }
   if (s === 'fis') { fisEkrani(p1); yanDuzen(); return kaydirma(); }
   if (!modulAcik(s)) return git('panel', true);
   menuCiz(s);
@@ -3273,15 +3283,13 @@ const ajandaSatir = (x, tutarli) => {
     <div class="ic"><b>${esc(x.o.ad)}${x.odendi ? '<span class="hap yesil">ödendi</span>' : ''}</b><small>${esc([tarihYaz(x.g, true), x.o.saat, AJANDA_TUR[x.o.tur], x.o.tekrar ? AJANDA_TEKRAR[x.o.tekrar] : '', x.o.yer].filter(Boolean).join(' · '))}</small></div>
     ${tutarli && gider && x.o.tutar ? `<span class="tutar">${para(x.o.tutar)}</span>` : `<span class="deger vade ${g < 0 && gider && !x.odendi ? 'gider' : g <= 2 ? 'turuncu' : ''}">${g === 0 ? 'bugün' : g === 1 ? 'yarın' : g < 0 ? -g + ' gün geçti' : g + ' gün'}</span>`}</button>`;
 };
-/* Özet ekranı bölümü: bu ayın takvimi ve önümüzdeki 14 gün (tutarsız) */
+/* Özet ekranı bölümü: ekleme düğmeleri, bu ayın takvimi ve önümüzdeki 15 gün (tutarsız) */
 function ozetTakvim() {
-  const ay = bugun().slice(0, 7), bas = bugun(), son = (() => { const d = tarihNesne(bas); d.setDate(d.getDate() + 14); return tarihStr(d); })();
-  const gecmis = ajandaOlaylar(ayKaydir(ay, -1) + '-01', (() => { const d = tarihNesne(bas); d.setDate(d.getDate() - 1); return tarihStr(d); })()).filter(x => x.o.tur === 'gider' && !x.odendi);
-  const yak = [...gecmis, ...ajandaOlaylar(bas, son)].slice(0, 6);
+  const ay = bugun().slice(0, 7);
   return `<div class="bolum">Takvim · ${esc(ayAdi(ay))}<a href="#/takvim">Takvimi aç</a></div>
-    <div class="tk-ozet"><div class="tk-kap">${takvimIzgara(ay, {kisa: true})}<div class="tk-lejant"><span><i class="tk-gider"></i>Sabit gider</span><span><i class="tk-randevu"></i>Randevu</span></div></div>
-    <div class="tk-yakin"><div class="grup">${yak.length ? yak.map(x => ajandaSatir(x, false)).join('') : `<div class="hucre"><div class="ic"><b>Önümüzdeki 2 haftada kayıt yok</b><small>Sabit gider ve randevuları Takvim'den ekleyin</small></div></div>`}</div>
-    <div class="btn-grup tk-ekle"><button class="btn renkli" data-tkyeni="gider">${ikon('arti')} Sabit gider</button><button class="btn renkli" data-tkyeni="randevu">${ikon('arti')} Randevu</button></div></div></div>`;
+    <div class="tk-ozet"><div class="btn-grup tk-ekle"><button class="btn renkli" data-tkyeni="gider">${ikon('arti')} Sabit gider</button><button class="btn renkli" data-tkyeni="randevu">${ikon('arti')} Randevu</button></div>
+    <div class="tk-kap">${takvimIzgara(ay, {kisa: true})}<div class="tk-lejant"><span><i class="tk-gider"></i>Sabit gider</span><span><i class="tk-randevu"></i>Randevu</span></div></div>
+    ${ozet15Gun()}</div>`;
 }
 function ozetTakvimBagla() {
   $$('.tk-ozet [data-tkg]:not([data-tko])').forEach(b => b.onclick = () => { ui.takvimAy = b.dataset.tkg.slice(0, 7); ui.takvimGun = b.dataset.tkg; git('takvim'); });
@@ -3380,19 +3388,36 @@ function ozetGrafik(ay) {
   return `<a class="k-grafik" href="#/kasa" aria-label="Son 6 ay gelir ve gider">${aylar.map(x => `<div class="k-ay${x.a === ay ? ' simdi' : ''}" title="${esc(ayAdi(x.a))}: gelir ${para(x.gelir)}, gider ${para(x.gider)}">
     <div class="k-cubuk"><span class="k-g" style="height:${boy(x.gelir)}%"></span><span class="k-c" style="height:${boy(x.gider)}%"></span></div><small>${esc(kisa(x.a))}</small></div>`).join('')}</a>`;
 }
+/* 2.14.9: Özet ekranı tutarsızdır: en üstte takvim ve ekleme düğmeleri, altında önümüzdeki 15 gün (ödemeler, randevular, vadeler),
+   bekleyen teklifler ve hatırlatmalar. Tutarlar Finans özeti ekranındadır. */
+function ozet15Gun() {
+  const bas = bugun(), son = (() => { const d = tarihNesne(bas); d.setDate(d.getDate() + 15); return tarihStr(d); })(), ac = modulAcik, l = [];
+  const gecmis = ajandaOlaylar(ayKaydir(bas.slice(0, 7), -1) + '-01', (() => { const d = tarihNesne(bas); d.setDate(d.getDate() - 1); return tarihStr(d); })()).filter(x => x.o.tur === 'gider' && !x.odendi);
+  for (const x of [...gecmis, ...ajandaOlaylar(bas, son)]) l.push({g: x.g, sira: x.o.tur === 'gider' ? 0 : 1, html: ajandaSatir(x, false)});
+  const kalan = (g, gider) => { const n = gunFark(g); return `<span class="deger vade ${n < 0 && gider ? 'gider' : n <= 2 ? 'turuncu' : ''}">${n === 0 ? 'bugün' : n === 1 ? 'yarın' : n < 0 ? -n + ' gün geçti' : n + ' gün'}</span>`; };
+  if (ac('fatura')) for (const f of D.faturalar) {
+    if (!(f.tur === 'fatura' || f.tur === 'alis') || f.durum !== 'gonderildi' || f.odendi || !f.vade || f.vade > son) continue;
+    if (f.vade < bas && gunFark(f.vade) < -60) continue;
+    const alis = f.tur === 'alis';
+    l.push({g: f.vade, sira: 2, html: `<button class="hucre kareli" data-fatura="${f.id}">${kare(alis ? 'giris' : 'dosya', alis ? 'turuncu' : 'indigo')}<div class="ic"><b>${esc(faturaMusteri(f))}</b><small>${esc([tarihYaz(f.vade, true), alis ? 'Fatura ödemesi' : 'Tahsilat', f.no].filter(Boolean).join(' · '))}</small></div>${kalan(f.vade, true)}</button>`});
+  }
+  if (ac('banka')) for (const k of aktifHesaplar().filter(h => h.tur === 'kart')) {
+    const so = kartSonOdeme(k);
+    if (so && so >= bas && so <= son && -hesapBakiye(k) > 0) l.push({g: so, sira: 0, html: `<a class="hucre kareli" href="#/banka/${k.id}">${kare('kart', 'turuncu')}<div class="ic"><b>${esc(k.ad)} son ödeme</b><small>${esc(tarihYaz(so, true))} · Kredi kartı</small></div>${kalan(so, true)}</a>`});
+  }
+  if (ac('kdv')) for (const v of vergiTakvimi(bas.slice(0, 7)).concat(vergiTakvimi(ayKaydir(bas.slice(0, 7), 1)))) if (v.tarih >= bas && v.tarih <= son)
+    l.push({g: v.tarih, sira: 0, html: `<a class="hucre kareli" href="#/kdv">${kare('takvim', 'pembe')}<div class="ic"><b>${esc(v.ad)}</b><small>${esc(tarihYaz(v.tarih, true))} · ${esc(v.alt)}</small></div>${kalan(v.tarih, false)}</a>`});
+  l.sort((a, b) => a.g.localeCompare(b.g) || a.sira - b.sira);
+  return `<div class="tk-15"><div class="bolum">Önümüzdeki 15 gün<a href="#/takvim">Takvim</a></div><div class="grup">${l.length ? l.slice(0, 14).map(x => x.html).join('') + (l.length > 14 ? `<a class="hucre" href="#/takvim"><div class="ic"><b>+${l.length - 14} kayıt daha</b><small>Takvimde görün</small></div>${CHEV}</a>` : '')
+    : `<div class="hucre"><div class="ic"><b>Önümüzdeki 15 günde kayıt yok</b><small>Sabit gider ve randevuları yukarıdaki düğmelerle ekleyin</small></div></div>`}</div></div>`;
+}
 function panelEkrani() {
-  const p = PROFILLER[D.profil], t = T(), ay = bugun().slice(0, 7), ac = modulAcik;
+  const p = PROFILLER[D.profil], t = T(), ac = modulAcik;
   const tarih = new Date().toLocaleDateString('tr-TR', {weekday:'long', day:'numeric', month:'long'});
   let h = sayfa(D.ad || p.ad + ' hesabı', {sag: `<button class="nav-btn" id="ayarBtn" aria-label="Ayarlar">${ikon('ayar')}</button>`});
   const saat = new Date().getHours(), selam = saat < 6 ? 'İyi geceler' : saat < 12 ? 'Günaydın' : saat < 18 ? 'İyi günler' : 'İyi akşamlar';
   const bos = hesapBosMu();
-  {
-    // 2.9.8: sade üst bant (grafik kaldırıldı; aylık grafik Raporlar'da)
-    const o = ayToplam(ay);
-    h += `<section class="kahraman kompakt"><div class="k-ust"><span><b>${selam}</b> · <span style="text-transform:capitalize">${esc(tarih)}</span></span><span class="k-surum">v${VERSIYON}</span></div>
-      ${ac('kasa') ? `<div class="k-alt"><div class="k-sol"><div class="k-etiket">${esc(ayAdi(ay))} · net</div><div class="k-tutar ${o.net < 0 ? 'eksi' : ''}" data-sayac="${o.net}">${para(o.net)}</div>
-      <div class="k-satir"><span><i class="k-g"></i>${esc(t.gelir)}<b>${kisaPara(o.gelir)}</b></span><span><i class="k-c"></i>${esc(t.gider)}<b>${kisaPara(o.gider)}</b></span></div></div>${ozetGrafik(ay)}</div>` : ''}</section>`;
-  }
+  h += `<section class="kahraman kompakt ozet-selam"><div class="k-ust"><span><b>${selam}</b> · <span style="text-transform:capitalize">${esc(tarih)}</span></span><span class="k-surum">v${VERSIYON}</span></div></section>`;
   if (bos) {
     const ad = [];
     if (ac('kasa')) ad.push(['gelir', `İlk ${kucult(t.gelir)} kaydını ekleyin`, 'Tutar, kategori ve ödeme şekli yeterli']);
@@ -3400,7 +3425,47 @@ function panelEkrani() {
     else if (ac('veresiye')) ad.push(['cari', `İlk ${kucult(t.kisi)} kaydını açın`, 'Borç ve tahsilatları tek yerde izleyin']);
     h += `<div class="bolum">Başlarken</div><div class="grup">${ad.map(([id, b, s], i) => `<button class="hucre" data-bas="${id}"><span class="adim">${String(i + 1).padStart(2, '0')}</span><div class="ic"><b>${esc(b)}</b><small>${esc(s)}</small></div>${CHEV}</button>`).join('')}</div>`;
   }
+  // Takvim (en üstte), ekleme düğmeleri ve 15 günlük liste
+  h += ozetTakvim();
+  // Bekleyen teklifler (tutarsız) ve hatırlatmalar
+  let alt = '';
+  if (ac('teklif')) {
+    const l = D.faturalar.filter(f => f.tur === 'teklif' && teklifDurumKod(f) === 'bekliyor').sort((a, b) => (a.vade || '9').localeCompare(b.vade || '9') || (b.tarih || '').localeCompare(a.tarih || ''));
+    alt += `<section><div class="bolum">Bekleyen teklifler${l.length ? ` (${l.length})` : ''}<a href="#/teklif">Tümü</a></div><div class="grup">${l.length ? l.slice(0, 6).map(f => { const g = f.vade ? gunFark(f.vade) : null;
+      return `<button class="hucre kareli" data-fatura="${f.id}">${kare('teklif', 'indigo')}<div class="ic"><b>${esc(faturaMusteri(f))}</b><small>${esc([f.no, f.tarih ? tarihYaz(f.tarih, true) : ''].filter(Boolean).join(' · '))}</small></div><span class="deger vade ${g !== null && g <= 2 ? 'turuncu' : ''}">${g === null ? 'süresiz' : g < 0 ? 'süresi doldu' : g === 0 ? 'bugün bitiyor' : g + ' gün geçerli'}</span></button>`; }).join('')
+      + (l.length > 6 ? `<a class="hucre" href="#/teklif"><div class="ic"><b>+${l.length - 6} teklif daha</b></div>${CHEV}</a>` : '')
+      : `<div class="hucre"><div class="ic"><b>Bekleyen teklif yok</b><small>Yanıt beklenen teklif kalmadı</small></div></div>`}</div></section>`;
+  }
+  const uy = [];
+  if (ac('servis')) {
+    const n = D.servisler.filter(servisAcikMi).length;
+    if (n) uy.push(`<a class="hucre kareli" href="#/servis">${kare('pano', 'mor')}<div class="ic"><b>${n} açık iş emri</b><small>Servis</small></div>${CHEV}</a>`);
+    const bk = yaklasanBakimlar(), gec = bk.filter(b => b.durum === 'gecikti').length;
+    if (bk.length) uy.push(`<a class="hucre kareli" href="#/servis/r-bakim">${kare('takvim', gec ? 'kirmizi' : 'turuncu')}<div class="ic"><b>${bk.length} makinenin bakımı ${gec ? `yaklaşıyor (${gec} gecikti)` : 'yaklaşıyor'}</b><small>${esc(bk.slice(0, 3).map(b => kisi(b.e.kisiId)?.ad || b.e.tekne || ekipmanAd(b.e)).join(', '))}</small></div>${CHEV}</a>`);
+  }
+  if (ac('stok')) { const n = D.urunler.filter(u => u.kritik > 0 && urunMiktar(u.id) <= u.kritik).length; if (n) uy.push(`<a class="hucre kareli" href="#/stok">${kare('depoUyari', 'kahve')}<div class="ic"><b>${n} üründe kritik stok</b><small>Stok azaldı</small></div>${CHEV}</a>`); }
+  if (uy.length) alt += `<section><div class="bolum">Hatırlatmalar</div><div class="grup">${uy.join('')}</div></section>`;
+  if (alt) h += `<div class="ozet-alt">${alt}</div>`;
 
+  $('#icerik').innerHTML = h;
+  $('#ayarBtn').onclick = () => git('ayarlar');
+  ozetTakvimBagla();
+  $$('[data-bas]').forEach(b => b.onclick = () => { const x = b.dataset.bas; x === 'gelir' ? islemFormu(null, 'gelir') : x === 'fatura' ? faturaFormu(null, 'fatura') : x === 'cari' ? git('veresiye') : ornekSor(); });
+  faturaTiklari();
+}
+/* 2.14.9: Finans özeti. Eskiden Özet ekranında olan bütün tutarlar (net, gelir/gider grafiği, alacak, ödemeler, kurlar, vadeler, hesaplar) */
+function finansOzetEkrani() {
+  const p = PROFILLER[D.profil], t = T(), ay = bugun().slice(0, 7), ac = modulAcik;
+  const tarih = new Date().toLocaleDateString('tr-TR', {weekday:'long', day:'numeric', month:'long'});
+  let h = sayfa('Finans özeti');
+  const bos = hesapBosMu();
+  {
+    // 2.9.8: sade üst bant (grafik kaldırıldı; aylık grafik Raporlar'da)
+    const o = ayToplam(ay);
+    h += `<section class="kahraman kompakt"><div class="k-ust"><span><b>Finans</b> · <span style="text-transform:capitalize">${esc(tarih)}</span></span></div>
+      ${ac('kasa') ? `<div class="k-alt"><div class="k-sol"><div class="k-etiket">${esc(ayAdi(ay))} · net</div><div class="k-tutar ${o.net < 0 ? 'eksi' : ''}" data-sayac="${o.net}">${para(o.net)}</div>
+      <div class="k-satir"><span><i class="k-g"></i>${esc(t.gelir)}<b>${kisaPara(o.gelir)}</b></span><span><i class="k-c"></i>${esc(t.gider)}<b>${kisaPara(o.gider)}</b></span></div></div>${ozetGrafik(ay)}</div>` : ''}</section>`;
+  }
   // Hızlı "Yeni" düğmeleri
   const yeni = [];
   if (ac('kasa')) yeni.push(['gelir', 'arti', 'yesil', t.gelir], ['gider', 'eksi', 'kirmizi', t.gider]);
@@ -3430,9 +3495,13 @@ function panelEkrani() {
   }
   if (ac('fatura')) { const l = [...acikSatis, ...acikAlis].filter(f => f.vade && f.vade < bugun()); bk.push(kutu('fatura', 'takvimX', 'kirmizi', l.length, 'Vadesi geçen', l.length ? kisaPara(l.reduce((x, f) => x + faturaKalan(f), 0)) : 'gecikme yok', l.length > 0)); }
   if (ac('stok')) { const n = D.urunler.filter(u => u.kritik > 0 && urunMiktar(u.id) <= u.kritik).length; bk.push(kutu('stok', 'depoUyari', 'kahve', n, 'Kritik stok', n ? 'ürün azaldı' : 'stok yeterli', n > 0)); }
-  if (bk.length && !bos) h += `<div class="bolum">Bekleyenler</div><div class="bekleyenler">${bk.join('')}</div>`;
-  // 2.14.8: takvim (sabit giderler ve randevular, tutarsız)
-  h += ozetTakvim();
+  // 2.14.9: bu ayın sabit giderleri (Takvim) ve kasa/banka toplamı
+  if ((D.ajanda || []).some(o => o.tur === 'gider')) {
+    const gl = ajandaOlaylar(...ajandaAyAraligi(ay)).filter(x => x.o.tur === 'gider'), top = gl.reduce((x, y) => x + (y.o.tutar || 0), 0), kal = gl.filter(x => !x.odendi).reduce((x, y) => x + (y.o.tutar || 0), 0);
+    bk.push(kutu('takvim', 'takvim', 'pembe', kisaPara(kal), 'Sabit gider kalan', gl.length ? `bu ay ${kisaPara(top)}` : 'bu ay yok'));
+  }
+  if (ac('banka') && D.finansHesap.length) { const fo = finansOzet(); bk.push(kutu('banka', 'banka', 'mavi', kisaPara(fo.varlik), 'Kasa ve banka', fo.kartBorc > 0 ? `kart borcu ${kisaPara(fo.kartBorc)}` : 'kart borcu yok')); }
+  if (bk.length) h += `<div class="bolum">Bekleyenler</div><div class="bekleyenler">${bk.join('')}</div>`;
 
   // 2.13: güncel döviz kurları (TCMB satış); dokununca kur penceresi açılır
   {
@@ -3443,26 +3512,22 @@ function panelEkrani() {
   }
 
   // Yaklaşan ödemeler ve tahsilatlar
-  const yak = [...acikSatis, ...acikAlis].map(f => ({f, g: f.vade ? gunFark(f.vade) : null})).sort((a, b) => (a.g ?? 999) - (b.g ?? 999)).slice(0, 3);
+  const yak = [...acikSatis, ...acikAlis].map(f => ({f, g: f.vade ? gunFark(f.vade) : null})).sort((a, b) => (a.g ?? 999) - (b.g ?? 999)).slice(0, 6);
   if (ac('fatura') && yak.length) h += `<div class="bolum">Vadesi yaklaşan faturalar<a href="#/fatura">Tümü</a></div><div class="grup">${yak.map(({f, g}) => {
       const alis = f.tur === 'alis';
       return `<button class="hucre kareli" data-fatura="${f.id}">${kare(alis ? 'giris' : 'dosya', alis ? 'turuncu' : 'indigo')}<div class="ic"><b>${esc(faturaMusteri(f))}</b><small>${alis ? 'Ödenecek' : 'Tahsil edilecek'} · ${esc(f.no)}</small></div>
         <span class="tutar">${para(faturaKalan(f))}<small class="vade ${g !== null && g < 0 ? 'gider' : g !== null && g <= 7 ? 'turuncu' : ''}">${g === null ? 'vade yok' : g < 0 ? -g + ' gün gecikti' : g === 0 ? 'bugün' : g + ' gün kaldı'}</small></span></button>`; }).join('')}</div>`;
 
-  // Uyarılar: kritik stok, sıradaki vergi
+  // Kredi kartı son ödemeleri (tutarlı)
   const uy = [];
   if (ac('banka')) for (const k of aktifHesaplar().filter(h => h.tur === 'kart')) {
     const borc = -hesapBakiye(k), so = kartSonOdeme(k), g = so ? gunFark(so) : null;
     if (borc > 0 && g !== null && g <= 7) uy.push(`<a class="hucre kareli" href="#/banka/${k.id}">${kare('kart', 'turuncu')}<div class="ic"><b>${esc(k.ad)} son ödeme</b><small>${esc(tarihYaz(so))} · borç ${para(borc)}</small></div><span class="deger vade ${g <= 3 ? 'gider' : ''}">${g === 0 ? 'bugün' : g + ' gün'}</span></a>`);
   }
-  if (ac('servis')) {
-    const bk = yaklasanBakimlar(), gec = bk.filter(b => b.durum === 'gecikti').length;
-    if (bk.length) uy.push(`<a class="hucre kareli" href="#/servis/r-bakim">${kare('takvim', gec ? 'kirmizi' : 'turuncu')}<div class="ic"><b>${bk.length} makinenin bakımı ${gec ? `yaklaşıyor (${gec} gecikti)` : 'yaklaşıyor'}</b><small>${esc(bk.slice(0, 3).map(b => kisi(b.e.kisiId)?.ad || b.e.tekne || ekipmanAd(b.e)).join(', '))}</small></div>${CHEV}</a>`);
-  }
-  if (ac('kdv')) { const sira = vergiTakvimi(ay).concat(vergiTakvimi(ayKaydir(ay, 1))).find(v => v.tarih >= bugun()); if (sira) { const g = gunFark(sira.tarih); uy.push(`<a class="hucre kareli" href="#/kdv">${kare('takvim', 'pembe')}<div class="ic"><b>${esc(sira.ad)}</b><small>${esc(tarihYaz(sira.tarih))} · ${esc(sira.alt)}</small></div><span class="deger vade ${g <= 3 ? 'gider' : ''}">${g === 0 ? 'bugün' : g + ' gün'}</span></a>`); } }
-  if (uy.length) h += `<div class="bolum">Hatırlatmalar</div><div class="grup">${uy.join('')}</div>`;
+  if (uy.length) h += `<div class="bolum">Kart ödemeleri</div><div class="grup">${uy.join('')}</div>`;
+  if (ac('banka') && D.finansHesap.length) { const l = aktifHesaplar(); if (l.length) h += `<div class="bolum">Hesaplar<a href="#/banka">Tümü</a></div><div class="grup">${l.slice(0, 8).map(hesapSatiri).join('')}</div>`; }
 
-  if (ac('kasa') && !bos) {
+  if (ac('kasa')) {
     const son = [...D.islemler].sort(islemSirala).slice(0, 4);
     h += `<div class="bolum">Son işlemler${son.length ? '<a href="#/kasa">Tümü</a>' : ''}</div>`;
     h += son.length ? `<div class="grup">${son.map(i => islemSatiri(i, true)).join('')}</div>`
@@ -3470,12 +3535,10 @@ function panelEkrani() {
   }
 
   $('#icerik').innerHTML = h;
-  $('#ayarBtn').onclick = () => git('ayarlar');
   $$('[data-kur]').forEach(b => b.onclick = kurFormu);
   if ($('#kurYenile')) $('#kurYenile').onclick = async () => { if (await kurGuncelle()) ciz(); };
-  ozetTakvimBagla();
   sayacBaslat($('#icerik'));
-  $$('[data-bas]').forEach(b => b.onclick = () => { const x = b.dataset.bas; x === 'gelir' ? islemFormu(null, 'gelir') : x === 'fatura' ? faturaFormu(null, 'fatura') : x === 'cari' ? git('veresiye') : ornekSor(); });
+  $$('[data-fhesap]').forEach(b => b.onclick = () => git('banka/' + b.dataset.fhesap));
   faturaTiklari();
   $$('[data-h]').forEach(b => b.onclick = () => {
     const x = b.dataset.h;
@@ -6494,7 +6557,7 @@ async function kurGuncelle(sessiz) {
   return k;
 }
 /* Açılışta ve 4 saatte bir sessizce güncellenir */
-function kurOtomatik() { const k = kurlar(); if (!(window.PowerServ && PowerServ.kurGetir) && !(window.Android && Android.kurIste)) return; if (!k || k.kaynak === 'TCMB' && Date.now() - (k.zaman || 0) > 4 * 3600e3) kurGuncelle(true).then(y => { if (y && location.hash.replace(/^#\/?/, '').split('/')[0] === 'panel' && !document.querySelector('.sayfa-modal')) ciz(); }); }
+function kurOtomatik() { const k = kurlar(); if (!(window.PowerServ && PowerServ.kurGetir) && !(window.Android && Android.kurIste)) return; if (!k || k.kaynak === 'TCMB' && Date.now() - (k.zaman || 0) > 4 * 3600e3) kurGuncelle(true).then(y => { if (y && location.hash.replace(/^#\/?/, '').split('/')[0] === 'finans' && !document.querySelector('.sayfa-modal')) ciz(); }); }
 function kurOzet() { const k = kurlar(); return k ? ['USD', 'EUR', 'GBP'].filter(d => k[d]).map(d => `${d} ${kurYaz(k[d].satis)}`).join(' · ') + ` (${k.kaynak === 'TCMB' ? 'TCMB' : 'elle'} ${tarihYaz(k.tarih || bugun(), true)})` : 'Henüz alınmadı'; }
 function kurFormu() {
   const k = kurlar() || {};
@@ -7190,7 +7253,7 @@ async function pencereKapat(yol) {
 }
 /* Kayıt kartları ve diğer ekranlar (cari kartı, stok kartı, fatura, personel, ayarlar...) masaüstünde aynı pencere çerçevesine alınır:
    başlık şeridi, sağdaki düğmeler üstte araç çubuğu olur, içerik sık ve çizgili görünür. Ekranların kendi kodu değişmez. */
-const ERP_CERCEVESIZ = ['panel', 'profil'];
+const ERP_CERCEVESIZ = ['panel', 'profil', 'finans'];
 function erpCercevele() {
   const k = $('#icerik'), [m = 'panel'] = rota();
   if (!document.body.classList.contains('erp') || k.classList.contains('erp-tam') || ERP_CERCEVESIZ.includes(m) || !D.profil || $('.karsilama', k)) return;
