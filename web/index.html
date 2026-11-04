@@ -1692,7 +1692,7 @@ body.erp .erp-form #mSerbest .yuzen{display:none}
 
 <script>
 'use strict';
-const VERSIYON = '2.14.1';
+const VERSIYON = '2.14.2';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -3904,9 +3904,14 @@ function kisiFormu(k, sonra) {
   yetkiliCiz();
   if ($('#kYetkiliEkle', m)) $('#kYetkiliEkle', m).onclick = () => { x.yetkililer.push({ad: '', gorev: '', tel: '', eposta: ''}); yetkiliCiz(); $$('[data-y] input[data-a=ad]', m).pop().focus(); };
   if (yeni) setTimeout(() => $('#kAd', m).focus(), 320);
-  if (!yeni) $('#kSil', m).onclick = async () => {
-    const n = D.hareketler.filter(h => h.kisiId === k.id).length;
-    if (!await onay(`${k.ad} silinsin mi?`, `${n} hareketiyle birlikte silinir. Kasaya işlenmiş tahsilatlar gelir olarak kalır.`)) return;
+  if (!yeni) $('#kSil', m).onclick = () => cariSil(k);
+}
+/* 2.14.2: cari silme; cari kartında, cari ekranında ve PC cari penceresinde (seçili satır) kullanılır */
+async function cariSil(k) {
+  if (!k) return false;
+  if (saltOkunur('veresiye')) { bildir('Bu kullanıcının cari silme yetkisi yok', true); return false; }
+  const n = D.hareketler.filter(h => h.kisiId === k.id).length;
+  if (!await onay(`${k.ad} silinsin mi?`, n ? `${n} hareketiyle birlikte silinir. Kasaya işlenmiş tahsilatlar gelir olarak kalır.` : 'Bu cari kalıcı olarak silinir.', 'Sil')) return false;
     for (const i of D.islemler) if (i.hareketId && D.hareketler.some(h => h.kisiId === k.id && h.id === i.hareketId)) {
       if (!i.aciklama.includes(k.ad)) i.aciklama = [k.ad, i.aciklama].filter(Boolean).join(' · ');
       delete i.hareketId;
@@ -3917,8 +3922,8 @@ function kisiFormu(k, sonra) {
     for (const y of D.servisler) if (y.kisiId === k.id) { y.musteriAd = y.musteriAd || k.ad; y.kisiId = null; }
     for (const e of D.ekipmanlar) if (e.kisiId === k.id) e.kisiId = null;
     for (const u of D.urunler) if (u.tedarikciId === k.id) u.tedarikciId = null;
-    kaydet(); bildir('Silindi'); git('veresiye', true);
-  };
+    kaydet(); bildir('Silindi'); git('veresiye', true); ciz();
+  return true;
 }
 /* Cari ekranındaki bilgi ve koşullar bölümü */
 function cariBilgiBolum(k) {
@@ -3952,7 +3957,7 @@ function kisiEkrani(id) {
   const k = kisi(id);
   if (!k) return git('veresiye', true);
   const t = T();
-  let h = sayfa(k.ad, {geri: 'veresiye', geriAd: modulAdi('veresiye'), sag: `<button class="nav-btn" id="kDuzenle">Düzenle</button>`});
+  let h = sayfa(k.ad, {geri: 'veresiye', geriAd: modulAdi('veresiye'), sag: `${saltOkunur('veresiye') ? '' : `<button class="nav-btn" id="kSilBtn" aria-label="Cariyi sil" title="Cariyi sil" style="color:var(--kirmizi)">${ikon('cop')}</button>`}<button class="nav-btn" id="kDuzenle">Düzenle</button>`});
   const b = kisiBakiye(id);
   const har = D.hareketler.filter(x => x.kisiId === id).sort((a, c) => a.tarih.localeCompare(c.tarih) || (a.olusturma || 0) - (c.olusturma || 0));
   let kalan = 0;
@@ -3983,6 +3988,7 @@ function kisiEkrani(id) {
     ${satirlar.length ? `<div class="grup">${satirlar.join('')}</div>` : bosDurum('defter', 'turuncu', 'Henüz hareket yok', 'Yukarıdaki düğmelerle borç veya tahsilat ekleyin.')}`;
   $('#icerik').innerHTML = h;
   $('#kDuzenle').onclick = () => kisiFormu(k);
+  if ($('#kSilBtn')) $('#kSilBtn').onclick = () => cariSil(k);
   cariServisBagla(k);
   $$('[data-yara]').forEach(b => b.onclick = () => disariAc('tel:' + k.yetkililer[+b.dataset.yara].tel.replace(/[^\d+]/g, '')));
   $$('[data-yeni]').forEach(btn => btn.onclick = () => btn.dataset.yeni === 'tahsilat' && fatAcik ? cariTahsilat(k) : hareketFormu(k, null, btn.dataset.yeni));
@@ -7000,6 +7006,8 @@ function servisListesiErp() {
 /* --- Modül pencereleri (masaüstü): her modül tam sayfa tablo penceresi olarak açılır.
    Üstte modülün işlemleri (araç çubuğu), altında rapor sekmeleri, ortada sık tablo, altta toplamlar.
    Satıra çift tıklayınca (ya da seçip Enter) kayıt açılır. Tablolar mevcut liste raporlarından gelir. --- */
+/* PC modül pencerelerinde "Sil": satırın yolundan kayıt bulunur (ör. veresiye/<id>) */
+const ERP_SIL = {veresiye: id => cariSil(kisi(id))};
 const ERP_ANA = {veresiye: 'bakiye', stok: 'eldeki', teklif: 'liste', fatura: 'satis', banka: 'bakiye', kasa: 'hepsi', personel: 'liste'};
 const ERP_ANA_AD = {kasa: 'Tüm hareketler'};
 const simgeAdi = s => String(s || '').replace(/\+$/, '');
@@ -7020,7 +7028,7 @@ function erpModul(m, ilkId, sorgu = new URLSearchParams()) {
   $('#icerik').innerHTML = `<div class="fis fis-liste">
     <div class="fis-bas"><div class="fis-ad">${ikon(md?.simge || 'tablo')}<div><b>${esc(modulAdi(m))}</b><small>${esc(R.ad)}</small></div></div>
       <div class="fis-arac">${islemler.map(([ad, simge], i) => `<button class="fa" data-is="${i}" ${ro ? 'disabled' : ''} title="${esc(ad)}">${ikon(simgeAdi(simge))}<span>${esc(ad)}</span></button>`).join('')}
-        ${islemler.length ? '<span class="fa-ayir"></span>' : ''}<button class="fa" data-l="ac" title="Seçili kaydı aç (Enter)">${ikon('dosya')}<span>Aç</span></button>
+        ${islemler.length ? '<span class="fa-ayir"></span>' : ''}<button class="fa" data-l="ac" title="Seçili kaydı aç (Enter)">${ikon('dosya')}<span>Aç</span></button>${ERP_SIL[m] && !ro ? `<button class="fa" data-l="sil" title="Seçili kaydı sil (Delete)">${ikon('cop')}<span>Sil</span></button>` : ''}
         <button class="fa" data-l="yaz">${ikon('yazici')}<span>Yazdır</span></button><button class="fa" data-l="csv">${ikon('indir')}<span>Excel</span></button><button class="fa" data-l="yenile">${ikon('donustur')}<span>Yenile</span></button></div></div>
     <div class="fis-sekmeler">${raporlar.filter(([r]) => r === ERP_ANA[m] || r === id || r === ilkId).map(([r, ad]) => `<button class="fs-s ${r === id ? 'aktif' : ''}" data-rs="${esc(r)}">${esc(ad)}</button>`).join('')}
       <span class="fl-ara">${ikon('ara')}<input type="search" id="emAra" placeholder="Listede ara" value="${esc(d.ara)}"></span></div>
@@ -7029,6 +7037,7 @@ function erpModul(m, ilkId, sorgu = new URLSearchParams()) {
     <div class="fis-govde"><div class="izg-kap uzun" id="emTablo"></div></div>
     <div class="fis-alt"><div class="ft" id="emAlt"></div></div></div>`;
   let son = [], secili = -1;
+  const erpSil = () => { const r = son[secili]; if (!r?.yol || !ERP_SIL[m]) return bildir('Önce listeden silinecek kaydı seçin', true); ERP_SIL[m](r.yol.split('/')[1]); };
   const sg = t => t === 'para' || t === 'sayi';
   const yaz = (v, t) => v === undefined || v === null || v === '' ? '' : t === 'para' ? tutarFmt(v) : hucreYaz(v, t);
   const ciz1 = () => {
@@ -7052,6 +7061,7 @@ function erpModul(m, ilkId, sorgu = new URLSearchParams()) {
       tr.ondblclick = () => { if (r.yol) git(r.yol); };
       tr.onkeydown = e => {
         if (e.key === 'Enter' && r.yol) git(r.yol);
+        if (e.key === 'Delete' && ERP_SIL[m] && !ro) erpSil();
         else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const y = e.key === 'ArrowDown' ? tr.nextElementSibling : tr.previousElementSibling; if (y) y.click(); }
       };
     });
@@ -7071,6 +7081,7 @@ function erpModul(m, ilkId, sorgu = new URLSearchParams()) {
   $$('[data-l]').forEach(b => b.onclick = () => {
     const v = b.dataset.l;
     if (v === 'ac') { const r = son[secili]; if (r?.yol) git(r.yol); else bildir('Önce listeden bir kayıt seçin'); }
+    if (v === 'sil') erpSil();
     else if (v === 'yaz') yazdir(R.ad, listeKagit(R, son, d));
     else if (v === 'csv') raporExcel(R, son, d, `powerserv-${m}-${id}-${bugun()}`);
     else ciz1();
