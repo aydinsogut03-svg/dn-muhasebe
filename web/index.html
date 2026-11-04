@@ -1462,6 +1462,9 @@ body.erp #icerik.yanli>.btn-izgara,body.erp #icerik.yanli>.yan-arac{grid-row:2/s
 .pnc-x{border:0;background:none;color:inherit;opacity:.55;padding:4px 7px 4px 0;cursor:pointer;display:flex}
 .pnc-x svg{width:12px;height:12px}
 .pnc-x:hover{opacity:1}
+.pnc-hepsi{position:sticky;right:0;margin-left:auto;flex:none;display:flex;align-items:center;gap:5px;border:1px solid var(--erp-cizgi);border-bottom:0;border-radius:5px 5px 0 0;background:var(--kart);color:var(--kirmizi);font:inherit;font-weight:600;padding:5px 10px;cursor:pointer;box-shadow:-6px 0 8px -4px rgba(0,0,0,.12)}
+.pnc-hepsi svg{width:12px;height:12px}
+.pnc-hepsi:hover{background:color-mix(in srgb,var(--kirmizi) 10%,var(--kart))}
 /* Fiş ve tablo pencereleri */
 .fis{display:flex;flex-direction:column;background:var(--kart);border:1px solid var(--erp-cizgi);font-size:12.5px;line-height:1.35;color:var(--yazi);min-height:calc(100vh - 112px)}
 .fis-bas{display:flex;align-items:stretch;justify-content:space-between;background:linear-gradient(180deg,#6a98df 0,var(--erp-bas1) 40%,var(--erp-bas2) 100%);color:#fff;min-height:56px}
@@ -1475,6 +1478,7 @@ body.erp #icerik.yanli>.btn-izgara,body.erp #icerik.yanli>.yan-arac{grid-row:2/s
 .fa{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:56px;padding:4px 5px;border:1px solid transparent;background:none;color:inherit;font:inherit;font-size:11px;cursor:pointer;border-radius:3px;white-space:nowrap}
 .fa svg{width:22px;height:22px;color:var(--erp-bas2)}
 @media (prefers-color-scheme:dark){.fa svg{color:var(--erp-th-yazi)}}
+.fa.fa-sil svg{color:var(--kirmizi)}
 .fa:hover:not(:disabled){background:var(--erp-secili);border-color:var(--erp-cizgi)}
 .fa:disabled{opacity:.38;cursor:default}
 .fa-ayir{flex:none;width:1px;background:var(--erp-cizgi);margin:6px 3px}
@@ -1711,7 +1715,7 @@ body.erp .erp-form #mSerbest .yuzen{display:none}
 
 <script>
 'use strict';
-const VERSIYON = '2.14.6';
+const VERSIYON = '2.14.7';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -2439,8 +2443,8 @@ const raporModulAd = m => m === 'rapor' ? 'Genel raporlar' : modulAdi(m) + ' rap
 /* Modülün rapor öğeleri: [ad, simge, hedef, gi, i] (Genel raporlarda Dönemsel analiz de dahil) */
 const raporOgeleri = m => (ALT_MENU[m] || []).flatMap(([, l], gi) => gi > 0 || m === 'rapor' ? l.map((x, i) => [...x, gi, i]).filter(x => typeof x[2] === 'string') : []);
 const raporYolu = yol => /^raporlar(\/|$)/.test(yol) || yol === 'rapor' || /^[a-z]+\/r-/.test(yol);
-const MENU_LISTE_AD = {teklif: 'Teklif listesi', fatura: 'Fatura listesi', servis: 'Servis fişleri', stok: 'Stok kartları', veresiye: 'Cari kartlar', banka: 'Banka ve kasa hesapları', kasa: 'Gelir / gider kayıtları', personel: 'Çalışanlar', kdv: 'Vergi takvimi'};
-/* Başlığın düz öğe listesi: {ad, simge, hedef, m, alt?, ayrac?}. Önce "Yeni …" işlemleri, sonra liste, sonra diğer işlemler. */
+const MENU_LISTE_AD = {teklif: 'Teklif listesi', fatura: 'Fatura listesi', servis: 'Servis listesi', stok: 'Stok listesi', veresiye: 'Cari listesi', banka: 'Hesap listesi', kasa: 'Gelir / gider listesi', personel: 'Personel listesi', kdv: 'Vergi takvimi'};
+/* Başlığın düz öğe listesi: {ad, simge, hedef, m, alt?, ayrac?}. 2.14.7: her modülde önce liste, sonra "Yeni …" işlemleri, sonra diğerleri. */
 function grupOgeleri(g) {
   if (g.raporlar) return [{ad: 'Tüm raporlar', simge: 'izgara', hedef: 'raporlar', m: 'rapor'},
     ...raporModulleri().map(m => ({ad: raporModulAd(m), simge: modul(m).simge, hedef: 'raporlar/' + m, m}))];
@@ -2450,7 +2454,7 @@ function grupOgeleri(g) {
     else {
       const t = ALT_MENU[m][0][1].map((x, i) => ({ad: x[2] === m ? (MENU_LISTE_AD[m] || x[0]) : x[0], simge: x[1], hedef: x[2], m, alt: `${m}|0|${i}`}));
       const yeni = o => /^Yeni /.test(o.ad);
-      l = [...t.filter(yeni), ...t.filter(o => o.hedef === m), ...t.filter(o => !yeni(o) && o.hedef !== m)];
+      l = [...t.filter(o => o.hedef === m), ...t.filter(o => yeni(o) && o.hedef !== m), ...t.filter(o => !yeni(o) && o.hedef !== m)];
     }
     if (mi > 0 && l[0]) l[0].ayrac = true;
     return l;
@@ -2508,6 +2512,9 @@ function menuCiz(aktif) {
     const c = $('#cekmece'), y = c.scrollTop;
     ui.acikGrup = ui.acikGrup === a.dataset.grup ? null : a.dataset.grup;
     menuCiz(aktif); c.scrollTop = y;
+    // 2.14.7: modül başlığı açılınca ilk öğe (liste) ekranda açılır; Raporlar başlığı yalnız açılır
+    const g = MENU_AGAC.find(x => x.id === ui.acikGrup), ilk = g && !g.raporlar && grupOgeleri(g)[0];
+    if (ilk && typeof ilk.hedef === 'string' && aktifYol().split('?')[0] !== ilk.hedef) { if (ilk.hedef === 'fatura') ui.faturaFiltre = 'hepsi'; git(ilk.hedef, true); }
   });
   $$('#cekmece [data-oge]').forEach(a => a.onclick = e => {
     e.preventDefault(); e.stopPropagation();
@@ -2597,7 +2604,7 @@ const ALT_MENU = {
       ['Teknisyen başına iş', 'teknisyen', 'rapor/r-teknisyen']]]],
   banka: [['İşlemler', [['Hesaplar', 'banka', 'banka'], ['Yeni hesap', 'banka+', () => finansHesapFormu()], ['Virman', 'virman', () => virmanFormu()]]],
     ['Raporlar', [['Hesap bakiyeleri', 'terazi', 'banka/r-bakiye'], ['Hesap hareketleri', 'hareket', 'banka/r-hareket']]]],
-  kasa: [['İşlemler', [['Gelir / gider kayıtları', 'cuzdan', 'kasa'], ['Gelir fişi', 'gelirOk', () => islemFormu(null, 'gelir', null, true)], ['Gider fişi', 'giderOk', () => islemFormu(null, 'gider', null, true)], ['Fiş fotoğrafından gider', 'kamera', fisCek]]],
+  kasa: [['İşlemler', [['Gelir / gider kayıtları', 'cuzdan', 'kasa'], ['Yeni gelir fişi', 'gelirOk', () => islemFormu(null, 'gelir', null, true)], ['Yeni gider fişi', 'giderOk', () => islemFormu(null, 'gider', null, true)], ['Fiş fotoğrafından gider', 'kamera', fisCek]]],
     ['Raporlar', [['Gelir listesi', 'tablo', 'kasa/r-gelir'], ['Gider listesi', 'fis', 'kasa/r-gider'], ['Kategori özeti', 'pasta', 'kasa/r-kategori']]]],
   veresiye: [['İşlemler', [['Cari kartlar', 'cariKart', 'veresiye'], ['Yeni cari', 'cariKart+', () => kisiFormu()], ['Tahsilat fişi', 'banknot', () => kisiSec(k => k && tahsilatFisiAc(k), false)]]],
     ['Raporlar', [['Cari bakiye listesi', 'terazi', 'veresiye/r-bakiye'], ['Borçlu cariler', 'kisiCikis', 'veresiye/r-borclu'], ['Alacaklı cariler', 'kisiGiris', 'veresiye/r-alacakli'],
@@ -6953,7 +6960,8 @@ function pencereCubugu() {
   pencereYaz(l);
   const sekme = (p, ev) => `<div class="pnc ${p.yol === yol ? 'aktif' : ''}" data-pyol="${esc(p.yol)}" title="${esc(p.ad)}">
     <button class="pnc-ad" data-pgit>${ev ? ikon('ev') : ''}<span>${taslakKirli(p.yol) ? '● ' : ''}${esc(p.ad)}</span></button>${ev ? '' : `<button class="pnc-x" data-pkapat title="Kapat" aria-label="Kapat">${ikon('kapat')}</button>`}</div>`;
-  $('#icerik').insertAdjacentHTML('afterbegin', `<nav class="pencereler" id="pencereler">${sekme({yol: 'panel', ad: 'Özet'}, true)}${l.map(p => sekme(p)).join('')}</nav>`);
+  $('#icerik').insertAdjacentHTML('afterbegin', `<nav class="pencereler" id="pencereler">${sekme({yol: 'panel', ad: 'Özet'}, true)}${l.map(p => sekme(p)).join('')}${l.length ? `<button class="pnc-hepsi" id="pncHepsi" title="Açık sekmelerin hepsini kapat">${ikon('kapat')}<span>Tümünü kapat</span></button>` : ''}</nav>`);
+  if ($('#pncHepsi')) $('#pncHepsi').onclick = () => pencereHepsiniKapat();
   $$('#pencereler .pnc').forEach(el => {
     const y = el.dataset.pyol;
     $('[data-pgit]', el).onclick = () => git(y);
@@ -6965,6 +6973,14 @@ function pencereCubugu() {
 function pencereEtiket(yol) {
   const el = $$('#pencereler .pnc').find(e => e.dataset.pyol === yol), s = el && $('.pnc-ad span', el);
   if (s) s.textContent = (taslakKirli(yol) ? '● ' : '') + s.textContent.replace(/^● /, '');
+}
+/* 2.14.7: Özet dışındaki bütün sekmeler tek seferde kapanır; kaydedilmemiş fiş varsa bir kez sorulur */
+async function pencereHepsiniKapat() {
+  const l = pencereListe(), kirli = l.filter(p => taslakKirli(p.yol));
+  if (kirli.length && !await onay('Kaydedilmemiş değişiklikler var', `${kirli.length} fişte kaydedilmemiş değişiklik var. Sekmeler kapatılırsa bu değişiklikler silinir.`, 'Kaydetmeden kapat')) return;
+  for (const p of l) { taslakSil(p.yol); fisKilitBirak(p.yol); }
+  pencereYaz([]);
+  if (aktifYol() !== 'panel') git('panel', true); else ciz();
 }
 async function pencereKapat(yol) {
   if (taslakKirli(yol) && !await onay('Kaydedilmemiş değişiklikler var', 'Pencere kapatılırsa bu fişte yaptığınız değişiklikler silinir.', 'Kaydetmeden kapat')) return;
@@ -6990,9 +7006,10 @@ function erpCercevele() {
   // Ekranın sağ üst düğmesi (Düzenle vb.) ve sağdaki düğme ızgarası araç çubuğuna alınır (olayları korunur)
   const varOlan = new Set($$(':scope > .btn-izgara > *, :scope > .yan-arac > *', k).map(b => b.textContent.trim().toLocaleLowerCase('tr-TR')));
   for (const b of $$('#ust .sag > .nav-btn:not(#esitleBtn)')) {
-    if (varOlan.has((b.textContent.trim() || 'Düzenle').toLocaleLowerCase('tr-TR'))) continue;
+    const ad = b.textContent.trim() || (b.getAttribute('aria-label') || b.title || '').replace(/^Cariyi sil$/, 'Sil') || 'Düzenle';
+    if (varOlan.has(ad.toLocaleLowerCase('tr-TR')) || $$('span', arac).some(x => x.textContent === ad)) continue;
     const y = document.createElement('button');
-    y.className = 'fa'; y.innerHTML = ikon('kalem') + '<span></span>'; $('span', y).textContent = b.textContent.trim() || 'Düzenle';
+    y.className = 'fa' + (/sil/i.test(ad) ? ' fa-sil' : ''); y.innerHTML = ikon(/sil/i.test(ad) ? 'cop' : 'kalem') + '<span></span>'; $('span', y).textContent = ad;
     y.onclick = () => b.click(); arac.append(y);
   }
   for (const kap of $$(':scope > .btn-izgara, :scope > .yan-arac', k)) { for (const b of [...kap.children]) { b.classList.add('fa'); arac.append(b); } kap.replaceWith(); }
