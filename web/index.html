@@ -1331,32 +1331,24 @@ select.secim{height:38px;border:1px solid var(--kenar);border-radius:var(--r,6px
 .kt-no b{font-weight:400}
 .kt-tutar,.kt-tutar *{-webkit-user-select:none;user-select:none}
 .kt-c.kt-tutar{align-items:center;justify-content:flex-end}
-/* 2.9.10: Telefonda Excel gibi eşit hücreler: her kalem iki sütunlu, etiketli büyük hücrelerden oluşan bir kart.
-   Satırlar: Kalem no + Sil | Parça no, Açıklama | Miktar, Birim | Birim fiyat, KDV | (İskonto), Tutar. */
+/* 2.14.4: Telefonda üstteki işlem düğmeleri yuvarlak değil, bitişik kare kutular (araç çubuğu gibi) */
 @media (max-width:760px){
-  .kt{font-size:14px;border:0;background:none;overflow:visible}
-  .kt-bas{display:none!important}
-  .kt-satir,.kt.kt-teklif .kt-satir{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"no sil" "kod ad" "mik birim" "fiyat kdv" "isk tutar";background:var(--kart)!important;border:1px solid var(--kenar)!important;border-radius:10px!important;margin:0 0 10px!important;overflow:hidden}
-  .kt.kt-teklif .kt-satir{grid-template-areas:"no sil" "kod ad" "mik birim" "fiyat kdv" "tutar tutar"}
-  .kt-satir>*{border:0!important;border-bottom:1px solid var(--ayirici)!important;min-width:0!important}
-  .kt-satir>:nth-child(odd):not(.kt-no):not(.kt-sil){border-right:0!important}
-  .kt-kod,.kt-mik,.kt-fiyat,.kt-isk{border-right:1px solid var(--ayirici)!important}
-  .kt.kt-teklif .kt-tutar{border-right:0!important}
-  .kt-no{grid-area:no;justify-content:flex-start!important;padding:7px 12px;font-size:13px!important;font-weight:650;color:var(--yazi)!important;background:color-mix(in srgb,var(--mavi) 8%,var(--kart))}
-  .kt-no i{display:inline;font-style:normal}
-  .kt-sil{grid-area:sil;justify-content:flex-end!important;gap:4px;padding:7px 12px!important;font-size:13px;color:var(--kirmizi)!important;background:color-mix(in srgb,var(--mavi) 8%,var(--kart))!important}
-  .kt-sil .kt-et{display:inline}
-  .kt-sil:disabled{opacity:1;color:transparent!important}
-  .kt-kod{grid-area:kod}.kt-ad{grid-area:ad}.kt-mik{grid-area:mik}.kt-birim{grid-area:birim}.kt-fiyat{grid-area:fiyat}.kt-isk{grid-area:isk}.kt-kdv{grid-area:kdv}.kt-tutar{grid-area:tutar}
-  .kt-c{flex-direction:column;padding:6px 10px 2px}
-  .kt-c .kt-et{display:block;font-size:11.5px;font-weight:600;color:var(--ikincil);line-height:1.2}
-  .kt-satir .kt-c input,.kt-satir .kt-c select{height:40px;font-size:17px!important;padding:4px 0!important;text-align:left!important;touch-action:manipulation;flex:none}
-  .kt-satir .kt-c select{appearance:none!important;-webkit-appearance:none!important;background:none!important}
-  .kt-satir .kt-c input:focus,.kt-satir .kt-c select:focus{box-shadow:none!important;background:none!important}
-  .kt-c:focus-within{background:color-mix(in srgb,var(--mavi) 10%,transparent);box-shadow:inset 0 0 0 2px var(--mavi)}
-  .kt-tutar{align-items:flex-start!important;justify-content:flex-start!important;padding:6px 10px 8px!important;font-size:17px}
-  .kt-tutar [data-tutar]{line-height:40px;font-weight:700}
-  .kt-satir>:nth-last-child(2),.kt-satir>.kt-isk{border-bottom:0!important}
+  .btn-izgara{gap:0!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;border:1px solid var(--kenar);border-radius:10px;overflow:hidden;background:var(--kart)}
+  .btn-izgara button,html.apk .btn-izgara button{border:0!important;border-right:1px solid var(--kenar)!important;border-bottom:1px solid var(--kenar)!important;border-radius:0!important;box-shadow:none!important;margin:0!important;min-height:66px!important;padding:9px 2px 7px!important;font-size:12px!important;line-height:1.2}
+  .btn-izgara button:nth-child(4n){border-right:0!important}
+  .btn-izgara button:nth-child(4n+1):nth-last-child(-n+4),.btn-izgara button:nth-child(4n+1):nth-last-child(-n+4)~button{border-bottom:0!important}
+  .btn-izgara button:active,html.apk .btn-izgara button:active{transform:none!important;background:color-mix(in srgb,var(--mavi) 10%,var(--kart))!important}
+}
+/* 2.14.4: Telefonda da kalemler PC'deki gibi tablo: her kalem tek satır, tablo yana kaydırılır, # sütunu sabit kalır. */
+@media (max-width:760px){
+  .kt{overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;font-size:14px}
+  .kt-bas,.kt-satir{grid-template-columns:30px 96px 200px 64px 78px 96px 56px 64px 96px 34px;width:max-content;min-width:100%}
+  .kt.kt-teklif .kt-bas,.kt.kt-teklif .kt-satir{grid-template-columns:30px 96px 200px 64px 78px 104px 64px 104px 34px}
+  .kt-satir{overflow:visible!important}
+  .kt-no{position:sticky;left:0;z-index:2;background:var(--kart);box-shadow:1px 0 0 var(--ayirici)}
+  .kt-bas .kt-no{background:color-mix(in srgb,var(--mavi) 9%,var(--kart))}
+  .kt-satir input,.kt-satir select{height:42px;font-size:16px!important}
+  .kt-sil .i,.kt-sil svg{width:17px;height:17px}
 }
 /* 2.9.8: Apple tarzı sol menü. Ayarlar uygulaması gibi renkli yuvarlak kare ikonlar, büyük satırlar, sağda açılır ok, yumuşak seçim. */
 #cekmece,body:not(.profilde) #cekmece{background:#f2f2f7!important;border-right:1px solid rgba(60,60,67,.14)!important;font-size:15px;padding-top:0!important}
@@ -1692,7 +1684,7 @@ body.erp .erp-form #mSerbest .yuzen{display:none}
 
 <script>
 'use strict';
-const VERSIYON = '2.14.3';
+const VERSIYON = '2.14.4';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -1969,6 +1961,28 @@ function sayiMetni(s) {
   if (v >= 0) return /^-?\d{1,3}(,\d{3})+$/.test(s) && s.split(',').length > 2 ? s.replace(/,/g, '') : s.replace(',', '.');
   if (/^-?\d{1,3}(\.\d{3})+$/.test(s)) return s.replace(/\./g, '');
   return s;
+}
+/* 2.14.4: Excel / Google E-Tablolar'dan kopyalanan blok: satırlar alt satıra, hücreler sekmeyle ayrılır.
+   Tırnak içindeki hücreler (içinde satır sonu olabilir) bozulmadan okunur. Tek hücre ise null döner (normal yapıştırma). */
+function excelOku(metin) {
+  const t = String(metin || '').replace(/\r\n?/g, '\n').replace(/\n+$/, '');
+  if (!/[\t\n]/.test(t)) return null;
+  const satirlar = [[]]; let h = '', tirnak = false;
+  for (let i = 0; i < t.length; i++) {
+    const c = t[i];
+    if (tirnak) { if (c === '"' && t[i + 1] === '"') { h += '"'; i++; } else if (c === '"') tirnak = false; else h += c; continue; }
+    if (c === '"' && h === '') tirnak = true;
+    else if (c === '\t') { satirlar[satirlar.length - 1].push(h.trim()); h = ''; }
+    else if (c === '\n') { satirlar[satirlar.length - 1].push(h.trim()); h = ''; satirlar.push([]); }
+    else h += c;
+  }
+  satirlar[satirlar.length - 1].push(h.trim());
+  const l = satirlar.filter(x => x.some(Boolean));
+  // Başlık satırı (Açıklama, Miktar, Fiyat…) atlanır
+  if (l.length > 1 && l[0].some(x => /^(parça|kod|stok kodu|açıklama|ürün|malzeme|miktar|adet|birim|fiyat|birim fiyat|kdv|tutar|sıra|no)\b/i.test(x)) && !l[0].some(x => /\d{2,}/.test(x))) l.shift();
+  // Başta 1, 2, 3… sıra numarası sütunu varsa atlanır
+  if (l.length > 1 && l.every((x, i) => String(i + 1) === x[0] || String(i + 1) + '.' === x[0]) && l.every(x => x.length > 2)) l.forEach(x => x.shift());
+  return l.length ? l : null;
 }
 function sayiOku(s) { const t = sayiMetni(s); if (!t) return NaN; const n = Number(t); return isFinite(n) ? n : NaN; }
 const tutarYaz = k => k ? (k / 100).toFixed(2).replace('.', ',').replace(/,00$/, '') : '';
@@ -4480,6 +4494,18 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
       ${t.tevkif ? `<div class="hucre"><div class="ic"><b>KDV tevkifatı (${x.tevkifat}/10)</b><small>${alisF ? '2 No.lu KDV ile siz ödersiniz' : 'Alıcı öder'}</small></div><span class="deger sayi">−${para(t.tevkif)}</span></div>` : ''}
       <div class="hucre"><div class="ic"><b class="k">${t.tevkif ? 'Ödenecek tutar' : 'Genel toplam'}</b></div><span class="tutar" style="font-weight:700">${dPara(x, t.toplam)}</span>${fDoviz(x) !== 'TL' && teklifKur(x) ? `</div><div class="hucre"><div class="ic"><small>TL karşılığı (kur ${kurYaz(teklifKur(x))})</small></div><span class="deger sayi">${para(Math.round(t.toplam * teklifKur(x)))}</span>` : ''}</div>`;
   };
+  const kalemAlanYaz = (k, a, v) => {
+    if (!a) return;
+    v = String(v ?? '').trim();
+    if (a === 'kod') k.kod = v;
+    else if (a === 'ad') k.ad = v;
+    else if (a === 'miktar') { const n = sayiOku(v); if (isFinite(n) && n) k.miktar = n; }
+    else if (a === 'birim') { if (v) k.birim = BIRIMLER.find(b => kucult(b) === kucult(v)) || v; }
+    else if (a === 'fiyat') { const n = tutarOku(v); if (isFinite(n)) k.fiyat = n; }
+    else if (a === 'iskonto') { const n = sayiOku(v.replace('%', '')); if (isFinite(n) && n > 0) k.iskonto = Math.min(100, n); else delete k.iskonto; }
+    else if (a === 'kdv') { const n = sayiOku(v.replace('%', '')); if (KDV_ORAN.includes(n)) k.kdv = n; }
+    if (a === 'kod' && v && !k.ad) { const u = D.urunler.find(y => kucult(y.kod) === kucult(v)); if (u) { k.urunId = u.id; k.ad = u.ad; k.birim = u.birim || k.birim; } }
+  };
   const kalemBos = k => !(k.ad || '').trim() && !k.fiyat && !k.kod && !k.urunId && !k.iskonto && (k.miktar || 1) === 1;
   // PC'de Excel gibi: en az 12 satır hep görünür; boş satırlar kaydedilmez
   const doldur = () => { if (!m.classList.contains('erp-form')) return; while (x.kalemler.length < 12) x.kalemler.push(yeniKalem(x.kalemler[x.kalemler.length - 1]?.kdv ?? 20)); };
@@ -4525,6 +4551,22 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
         $('#kalemEkle', m).click();
       });
       const s = $('[data-sil]', el); if (s) s.onclick = () => { if (x.kalemler.length < 2) return; x.kalemler.splice(+el.dataset.k, 1); kalemCiz(); };
+      // Excel'den çok satırlı blok yapıştırılınca bu hücreden başlayarak alt alta ve sağa doğru doldurulur
+      $$('input[data-a]', el).forEach(inp => inp.addEventListener('paste', e => {
+        const l = excelOku(e.clipboardData && e.clipboardData.getData('text/plain'));
+        if (!l) return;
+        e.preventDefault();
+        const sut = teklif ? ['kod', 'ad', 'miktar', 'birim', 'fiyat', 'kdv'] : ['kod', 'ad', 'miktar', 'birim', 'fiyat', 'iskonto', 'kdv'];
+        const bas = Math.max(0, sut.indexOf(inp.dataset.a)), i0 = +el.dataset.k;
+        l.forEach((sat, ri) => {
+          while (x.kalemler.length <= i0 + ri) x.kalemler.push(yeniKalem(x.kalemler[x.kalemler.length - 1]?.kdv ?? 20));
+          const k = x.kalemler[i0 + ri];
+          sat.forEach((v, ci) => kalemAlanYaz(k, sut[bas + ci], v));
+        });
+        kalemCiz();
+        const son = $(`.kalem[data-k="${i0 + l.length - 1}"] input[data-a="${inp.dataset.a}"]`, m); if (son) son.focus();
+        bildir(`${l.length} satır yapıştırıldı`);
+      }));
     });
     toplamCiz();
   };
@@ -6568,6 +6610,28 @@ function izgara(kap, {kolonlar, satirlar, salt = false, satirSinif = () => '', d
         });
       });
       tr.addEventListener('focusin', () => { $$('tr.secili', kap).forEach(x => x !== tr && x.classList.remove('secili')); tr.classList.add('secili'); });
+      if (!salt) $$('input[data-a]', tr).forEach(el => el.addEventListener('paste', e => {
+        const l = excelOku(e.clipboardData && e.clipboardData.getData('text/plain'));
+        if (!l) return;
+        e.preventDefault();
+        const duz = kolonlar.filter(x => x.tip !== 'salt'), bas = Math.max(0, duz.findIndex(x => x.a === el.dataset.a));
+        l.forEach((sat, ri) => {
+          if (i + ri >= satirlar.length) { if (!yeniSatir) return; const y = yeniSatir(); if (y && !satirlar.includes(y)) satirlar.push(y); }
+          const r = satirlar[i + ri]; if (!r) return;
+          sat.forEach((v, ci) => {
+            const k = duz[bas + ci]; if (!k) return;
+            let d;
+            if (k.tip === 'sayi') { const n = sayiOku(String(v).replace('%', '')); d = v && isFinite(n) ? n : undefined; }
+            else if (k.tip === 'para') { const n = tutarOku(v); d = v && isFinite(n) ? n : undefined; }
+            else if (k.tip === 'secim') { const e2 = Object.entries(k.secenek).find(([a, b]) => kucult(a) === kucult(v) || kucult(b) === kucult(v)); if (!e2) return; d = e2[0]; }
+            else d = v;
+            if (d === undefined || d === '') delete r[k.a]; else r[k.a] = d;
+            degisti(r, k.a, {value: v});
+          });
+        });
+        ciz1(); odakla(Math.min(i + l.length - 1, satirlar.length - 1), el.dataset.a);
+        bildir(`${l.length} satır yapıştırıldı`);
+      }));
       const sil = $('[data-sil]', tr);
       if (sil) sil.onclick = () => { satirlar.splice(i, 1); silindi(r); ciz1(); };
     });
