@@ -1416,6 +1416,47 @@ html.apk #cekmece .c-alt-menu a{min-height:42px!important;font-size:15px!importa
   .k-cubuk span{width:14px}
   .kahraman.kompakt .k-tutar{font-size:30px!important}
 }
+/* 2.14.8: Takvim */
+.tk-ozet{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:12px;margin-bottom:14px;align-items:start}
+.tk-ozet .grup{margin:0}
+.tk-ozet .tk-ekle{margin-top:8px}
+.tk-kap{background:var(--kart);border:1px solid var(--kenar);border-radius:var(--r,10px);padding:8px}
+.tk-izgara{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+.tk-ga{font-size:11px;font-weight:700;color:var(--ikincil);text-align:center;padding:2px 0 4px;text-transform:uppercase}
+.tk-gun{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:2px;min-height:44px;padding:3px 4px;border:1px solid var(--kenar);border-radius:5px;background:var(--kart);color:var(--yazi);font:inherit;text-align:left;cursor:pointer;min-width:0;overflow:hidden}
+.tk-gun.bos{border-color:transparent;background:none;cursor:default}
+.tk-gun:hover:not(.bos){border-color:var(--mavi)}
+.tk-no{font-size:12.5px;font-weight:600;line-height:1.2}
+.tk-gun.bugun .tk-no{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:4px;background:var(--mavi);color:#fff}
+.tk-gun.secili{border-color:var(--mavi);box-shadow:inset 0 0 0 1px var(--mavi);background:color-mix(in srgb,var(--mavi) 7%,var(--kart))}
+.tk-gun.gecikti{border-color:var(--kirmizi)}
+.tk-noktalar{display:flex;gap:3px;flex-wrap:wrap}
+.tk-noktalar i,.tk-lejant i{display:inline-block;width:8px;height:8px;border-radius:2px}
+.tk-gider{background:#e8892b}.tk-randevu{background:#2f74d0}.tk-gider.odendi{background:#9aa3ae}
+.tk-olaylar{display:none;flex-direction:column;gap:2px;min-width:0}
+.tk-o{display:block;font-size:11px;line-height:1.3;padding:1px 4px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff}
+.tk-o.tk-gider{background:#d9771c}.tk-o.tk-randevu{background:#2f6fc6}.tk-o.odendi{background:#8b949e;text-decoration:line-through}
+.tk-o.tk-daha{background:none;color:var(--ikincil);padding:0 2px}
+.tk-lejant{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ikincil);padding:8px 2px 0}
+.tk-lejant span{display:flex;align-items:center;gap:5px}
+.tk-ust{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.tk-ust b{font-size:17px;min-width:150px;text-align:center;text-transform:capitalize}
+.tk-ust .btn{width:auto;min-height:36px;padding:0 12px;background:var(--kart)!important;color:var(--yazi)!important;border:1px solid var(--kenar)!important}
+.tk-ust .btn svg{width:16px;height:16px}
+.tk-ekran{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(300px,1fr);gap:14px;align-items:start}
+.tk-ekran .tk-gun{min-height:92px}
+.tk-ekran .tk-noktalar{display:none}
+.tk-ekran .tk-olaylar{display:flex}
+.tk-yan .bolum:first-child{margin-top:0}
+@media (min-width:761px){.tk-ozet .tk-gun{min-height:58px}.tk-ozet .tk-noktalar{display:none}.tk-ozet .tk-olaylar{display:flex}}
+@media (max-width:760px){
+  .tk-ozet,.tk-ekran{grid-template-columns:minmax(0,1fr)}
+  .tk-gun{min-height:42px;padding:3px}
+  .tk-ekran .tk-gun{min-height:48px}
+  .tk-ekran .tk-noktalar{display:flex}
+  .tk-ekran .tk-olaylar{display:none}
+  .tk-ust b{min-width:0;flex:1}
+}
 .bekleyenler{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-bottom:14px}
 @media (max-width:1000px){.bekleyenler{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .bk-kutu{display:flex;flex-direction:column;gap:1px;min-width:0;background:var(--kart);border:1px solid var(--kenar);border-radius:14px;padding:10px 10px 9px;color:var(--yazi);text-decoration:none}
@@ -1715,7 +1756,7 @@ body.erp .erp-form #mSerbest .yuzen{display:none}
 
 <script>
 'use strict';
-const VERSIYON = '2.14.7';
+const VERSIYON = '2.14.8';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -1892,7 +1933,7 @@ const T = () => TERIM[D.profil] || TERIM.esnaf;
 const yeniDurum = () => ({
   v:2, profil:null, ad:'', firma:{adres:'', vd:'', vno:'', tel:'', eposta:'', iban:''}, modulAyar:{},
   islemler:[], kisiler:[], hareketler:[],
-  butceler:{}, hedefler:[],
+  butceler:{}, hedefler:[], ajanda:[],
   urunler:[], stokHareket:[],
   faturalar:[],
   finansHesap:[], virmanlar:[], finansAyar:{varsayilan:{}},
@@ -2499,7 +2540,7 @@ function menuCiz(aktif) {
   $('#cekmece').innerHTML = `<button class="c-ust" id="cProfil">${kare(p.simge, p.renk)}<div style="min-width:0;flex:1"><b>${esc(D.ad || 'Firma hesabı')}</b><small>Hesap değiştir</small></div>${ikon('ileri', 'chev')}</button>
     ${H.liste.length > 1 ? `<div class="c-hesaplar">${H.liste.filter(x => x.id !== H.aktif).map(x => `<button data-hgec="${x.id}">${kare(x.profil ? PROFILLER[x.profil].simge : 'kisi', x.profil ? PROFILLER[x.profil].renk : 'gri')}<span>${esc(hesapAdi(x))}</span></button>`).join('')}</div>` : ''}
     <div class="c-bolum">Gezinti</div>
-    <div class="c-liste">${satir('panel', 'Özet', 'ev', 'mavi')}</div>
+    <div class="c-liste">${satir('panel', 'Özet', 'ev', 'mavi')}${satir('takvim', 'Takvim', 'takvim', 'pembe')}</div>
     <div class="c-liste c-ana">${gorunen.map(grupHtml).join('')}</div>
     <div class="c-bolum">Sistem</div>
     <div class="c-liste">${satir('menu', 'Modüller', 'izgara', 'indigo', kapali ? `<span class="rozet">${kapali} kapalı</span>` : '')}${satir('ayarlar', 'Ayarlar', 'ayar', 'gri')}</div>
@@ -2571,6 +2612,7 @@ function ciz0() {
   if (s === 'kullanicilar') { menuCiz('ayarlar'); kullanicilarEkrani(); return kaydirma(); }
   if (s === 'islemkaydi') { menuCiz('ayarlar'); islemKaydiEkrani(); return kaydirma(); }
   if (s === 'raporlar') { menuCiz('raporlar'); raporlarEkrani(p1); return kaydirma(); }
+  if (s === 'takvim') { menuCiz('takvim'); takvimEkrani(); yanDuzen(); return kaydirma(); }
   if (s === 'fis') { fisEkrani(p1); yanDuzen(); return kaydirma(); }
   if (!modulAcik(s)) return git('panel', true);
   menuCiz(s);
@@ -3176,6 +3218,159 @@ function menuEkrani() {
 }
 
 /* ================= Özet ================= */
+/* ================= 2.14.8: Takvim (sabit giderler ve randevular) =================
+   D.ajanda: [{id, tur: 'gider'|'randevu', ad, tarih, saat?, tutar? (kuruş), tekrar: ''|'hafta'|'ay'|'yil', bitis?, yer?, not?, odenen: [gün...]}]
+   Özet ekranında aylık takvim tutarsız gösterilir; tutarlar yalnız Takvim ekranındadır. */
+const AJANDA_TEKRAR = {'': 'Tekrarlanmaz', hafta: 'Her hafta', ay: 'Her ay', yil: 'Her yıl'};
+const AJANDA_TUR = {gider: 'Sabit gider', randevu: 'Randevu'};
+function ajandaGunleri(o, bas, son) {
+  const l = [];
+  if (!o || !/^\d{4}-\d{2}-\d{2}$/.test(o.tarih || '')) return l;
+  const bit = o.bitis && o.bitis < son ? o.bitis : son;
+  if (!o.tekrar) { if (o.tarih >= bas && o.tarih <= bit) l.push(o.tarih); return l; }
+  const [y0, m0, g0] = o.tarih.split('-').map(Number);
+  // Uzun süredir tekrarlanan kayıtta baştan saymamak için aralığın başına yakın yerden başlanır
+  let i = 0;
+  if (o.tekrar === 'ay') i = Math.max(0, (+bas.slice(0, 4) - y0) * 12 + (+bas.slice(5, 7) - m0) - 1);
+  else if (o.tekrar === 'yil') i = Math.max(0, +bas.slice(0, 4) - y0 - 1);
+  else if (o.tekrar === 'hafta') i = Math.max(0, Math.floor((tarihNesne(bas) - tarihNesne(o.tarih)) / 864e5 / 7) - 1);
+  for (let n = 0; n < 800; n++, i++) {
+    let t;
+    if (o.tekrar === 'hafta') { const d = new Date(y0, m0 - 1, g0 + 7 * i); t = tarihStr(d); }
+    else if (o.tekrar === 'ay') { const d = new Date(y0, m0 - 1 + i, 1); d.setDate(Math.min(g0, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate())); t = tarihStr(d); }
+    else { const d = new Date(y0 + i, m0 - 1, 1); d.setDate(Math.min(g0, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate())); t = tarihStr(d); }
+    if (t > bit) break;
+    if (t >= bas) l.push(t);
+  }
+  return l;
+}
+/* Aralıktaki olaylar: [{o, g, odendi}] gün ve saate göre sıralı */
+function ajandaOlaylar(bas, son) {
+  return (D.ajanda || []).flatMap(o => ajandaGunleri(o, bas, son).map(g => ({o, g, odendi: (o.odenen || []).includes(g)})))
+    .sort((a, b) => a.g.localeCompare(b.g) || (a.o.tur === 'gider' ? -1 : 1) - (b.o.tur === 'gider' ? -1 : 1) || (a.o.saat || '').localeCompare(b.o.saat || '') || a.o.ad.localeCompare(b.o.ad, 'tr'));
+}
+const ajandaAyAraligi = ay => [ay + '-01', tarihStr(new Date(+ay.slice(0, 4), +ay.slice(5, 7), 0))];
+/* Aylık takvim ızgarası (Pazartesi başlar). tutarli=false iken tutar gösterilmez (Özet ekranı) */
+function takvimIzgara(ay, {secili = '', tutarli = false, kisa = false} = {}) {
+  const [bas, son] = ajandaAyAraligi(ay), olay = ajandaOlaylar(bas, son), bugunT = bugun();
+  const ilk = (tarihNesne(bas).getDay() + 6) % 7, gunSay = +son.slice(8);
+  const gunAd = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+  let h = `<div class="tk-izgara${kisa ? ' tk-kisa' : ''}">${gunAd.map(g => `<div class="tk-ga">${g}</div>`).join('')}`;
+  for (let i = 0; i < ilk; i++) h += '<div class="tk-gun bos"></div>';
+  for (let d = 1; d <= gunSay; d++) {
+    const g = `${ay}-${iki(d)}`, l = olay.filter(x => x.g === g);
+    const gec = l.some(x => x.o.tur === 'gider' && !x.odendi && g < bugunT);
+    h += `<button type="button" class="tk-gun${g === bugunT ? ' bugun' : ''}${g === secili ? ' secili' : ''}${l.length ? ' dolu' : ''}${gec ? ' gecikti' : ''}" data-tkg="${g}" aria-label="${esc(tarihYaz(g))}${l.length ? ', ' + l.length + ' kayıt' : ''}">
+      <span class="tk-no">${d}</span>
+      <span class="tk-noktalar">${l.slice(0, 4).map(x => `<i class="tk-${x.o.tur}${x.odendi ? ' odendi' : ''}"></i>`).join('')}</span>
+      <span class="tk-olaylar">${l.slice(0, 3).map(x => `<span class="tk-o tk-${x.o.tur}${x.odendi ? ' odendi' : ''}">${x.o.saat && x.o.tur === 'randevu' ? `<b>${esc(x.o.saat)}</b> ` : ''}${esc(x.o.ad)}${tutarli && x.o.tutar ? ` · ${kisaPara(x.o.tutar)}` : ''}</span>`).join('')}${l.length > 3 ? `<span class="tk-o tk-daha">+${l.length - 3}</span>` : ''}</span></button>`;
+  }
+  return h + '</div>';
+}
+const ajandaSatir = (x, tutarli) => {
+  const g = gunFark(x.g), gider = x.o.tur === 'gider';
+  return `<button class="hucre kareli" data-tko="${x.o.id}" data-tkg="${x.g}">${kare(gider ? 'cuzdan' : 'takvim', gider ? (x.odendi ? 'gri' : 'turuncu') : 'mavi')}
+    <div class="ic"><b>${esc(x.o.ad)}${x.odendi ? '<span class="hap yesil">ödendi</span>' : ''}</b><small>${esc([tarihYaz(x.g, true), x.o.saat, AJANDA_TUR[x.o.tur], x.o.tekrar ? AJANDA_TEKRAR[x.o.tekrar] : '', x.o.yer].filter(Boolean).join(' · '))}</small></div>
+    ${tutarli && gider && x.o.tutar ? `<span class="tutar">${para(x.o.tutar)}</span>` : `<span class="deger vade ${g < 0 && gider && !x.odendi ? 'gider' : g <= 2 ? 'turuncu' : ''}">${g === 0 ? 'bugün' : g === 1 ? 'yarın' : g < 0 ? -g + ' gün geçti' : g + ' gün'}</span>`}</button>`;
+};
+/* Özet ekranı bölümü: bu ayın takvimi ve önümüzdeki 14 gün (tutarsız) */
+function ozetTakvim() {
+  const ay = bugun().slice(0, 7), bas = bugun(), son = (() => { const d = tarihNesne(bas); d.setDate(d.getDate() + 14); return tarihStr(d); })();
+  const gecmis = ajandaOlaylar(ayKaydir(ay, -1) + '-01', (() => { const d = tarihNesne(bas); d.setDate(d.getDate() - 1); return tarihStr(d); })()).filter(x => x.o.tur === 'gider' && !x.odendi);
+  const yak = [...gecmis, ...ajandaOlaylar(bas, son)].slice(0, 6);
+  return `<div class="bolum">Takvim · ${esc(ayAdi(ay))}<a href="#/takvim">Takvimi aç</a></div>
+    <div class="tk-ozet"><div class="tk-kap">${takvimIzgara(ay, {kisa: true})}<div class="tk-lejant"><span><i class="tk-gider"></i>Sabit gider</span><span><i class="tk-randevu"></i>Randevu</span></div></div>
+    <div class="tk-yakin"><div class="grup">${yak.length ? yak.map(x => ajandaSatir(x, false)).join('') : `<div class="hucre"><div class="ic"><b>Önümüzdeki 2 haftada kayıt yok</b><small>Sabit gider ve randevuları Takvim'den ekleyin</small></div></div>`}</div>
+    <div class="btn-grup tk-ekle"><button class="btn renkli" data-tkyeni="gider">${ikon('arti')} Sabit gider</button><button class="btn renkli" data-tkyeni="randevu">${ikon('arti')} Randevu</button></div></div></div>`;
+}
+function ozetTakvimBagla() {
+  $$('.tk-ozet [data-tkg]:not([data-tko])').forEach(b => b.onclick = () => { ui.takvimAy = b.dataset.tkg.slice(0, 7); ui.takvimGun = b.dataset.tkg; git('takvim'); });
+  $$('.tk-ozet [data-tko]').forEach(b => b.onclick = () => { ui.takvimAy = b.dataset.tkg.slice(0, 7); ui.takvimGun = b.dataset.tkg; git('takvim'); });
+  $$('.tk-ozet [data-tkyeni]').forEach(b => b.onclick = () => ajandaFormu(null, b.dataset.tkyeni));
+}
+/* Takvim ekranı: ay ızgarası (kayıt adları ve tutarlar), seçili günün kayıtları, ayın sabit gider toplamı */
+function takvimEkrani() {
+  ui.takvimAy ||= bugun().slice(0, 7);
+  const ay = ui.takvimAy;
+  if (!ui.takvimGun || ui.takvimGun.slice(0, 7) !== ay) ui.takvimGun = ay === bugun().slice(0, 7) ? bugun() : ay + '-01';
+  const [bas, son] = ajandaAyAraligi(ay), olay = ajandaOlaylar(bas, son), gun = ui.takvimGun;
+  const giderler = olay.filter(x => x.o.tur === 'gider'), top = giderler.reduce((s, x) => s + (x.o.tutar || 0), 0), od = giderler.filter(x => x.odendi).reduce((s, x) => s + (x.o.tutar || 0), 0);
+  let h = sayfa('Takvim', {sag: `<button class="nav-btn" id="tkYeni">Ekle</button>`});
+  h += `<div class="tk-ust"><button class="btn" id="tkOnceki" aria-label="Önceki ay">${ikon('geri')}</button><b>${esc(ayAdi(ay))}</b><button class="btn" id="tkSonraki" aria-label="Sonraki ay">${ikon('ileri')}</button><button class="btn" id="tkBugun">Bugün</button></div>`;
+  h += `<div class="tk-ekran"><div class="tk-kap">${takvimIzgara(ay, {secili: gun, tutarli: true})}<div class="tk-lejant"><span><i class="tk-gider"></i>Sabit gider</span><span><i class="tk-randevu"></i>Randevu</span><span><i class="tk-gider odendi"></i>Ödendi</span></div></div>
+    <div class="tk-yan">
+      <div class="bolum">${esc(tarihYaz(gun))}</div>
+      <div class="grup">${olay.filter(x => x.g === gun).map(x => ajandaSatir(x, true)).join('') || `<div class="hucre"><div class="ic"><b>Bu gün kayıt yok</b><small>Ekle ile sabit gider ya da randevu girin</small></div></div>`}</div>
+      <div class="btn-grup"><button class="btn renkli" data-tkyeni="gider">${ikon('arti')} Sabit gider</button><button class="btn renkli" data-tkyeni="randevu">${ikon('arti')} Randevu</button></div>
+      <div class="bolum">Bu ayın sabit giderleri</div>
+      <div class="grup">${giderler.length ? giderler.map(x => ajandaSatir(x, true)).join('') : `<div class="hucre"><div class="ic"><b>Bu ay sabit gider yok</b></div></div>`}
+        ${giderler.length ? `<div class="hucre"><div class="ic"><b>Toplam</b><small>Ödenen ${para(od)} · kalan ${para(top - od)}</small></div><span class="tutar">${para(top)}</span></div>` : ''}</div>
+    </div></div>`;
+  $('#icerik').innerHTML = h;
+  $('#tkOnceki').onclick = () => { ui.takvimAy = ayKaydir(ay, -1); ui.takvimGun = ''; takvimEkrani(); };
+  $('#tkSonraki').onclick = () => { ui.takvimAy = ayKaydir(ay, 1); ui.takvimGun = ''; takvimEkrani(); };
+  $('#tkBugun').onclick = () => { ui.takvimAy = bugun().slice(0, 7); ui.takvimGun = bugun(); takvimEkrani(); };
+  $('#tkYeni').onclick = () => ajandaFormu(null, 'gider', gun);
+  $$('.tk-ekran [data-tkyeni]').forEach(b => b.onclick = () => ajandaFormu(null, b.dataset.tkyeni, gun));
+  $$('.tk-gun[data-tkg]').forEach(b => b.onclick = () => { ui.takvimGun = b.dataset.tkg; takvimEkrani(); });
+  $$('.tk-ekran [data-tko]').forEach(b => b.onclick = () => ajandaIslem(D.ajanda.find(o => o.id === b.dataset.tko), b.dataset.tkg));
+}
+async function ajandaIslem(o, g) {
+  if (!o) return;
+  const gider = o.tur === 'gider', odendi = (o.odenen || []).includes(g);
+  const e = [];
+  if (gider) e.push({ad: odendi ? 'Ödenmedi olarak işaretle' : 'Ödendi olarak işaretle', deger: 'ode'});
+  e.push({ad: 'Düzenle', deger: 'duzenle'}, {ad: 'Sil', deger: 'sil', tehlike: true});
+  const s = await eylemSayfa(o.ad, [tarihYaz(g), o.saat, gider && o.tutar ? para(o.tutar) : ''].filter(Boolean).join(' · '), e);
+  if (s === 'ode') { o.odenen = odendi ? (o.odenen || []).filter(x => x !== g) : [...(o.odenen || []), g].sort(); kaydet(); bildir(odendi ? 'Ödenmedi olarak işaretlendi' : 'Ödendi olarak işaretlendi'); ciz(); }
+  else if (s === 'duzenle') setTimeout(() => ajandaFormu(o), 320);
+  else if (s === 'sil') {
+    if (!await onay(`${o.ad} silinsin mi?`, o.tekrar ? `Tekrarlanan kayıt (${AJANDA_TEKRAR[o.tekrar].toLocaleLowerCase('tr-TR')}) bütün tarihlerden silinir.` : '')) return;
+    D.ajanda = D.ajanda.filter(x => x !== o); kaydet(); bildir('Silindi'); ciz();
+  }
+}
+function ajandaFormu(o, tur = 'gider', gun) {
+  const yeni = !o;
+  const x = o ? {...o} : {tur, ad: '', tarih: gun && gun >= bugun().slice(0, 7) ? gun : bugun(), saat: '', tutar: 0, tekrar: tur === 'gider' ? 'ay' : '', bitis: '', yer: '', not: ''};
+  const m = modal(yeni ? (x.tur === 'gider' ? 'Yeni sabit gider' : 'Yeni randevu') : 'Takvim kaydını düzenle', `
+    <div class="segment" id="ajTur">${Object.entries(AJANDA_TUR).map(([t, a]) => `<label><input type="radio" name="ajTur" value="${t}" ${x.tur === t ? 'checked' : ''}><span>${a}</span></label>`).join('')}</div>
+    <div class="grup">
+      <label class="f-satir sol"><input type="text" id="ajAd" value="${esc(x.ad)}" maxlength="120" placeholder="Başlık"></label>
+      <label class="f-satir"><span>Tarih</span><input type="date" id="ajTarih" value="${esc(x.tarih)}"></label>
+      <label class="f-satir" data-aj="randevu"><span>Saat</span><input type="time" id="ajSaat" value="${esc(x.saat || '')}"></label>
+      <label class="f-satir" data-aj="gider"><span>Tutar</span><input id="ajTutar" inputmode="decimal" placeholder="0 ₺" value="${tutarYaz(x.tutar)}"></label>
+      <label class="f-satir"><span>Tekrar</span><select id="ajTekrar">${Object.entries(AJANDA_TEKRAR).map(([v, a]) => `<option value="${v}" ${x.tekrar === v ? 'selected' : ''}>${a}</option>`).join('')}</select></label>
+      <label class="f-satir" id="ajBitisS"><span>Bitiş tarihi (isteğe bağlı)</span><input type="date" id="ajBitis" value="${esc(x.bitis || '')}"></label>
+      <label class="f-satir sol"><input type="text" id="ajYer" value="${esc(x.yer || '')}" maxlength="120" placeholder="Kişi / yer (isteğe bağlı)"></label>
+      <label class="f-satir sol"><textarea id="ajNot" rows="2" placeholder="Not">${esc(x.not || '')}</textarea></label>
+    </div>
+    <p class="dipnot" id="ajDip"></p>
+    ${yeni ? '' : `<div class="grup"><button class="hucre tehlike" id="ajSil">Kaydı sil</button></div>`}`,
+    {kaydet: () => {
+      const y = {...x, tur: $('input[name=ajTur]:checked', m).value, ad: $('#ajAd', m).value.trim(), tarih: $('#ajTarih', m).value, tekrar: $('#ajTekrar', m).value, yer: $('#ajYer', m).value.trim(), not: $('#ajNot', m).value.trim()};
+      if (!y.ad) { bildir('Başlık yazın', true); return false; }
+      if (!y.tarih) { bildir('Tarih seçin', true); return false; }
+      if (y.tur === 'gider') { const t = tutarOku($('#ajTutar', m).value); y.tutar = isFinite(t) && t > 0 ? t : 0; delete y.saat; }
+      else { y.saat = $('#ajSaat', m).value; delete y.tutar; delete y.odenen; }
+      y.bitis = y.tekrar ? $('#ajBitis', m).value : '';
+      if (y.bitis && y.bitis < y.tarih) { bildir('Bitiş tarihi başlangıçtan önce olamaz', true); return false; }
+      for (const k of ['saat', 'bitis', 'yer', 'not', 'tekrar']) if (!y[k]) delete y[k];
+      if (yeni) { y.id = kimlik(); y.olusturma = Date.now(); D.ajanda.push(y); } else D.ajanda[D.ajanda.findIndex(z => z.id === o.id)] = y;
+      kaydet(); hatirlaticiPlanla(); bildir(yeni ? 'Takvime eklendi' : 'Kaydedildi');
+      ui.takvimAy = y.tarih.slice(0, 7); ui.takvimGun = y.tarih;
+      setTimeout(ciz, 10);
+    }});
+  const tip = () => {
+    const t = $('input[name=ajTur]:checked', m).value;
+    $$('[data-aj]', m).forEach(e => e.style.display = e.dataset.aj === t ? '' : 'none');
+    $('#ajBitisS', m).style.display = $('#ajTekrar', m).value ? '' : 'none';
+    $('#ajAd', m).placeholder = t === 'gider' ? 'Başlık (ör. Dükkan kirası, Kredi taksiti)' : 'Başlık (ör. Mavi Deniz, motor bakımı)';
+    $('#ajDip', m).textContent = t === 'gider' ? 'Sabit gider tutarı yalnız Takvim ekranında görünür; Özet ekranında yalnız günü işaretlenir. Ödeme günü yaklaşınca hatırlatılır.' : 'Randevu günü Özet ekranındaki takvimde işaretlenir ve o sabah hatırlatılır.';
+  };
+  $$('input[name=ajTur]', m).forEach(r => r.onchange = tip); $('#ajTekrar', m).onchange = tip; tip();
+  if (!yeni) $('#ajSil', m).onclick = async () => { if (!await onay(`${o.ad} silinsin mi?`, '')) return; D.ajanda = D.ajanda.filter(z => z.id !== o.id); kaydet(); kapat(); setTimeout(ciz, 10); };
+  setTimeout(() => yeni && $('#ajAd', m)?.focus(), 350);
+}
 /* 2.14.6: Özet kartında son 6 ayın gelir / gider sütunları (dokununca Gelir-gider raporu) */
 function ozetGrafik(ay) {
   const aylar = Array.from({length: 6}, (_, i) => ayKaydir(ay, i - 5)).map(a => ({a, ...ayToplam(a)}));
@@ -3236,6 +3431,8 @@ function panelEkrani() {
   if (ac('fatura')) { const l = [...acikSatis, ...acikAlis].filter(f => f.vade && f.vade < bugun()); bk.push(kutu('fatura', 'takvimX', 'kirmizi', l.length, 'Vadesi geçen', l.length ? kisaPara(l.reduce((x, f) => x + faturaKalan(f), 0)) : 'gecikme yok', l.length > 0)); }
   if (ac('stok')) { const n = D.urunler.filter(u => u.kritik > 0 && urunMiktar(u.id) <= u.kritik).length; bk.push(kutu('stok', 'depoUyari', 'kahve', n, 'Kritik stok', n ? 'ürün azaldı' : 'stok yeterli', n > 0)); }
   if (bk.length && !bos) h += `<div class="bolum">Bekleyenler</div><div class="bekleyenler">${bk.join('')}</div>`;
+  // 2.14.8: takvim (sabit giderler ve randevular, tutarsız)
+  h += ozetTakvim();
 
   // 2.13: güncel döviz kurları (TCMB satış); dokununca kur penceresi açılır
   {
@@ -3276,6 +3473,7 @@ function panelEkrani() {
   $('#ayarBtn').onclick = () => git('ayarlar');
   $$('[data-kur]').forEach(b => b.onclick = kurFormu);
   if ($('#kurYenile')) $('#kurYenile').onclick = async () => { if (await kurGuncelle()) ciz(); };
+  ozetTakvimBagla();
   sayacBaslat($('#icerik'));
   $$('[data-bas]').forEach(b => b.onclick = () => { const x = b.dataset.bas; x === 'gelir' ? islemFormu(null, 'gelir') : x === 'fatura' ? faturaFormu(null, 'fatura') : x === 'cari' ? git('veresiye') : ornekSor(); });
   faturaTiklari();
@@ -7009,7 +7207,7 @@ function erpCercevele() {
     const ad = b.textContent.trim() || (b.getAttribute('aria-label') || b.title || '').replace(/^Cariyi sil$/, 'Sil') || 'Düzenle';
     if (varOlan.has(ad.toLocaleLowerCase('tr-TR')) || $$('span', arac).some(x => x.textContent === ad)) continue;
     const y = document.createElement('button');
-    y.className = 'fa' + (/sil/i.test(ad) ? ' fa-sil' : ''); y.innerHTML = ikon(/sil/i.test(ad) ? 'cop' : 'kalem') + '<span></span>'; $('span', y).textContent = ad;
+    y.className = 'fa' + (/sil/i.test(ad) ? ' fa-sil' : ''); y.innerHTML = ikon(/sil/i.test(ad) ? 'cop' : /^(Ekle|Yeni)/i.test(ad) ? 'arti' : 'kalem') + '<span></span>'; $('span', y).textContent = ad;
     y.onclick = () => b.click(); arac.append(y);
   }
   for (const kap of $$(':scope > .btn-izgara, :scope > .yan-arac', k)) { for (const b of [...kap.children]) { b.classList.add('fa'); arac.append(b); } kap.replaceWith(); }
@@ -9225,6 +9423,14 @@ function hatirlaticilar() {
         const bk = yaklasanBakimlar(), gec = bk.filter(b => b.durum === 'gecikti').length;
         if (bk.length) durum('bk', `${bk.length} makinenin bakımı ${gec ? 'geldi' : 'yaklaşıyor'}`, bk.slice(0, 3).map(b => kisi(b.e.kisiId)?.ad || b.e.tekne || ekipmanAd(b.e)).join(', '), 'servis/r-bakim');
       }
+      // 2.14.8: takvim: sabit gider 3 gün önce ve o gün, randevu o gün
+      for (const x of ajandaOlaylar(bugunT, sinir)) {
+        if (x.odendi) continue;
+        if (x.o.tur === 'gider') {
+          ekle(gunOnce(x.g, 3), `a3-${x.o.id}-${x.g}`, 'Sabit gider yaklaşıyor', `${x.o.ad}${x.o.tutar ? ' · ' + para(x.o.tutar) : ''} · 3 gün sonra${hesap}`, `${h.id}|takvim`);
+          ekle(x.g, `a0-${x.o.id}-${x.g}`, 'Bugün ödenecek', `${x.o.ad}${x.o.tutar ? ' · ' + para(x.o.tutar) : ''}${hesap}`, `${h.id}|takvim`);
+        } else ekle(x.g, `ar-${x.o.id}-${x.g}`, 'Bugün randevu', `${x.o.saat ? x.o.saat + ' · ' : ''}${x.o.ad}${x.o.yer ? ' · ' + x.o.yer : ''}${hesap}`, `${h.id}|takvim`);
+      }
       if (modulAcik('teklif')) for (const f of D.faturalar) if (f.tur === 'teklif' && f.vade && teklifDurumKod(f) === 'bekliyor')
         ekle(gunOnce(f.vade, 1), `t1-${f.id}`, 'Teklif geçerliliği bitiyor', `${faturaMusteri(f)} · ${f.no} · yarın son gün${hesap}`, `${h.id}|teklif/${f.id}`);
     }
@@ -9308,7 +9514,7 @@ const ozelMi = k => !GENEL_KAYIT.includes(k);
 const kayitYeri = k => ozelMi(k) ? 'ozel' : 'kayit';
 const KOLEKSIYON_AD = {islemler: 'Gelir/gider', kisiler: 'Cari', hareketler: 'Cari hareket', urunler: 'Ürün', stokHareket: 'Stok hareketi',
   faturalar: 'Fatura/teklif', finansHesap: 'Banka/kasa hesabı', virmanlar: 'Virman', ekipmanlar: 'Tekne/makine', servisler: 'Servis',
-  personeller: 'Personel', personelOdeme: 'Personel ödemesi', hedefler: 'Hedef', _firma: 'Firma bilgileri', _ad: 'Firma unvanı',
+  personeller: 'Personel', personelOdeme: 'Personel ödemesi', hedefler: 'Hedef', ajanda: 'Takvim kaydı', _firma: 'Firma bilgileri', _ad: 'Firma unvanı',
   _servisAyar: 'Servis ayarları', _finansAyar: 'Finans ayarları', _modulAyar: 'Modül ayarları', _puantaj: 'Puantaj', _butceler: 'Bütçe',
   _bordroAyar: 'Bordro ayarları', _vergiAyar: 'Vergi ayarları', _fisNo: 'Fiş numaraları', _profil: 'Profil'};
 const ISLEM_AD = {ekle: 'Ekledi', duzenle: 'Değiştirdi', sil: 'Sildi', toplu: 'Toplu gönderim', kurulum: 'Kurulum', giris: 'Giriş', kullanici: 'Kullanıcı'};
