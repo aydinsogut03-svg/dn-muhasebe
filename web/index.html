@@ -1684,7 +1684,7 @@ body.erp .erp-form #mSerbest .yuzen{display:none}
 
 <script>
 'use strict';
-const VERSIYON = '2.14.4';
+const VERSIYON = '2.14.5';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -2544,6 +2544,8 @@ function ciz0() {
   if (s === 'stok' && p1 && p1.startsWith('s-')) { siparisEkrani(p1.slice(2)); yanDuzen(); return kaydirma(); }
   if (p1 && p1.startsWith('r-')) { const [r, q = ''] = p1.slice(2).split('?'); if (masaustuMu()) erpModul(s, r, new URLSearchParams(q)); else raporListe(s, r, new URLSearchParams(q)); yanDuzen(); return kaydirma(); }
   // 2.10: masaüstünde modül ana ekranı tam sayfa tablo penceresidir
+  if (s === 'personel') ui.pSekme = p1 === 'puantaj' || p1 === 'bordro' ? p1 : 'liste';
+  if (s === 'personel' && ui.pSekme !== 'liste') { personelEkrani(); yanDuzen(); return kaydirma(); }
   if (!p1 && masaustuMu() && ERP_ANA[s] && raporTanim(s, ERP_ANA[s])) { erpModul(s, ERP_ANA[s]); yanDuzen(); return kaydirma(); }
   const ekran = {panel: panelEkrani, servis: p1 ? () => masaustuMu() ? servisFisi(p1) : servisEkrani1(p1) : () => masaustuMu() ? servisListesiErp() : servisEkrani, banka: p1 ? () => finansHesapEkrani(p1) : bankaEkrani, kasa: kasaEkrani, veresiye: p1 ? () => kisiEkrani(p1) : veresiyeEkrani,
     stok: p1 ? () => urunEkrani(p1) : stokEkrani, teklif: p1 ? () => teklifEkrani(p1) : teklifListeEkrani,
@@ -2581,7 +2583,7 @@ const ALT_MENU = {
     ['Raporlar', [['Teklif listesi', 'tablo', 'teklif/r-liste'], ['Yanıt bekleyenler', 'kumSaati', 'teklif/r-bekleyen'], ['Müşteri bazında', 'kisiYildiz', 'teklif/r-musteri']]]],
   fatura: [['İşlemler', [['Faturalar', 'faturaTL', 'fatura'], ['Yeni satış faturası', 'faturaTL+', () => faturaFormu(null, 'fatura')], ['Yeni alış faturası', 'faturaAl', () => faturaFormu(null, 'alis')], ['e-Arşiv / e-Fatura yükle', 'faturaYukle', () => eFaturaYukle()]]],
     ['Raporlar', [['Satış faturaları', 'tablo', 'fatura/r-satis'], ['Alış faturaları', 'kayitlar', 'fatura/r-alis'], ['Vadesi geçenler', 'takvimX', 'fatura/r-vade']]]],
-  personel: [['İşlemler', [['Çalışanlar', 'kisiler', 'personel'], ['Yeni personel', 'kisi+', () => personelFormu()], ['Puantaj', 'puantaj', () => personelSekme('puantaj')], ['Bordro', 'bordro', () => personelSekme('bordro')],
+  personel: [['İşlemler', [['Çalışanlar', 'kisiler', 'personel'], ['Yeni personel', 'kisi+', () => personelFormu()], ['Puantaj', 'puantaj', 'personel/puantaj'], ['Bordro', 'bordro', 'personel/bordro'],
       ['İzin girişi', 'semsiye', async () => { const p = await personelSec('İzin girişi'); if (p) izinFormu(p); }], ['Zimmet ver', 'anahtar', async () => { const p = await personelSec('Zimmet ver'); if (p) zimmetFormu(p); }],
       ['Maaş hesaplayıcı', 'hesapMakinesi', () => maasHesaplayici()]]],
     ['Raporlar', [['Personel listesi', 'tablo', 'personel/r-liste'], ['İletişim ve acil durum', 'rehber', 'personel/r-iletisim'], ['Maaş ve avans ödemeleri', 'banknot', 'personel/r-odeme'],
@@ -3557,6 +3559,499 @@ function ublOku(xmlMetin) {
     xslt: ekler.find(e => /\.xslt?$/i.test(e.ad))?.veri || ''
   };
 }
+/* ================= 2.14.5: PDF faturadan veri çekme (kitaplıksız, çevrimdışı) =================
+   1) PDF'e gömülü UBL XML varsa (bazı entegratörler ekler) doğrudan XML gibi okunur.
+   2) Yoksa sayfalardaki yazılar konumlarıyla çıkarılır (FlateDecode, nesne akışları, ToUnicode, Type0/CID yazı tipleri, form nesneleri)
+      ve GİB e-Arşiv / e-Fatura görünümündeki etiketlerden fatura no, ETTN, tarih, VKN/TCKN, kalemler, KDV ve toplamlar bulunur.
+   Kalem tablosu toplamı tutmazsa fatura KDV oranlarına göre matrah kalemleriyle kaydedilir; tutarlar her zaman PDF'teki toplamla aynıdır. */
+const pdfIkili = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 8192) s += String.fromCharCode.apply(null, u8.subarray(i, i + 8192)); return s; };
+const PDF_AYRAC = new Uint8Array(256); for (const c of ' \t\r\n\f\0/[]<>(){}%') PDF_AYRAC[c.charCodeAt(0)] = 1;
+async function pdfInflate(u8) {
+  for (const tur of ['deflate', 'deflate-raw']) {
+    const parca = []; let n = 0;
+    try {
+      const r = new Blob([tur === 'deflate' ? u8 : u8.subarray(2)]).stream().pipeThrough(new DecompressionStream(tur)).getReader();
+      for (;;) { const {done, value} = await r.read(); if (done) break; parca.push(value); n += value.length; }
+    } catch (e) { /* sondaki bozuk baytlar: okunan kısım yeter */ }
+    if (n) { const c = new Uint8Array(n); let o = 0; for (const x of parca) { c.set(x, o); o += x.length; } return c; }
+  }
+  return new Uint8Array(0);
+}
+function pdfA85(u8) {
+  const t = pdfIkili(u8).replace(/^\s*<~/, '').replace(/~>[\s\S]*$/, '').replace(/\s/g, ''), c = [];
+  for (let i = 0; i < t.length;) {
+    if (t[i] === 'z') { c.push(0, 0, 0, 0); i++; continue; }
+    const g = t.slice(i, i + 5); i += 5; const n = g.length; if (n < 2) break;
+    let v = 0; for (let k = 0; k < 5; k++) v = v * 85 + ((k < n ? g.charCodeAt(k) : 117) - 33);
+    const b = [(v >>> 24) & 255, (v >>> 16) & 255, (v >>> 8) & 255, v & 255]; c.push(...b.slice(0, n - 1));
+  }
+  return new Uint8Array(c);
+}
+/* Tek simge: sayı, /Ad, {s: dizi}, {t: '[' ']' '<<' '>>'}, {op: işleç} */
+function pdfTok(s, i) {
+  const L = s.length;
+  for (;;) {
+    const c = s.charCodeAt(i);
+    if (c === 32 || c === 10 || c === 13 || c === 9 || c === 12 || c === 0) i++;
+    else if (c === 37) { while (i < L && s[i] !== '\n' && s[i] !== '\r') i++; }
+    else break;
+  }
+  if (i >= L) return [undefined, i];
+  const c = s[i];
+  if (c === '/') { let j = i + 1; while (j < L && !PDF_AYRAC[s.charCodeAt(j)]) j++; return ['/' + s.slice(i + 1, j).replace(/#([0-9a-f]{2})/gi, (_, h) => String.fromCharCode(parseInt(h, 16))), j]; }
+  if (c === '(') {
+    let d = 1, j = i + 1, o = '';
+    while (j < L && d) {
+      const ch = s[j];
+      if (ch === '\\') {
+        const n = s[j + 1]; j += 2;
+        if (n === 'n') o += '\n'; else if (n === 'r') o += '\r'; else if (n === 't') o += '\t'; else if (n === 'b') o += '\b'; else if (n === 'f') o += '\f';
+        else if (n === '\r') { if (s[j] === '\n') j++; } else if (n === '\n') {}
+        else if (n >= '0' && n <= '7') { let k = n; while (k.length < 3 && s[j] >= '0' && s[j] <= '7') k += s[j++]; o += String.fromCharCode(parseInt(k, 8) & 255); }
+        else o += n;
+        continue;
+      }
+      if (ch === '(') d++; else if (ch === ')') { d--; if (!d) break; }
+      o += ch; j++;
+    }
+    return [{s: o}, j + 1];
+  }
+  if (c === '<') {
+    if (s[i + 1] === '<') return [{t: '<<'}, i + 2];
+    const j = s.indexOf('>', i); let h = s.slice(i + 1, j < 0 ? L : j).replace(/[^0-9a-f]/gi, ''); if (h.length % 2) h += '0';
+    let o = ''; for (let k = 0; k < h.length; k += 2) o += String.fromCharCode(parseInt(h.substr(k, 2), 16));
+    return [{s: o}, (j < 0 ? L : j) + 1];
+  }
+  if (c === '>') return [{t: '>>'}, s[i + 1] === '>' ? i + 2 : i + 1];
+  if (c === '[' || c === ']' || c === '{' || c === '}' || c === ')') return [{t: c}, i + 1];
+  let j = i; while (j < L && !PDF_AYRAC[s.charCodeAt(j)]) j++;
+  const w = s.slice(i, j);
+  if (/^[+-]?(\d+\.?\d*|\.\d+)$/.test(w)) return [parseFloat(w), j];
+  return [{op: w}, j];
+}
+/* Nesne: sayı, ad, {s}, {r: no} (dolaylı), dizi, {d: sözlük}, true/false/null */
+function pdfNesne(s, i, refli = true) {
+  const [t, j] = pdfTok(s, i);
+  if (typeof t === 'number') {
+    if (refli && Number.isInteger(t)) { const [t2, j2] = pdfTok(s, j); if (typeof t2 === 'number') { const [t3, j3] = pdfTok(s, j2); if (t3 && t3.op === 'R') return [{r: t}, j3]; } }
+    return [t, j];
+  }
+  if (t && t.t === '[') { const a = []; let k = j; for (let n = 0; n < 1e6; n++) { const [q, k2] = pdfTok(s, k); if (q === undefined) return [a, k2]; if (q.t === ']') return [a, k2]; const [v, k3] = pdfNesne(s, k, refli); a.push(v); k = k3; } return [a, k]; }
+  if (t && t.t === '<<') { const d = {}; let k = j; for (let n = 0; n < 1e6; n++) { const [q, k2] = pdfTok(s, k); if (q === undefined || q.t === '>>') return [{d}, k2]; if (typeof q === 'string') { const [v, k3] = pdfNesne(s, k2, refli); d[q.slice(1)] = v; k = k3; } else k = k2; } return [{d}, k]; }
+  if (t && t.op === 'true') return [true, j]; if (t && t.op === 'false') return [false, j]; if (t && t.op === 'null') return [null, j];
+  return [t, j];
+}
+/* PDF yapısı: nesneler (nesne akışları dahil), akış çözme, sayfalar */
+async function pdfYapi(u8) {
+  const s = pdfIkili(u8), nes = new Map();
+  const re = /(\d+)\s+(\d+)\s+obj\b/g; let m;
+  while ((m = re.exec(s))) {
+    let [v, j] = pdfNesne(s, re.lastIndex);
+    const o = {v};
+    let k = j; while (/\s/.test(s[k] || '')) k++;
+    if (s.startsWith('stream', k)) {
+      k += 6; if (s[k] === '\r') k++; if (s[k] === '\n') k++;
+      const boy = v && v.d && v.d.Length;
+      let son = -1;
+      if (typeof boy === 'number' && /^\s*endstream/.test(s.substr(k + boy, 20))) son = k + boy;
+      if (son < 0) { son = s.indexOf('endstream', k); if (son < 0) son = s.length; let t = son; if (s[t - 1] === '\n') t--; if (s[t - 1] === '\r') t--; son = t; }
+      o.ham = u8.subarray(k, son); re.lastIndex = son;
+    }
+    nes.set(+m[1], o);
+  }
+  if (/\/Encrypt\s/.test(s.slice(-4096)) || [...nes.values()].some(o => o.v?.d?.Type === '/XRef' && o.v.d.Encrypt)) throw new Error('şifreli');
+  const R = x => { for (let n = 0; x && x.r !== undefined && n < 20; n++) x = nes.get(x.r)?.v ?? null; return x; };
+  const D = x => R(x)?.d || null;
+  const akis = async o => {
+    if (!o || !o.ham) return null;
+    if (o.coz) return o.coz;
+    let veri = o.ham; const d = o.v?.d || {};
+    let f = R(d.Filter); f = f ? (Array.isArray(f) ? f.map(R) : [f]) : [];
+    for (const x of f) {
+      if (x === '/FlateDecode' || x === '/Fl') veri = await pdfInflate(veri);
+      else if (x === '/ASCIIHexDecode' || x === '/AHx') { const h = pdfIkili(veri).replace(/>.*$/s, '').replace(/[^0-9a-f]/gi, ''); const c = new Uint8Array(h.length >> 1); for (let i = 0; i < c.length; i++) c[i] = parseInt(h.substr(i * 2, 2), 16); veri = c; }
+      else if (x === '/ASCII85Decode' || x === '/A85') veri = pdfA85(veri);
+      else return o.coz = null;
+    }
+    return o.coz = veri;
+  };
+  // Nesne akışlarındaki (ObjStm) sıkıştırılmış nesneler
+  for (const o of [...nes.values()]) {
+    if (o.v?.d?.Type !== '/ObjStm') continue;
+    const v = await akis(o); if (!v) continue;
+    const t = pdfIkili(v), n = R(o.v.d.N) || 0, ilk = R(o.v.d.First) || 0;
+    const bas = t.slice(0, ilk).trim().split(/\s+/).map(Number);
+    for (let i = 0; i < n; i++) { const no = bas[i * 2], yer = bas[i * 2 + 1]; if (!Number.isFinite(no)) continue; if (!nes.has(no) || !nes.get(no).ham) nes.set(no, {v: pdfNesne(t, ilk + yer)[0]}); }
+  }
+  // Sayfalar, sayfa ağacı sırasıyla; kaynaklar üst düğümden devralınır
+  const sayfalar = [];
+  const gez = (x, kay, d0 = 0) => {
+    const d = D(x); if (!d || d0 > 30) return;
+    const k = d.Resources ? R(d.Resources) : kay;
+    if (d.Type === '/Pages' || d.Kids) for (const c of R(d.Kids) || []) gez(c, k, d0 + 1);
+    else sayfalar.push({d, kay: k});
+  };
+  const katalog = [...nes.values()].filter(o => o.v?.d?.Type === '/Catalog').pop();
+  if (katalog) gez(katalog.v.d.Pages);
+  if (!sayfalar.length) for (const o of nes.values()) if (o.v?.d?.Type === '/Page') sayfalar.push({d: o.v.d, kay: R(o.v.d.Resources)});
+  return {nes, R, D, akis, sayfalar, katalog};
+}
+/* Yazı tipi: karakter kodu → Unicode ve genişlik */
+const PDF_GLIF = {space: ' ', period: '.', comma: ',', colon: ':', semicolon: ';', hyphen: '-', minus: '-', slash: '/', percent: '%', parenleft: '(', parenright: ')', ampersand: '&', at: '@', plus: '+', equal: '=', underscore: '_', quotesingle: "'", quotedbl: '"', numbersign: '#', asterisk: '*', bracketleft: '[', bracketright: ']',
+  zero: '0', one: '1', two: '2', three: '3', four: '4', five: '5', six: '6', seven: '7', eight: '8', nine: '9', Gbreve: 'Ğ', gbreve: 'ğ', Idotaccent: 'İ', Idot: 'İ', dotlessi: 'ı', Scedilla: 'Ş', scedilla: 'ş', Ccedilla: 'Ç', ccedilla: 'ç', Odieresis: 'Ö', odieresis: 'ö', Udieresis: 'Ü', udieresis: 'ü', Euro: '€', sterling: '£', dollar: '$', endash: '–', emdash: '—', quoteright: '’', quoteleft: '‘', bullet: '•'};
+let pdfWinAnsi;
+async function pdfYaziTipi(y, fd) {
+  const {R, D, akis} = y;
+  const f = {bayt: 1, harf: new Map(), gen: new Map(), vars: 500};
+  if (!fd) return f;
+  const tip = R(fd.Subtype);
+  if (tip === '/Type0') {
+    f.bayt = 2; f.vars = 1000;
+    const alt = D(R(fd.DescendantFonts)?.[0]);
+    if (alt) {
+      f.vars = R(alt.DW) ?? 1000;
+      const w = R(alt.W) || [];
+      for (let i = 0; i < w.length;) {
+        const a = R(w[i]), b = R(w[i + 1]);
+        if (Array.isArray(b)) { b.forEach((x, k) => f.gen.set(a + k, R(x))); i += 2; }
+        else { const c = R(w[i + 2]); for (let k = a; k <= b && k - a < 65536; k++) f.gen.set(k, c); i += 3; }
+      }
+    }
+  } else {
+    const fc = R(fd.FirstChar) || 0, w = R(fd.Widths) || [];
+    w.forEach((x, k) => f.gen.set(fc + k, R(x)));
+    pdfWinAnsi ||= new TextDecoder('windows-1252').decode(Uint8Array.from({length: 256}, (_, i) => i));
+    for (let i = 32; i < 256; i++) f.harf.set(i, pdfWinAnsi[i]);
+    const enc = R(fd.Encoding), fark = enc && enc.d ? R(enc.d.Differences) : null;
+    if (Array.isArray(fark)) { let k = 0; for (const x of fark.map(R)) { if (typeof x === 'number') k = x; else if (typeof x === 'string') { const ad = x.slice(1); const u = /^uni([0-9A-F]{4})$/i.exec(ad); const h = PDF_GLIF[ad] || (u ? String.fromCharCode(parseInt(u[1], 16)) : ad.length === 1 ? ad : ''); if (h) f.harf.set(k, h); k++; } } }
+  }
+  const tu = fd.ToUnicode, o = tu && tu.r !== undefined ? y.nes.get(tu.r) : null;
+  const cm = o && await akis(o);
+  if (cm) {
+    const t = pdfIkili(cm), hex = x => parseInt(x, 16), uni = h => { let o = ''; for (let i = 0; i + 4 <= h.length; i += 4) o += String.fromCharCode(hex(h.substr(i, 4))); if (h.length % 4 === 2) o += String.fromCharCode(hex(h.slice(-2))); return o; };
+    const cs = /begincodespacerange([\s\S]*?)endcodespacerange/.exec(t);
+    if (cs) { const l = cs[1].match(/<([0-9a-f]+)>/gi) || []; if (l.length && l.every(x => x.length <= 4)) f.bayt = 1; else if (l.length) f.bayt = 2; }
+    for (const b of t.matchAll(/beginbfchar([\s\S]*?)endbfchar/g)) for (const x of b[1].matchAll(/<([0-9a-f]+)>\s*<([0-9a-f]*)>/gi)) f.harf.set(hex(x[1]), uni(x[2]));
+    for (const b of t.matchAll(/beginbfrange([\s\S]*?)endbfrange/g)) {
+      for (const x of b[1].matchAll(/<([0-9a-f]+)>\s*<([0-9a-f]+)>\s*(<([0-9a-f]*)>|\[([^\]]*)\])/gi)) {
+        const a = hex(x[1]), z = hex(x[2]);
+        if (x[4] !== undefined) { const h = x[4], son = hex(h.slice(-4)) || 0, on = h.slice(0, -4); for (let k = a; k <= z && k - a < 65536; k++) f.harf.set(k, uni(on) + String.fromCharCode(son + k - a)); }
+        else { const l = x[5].match(/<([0-9a-f]*)>/gi) || []; l.forEach((h, k) => f.harf.set(a + k, uni(h.slice(1, -1)))); }
+      }
+    }
+  }
+  return f;
+}
+const pdfCarp = (a, b) => [a[0] * b[0] + a[1] * b[2], a[0] * b[1] + a[1] * b[3], a[2] * b[0] + a[3] * b[2], a[2] * b[1] + a[3] * b[3], a[4] * b[0] + a[5] * b[2] + b[4], a[4] * b[1] + a[5] * b[3] + b[5]];
+/* İçerik akışını yürütür, yazı parçalarını {x, y, x2, fs, t} olarak toplar */
+async function pdfIcerik(y, veri, kay, ctm, cikti, derin = 0) {
+  const {R, D} = y;
+  if (!veri || derin > 6) return;
+  const fontlar = D(kay?.d?.Font) || {}, xo = D(kay?.d?.XObject) || {};
+  const s = pdfIkili(veri);
+  let gs = {ctm}, yigin = [], tm = [1, 0, 0, 1, 0, 0], tlm = tm, fs = 12, font = null, tc = 0, tw = 0, th = 1, tl = 0, rise = 0;
+  const tf = async ad => { const r = fontlar[String(ad || '').slice(1)]; if (!r) return null; const anahtar = r.r ?? ad; y.ftOn ||= new Map(); if (!y.ftOn.has(anahtar)) y.ftOn.set(anahtar, await pdfYaziTipi(y, D(r))); return y.ftOn.get(anahtar); };
+  const goster = str => {
+    const f = font || {bayt: 1, harf: new Map(), gen: new Map(), vars: 500};
+    let t = '', adim = 0;
+    for (let i = 0; i < str.length; i += f.bayt) {
+      const kod = f.bayt === 2 ? (str.charCodeAt(i) << 8) | (str.charCodeAt(i + 1) || 0) : str.charCodeAt(i);
+      let h = f.harf.get(kod); if (h === undefined) h = f.bayt === 1 && kod >= 32 && kod < 127 ? String.fromCharCode(kod) : '';
+      t += h;
+      adim += ((f.gen.get(kod) ?? f.vars) / 1000 * fs + tc + (f.bayt === 1 && kod === 32 ? tw : 0)) * th;
+    }
+    const trm = pdfCarp([fs * th, 0, 0, fs, 0, rise], pdfCarp(tm, gs.ctm));
+    const son = pdfCarp([1, 0, 0, 1, adim, 0], tm), trm2 = pdfCarp([fs * th, 0, 0, fs, 0, rise], pdfCarp(son, gs.ctm));
+    const boy = Math.hypot(trm[2], trm[3]);
+    t = t.replace(/[\u0000-\u001f­]/g, '').replace(/ /g, ' ');
+    if (t.trim() && Math.abs(trm[1]) < Math.abs(trm[0]) + 0.01) cikti.push({x: trm[4], y: trm[5], x2: trm2[4], fs: boy || 1, t});
+    tm = son;
+  };
+  let ops = [];
+  for (let i = 0, n = 0; i < s.length && n < 2e6; n++) {
+    let [t, j] = pdfTok(s, i);
+    if (t === undefined) break;
+    if (t && t.t === '[') { const [a, k] = pdfNesne(s, i, false); ops.push(a); i = k; continue; }
+    if (t && t.t === '<<') { const [a, k] = pdfNesne(s, i, false); ops.push(a); i = k; continue; }
+    i = j;
+    if (!t || !t.op) { ops.push(t); continue; }
+    const op = t.op, a = ops; ops = [];
+    switch (op) {
+      case 'q': yigin.push(gs); gs = {...gs}; break;
+      case 'Q': gs = yigin.pop() || gs; break;
+      case 'cm': if (a.length >= 6) gs.ctm = pdfCarp(a.slice(-6), gs.ctm); break;
+      case 'BT': tm = tlm = [1, 0, 0, 1, 0, 0]; break;
+      case 'Tf': font = await tf(a[0]); fs = a[1] ?? fs; break;
+      case 'Tc': tc = a[0] || 0; break;
+      case 'Tw': tw = a[0] || 0; break;
+      case 'Tz': th = (a[0] ?? 100) / 100; break;
+      case 'TL': tl = a[0] || 0; break;
+      case 'Ts': rise = a[0] || 0; break;
+      case 'Td': tm = tlm = pdfCarp([1, 0, 0, 1, a[0] || 0, a[1] || 0], tlm); break;
+      case 'TD': tl = -(a[1] || 0); tm = tlm = pdfCarp([1, 0, 0, 1, a[0] || 0, a[1] || 0], tlm); break;
+      case 'Tm': if (a.length >= 6) tm = tlm = a.slice(-6); break;
+      case 'T*': tm = tlm = pdfCarp([1, 0, 0, 1, 0, -tl], tlm); break;
+      case 'Tj': if (a[0]?.s !== undefined) goster(a[0].s); break;
+      case "'": tm = tlm = pdfCarp([1, 0, 0, 1, 0, -tl], tlm); if (a[0]?.s !== undefined) goster(a[0].s); break;
+      case '"': tw = a[0] || 0; tc = a[1] || 0; tm = tlm = pdfCarp([1, 0, 0, 1, 0, -tl], tlm); if (a[2]?.s !== undefined) goster(a[2].s); break;
+      case 'TJ': for (const x of Array.isArray(a[0]) ? a[0] : []) { if (typeof x === 'number') tm = pdfCarp([1, 0, 0, 1, -x / 1000 * fs * th, 0], tm); else if (x?.s !== undefined) goster(x.s); } break;
+      case 'Do': {
+        const r = xo[String(a[0] || '').slice(1)]; const o = r && r.r !== undefined ? y.nes.get(r.r) : null; const d = o?.v?.d;
+        if (d && R(d.Subtype) === '/Form') { const mt = R(d.Matrix) || [1, 0, 0, 1, 0, 0]; await pdfIcerik(y, await y.akis(o), d.Resources ? R(d.Resources) : kay, pdfCarp(mt, gs.ctm), cikti, derin + 1); }
+        break;
+      }
+      case 'BI': { const k = s.indexOf('ID', i); const e = k < 0 ? -1 : s.indexOf('EI', k + 3); i = e < 0 ? s.length : e + 2; break; }
+    }
+  }
+}
+/* PDF → satırlar: [{y, s (sayfa), r: [{x, x2, fs, t}], t}] yukarıdan aşağı, soldan sağa */
+async function pdfYazilar(u8) {
+  const y = await pdfYapi(u8), tum = [];
+  for (let si = 0; si < y.sayfalar.length && si < 30; si++) {
+    const {d, kay} = y.sayfalar[si];
+    let ic = y.R(d.Contents); ic = Array.isArray(ic) ? ic : [d.Contents];
+    const parca = []; let n = 0;
+    for (const c of ic) { const o = c && c.r !== undefined ? y.nes.get(c.r) : null; const v = await y.akis(o); if (v) { parca.push(v); n += v.length + 1; } }
+    const veri = new Uint8Array(n); let o = 0; for (const p of parca) { veri.set(p, o); o += p.length + 1; veri[o - 1] = 10; }
+    const r = []; await pdfIcerik(y, veri, kay, [1, 0, 0, 1, 0, 0], r);
+    r.sort((a, b) => b.y - a.y || a.x - b.x);
+    const satirlar = [];
+    for (const p of r) {
+      const s = satirlar.find(l => Math.abs(l.y - p.y) < Math.min(l.fs, p.fs) * 0.45);
+      if (s) { s.r.push(p); s.fs = Math.min(s.fs, p.fs); } else satirlar.push({y: p.y, fs: p.fs, r: [p]});
+    }
+    satirlar.sort((a, b) => b.y - a.y);
+    for (const l of satirlar) {
+      l.r.sort((a, b) => a.x - b.x);
+      // Bitişik parçalar birleşir; araları açık olanlar ayrı hücre olur
+      const h = [];
+      for (const p of l.r) {
+        const o = h[h.length - 1], bosluk = o ? p.x - o.x2 : 1e9;
+        if (o && bosluk < p.fs * 0.9) { o.t += (bosluk > p.fs * 0.12 && !/\s$/.test(o.t) && !/^\s/.test(p.t) ? ' ' : '') + p.t; o.x2 = Math.max(o.x2, p.x2); }
+        else h.push({...p});
+      }
+      h.forEach(c => c.t = c.t.replace(/\s+/g, ' ').trim());
+      tum.push({s: si, y: l.y, fs: l.fs, r: l.r, h: h.filter(c => c.t), t: h.map(c => c.t).filter(Boolean).join('   ')});
+    }
+  }
+  return {y, satirlar: tum.filter(l => l.t)};
+}
+/* PDF içine gömülü UBL fatura XML'i */
+async function pdfGomuluXml(y) {
+  for (const o of y.nes.values()) {
+    if (!o.ham || o.v?.d?.Type === '/ObjStm' || o.v?.d?.Subtype === '/Image' || o.v?.d?.Subtype === '/Form') continue;
+    const v = await y.akis(o); if (!v || v.length < 200) continue;
+    const bas = new TextDecoder().decode(v.subarray(0, 400)).replace(/^﻿/, '').trimStart();
+    if (!/^<(\?xml|([\w-]+:)?Invoice\b)/.test(bas)) continue;
+    const metin = new TextDecoder().decode(v);
+    if (!/<([\w-]+:)?Invoice[\s>]/.test(metin)) continue;
+    try { const u = ublOku(metin); if (u) return {u, xml: metin}; } catch (e) {}
+  }
+  return null;
+}
+/* Yazılardan fatura bilgileri; ublOku ile aynı biçimde nesne döner */
+function pdfFaturaCoz(satirlar) {
+  const T = satirlar.map(l => l.t).join('\n'), duz = T.replace(/\s+/g, ' ');
+  const sayi = x => sayiOku(String(x || '').replace(/[^\d.,-]/g, ''));
+  const TUTAR = /-?\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{1,4})?|-?\d+(?:[.,]\d{1,4})?/;
+  const tutarBul = metin => { const m = new RegExp(TUTAR.source + '\\s*(TL|TRY|₺|USD|EUR|GBP|\\$|€|£)?', 'i').exec(metin || ''); return m ? {k: tutarOku(m[0].replace(/[^\d.,-]/g, '')), para: (m[1] || '').toUpperCase()} : null; };
+  // Etiketin yanındaki (aynı hücre ya da sağdaki hücreler) tutar
+  const etiket = (re, hepsi = false) => {
+    const sonuc = [];
+    for (const l of satirlar) {
+      for (let i = 0; i < l.h.length; i++) {
+        const m = re.exec(l.h[i].t); if (!m) continue;
+        const kalan = [l.h[i].t.slice(m.index + m[0].length), ...l.h.slice(i + 1).map(c => c.t)];
+        for (const k of kalan) { const t = tutarBul(k.replace(/^[\s:)]+/, '')); if (t && /\d/.test(k)) { sonuc.push({...t, m, l}); break; } }
+        if (sonuc.length && !hepsi) return sonuc[0];
+      }
+    }
+    return hepsi ? sonuc : sonuc[0] || null;
+  };
+  const no = (/Fatura\s*No\s*[:.]?\s*([A-Z0-9]{3}20\d{11})\b/i.exec(duz) || /\b([A-Z0-9]{3}20\d{2}\d{9})\b/.exec(duz) || /Fatura\s*(?:No|Numaras[ıi])\s*[:.]?\s*([A-Z0-9][A-Z0-9\-\/]{2,30})/i.exec(duz) || [])[1] || '';
+  const ettnRe = /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
+  const ettn = ((/ETTN\s*[:.]?\s*([0-9a-f\-\s]{36,44})/i.exec(T) || [])[1] || '').replace(/\s/g, '').match(ettnRe)?.[1] || (ettnRe.exec(duz) || ettnRe.exec(T.replace(/\s+/g, '')) || [])[1] || '';
+  const tr = /(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{4})/;
+  const tm = new RegExp('Fatura\\s*Tarihi\\s*[:.]?\\s*' + tr.source, 'i').exec(duz) || new RegExp('(?:Düzenleme|Belge)\\s*Tarihi\\s*[:.]?\\s*' + tr.source, 'i').exec(duz) || tr.exec(duz);
+  const tarih = tm ? `${tm[3]}-${tm[2].padStart(2, '0')}-${tm[1].padStart(2, '0')}` : '';
+  const tipM = /Fatura\s*Tipi\s*[:.]?\s*([A-ZÇĞİÖŞÜa-zçğıöşü]+)/i.exec(duz);
+  const tip = tipM ? kucult(tipM[1]).replace('ş', 's').replace('i̇', 'i').toUpperCase().replace('İ', 'I') : '';
+  const profil = /e-?\s*ar[sş][iı]v|EARSIV/i.test(duz) ? 'EARSIVFATURA' : 'TICARIFATURA';
+  // Taraflar: SAYIN'dan önceki VKN satıcının, sonraki alıcının
+  const sayinI = satirlar.findIndex(l => l.h.some(c => /^SAYIN\b/i.test(c.t)));
+  const kimlikRe = /(?:VKN|TCKN|V\.\s*K\.\s*N\.?|T\.\s*C\.\s*K\.\s*N\.?|Vergi\s*(?:Kimlik\s*)?(?:No|Numaras[ıi])|T\.?\s*C\.?\s*(?:Kimlik\s*)?No|TC\s*No)\s*[:.]?\s*(\d{10,11})\b/i;
+  const kimlikler = [];
+  satirlar.forEach((l, i) => { const m = kimlikRe.exec(l.t) || (l.h.some(c => /^(VKN|TCKN|Vergi\s*No)\s*:?$/i.test(c.t)) && /\b(\d{10,11})\b/.exec(l.t)); if (m) kimlikler.push({i, vkn: m[1], l}); });
+  const vdBul = (bas, son) => { for (let i = Math.max(0, bas); i < Math.min(satirlar.length, son); i++) { const m = /Vergi\s*Dairesi\s*[:.]?\s*(.+)/i.exec(satirlar[i].t); if (m) return m[1].split(/\s{3,}/)[0].replace(/\s*(VKN|TCKN|Vergi\s*No).*$/i, '').trim(); } return ''; };
+  const ADRES = /^(SAYIN|Adres|Tel|Telefon|Faks|Fax|Web|E-?\s*Posta|Vergi|VKN|TCKN|Mersis|Ticaret Sicil|No\s*:|Mah|Cad|Sok|Sk\.|Bulvar|e-?\s*ar[sş]iv|e-?\s*fatura|fatura|ETTN|Özelleştirme|Senaryo|Sipariş|İrsaliye|Kapı)|(Mah\.|Mahallesi|Cad\.|Caddesi|Sok\.|Sokak|Bulv|No\s*:\s*\d|\/\s*[A-ZÇĞİÖŞÜ]{3,}$|\b\d{5}\b)/i;
+  const SIRKET = /(LTD|ŞT[İI]|STI|A\.\s*Ş|A\.S\.|SAN\.|T[İI]C\.|L[İI]M[İI]TED|ANON[İI]M|Ş[İI]RKET[İI]|KOOPERAT[İI]F|VAKF|DERNE)/i;
+  const solHucre = l => l.h[0];
+  const adAl = i => {
+    const c = satirlar[i] && solHucre(satirlar[i]); if (!c || ADRES.test(c.t) || /\d{6,}/.test(c.t)) return '';
+    let ad = c.t; const s2 = satirlar[i + 1] && solHucre(satirlar[i + 1]);
+    if (s2 && Math.abs(s2.x - c.x) < 4 && !ADRES.test(s2.t) && (SIRKET.test(s2.t) || /(VE|&|-)$/i.test(ad)) && !SIRKET.test(ad.slice(-12))) ad += ' ' + s2.t;
+    return ad.trim();
+  };
+  let satici = {ad: '', vkn: ''}, alici = {ad: '', vkn: ''};
+  const ilkSayfa = satirlar.filter(l => l.s === 0);
+  if (sayinI >= 0) {
+    const once = kimlikler.filter(k => k.i < sayinI), sonra = kimlikler.filter(k => k.i > sayinI);
+    if (once.length) satici.vkn = once[once.length - 1].vkn;
+    if (sonra.length) alici.vkn = sonra[0].vkn;
+    const sc = satirlar[sayinI].h.find(c => /^SAYIN\b/i.test(c.t)), yanAd = sc.t.replace(/^SAYIN\s*:?\s*/i, '');
+    alici.ad = yanAd || (() => { for (let i = sayinI + 1; i < Math.min(satirlar.length, sayinI + 3); i++) { const c = satirlar[i].h.find(x => Math.abs(x.x - sc.x) < 30) || solHucre(satirlar[i]); if (c && !ADRES.test(c.t)) { const s2 = satirlar[i + 1]?.h.find(x => Math.abs(x.x - c.x) < 4); return (c.t + (s2 && !ADRES.test(s2.t) && SIRKET.test(s2.t) && !SIRKET.test(c.t.slice(-12)) ? ' ' + s2.t : '')).trim(); } } return ''; })();
+    alici.vd = vdBul(sayinI, kimlikler.find(k => k.i > sayinI)?.i + 1 || sayinI + 8);
+    satici.vd = vdBul(0, sayinI);
+    for (let i = 0; i < sayinI && !satici.ad; i++) satici.ad = adAl(i);
+  } else {
+    if (kimlikler[0]) satici.vkn = kimlikler[0].vkn;
+    if (kimlikler[1]) alici.vkn = kimlikler[1].vkn;
+    for (const [taraf, re] of [[satici, /SATICI|GÖNDEREN|DÜZENLEYEN/i], [alici, /ALICI|MÜŞTERİ|MUSTERI/i]]) {
+      const i = satirlar.findIndex(l => l.h.some(c => re.test(c.t) && c.t.length < 30)); if (i < 0) continue;
+      const c = satirlar[i].h.find(c => re.test(c.t)), yan = c.t.replace(re, '').replace(/^[\s:]+/, '');
+      taraf.ad = yan || (satirlar[i + 1]?.h.find(x => Math.abs(x.x - c.x) < 40)?.t || '');
+      const k = kimlikler.find(k => k.i >= i); if (k && !taraf.vknSabit) taraf.vkn = k.vkn;
+    }
+    if (!satici.ad) for (let i = 0; i < Math.min(8, ilkSayfa.length) && !satici.ad; i++) satici.ad = adAl(i);
+  }
+  // Toplamlar
+  const odenecek = etiket(/Ödenecek\s*Tutar|ODENECEK\s*TUTAR|Ödenecek\s*Toplam|Ödenecek\b/i);
+  const vergiDahil = etiket(/Vergiler\s*Dahil\s*Toplam(\s*Tutar)?|KDV\s*Dahil\s*Toplam|Genel\s*Toplam|Fatura\s*Toplam[ıi]?/i);
+  const malHizmet = etiket(/Mal\s*(?:\/\s*)?Hizmet\s*Toplam(\s*Tutar[ıi])?|Ara\s*Toplam/i);
+  const iskToplam = etiket(/Toplam\s*[İIi]skonto|[İI]skonto\s*Toplam/i);
+  const kdvSat = etiket(/(?:Hesaplanan\s*)?(?:KDV|Katma\s*De[ğg]er\s*Vergisi)\s*(?:Tutar[ıi]\s*)?\(?\s*%?\s*(\d{1,2}(?:[.,]\d+)?)\s*%?\s*\)?/i, true)
+    .filter(x => !/tevkifat|matrah/i.test(x.l.t) && !/^\s*(Oran|Tutar)/i.test(x.l.t)).map(x => ({oran: Math.round(sayi(x.m[1])), k: x.k}))
+    .filter(x => KDV_ORAN.includes(x.oran) && x.k >= 0);
+  const kdvlar = []; for (const x of kdvSat) if (!kdvlar.some(y => y.oran === x.oran)) kdvlar.push(x);
+  const tevM = /Tevkifat[^\n]{0,60}?(?:\(\s*(\d)\s*\/\s*10\s*\)|(\d)\s*\/\s*10|%\s*(\d{2,3}))/i.exec(T);
+  const tevkifat = tevM ? +(tevM[1] || tevM[2] || Math.round(sayi(tevM[3]) / 10)) : 0;
+  const paraM = [odenecek, vergiDahil, malHizmet].find(x => x && x.para && !/TL|TRY|₺/.test(x.para));
+  const doviz = paraM ? ({'$': 'USD', '€': 'EUR', '£': 'GBP'}[paraM.para] || paraM.para) : 'TRY';
+  const kurM = /D[öo]viz\s*Kuru\s*[:.]?\s*([\d.,]+)/i.exec(duz);
+  const kur = doviz !== 'TRY' && kurM ? sayi(kurM[1]) || 1 : 1;
+  const tl = k => Math.round(k * kur);
+  // Kalem tablosu
+  const kalemler = pdfKalemler(satirlar, kdvlar).map(k => ({...k, fiyat: tl(k.fiyat)}));
+  const toplamK = odenecek?.k ?? vergiDahil?.k;
+  const hesap = l => { const net = {}; for (const k of l) { const b = Math.round(k.miktar * k.fiyat * (1 - (k.iskonto || 0) / 100)); net[k.kdv] = (net[k.kdv] || 0) + b; } let t = 0; for (const o in net) t += net[o] + Math.round(net[o] * o / 100); return {t, net}; };
+  const hedef = tl(vergiDahil?.k ?? (odenecek ? odenecek.k : 0));
+  let son = kalemler;
+  const tutuyor = l => l.length && hedef > 0 && Math.abs(hesap(l).t - hedef) <= Math.max(3, l.length * 2);
+  if (!tutuyor(kalemler) && hedef > 0) {
+    // Kalem tablosu okunamadı ya da toplam tutmadı: KDV oranlarına göre matrah kalemleri
+    const adlar = kalemler.map(k => k.ad).filter(Boolean), ad0 = adlar.length === 1 ? adlar[0] : adlar.length ? adlar.slice(0, 4).join(', ').slice(0, 90) + (adlar.length > 4 ? '…' : '') : 'Fatura tutarı';
+    let l;
+    if (kdvlar.length) {
+      l = kdvlar.map(x => ({ad: kdvlar.length > 1 ? `${ad0} (%${x.oran} KDV)` : ad0, miktar: 1, birim: 'adet', kdv: x.oran, fiyat: x.oran ? Math.round(tl(x.k) * 100 / x.oran) : 0}));
+      const kdvT = kdvlar.reduce((s, x) => s + tl(x.k), 0), netT = l.reduce((s, x) => s + x.fiyat, 0), sifir = hedef - kdvT - netT;
+      const z = l.find(x => !x.oran); if (z) z.fiyat += sifir; else if (Math.abs(sifir) > 2) l.push({ad: `${ad0} (KDV'siz)`, miktar: 1, birim: 'adet', kdv: 0, fiyat: sifir});
+      else if (l.length === 1) l[0].fiyat += 0;
+      // kuruş yuvarlamasını ilk kaleme yedir
+      const fark = hedef - hesap(l).t; if (fark && l[0].kdv >= 0 && Math.abs(fark) < 50) l[0].fiyat += Math.round(fark / (1 + l[0].kdv / 100));
+    } else {
+      const mh = malHizmet ? tl(malHizmet.k) - (iskToplam ? tl(iskToplam.k) : 0) : 0, oran = mh > 0 ? Math.round((hedef / mh - 1) * 100) : 0;
+      l = KDV_ORAN.includes(oran) && oran ? [{ad: ad0, miktar: 1, birim: 'adet', kdv: oran, fiyat: mh}] : [{ad: ad0, miktar: 1, birim: 'adet', kdv: 0, fiyat: hedef}];
+    }
+    son = l;
+  }
+  if (!son.length && !toplamK) return null;
+  return {no, ettn, tarih, profil, tip: /IADE/.test(tip) ? 'IADE' : tip, doviz, kur, vade: '', not: '',
+    satici: {...satici, ad: satici.ad || ''}, alici: {...alici, ad: alici.ad || ''},
+    kalemler: son, tevkifat, odenecek: toplamK != null ? tl(toplamK) : hesap(son).t, pdfOkuma: son === kalemler ? 'kalem' : 'toplam'};
+}
+/* Satırdaki parçaları sözcük aralığından geniş boşluklarda öbeklere ayırır (tablo hücreleri) */
+function pdfObek(r) {
+  const obek = [];
+  for (const p of r) { const o = obek[obek.length - 1]; if (o && p.x - o.x2 < p.fs * 0.45) { o.t += (p.x - o.x2 > p.fs * 0.12 && !/\s$/.test(o.t) ? ' ' : '') + p.t; o.x2 = Math.max(o.x2, p.x2); } else obek.push({...p}); }
+  obek.forEach(o => o.t = o.t.replace(/\s+/g, ' ').trim());
+  return obek.filter(o => o.t);
+}
+/* Kalem tablosu: başlık satırındaki sütunlara göre satırlar okunur (çok sayfalı tablolarda başlık her sayfada yeniden bulunur) */
+function pdfKalemler(satirlar, kdvlar) {
+  const SUT = [['sira', /^S[ıi]ra(\s*No)?$|^#$|^No$/i], ['kod', /^(Mal\s*)?(Kod|Stok\s*Kodu|Ürün\s*Kodu|Malzeme\s*Kodu)/i], ['iskT', /[İIi]skonto\s*Tutar|[İIi]nd\.?\s*Tutar/i], ['isk', /[İIi]skonto|[İIi]nd[iı]r[iı]m|[İIi]sk\./i],
+    ['kdvT', /KDV\s*Tutar/i], ['kdv', /KDV/i], ['fiyat', /Birim\s*Fiyat|Fiyat/i], ['miktar', /Miktar|^Adet$/i], ['birim', /^Birim$/i], ['diger', /Di[ğg]er\s*Vergi/i],
+    ['tutar', /Mal\s*Hizmet\s*Tutar|Tutar|Toplam/i], ['ad', /Mal\s*Hizmet|A[çc][ıi]klama|Ürün|Malzeme|Hizmet|Cinsi/i]];
+  const sinif = t => (SUT.find(([, re]) => re.test(t)) || [])[0];
+  const BITIS = /Mal\s*Hizmet\s*Toplam|Toplam\s*[İIi]skonto|Hesaplanan|Vergiler\s*Dahil|Ödenecek|Ara\s*Toplam|Genel\s*Toplam|Matrah|Yaln[ıi]z\s*:?|Not\s*:/i;
+  const sonuc = []; let kol = null, sonKalem = null, bekleyen = [];
+  const bosalt = () => { if (sonKalem) for (const b of bekleyen) sonKalem.ad += ' ' + b.t; bekleyen = []; };
+  const kolonlar = (i) => {
+    const l = satirlar[i]; let h = pdfObek(l.r);
+    // İki-üç satırlık başlıkları birleştir
+    for (let k = i + 1; k < Math.min(i + 3, satirlar.length); k++) {
+      const n = satirlar[k]; if (n.s !== l.s || Math.abs(l.y - n.y) > l.fs * 3 || /\d/.test(n.t)) break;
+      for (const c of pdfObek(n.r)) { const u = h.find(x => c.x < x.x2 + 2 && c.x2 > x.x - 2); if (u) { u.t += ' ' + c.t; u.x = Math.min(u.x, c.x); u.x2 = Math.max(u.x2, c.x2); } else h.push({...c}); }
+      satirlar[k].baslik = true;
+    }
+    h.sort((a, b) => a.x - b.x);
+    const k = h.map(c => ({...c, a: sinif(c.t)}));
+    if (!k.some(c => c.a === 'ad') || !k.some(c => c.a === 'miktar' || c.a === 'tutar' || c.a === 'fiyat')) return null;
+    // "Mal Hizmet" ad sütunu; tutar sütunu en sağdaki tutar
+    const tut = k.filter(c => c.a === 'tutar'); tut.slice(0, -1).forEach(c => c.a = 'diger');
+    k.forEach((c, j) => { c.sol = j ? (k[j - 1].x2 + c.x) / 2 : -1e9; c.sag = j < k.length - 1 ? (c.x2 + k[j + 1].x) / 2 : 1e9; });
+    return k;
+  };
+  for (let i = 0; i < satirlar.length; i++) {
+    const l = satirlar[i];
+    if (l.baslik) continue;
+    const yeniKol = pdfObek(l.r).filter(c => sinif(c.t)).length >= 3 && !/\d{3,}/.test(l.t) ? kolonlar(i) : null;
+    if (yeniKol) { bosalt(); kol = yeniKol; sonKalem = null; continue; }
+    if (!kol) continue;
+    if (BITIS.test(l.t) && !/^\s*\d+\s/.test(l.t)) { bosalt(); kol = null; continue; }
+    // Parçaları sütunlara dağıt
+    const v = {};
+    // Parçalar sözcük aralığından geniş boşluklarda ayrılır, her öbek orta noktasının düştüğü sütuna yazılır
+    for (const p of pdfObek(l.r)) { const m = (p.x + p.x2) / 2; const c = kol.find(c => m >= c.sol && m < c.sag) || kol[kol.length - 1]; if (c.a) v[c.a] = ((v[c.a] || '') + (v[c.a] && !/\s$/.test(v[c.a]) ? ' ' : '') + p.t).replace(/\s+/g, ' ').trim(); }
+    const sayiVar = x => x && /\d/.test(x);
+    const yeni = (kol.some(c => c.a === 'sira') ? /^\d{1,3}\.?$/.test(v.sira || '') : true) && (sayiVar(v.miktar) || sayiVar(v.tutar) || sayiVar(v.fiyat));
+    // Sayısız satır: çok satırlı ürün adının parçası; hangi kaleme yakınsa ona eklenir (hücreler ortalı ya da üstte olabilir)
+    if (!yeni) { if (v.ad && !sayiVar(v.tutar) && !sayiVar(v.miktar)) bekleyen.push({y: l.y, s: l.s, t: v.ad}); continue; }
+    const mikMetin = v.miktar || '1', mik = sayiOku((mikMetin.match(/-?[\d.,]+/) || ['1'])[0]) || 1;
+    const birimMetin = (v.birim || mikMetin.replace(/-?[\d.,]+/, '')).trim();
+    const birim = PDF_BIRIM(birimMetin);
+    const para = x => { const m = /-?\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{1,8})?|-?\d+(?:[.,]\d{1,8})?/.exec(x || ''); return m ? sayiOku(m[0]) : NaN; };
+    let fiyat = para(v.fiyat), tutar = para(v.tutar), isk = para((v.isk || '').replace('%', '')), iskT = para(v.iskT);
+    let kdv = Math.round(para((v.kdv || '').replace('%', '')));
+    if (!KDV_ORAN.includes(kdv)) kdv = kdvlar.length === 1 ? kdvlar[0].oran : kdvlar.length ? kdvlar[0].oran : 20;
+    const k = {ad: (v.ad || v.kod || '').replace(/\s+/g, ' ').trim(), miktar: mik, birim, kdv, fiyat: 0};
+    if (v.kod && v.ad) k.kod = v.kod;
+    if (!isFinite(isk) || isk <= 0 || isk >= 100) isk = 0;
+    if (isFinite(fiyat)) {
+      k.fiyat = Math.round(fiyat * 100);
+      if (!isk && isFinite(iskT) && iskT > 0 && fiyat * mik > 0) isk = Math.round(iskT / (fiyat * mik) * 10000) / 100;
+      if (isk) k.iskonto = isk;
+      // Satır tutarı varsa ona uydur
+      if (isFinite(tutar) && tutar > 0 && Math.abs(fiyat * mik * (1 - isk / 100) - tutar) > 0.02 + mik * 0.005) { delete k.iskonto; k.fiyat = Math.round(tutar * 100 / mik); }
+    } else if (isFinite(tutar)) k.fiyat = Math.round(tutar * 100 / mik);
+    k.y = l.y; k.s = l.s;
+    const once = bekleyen.filter(b => b.s === l.s && (!sonKalem || sonKalem.s !== b.s || Math.abs(b.y - l.y) < Math.abs(b.y - sonKalem.y)));
+    bekleyen.filter(b => !once.includes(b)).forEach(b => sonKalem && (sonKalem.ad += ' ' + b.t));
+    if (once.length) k.ad = [...once.map(b => b.t), v.ad || ''].join(' ').replace(/\s+/g, ' ').trim();
+    bekleyen = [];
+    sonuc.push(k); sonKalem = k;
+  }
+  bosalt();
+  // Sıra no sütunu ayrılamadıysa adın başındaki 1, 2, 3… atılır
+  if (sonuc.length && sonuc.every((k, i) => new RegExp('^' + (i + 1) + '\\.?\\s').test(k.ad))) sonuc.forEach(k => k.ad = k.ad.replace(/^\d+\.?\s+/, ''));
+  sonuc.forEach(k => { delete k.y; delete k.s; k.ad = k.ad.replace(/\s+/g, ' ').trim() || 'Kalem'; });
+  return sonuc;
+}
+const PDF_BIRIM = t => {
+  const k = kucult(t).replace(/[.\s]/g, '');
+  if (!k) return 'adet';
+  const tablo = {adet: 'adet', ad: 'adet', adt: 'adet', pcs: 'adet', piece: 'adet', saat: 'saat', sa: 'saat', gün: 'gün', gun: 'gün', ay: 'ay', kg: 'kg', kilogram: 'kg', gr: 'gr', g: 'gr', gram: 'gr', ton: 'ton', lt: 'lt', litre: 'lt', l: 'lt', ml: 'ml', m: 'm', metre: 'm', mt: 'm', cm: 'cm', m2: 'm²', 'm²': 'm²', m3: 'm³', 'm³': 'm³', set: 'set', takım: 'takım', takim: 'takım', çift: 'çift', cift: 'çift', paket: 'paket', pk: 'paket', kutu: 'kutu', koli: 'koli', sefer: 'sefer'};
+  return tablo[k] || BIRIMLER.find(b => kucult(b) === k) || 'adet';
+};
+/* PDF dosyasından fatura: önce gömülü XML, sonra yazılar. {u, xml?} ya da hata fırlatır */
+async function pdfFaturaOku(u8) {
+  const {y, satirlar} = await pdfYazilar(u8);
+  const g = await pdfGomuluXml(y);
+  if (g) return {u: g.u, xml: g.xml};
+  if (!satirlar.length) throw new Error('taranmış resim, içinde yazı yok');
+  const u = pdfFaturaCoz(satirlar);
+  if (!u || !(u.odenecek > 0)) throw new Error('Faturada tutar bulunamadı');
+  return {u};
+}
 const efTur = u => /EARSIV/i.test(u.profil) ? 'e-Arşiv' : 'e-Fatura';
 const vknTemiz = x => String(x || '').replace(/\D/g, '');
 /* Yüklenen dosyaları faturalara ayırır: [{u (UBL), xml, pdf, html, ad, hata}] */
@@ -3578,7 +4073,15 @@ async function eFaturaDosyalari(dosyalar) {
     const tur = /\.pdf$/i.test(p.ad) ? 'pdf' : 'html';
     const es = sonuc.find(s => s.u && !s[tur] && (kok(s.ad) === kok(p.ad) || [s.u.ettn, s.u.no].some(x => x && p.ad.toLowerCase().includes(x.toLowerCase()))))
       || (sonuc.filter(s => s.u).length === 1 && parca.filter(x => /\.xml$/i.test(x.ad)).length === 1 ? sonuc.find(s => s.u && !s[tur]) : null);
-    if (es) es[tur] = p; else if (tur === 'pdf') sonuc.push({ad: p.ad, pdf: p});
+    if (es) es[tur] = p;
+    else if (tur === 'pdf') {
+      // 2.14.5: XML'i olmayan PDF'in kendisi okunur
+      try {
+        const r = await pdfFaturaOku(p.veri), s = {u: r.u, pdf: p, ad: p.ad, pdfden: true};
+        if (r.xml) s.xml = {ad: p.ad.replace(/\.pdf$/i, '') + '.xml', veri: new TextEncoder().encode(r.xml)};
+        sonuc.push(s);
+      } catch (e) { sonuc.push({ad: p.ad, pdf: p, okunamadi: e.message || 'okunamadı'}); }
+    }
   }
   for (const p of parca.filter(x => x.hata)) sonuc.push(p);
   for (const p of parca.filter(x => !x.hata && !/\.(xml|pdf|html?)$/i.test(x.ad))) sonuc.push({ad: p.ad, hata: 'Desteklenmeyen dosya'});
@@ -3586,7 +4089,8 @@ async function eFaturaDosyalari(dosyalar) {
 }
 function eFaturaDurum(s) {
   if (s.hata) return {aktar: false, metin: s.hata, renk: 'kirmizi'};
-  if (!s.u) return {aktar: false, metin: 'Yalnızca PDF: bilgiler elle girilir', renk: 'turuncu'};
+  if (!s.u) return {aktar: false, metin: `PDF okunamadı${s.okunamadi ? ' (' + s.okunamadi + ')' : ''}: bilgileri elle girin`, renk: 'turuncu'};
+  if (s.kaydedildi) return {aktar: false, metin: 'Kaydedildi', renk: 'yesil', fatura: s.kaydedildi};
   const var1 = D.faturalar.find(f => (s.u.ettn && f.ettn === s.u.ettn) || (f.no === s.u.no && f.tur !== 'teklif'));
   if (var1) return {aktar: false, metin: 'Zaten kayıtlı (' + var1.no + ')', renk: 'gri', fatura: var1};
   return {aktar: true, metin: '', renk: 'yesil'};
@@ -3594,6 +4098,10 @@ function eFaturaDurum(s) {
 function eFaturaYon(u) {
   const biz = vknTemiz(firmaAlan('vno'));
   if (biz && vknTemiz(u.alici.vkn) === biz && vknTemiz(u.satici.vkn) !== biz) return 'alis';
+  if (biz && (vknTemiz(u.satici.vkn) === biz || vknTemiz(u.alici.vkn))) return 'fatura';
+  // Firma VKN'si yoksa ya da PDF'te bulunamadıysa firma adına bakılır
+  const ad = kucult(firmaAlan('ad') || D.ad || '').split(/\s+/).filter(w => w.length > 1).slice(0, 2).join(' ');
+  if (ad && kucult(u.alici.ad).includes(ad) && !kucult(u.satici.ad).includes(ad)) return 'alis';
   return 'fatura';
 }
 async function eFaturaBelge(p, tip, mime) {
@@ -3608,8 +4116,8 @@ async function eFaturaBelge(p, tip, mime) {
 async function eFaturaAktar(s) {
   const u = s.u, tur = eFaturaYon(u), taraf = tur === 'alis' ? u.satici : u.alici;
   let k = taraf.vkn && D.kisiler.find(x => vknTemiz(x.vno) === vknTemiz(taraf.vkn));
-  if (!k && taraf.ad) {
-    k = {id: kimlik(), olusturma: Date.now(), ad: taraf.ad, vno: taraf.vkn, vd: taraf.vd, adres: taraf.adres, il: taraf.il, tel: taraf.tel, eposta: taraf.eposta, tip: tur === 'alis' ? 'tedarikci' : 'musteri', yetkililer: []};
+  if (!k && (taraf.ad || taraf.vkn)) {
+    k = {id: kimlik(), olusturma: Date.now(), ad: taraf.ad || (taraf.vkn.length === 11 ? 'TCKN ' : 'VKN ') + taraf.vkn, vno: taraf.vkn, vd: taraf.vd, adres: taraf.adres, il: taraf.il, tel: taraf.tel, eposta: taraf.eposta, tip: tur === 'alis' ? 'tedarikci' : 'musteri', yetkililer: []};
     for (const a of Object.keys(k)) if (k[a] === '') delete k[a];
     D.kisiler.push(k);
   }
@@ -3621,6 +4129,7 @@ async function eFaturaAktar(s) {
   if (u.tevkifat) f.tevkifat = u.tevkifat;
   if (ekler.length) f.ekler = ekler;
   if (u.tip === 'IADE') f.not = ['İade faturası', f.not].filter(Boolean).join('\n');
+  if (s.pdfden) f.not = [f.not, s.xml ? "PDF'teki e-Fatura XML'inden okundu" : u.pdfOkuma === 'toplam' ? "PDF'den okundu. Kalem tablosu okunamadığı için kalemler KDV oranına göre toplam tutardan yazıldı." : "PDF'den okundu"].filter(Boolean).join('\n');
   D.faturalar.push(f);
   faturaTuret(f);
   return f;
@@ -3629,32 +4138,42 @@ async function eFaturaYukle() {
   const dosyalar = await new Promise(coz => { const inp = document.createElement('input'); inp.type = 'file'; inp.multiple = true; inp.accept = '.xml,.zip,.pdf,.html,application/xml,text/xml,application/zip,application/pdf'; inp.onchange = () => coz([...inp.files]); inp.click(); });
   if (!dosyalar.length) return;
   let liste;
+  bildir('Dosyalar okunuyor…');
   try { liste = await eFaturaDosyalari(dosyalar); } catch (e) { return bildir('Dosyalar okunamadı', true); }
-  const sec = new Set(liste.map((s, i) => eFaturaDurum(s).aktar ? i : -1).filter(i => i >= 0));
+  // 2.14.5: okunabilen faturalar sorulmadan kaydedilir; yalnız sorunlu dosya varsa liste gösterilir
+  let kaydedilen = 0, sonF = null;
+  for (const s of liste) {
+    if (!eFaturaDurum(s).aktar) continue;
+    try { sonF = await eFaturaAktar(s); s.kaydedildi = sonF; kaydedilen++; } catch (e) { s.hata = 'Kaydedilemedi'; }
+  }
+  if (kaydedilen) { kaydet(); bildir(`${kaydedilen} fatura kaydedildi`); }
+  const git1 = () => setTimeout(() => { ui.faturaFiltre = 'hepsi'; if (kaydedilen === 1) git('fatura/' + sonF.id); else { git('fatura', true); ciz(); } }, 30);
+  if (kaydedilen && liste.every(s => s.kaydedildi)) return git1();
+  const sec = new Set();
   const satir = (s, i) => {
     const d = eFaturaDurum(s), u = s.u;
-    if (!u) return `<div class="hucre kareli">${kare(s.pdf ? 'dosya' : 'uyari', d.renk)}<div class="ic"><b>${esc(s.ad)}</b><small>${esc(d.metin)}</small></div>${s.pdf && !s.hata ? `<button type="button" class="btn kucuk renkli" data-elle="${i}">Elle gir</button>` : ''}</div>`;
+    if (!u) return `<div class="hucre kareli" data-efs="${i}">${kare(s.pdf ? 'dosya' : 'uyari', d.renk)}<div class="ic"><b>${esc(s.ad)}</b><small>${esc(d.metin)}</small></div>${s.pdf && !s.hata ? `<button type="button" class="btn kucuk renkli" data-elle="${i}">Elle gir</button>` : ''}</div>`;
     const yon = eFaturaYon(u), taraf = yon === 'alis' ? u.satici : u.alici;
     const t = faturaHesap({kalemler: u.kalemler, tevkifat: u.tevkifat, tur: yon}), fark = Math.abs(t.toplam - u.odenecek) > Math.max(2, u.kalemler.length);
-    const ekAd = [s.pdf && 'PDF', 'XML', s.html && 'görüntü'].filter(Boolean).join(' + ');
-    return `<label class="hucre kareli ef-satir">${d.aktar ? `<input type="checkbox" data-ef="${i}" ${sec.has(i) ? 'checked' : ''}>` : kare('tamam', 'gri')}
+    const ekAd = [s.pdf && 'PDF', s.xml && 'XML', s.html && 'görüntü'].filter(Boolean).join(' + ');
+    return `<label class="hucre kareli ef-satir" data-efs="${i}">${d.aktar ? `<input type="checkbox" data-ef="${i}" ${sec.has(i) ? 'checked' : ''}>` : kare('tamam', 'gri')}
       <div class="ic"><b>${esc(taraf.ad || 'Ad yok')}</b><small>${esc([efTur(u), yon === 'alis' ? 'Alış' : 'Satış', u.no, tarihYaz(u.tarih, true), taraf.vkn && (taraf.vkn.length === 11 ? 'TCKN ' : 'VKN ') + taraf.vkn, ekAd].filter(Boolean).join(' · '))}</small>
-      ${d.metin ? `<small class="soluk">${esc(d.metin)}</small>` : ''}${fark && d.aktar ? `<small class="gider">Tutar farkı: XML ${para(u.odenecek)}, hesaplanan ${para(t.toplam)}. Kayıttan sonra kontrol edin.</small>` : ''}</div>
+      ${d.metin ? `<small class="soluk">${esc(d.metin)}</small>` : ''}${fark && (d.aktar || s.kaydedildi) && !s.pdfden ? `<small class="gider">Tutar farkı: XML ${para(u.odenecek)}, hesaplanan ${para(t.toplam)}. Kayıttan sonra kontrol edin.</small>` : ''}</div>
       <span class="tutar">${para(u.odenecek || t.toplam)}</span></label>`;
   };
   const m = modal('e-Arşiv / e-Fatura yükle', `
-    <p class="dipnot" style="margin-top:0">GİB portalından veya entegratörünüzden indirdiğiniz fatura dosyalarını seçtiniz. XML'deki bilgiler (no, ETTN, tarih, cari, kalemler, KDV, tevkifat) faturaya aktarılır, orijinal dosyalar faturaya eklenir. Cari VKN/TCKN ile bulunur, yoksa açılır.</p>
+    <p class="dipnot" style="margin-top:0">${kaydedilen ? `<b>${kaydedilen} fatura kaydedildi.</b> ` : ''}XML, ZIP ve PDF dosyalarındaki bilgiler (no, ETTN, tarih, cari, kalemler, KDV, tevkifat) faturaya aktarılır, orijinal dosyalar faturaya eklenir. Cari VKN/TCKN ile bulunur, yoksa açılır. Aşağıda kaydedilemeyen dosyalar görünür.</p>
     <div class="grup tek-sutun" id="efListe">${liste.map(satir).join('')}</div>
     <div class="btn-grup"><button type="button" class="btn renkli" id="efBaska">${ikon('yukle')} Başka dosya seç</button></div>
-    <p class="dipnot">İpucu: Portalda faturayı "İndir" ile ZIP olarak alın; içinde XML ve görüntü birlikte gelir. Yalnızca PDF'iniz varsa "Elle gir" ile tutarları siz yazarsınız.</p>`,
-    {kaydet: () => { aktar(); return false; }, kaydetAd: 'Seçilenleri kaydet'});
-  const say = () => { $('[data-sag]', m).textContent = sec.size ? `${sec.size} faturayı kaydet` : 'Seçilenleri kaydet'; };
+    <p class="dipnot">Taranmış (resim) PDF'lerde yazı olmadığı için bilgiler okunamaz; "Elle gir" ile tutarları siz yazarsınız. Portaldan ZIP indirirseniz içindeki XML her zaman eksiksiz okunur.</p>`,
+    {kaydet: () => { aktar(); return false; }, kaydetAd: 'Tamam'});
+  const say = () => { $('[data-sag]', m).textContent = sec.size ? `${sec.size} faturayı kaydet` : 'Tamam'; };
   $$('[data-ef]', m).forEach(c => c.onchange = () => { c.checked ? sec.add(+c.dataset.ef) : sec.delete(+c.dataset.ef); say(); });
   $$('[data-elle]', m).forEach(b => b.onclick = async e => { e.preventDefault(); const s = liste[+b.dataset.elle]; const ek = await eFaturaBelge(s.pdf, 'pdf', 'application/pdf'); kapat(); setTimeout(() => faturaFormuEkli('fatura', ek), 320); });
   $('#efBaska', m).onclick = () => { kapat(); setTimeout(eFaturaYukle, 320); };
   say();
   async function aktar() {
-    if (!sec.size) return bildir('Kaydedilecek fatura seçin', true);
+    if (!sec.size) { kapat(); if (kaydedilen) git1(); return; }
     const l = [...sec].map(i => liste[i]); let n = 0;
     for (const s of l) { try { await eFaturaAktar(s); n++; } catch (e) { bildir(`${s.ad} kaydedilemedi`, true); } }
     kaydet(); kapat(); bildir(`${n} fatura kaydedildi`);
@@ -7253,7 +7772,7 @@ function personelEkrani() {
   else h += personelListe(ay);
   $('#icerik').innerHTML = h;
   ayBagla('pAy', personelEkrani);
-  $$('#pSek button').forEach(b => b.onclick = () => { ui.pSekme = b.dataset.v; personelEkrani(); });
+  $$('#pSek button').forEach(b => b.onclick = () => personelSekme(b.dataset.v));
   if ($('#ekleBtn')) $('#ekleBtn').onclick = () => personelFormu();
   if ($('#bosEkle')) $('#bosEkle').onclick = () => personelFormu();
   if ($('#hesapBtn')) $('#hesapBtn').onclick = () => maasHesaplayici();
@@ -7680,7 +8199,8 @@ async function personelSec(baslik) {
   const id = await eylemSayfa(baslik, '', l.map(p => ({ad: p.ad + (p.gorev ? ' · ' + p.gorev : ''), deger: p.id})));
   return id ? personel(id) : null;
 }
-function personelSekme(v) { ui.pSekme = v; if (rota()[0] === 'personel' && !rota()[1]) ciz(); else git('personel'); }
+/* 2.14.5: Puantaj ve Bordro kendi adresleriyle açılır (personel/puantaj, personel/bordro); PC'de Çalışanlar tablo ekranı bunları gölgelemez */
+function personelSekme(v) { git(v && v !== 'liste' ? 'personel/' + v : 'personel'); }
 function personelOdemeFormu(p, tur) {
   const ay = ui.pAy, av = avansToplam(p.id, ay), b = tur === 'maas' ? bordro(p, ay) : null;
   const oneri = b ? Math.max(0, b.net - av) : 0;
