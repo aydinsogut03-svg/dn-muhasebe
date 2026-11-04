@@ -1389,6 +1389,33 @@ html.apk #cekmece .c-alt-menu a{min-height:42px!important;font-size:15px!importa
 .kahraman.kompakt .k-etiket{margin-top:8px!important}
 .kahraman.kompakt .k-tutar{font-size:26px!important;margin-top:2px}
 .kahraman.kompakt .k-satir{margin-top:0!important;padding-bottom:3px}
+/* 2.14.6: Özet kartı. Koyu mavi zeminde bütün yazılar beyaz; sağda son 6 ay gelir / gider grafiği */
+.kahraman.kompakt{background:linear-gradient(135deg,#1d5fc0,#163f86)!important;color:#fff!important;padding:14px 18px 14px!important}
+.kahraman.kompakt .k-ust,.kahraman.kompakt .k-ust span{color:rgba(255,255,255,.85)!important}
+.kahraman.kompakt .k-ust b,.kahraman.kompakt .k-surum{color:#fff!important}
+.kahraman.kompakt .k-alt{color:#fff!important;align-items:flex-end;flex-wrap:nowrap;overflow:visible;white-space:normal;margin-top:4px}
+.kahraman.kompakt .k-sol{min-width:0}
+.kahraman.kompakt .k-etiket{color:rgba(255,255,255,.9)!important;font-size:13px!important;font-weight:600}
+.kahraman.kompakt .k-tutar{color:#fff!important;font-size:32px!important;line-height:1.15;text-shadow:0 1px 2px rgba(0,0,0,.18)}
+.kahraman.kompakt .k-tutar.eksi{color:#ffd1cc!important}
+.kahraman.kompakt .k-satir{display:flex;gap:16px;margin-top:6px!important;font-size:13px;color:rgba(255,255,255,.9)!important}
+.kahraman.kompakt .k-satir b{color:#fff!important;margin-left:5px}
+.kahraman.kompakt .k-satir i{width:9px;height:9px;border-radius:2px;box-shadow:none!important}
+.kahraman .k-g{background:#86efac!important}.kahraman .k-c{background:#fca5a5!important}
+.k-grafik{display:flex;align-items:flex-end;gap:10px;height:92px;padding:8px 10px 4px;border-radius:8px;background:rgba(255,255,255,.08);text-decoration:none;flex:0 0 auto}
+.k-ay{display:flex;flex-direction:column;align-items:center;gap:4px;height:100%}
+.k-ay:not(.simdi) .k-cubuk span{opacity:.7}
+.k-ay small{font-size:11px;color:rgba(255,255,255,.9);line-height:1;text-transform:capitalize}
+.k-ay.simdi small{font-weight:700;color:#fff}
+.k-cubuk{flex:1;display:flex;align-items:flex-end;gap:3px;border-bottom:1px solid rgba(255,255,255,.35);padding:0 1px}
+.k-cubuk span{display:block;width:12px;border-radius:2px 2px 0 0;min-height:0}
+@media (max-width:760px){
+  .kahraman.kompakt .k-alt{flex-wrap:wrap}
+  .kahraman.kompakt .k-sol{flex:1 1 100%}
+  .k-grafik{flex:1 1 100%;justify-content:space-between;height:84px;gap:4px;margin-top:4px}
+  .k-cubuk span{width:14px}
+  .kahraman.kompakt .k-tutar{font-size:30px!important}
+}
 .bekleyenler{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-bottom:14px}
 @media (max-width:1000px){.bekleyenler{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .bk-kutu{display:flex;flex-direction:column;gap:1px;min-width:0;background:var(--kart);border:1px solid var(--kenar);border-radius:14px;padding:10px 10px 9px;color:var(--yazi);text-decoration:none}
@@ -1684,7 +1711,7 @@ body.erp .erp-form #mSerbest .yuzen{display:none}
 
 <script>
 'use strict';
-const VERSIYON = '2.14.5';
+const VERSIYON = '2.14.6';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -3142,6 +3169,15 @@ function menuEkrani() {
 }
 
 /* ================= Özet ================= */
+/* 2.14.6: Özet kartında son 6 ayın gelir / gider sütunları (dokununca Gelir-gider raporu) */
+function ozetGrafik(ay) {
+  const aylar = Array.from({length: 6}, (_, i) => ayKaydir(ay, i - 5)).map(a => ({a, ...ayToplam(a)}));
+  const en = Math.max(1, ...aylar.flatMap(x => [x.gelir, x.gider]));
+  const boy = v => v > 0 ? Math.max(4, Math.round(v / en * 100)) : 0;
+  const kisa = a => tarihNesne(a + '-01').toLocaleDateString('tr-TR', {month: 'short'}).replace('.', '');
+  return `<a class="k-grafik" href="#/kasa" aria-label="Son 6 ay gelir ve gider">${aylar.map(x => `<div class="k-ay${x.a === ay ? ' simdi' : ''}" title="${esc(ayAdi(x.a))}: gelir ${para(x.gelir)}, gider ${para(x.gider)}">
+    <div class="k-cubuk"><span class="k-g" style="height:${boy(x.gelir)}%"></span><span class="k-c" style="height:${boy(x.gider)}%"></span></div><small>${esc(kisa(x.a))}</small></div>`).join('')}</a>`;
+}
 function panelEkrani() {
   const p = PROFILLER[D.profil], t = T(), ay = bugun().slice(0, 7), ac = modulAcik;
   const tarih = new Date().toLocaleDateString('tr-TR', {weekday:'long', day:'numeric', month:'long'});
@@ -3152,8 +3188,8 @@ function panelEkrani() {
     // 2.9.8: sade üst bant (grafik kaldırıldı; aylık grafik Raporlar'da)
     const o = ayToplam(ay);
     h += `<section class="kahraman kompakt"><div class="k-ust"><span><b>${selam}</b> · <span style="text-transform:capitalize">${esc(tarih)}</span></span><span class="k-surum">v${VERSIYON}</span></div>
-      ${ac('kasa') ? `<div class="k-alt"><div><div class="k-etiket">${esc(ayAdi(ay))} · net</div><div class="k-tutar ${o.net < 0 ? 'eksi' : ''}" data-sayac="${o.net}">${para(o.net)}</div></div>
-      <div class="k-satir"><span><i style="background:#6cc398"></i>${esc(t.gelir)}<b>${kisaPara(o.gelir)}</b></span><span><i style="background:#e2806a"></i>${esc(t.gider)}<b>${kisaPara(o.gider)}</b></span></div></div>` : ''}</section>`;
+      ${ac('kasa') ? `<div class="k-alt"><div class="k-sol"><div class="k-etiket">${esc(ayAdi(ay))} · net</div><div class="k-tutar ${o.net < 0 ? 'eksi' : ''}" data-sayac="${o.net}">${para(o.net)}</div>
+      <div class="k-satir"><span><i class="k-g"></i>${esc(t.gelir)}<b>${kisaPara(o.gelir)}</b></span><span><i class="k-c"></i>${esc(t.gider)}<b>${kisaPara(o.gider)}</b></span></div></div>${ozetGrafik(ay)}</div>` : ''}</section>`;
   }
   if (bos) {
     const ad = [];
