@@ -1759,6 +1759,15 @@ body.erp .erp-form #mSerbest .yuzen{display:none}
 .evrak-kod{font:600 20px/1.5 ui-monospace,Consolas,monospace;letter-spacing:1px;text-align:center;padding:16px 10px;margin:12px 0;border:2px dashed var(--kenar);background:var(--kart);word-break:break-all;user-select:all}
 .evrak-tablo tbody tr{cursor:pointer}.evrak-tablo tbody tr:hover td{background:var(--dolgu)}
 .evrak-filtre{margin-bottom:12px}
+.evrak-sekme{display:flex;gap:6px;overflow-x:auto;margin:0 0 10px;padding-bottom:2px;scrollbar-width:none}
+.evrak-sekme button{flex:none;border:1px solid var(--kenar);background:var(--kart);color:var(--yazi);font:inherit;font-size:14px;padding:9px 12px;border-radius:0;cursor:pointer;white-space:nowrap}
+.evrak-sekme button.secili{background:var(--mavi);border-color:var(--mavi);color:#fff;font-weight:600}
+.evrak-pencere .fl-tarih select{height:25px;border:1px solid var(--erp-cizgi);border-radius:2px;background:var(--erp-giris);color:var(--yazi);font:inherit;padding:0 6px;min-width:240px}
+.evrak-uyarilar{padding:6px 8px 0}.evrak-uyarilar .kilit-uyari{margin:0 0 6px}
+.mavi-yazi{color:var(--mavi)}
+.evrak-pencere table.izg{width:100%;min-width:900px}
+.evrak-pencere table.izg th.izg-no{width:34px}
+.evrak-pencere .fl-ara input{width:200px}
 .evrak-bilgi{cursor:default}.evrak-bilgi:hover{border-color:var(--kenar)}
 .evrak-bilgi b{white-space:normal}
 .ek-satir .ek-sil + .ek-sil{margin-left:6px}
@@ -1776,7 +1785,7 @@ p.dipnot .i{width:14px;height:14px;vertical-align:-2px}
 
 <script>
 'use strict';
-const VERSIYON = '2.15.0';
+const VERSIYON = '2.15.1';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -2566,10 +2575,10 @@ function menuCiz(aktif) {
   $('#cekmece').innerHTML = `<button class="c-ust" id="cProfil">${kare(p.simge, p.renk)}<div style="min-width:0;flex:1"><b>${esc(D.ad || 'Firma hesabı')}</b><small>Hesap değiştir</small></div>${ikon('ileri', 'chev')}</button>
     ${H.liste.length > 1 ? `<div class="c-hesaplar">${H.liste.filter(x => x.id !== H.aktif).map(x => `<button data-hgec="${x.id}">${kare(x.profil ? PROFILLER[x.profil].simge : 'kisi', x.profil ? PROFILLER[x.profil].renk : 'gri')}<span>${esc(hesapAdi(x))}</span></button>`).join('')}</div>` : ''}
     <div class="c-bolum">Gezinti</div>
-    <div class="c-liste">${satir('panel', 'Özet', 'ev', 'mavi')}${satir('takvim', 'Takvim', 'takvim', 'pembe')}${evrakYetkili() ? satir('evrak', 'Evrak arşivi', 'kilit', 'indigo', evrakYaklasan().length ? `<span class="rozet uyar">${evrakYaklasan().length}</span>` : '') : ''}</div>
+    <div class="c-liste">${satir('panel', 'Özet', 'ev', 'mavi')}${satir('takvim', 'Takvim', 'takvim', 'pembe')}</div>
     <div class="c-liste c-ana">${gorunen.map(grupHtml).join('')}</div>
     <div class="c-bolum">Sistem</div>
-    <div class="c-liste">${satir('menu', 'Modüller', 'izgara', 'indigo', kapali ? `<span class="rozet">${kapali} kapalı</span>` : '')}${satir('ayarlar', 'Ayarlar', 'ayar', 'gri')}</div>
+    <div class="c-liste">${satir('menu', 'Modüller', 'izgara', 'indigo', kapali ? `<span class="rozet">${kapali} kapalı</span>` : '')}${satir('ayarlar', 'Ayarlar', 'ayar', 'gri')}${evrakYetkili() ? satir('evrak', 'Evrak arşivi', 'kilit', 'indigo', evrakYaklasan().length ? `<span class="rozet uyar">${evrakYaklasan().length}</span>` : '') : ''}</div>
     <button class="c-alt c-baglanti ${ortakBagli() ? (ortakDurum.hata ? 'hata' : 'ok') : 'yok'}" id="cBaglanti"><span class="c-nokta"></span><span class="c-bm">${ortakBagli()
       ? `<b>${esc(ortakOturum()?.ad || ortakOturum()?.eposta || 'Ortak veritabanı')}</b><small class="ortak-durum">${esc(ortakDurumMetni())}</small>`
       : `<b>Ortak veritabanına bağlı değil</b><small>Veriler yalnız bu cihazda · bağlanmak için dokunun</small>`}<small>PowerServ+ ${VERSIYON}</small></span></button>`;
@@ -10417,7 +10426,7 @@ function evrakDurum(x) {
   return {sinif: 'yesil', yazi: 'geçerli', kod: 'gecerli'};
 }
 function evrakEkrani(p1) {
-  ui.evrakFiltre ||= {grup: 'hepsi', kat: '', ara: '', durum: ''};
+  ui.evrakFiltre ||= {sekme: 'hepsi', kat: '', ara: ''};
   const pid = p1 && p1.startsWith('p-') ? p1.slice(2) : '';
   let h = sayfa(pid ? 'Evraklar · ' + (personel(pid)?.ad || 'Personel') : 'Evrak arşivi', pid ? {geri: 'personel/' + pid, geriAd: 'Personel'} : {});
   const kok = $('#icerik');
@@ -10524,51 +10533,98 @@ function evrakKurtarFormu(a) {
       return false;
     }, kaydetAd: 'Aç ve şifreyi değiştir'});
 }
+/* 2.15.1: kategori listesi = hazır kategoriler + kullanıcının bir kez yazdığı yeni kategoriler (evraklardan toplanır) */
+function evrakKategoriler(grup) {
+  const l = grup ? [...EVRAK_KAT[grup]] : [...new Set([...EVRAK_KAT.sirket, ...EVRAK_KAT.personel])];
+  for (const x of kasa.meta.values()) if (x.kat && (!grup || x.grup === grup) && !l.includes(x.kat)) l.splice(Math.max(0, l.length - 1), 0, x.kat);
+  return l;
+}
+const EVRAK_SEKME = [['hepsi', 'Tüm evraklar'], ['sirket', 'Şirket evrakları'], ['personel', 'Personel evrakları'], ['suresi', 'Süresi dolan / yaklaşan'], ['eksik', 'Eksik evraklar']];
 function evrakListe(h, pid) {
   const f = ui.evrakFiltre, masa = masaustuMu();
+  if (!EVRAK_SEKME.some(([k]) => k === f.sekme)) f.sekme = 'hepsi';
   const hepsi = [...kasa.meta.values()];
-  const l = hepsi.filter(x => (pid ? x.grup === 'personel' && x.personelId === pid : (f.grup === 'hepsi' || x.grup === f.grup))
-      && (!f.kat || x.kat === f.kat) && (!f.durum || evrakDurum(x).kod === f.durum || (f.durum === 'yaklasan' && evrakDurum(x).kod === 'doldu'))
-      && (!f.ara || [x.ad, x.kat, x.no, x.kurum, x.not, evrakSahip(x), ...x.dosyalar.map(d => d.ad)].join(' ').toLocaleLowerCase('tr-TR').includes(f.ara.toLocaleLowerCase('tr-TR'))))
-    .sort((a, b) => (a.bitis && gunFark(a.bitis) <= (+a.hatirlat || 30) ? 0 : 1) - (b.bitis && gunFark(b.bitis) <= (+b.hatirlat || 30) ? 0 : 1) || evrakSahip(a).localeCompare(evrakSahip(b), 'tr') || (a.kat || '').localeCompare(b.kat || '', 'tr'));
-  const yak = hepsi.filter(x => ['doldu', 'yaklasan'].includes(evrakDurum(x).kod) && (pid ? x.personelId === pid : f.grup === 'hepsi' || x.grup === f.grup));
-  // Eksik zorunlu evraklar: şirket ve çalışan personel için
+  const sek = pid ? (f.sekme === 'eksik' ? 'eksik' : 'personel') : f.sekme;
+  const temel = hepsi.filter(x => (!pid || (x.grup === 'personel' && x.personelId === pid))
+    && (sek === 'hepsi' || sek === 'eksik' || (sek === 'suresi' ? ['doldu', 'yaklasan'].includes(evrakDurum(x).kod) : x.grup === sek)));
+  const ara = (f.ara || '').toLocaleLowerCase('tr-TR');
+  const l = temel.filter(x => (!f.kat || x.kat === f.kat)
+      && (!ara || [x.ad, x.kat, x.no, x.kurum, x.not, evrakSahip(x), ...x.dosyalar.map(d => d.ad)].join(' ').toLocaleLowerCase('tr-TR').includes(ara)))
+    .sort((a, b) => (a.bitis || '9999').localeCompare(b.bitis || '9999') * (sek === 'suresi' ? 1 : 0) || evrakSahip(a).localeCompare(evrakSahip(b), 'tr') || (a.kat || '').localeCompare(b.kat || '', 'tr') || (b.olusturma || 0) - (a.olusturma || 0));
+  // Eksik zorunlu evraklar
   const varMi = (grup, kat, p) => hepsi.some(x => x.grup === grup && x.kat === kat && (grup !== 'personel' || x.personelId === p));
-  const eksikSirket = EVRAK_ZORUNLU.sirket.filter(k => !varMi('sirket', k));
-  const aktifP = D.personeller.filter(p => p.aktif !== false && (!pid || p.id === pid));
-  const eksikP = aktifP.map(p => ({p, l: EVRAK_ZORUNLU.personel.filter(k => !varMi('personel', k, p.id))})).filter(x => x.l.length);
-  h += `<div class="btn-izgara"><button id="evYeni">${ikon('yukle')}Evrak yükle</button>${!masa ? `<button id="evKamera">${ikon('kamera')}Fotoğraf çek</button>` : ''}<button id="evKilit">${ikon('kilit')}Kilitle</button><button id="evAyar">${ikon('ayar')}Şifre ve güvenlik</button></div>`;
-  if (kasa.kural === false) h += `<div class="kilit-uyari">${ikon('bulut')}<div><b>Evraklar şimdilik yalnız bu cihazda</b><small>Sunucu kuralı yayınlanınca diğer cihazlarınızla kendiliğinden eşitlenir.</small></div></div>`;
-  else if (kasa.hata) h += `<div class="kilit-uyari">${ikon('uyari')}<div><b>Eşitlenemedi</b><small>${esc(kasa.hata)}</small></div></div>`;
-  if (kasa.acilamayan) h += `<div class="kilit-uyari">${ikon('uyari')}<div><b>${kasa.acilamayan} evrak bu şifreyle açılamadı</b><small>Başka bir cihazda farklı şifreyle kurulmuş arşivden gelmiş olabilir.</small></div></div>`;
-  if (!pid) h += `<div class="segment" id="evGrup">${[['hepsi', `Tümü (${hepsi.length})`], ['sirket', 'Şirket'], ['personel', 'Personel']].map(([k, a]) => `<button data-g="${k}" class="${f.grup === k ? 'secili' : ''}">${esc(a)}</button>`).join('')}</div>`;
-  const katlar = pid ? EVRAK_KAT.personel : f.grup === 'hepsi' ? [...new Set([...EVRAK_KAT.sirket, ...EVRAK_KAT.personel])] : EVRAK_KAT[f.grup];
-  h += `<div class="grup evrak-filtre"><label class="f-satir sol"><input id="evAra" type="search" placeholder="Ara (evrak, kişi, belge no)" value="${esc(f.ara)}"></label>
-    <label class="f-satir"><span>Kategori</span><select id="evKat"><option value="">Tümü</option>${katlar.map(k => `<option ${k === f.kat ? 'selected' : ''}>${esc(k)}</option>`).join('')}</select></label>
-    <label class="f-satir"><span>Durum</span><select id="evDurum">${[['', 'Tümü'], ['yaklasan', 'Süresi dolan / yaklaşan'], ['gecerli', 'Geçerli'], ['suresiz', 'Süresiz']].map(([k, a]) => `<option value="${k}" ${k === f.durum ? 'selected' : ''}>${a}</option>`).join('')}</select></label></div>`;
-  if (yak.length && !f.durum) h += `<div class="bolum">Süresi dolan ve yaklaşan (${yak.length})</div><div class="grup">${yak.slice(0, 6).map(x => { const d = evrakDurum(x);
-    return `<button class="hucre kareli" data-ev="${esc(x.id)}">${kare('takvim', d.kod === 'doldu' ? 'kirmizi' : 'turuncu')}<div class="ic"><b>${esc(x.ad || x.kat)}</b><small>${esc(evrakSahip(x))} · bitiş ${esc(tarihYaz(x.bitis, true))}</small></div><span class="hap ${d.sinif}">${esc(d.yazi)}</span></button>`; }).join('')}</div>`;
-  h += `<div class="bolum">${pid ? 'Evrakları' : 'Evraklar'} (${l.length})</div>`;
-  if (!l.length) h += bosDurum('dosya', 'indigo', hepsi.length ? 'Bu filtrede evrak yok' : 'Henüz evrak yok', hepsi.length ? 'Filtreyi değiştirin.' : 'Evrak yükle ile PDF ya da fotoğraf ekleyin. Hepsi şifreli saklanır.');
-  else if (masa) h += `<div class="p-tablo-kap"><table class="p-tablo evrak-tablo"><thead><tr><th>Evrak</th><th>Kategori</th><th>Kime ait</th><th>Belge no</th><th>Veren kurum</th><th>Tarih</th><th>Bitiş</th><th>Durum</th><th class="sg">Dosya</th></tr></thead><tbody>
-    ${l.map(x => { const d = evrakDurum(x); return `<tr data-ev="${esc(x.id)}"><td><b>${esc(x.ad || x.kat)}</b></td><td>${esc(x.kat)}</td><td>${esc(evrakSahip(x))}</td><td>${esc(x.no || '')}</td><td>${esc(x.kurum || '')}</td><td>${x.tarih ? esc(tarihYaz(x.tarih, true)) : ''}</td><td>${x.bitis ? esc(tarihYaz(x.bitis, true)) : ''}</td><td><span class="hap ${d.sinif}">${esc(d.yazi)}</span></td><td class="sg">${x.dosyalar.length} · ${esc(boyutYaz(x.dosyalar.reduce((t, y) => t + (y.boyut || 0), 0)))}</td></tr>`; }).join('')}</tbody></table></div>`;
-  else h += `<div class="grup">${l.map(x => { const d = evrakDurum(x); return `<button class="hucre kareli" data-ev="${esc(x.id)}">${kare(x.grup === 'personel' ? 'kisi' : 'sirket', x.grup === 'personel' ? 'camgobegi' : 'indigo')}<div class="ic"><b>${esc(x.ad || x.kat)}</b><small>${esc([evrakSahip(x), x.kat !== x.ad ? x.kat : '', x.no].filter(Boolean).join(' · '))}</small></div><span class="hap ${d.sinif}">${esc(d.yazi)}</span></button>`; }).join('')}</div>`;
-  const filtresiz = !f.kat && !f.ara && !f.durum;
-  if (filtresiz && !pid && f.grup !== 'personel' && eksikSirket.length) h += `<div class="bolum">Eksik şirket evrakları</div><div class="grup">${eksikSirket.map(k => `<button class="hucre kareli" data-eksik="sirket|${esc(k)}|">${kare('uyari', 'gri')}<div class="ic"><b>${esc(k)}</b><small>Yüklenmedi</small></div><span class="deger">Yükle</span></button>`).join('')}</div>`;
-  if (filtresiz && (pid || f.grup !== 'sirket') && eksikP.length) h += `<div class="bolum">Eksik personel evrakları</div><div class="grup">${eksikP.flatMap(({p, l: e}) => e.map(k => `<button class="hucre kareli" data-eksik="personel|${esc(k)}|${esc(p.id)}">${kare('uyari', 'gri')}<div class="ic"><b>${esc(k)}</b><small>${esc(p.ad)}</small></div><span class="deger">Yükle</span></button>`)).join('')}</div>`;
-  h += `<p class="dipnot">${ikon('kilit')} Evraklar AES-256 ile şifreli saklanır. ${EVRAK_KILIT_DK} dakika işlem yapılmazsa arşiv kilitlenir.</p>`;
-  $('#icerik').innerHTML = h;
-  const yeni = (on = {}) => evrakFormu({grup: pid ? 'personel' : f.grup === 'personel' ? 'personel' : 'sirket', personelId: pid, ...on});
+  const eksik = [...(pid ? [] : EVRAK_ZORUNLU.sirket.filter(k => !varMi('sirket', k)).map(k => ({grup: 'sirket', kat: k, p: null}))),
+    ...D.personeller.filter(p => p.aktif !== false && (!pid || p.id === pid)).flatMap(p => EVRAK_ZORUNLU.personel.filter(k => !varMi('personel', k, p.id)).map(k => ({grup: 'personel', kat: k, p})))];
+  const katlar = evrakKategoriler(sek === 'sirket' || sek === 'personel' ? sek : null);
+  if (f.kat && !katlar.includes(f.kat)) f.kat = '';
+  const uyarilar = (kasa.kural === false ? `<div class="kilit-uyari">${ikon('bulut')}<div><b>Evraklar şimdilik yalnız bu cihazda</b><small>Sunucu kuralı yayınlanınca diğer cihazlarınızla kendiliğinden eşitlenir.</small></div></div>`
+    : kasa.hata ? `<div class="kilit-uyari">${ikon('uyari')}<div><b>Eşitlenemedi</b><small>${esc(kasa.hata)}</small></div></div>` : '')
+    + (kasa.acilamayan ? `<div class="kilit-uyari">${ikon('uyari')}<div><b>${kasa.acilamayan} evrak bu şifreyle açılamadı</b><small>Başka bir cihazda farklı şifreyle kurulmuş arşivden gelmiş olabilir.</small></div></div>` : '');
+  const sekmeler = (pid ? [['personel', 'Evrakları'], ['eksik', 'Eksik evraklar']] : EVRAK_SEKME).map(([k, a]) => {
+    const n = k === 'eksik' ? eksik.length : k === 'suresi' ? hepsi.filter(x => ['doldu', 'yaklasan'].includes(evrakDurum(x).kod)).length : k === 'hepsi' ? hepsi.length : pid ? temel.length : hepsi.filter(x => x.grup === k).length;
+    return [k, `${a} (${n})`]; });
+  const katSec = `<select id="evKat"><option value="">Tüm kategoriler</option>${katlar.map(k => `<option ${k === f.kat ? 'selected' : ''}>${esc(k)}</option>`).join('')}</select>`;
+  const bosMetin = hepsi.length ? 'Bu listede evrak yok. Sekmeyi ya da kategoriyi değiştirin.' : 'Henüz evrak yok. Evrak yükle ile PDF ya da fotoğraf ekleyin; hepsi şifreli saklanır.';
+  let govde;
+  if (masa) {
+    $('#icerik').classList.add('erp-tam');
+    const satirlar = sek === 'eksik'
+      ? `<table class="izg salt-tablo liste"><thead><tr><th class="izg-no"></th><th style="width:300px">Eksik evrak</th><th style="width:120px">Tür</th><th style="width:240px">Kime ait</th><th style="width:120px"></th></tr></thead><tbody>
+        ${eksik.map((e, n) => `<tr class="tik" data-eksik="${e.grup}|${esc(e.kat)}|${esc(e.p?.id || '')}"><td class="izg-no">${n + 1}</td><td class="salt">${esc(e.kat)}</td><td class="salt">${EVRAK_GRUP[e.grup]}</td><td class="salt">${esc(e.p ? e.p.ad : 'Şirket')}</td><td class="salt"><b class="mavi-yazi">Yükle</b></td></tr>`).join('')}</tbody></table>
+        ${eksik.length ? '' : '<div class="izg-bos">Zorunlu evrakların hepsi yüklenmiş.</div>'}`
+      : `<table class="izg salt-tablo liste evrak-tablo"><thead><tr><th class="izg-no"></th>${[['Evrak', 15], ['Kategori', 13], ['Kime ait', 12], ['Belge no', 10], ['Veren kurum', 12], ['Tarih', 8], ['Bitiş', 9], ['Durum', 14], ['Dosya', 7]].map(([a, w]) => `<th style="width:${w}%">${a}</th>`).join('')}</tr></thead><tbody>
+        ${l.map((x, n) => { const d = evrakDurum(x); return `<tr class="tik ${d.kod === 'doldu' ? 'd-uyar' : ''}" data-ev="${esc(x.id)}" tabindex="-1"><td class="izg-no">${n + 1}</td><td class="salt"><b>${esc(x.ad || x.kat)}</b></td><td class="salt">${esc(x.kat)}</td><td class="salt">${esc(evrakSahip(x))}</td><td class="salt">${esc(x.no || '')}</td><td class="salt">${esc(x.kurum || '')}</td><td class="salt">${x.tarih ? esc(tarihYaz(x.tarih, true)) : ''}</td><td class="salt">${x.bitis ? esc(tarihYaz(x.bitis, true)) : ''}</td><td class="salt"><span class="hap ${d.sinif}">${esc(d.yazi)}</span></td><td class="salt sg">${x.dosyalar.length} · ${esc(boyutYaz(x.dosyalar.reduce((t, y) => t + (y.boyut || 0), 0)))}</td></tr>`; }).join('')}</tbody></table>
+        ${l.length ? '' : `<div class="izg-bos">${esc(bosMetin)}</div>`}`;
+    govde = `<div class="fis fis-liste evrak-pencere">
+      <div class="fis-bas"><div class="fis-ad">${ikon('kilit')}<div><b>${esc(pid ? 'Evraklar · ' + (personel(pid)?.ad || '') : 'Evrak arşivi')}</b><small>Şifreli · yalnız siz görürsünüz</small></div></div>
+        <div class="fis-arac"><button class="fa" id="evYeni">${ikon('yukle')}<span>Evrak yükle</span></button><span class="fa-ayir"></span>
+          <button class="fa" id="evAc">${ikon('dosya')}<span>Aç</span></button><button class="fa fa-sil" id="evSilBtn">${ikon('cop')}<span>Sil</span></button><span class="fa-ayir"></span>
+          <button class="fa" id="evKilit">${ikon('kilit')}<span>Kilitle</span></button><button class="fa" id="evAyar">${ikon('ayar')}<span>Şifre</span></button></div></div>
+      ${uyarilar ? `<div class="evrak-uyarilar">${uyarilar}</div>` : ''}
+      <div class="fis-sekmeler">${sekmeler.map(([k, a]) => `<button class="fs-s ${k === sek ? 'aktif' : ''}" data-sk="${k}">${esc(a)}</button>`).join('')}
+        <span class="fl-ara">${ikon('ara')}<input type="search" id="evAra" placeholder="Listede ara" value="${esc(f.ara)}"></span></div>
+      ${sek === 'eksik' ? '' : `<div class="fl-tarih"><label>Kategori</label>${katSec}</div>`}
+      <div class="fis-govde"><div class="izg-kap uzun" id="evTablo">${satirlar}</div></div>
+      <div class="fis-alt"><div class="ft"><div class="ft-kolon"><span>Kayıt</span><b>${sek === 'eksik' ? eksik.length : l.length}</b></div><span class="soluk ft-ipucu">Açmak için satıra çift tıklayın ya da seçip Enter'a basın. 10 dakika işlem yapılmazsa arşiv kilitlenir.</span></div></div></div>`;
+    $('#icerik').innerHTML = govde;
+  } else {
+    h += `<div class="btn-izgara"><button id="evYeni">${ikon('yukle')}Evrak yükle</button><button id="evKamera">${ikon('kamera')}Fotoğraf çek</button><button id="evKilit">${ikon('kilit')}Kilitle</button><button id="evAyar">${ikon('ayar')}Şifre</button></div>${uyarilar}`;
+    h += `<div class="evrak-sekme">${sekmeler.map(([k, a]) => `<button data-sk="${k}" class="${k === sek ? 'secili' : ''}">${esc(a)}</button>`).join('')}</div>`;
+    if (sek !== 'eksik') h += `<div class="grup evrak-filtre"><label class="f-satir sol"><input id="evAra" type="search" placeholder="Ara (evrak, kişi, belge no)" value="${esc(f.ara)}"></label><label class="f-satir"><span>Kategori</span>${katSec}</label></div>`;
+    if (sek === 'eksik') h += eksik.length ? `<div class="grup">${eksik.map(e => `<button class="hucre kareli" data-eksik="${e.grup}|${esc(e.kat)}|${esc(e.p?.id || '')}">${kare('uyari', 'gri')}<div class="ic"><b>${esc(e.kat)}</b><small>${esc(e.p ? e.p.ad : 'Şirket')}</small></div><span class="deger">Yükle</span></button>`).join('')}</div>`
+      : bosDurum('tamam', 'yesil', 'Eksik evrak yok', 'Zorunlu evrakların hepsi yüklenmiş.');
+    else h += `<div class="bolum">Evraklar (${l.length})</div>` + (l.length ? `<div class="grup">${l.map(x => { const d = evrakDurum(x); return `<button class="hucre kareli" data-ev="${esc(x.id)}">${kare(x.grup === 'personel' ? 'kisi' : 'sirket', x.grup === 'personel' ? 'camgobegi' : 'indigo')}<div class="ic"><b>${esc(x.ad || x.kat)}</b><small>${esc([evrakSahip(x), x.kat !== x.ad ? x.kat : '', x.no].filter(Boolean).join(' · '))}</small></div><span class="hap ${d.sinif}">${esc(d.yazi)}</span></button>`; }).join('')}</div>`
+      : bosDurum('dosya', 'indigo', hepsi.length ? 'Bu listede evrak yok' : 'Henüz evrak yok', bosMetin));
+    h += `<p class="dipnot">${ikon('kilit')} Evraklar AES-256 ile şifreli saklanır. ${EVRAK_KILIT_DK} dakika işlem yapılmazsa arşiv kilitlenir.</p>`;
+    $('#icerik').innerHTML = h;
+  }
+  const yeni = (on = {}) => evrakFormu({grup: pid || sek === 'personel' ? 'personel' : 'sirket', personelId: pid, kat: f.kat || '', ...on});
   $('#evYeni').onclick = () => yeni();
   if ($('#evKamera')) $('#evKamera').onclick = () => yeni({kamera: true});
   $('#evKilit').onclick = () => kasaKilitle();
   $('#evAyar').onclick = () => evrakGuvenlik();
-  $$('#evGrup [data-g]').forEach(b => b.onclick = () => { f.grup = b.dataset.g; f.kat = ''; ciz(); });
-  $('#evKat').onchange = e => { f.kat = e.target.value; ciz(); };
-  $('#evDurum').onchange = e => { f.durum = e.target.value; ciz(); };
-  let z; $('#evAra').oninput = e => { clearTimeout(z); z = setTimeout(() => { f.ara = e.target.value; ciz(); const i = $('#evAra'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }, 300); };
-  $$('[data-ev]').forEach(b => b.onclick = () => evrakDetay(kasa.meta.get(b.dataset.ev)));
+  $$('[data-sk]').forEach(b => b.onclick = () => { f.sekme = b.dataset.sk; ciz(); });
+  if ($('#evKat')) $('#evKat').onchange = e => { f.kat = e.target.value; ciz(); };
+  if ($('#evAra')) { let z; $('#evAra').oninput = e => { clearTimeout(z); z = setTimeout(() => { f.ara = e.target.value; ciz(); const i = $('#evAra'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }, 300); }; }
   $$('[data-eksik]').forEach(b => b.onclick = () => { const [grup, kat, p] = b.dataset.eksik.split('|'); evrakFormu({grup, kat, ad: kat, personelId: p}); });
+  if (masa) {
+    let secili = '';
+    $$('#evTablo tr[data-ev]').forEach(tr => {
+      tr.onclick = () => { secili = tr.dataset.ev; $$('#evTablo tr.secili').forEach(x => x.classList.remove('secili')); tr.classList.add('secili'); tr.focus(); };
+      tr.ondblclick = () => evrakDetay(kasa.meta.get(tr.dataset.ev));
+      tr.onkeydown = e => {
+        if (e.key === 'Enter') evrakDetay(kasa.meta.get(tr.dataset.ev));
+        else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const y = e.key === 'ArrowDown' ? tr.nextElementSibling : tr.previousElementSibling; if (y) y.click(); }
+      };
+    });
+    $('#evAc').onclick = () => secili ? evrakDetay(kasa.meta.get(secili)) : bildir('Önce listeden bir evrak seçin');
+    $('#evSilBtn').onclick = async () => {
+      const x = kasa.meta.get(secili);
+      if (!x) return bildir('Önce listeden silinecek evrakı seçin', true);
+      if (!await onay('Evrak silinsin mi?', `${x.ad || x.kat} · ${evrakSahip(x)} · dosyaları da silinir, geri alınamaz`)) return;
+      try { await evrakSil(x); bildir('Evrak silindi'); ciz(); } catch (e) { bildir(e.message || 'Silinemedi', true); }
+    };
+  } else $$('[data-ev]').forEach(b => b.onclick = () => evrakDetay(kasa.meta.get(b.dataset.ev)));
 }
 function evrakDetay(x) {
   if (!x) return;
@@ -10598,13 +10654,16 @@ function evrakFormu(on) {
     : JSON.parse(JSON.stringify(on));
   const eklenen = [], kaldirilan = [];
   const pOps = () => D.personeller.slice().sort((a, b) => (a.aktif === false) - (b.aktif === false) || a.ad.localeCompare(b.ad, 'tr')).map(p => `<option value="${esc(p.id)}" ${p.id === x.personelId ? 'selected' : ''}>${esc(p.ad)}${p.aktif === false ? ' (ayrıldı)' : ''}</option>`).join('');
-  const katOps = g => EVRAK_KAT[g].map(k => `<option ${k === x.kat ? 'selected' : ''}>${esc(k)}</option>`).join('');
+  // 2.15.1: hazır kategoriler + daha önce yazılmış yeni kategoriler; "Yeni kategori" bir kez yazılır, sonra listede ve filtrede çıkar
+  const katOps = g => { const l = evrakKategoriler(g); if (x.kat && !l.includes(x.kat)) l.unshift(x.kat);
+    return l.map(k => `<option ${k === x.kat ? 'selected' : ''}>${esc(k)}</option>`).join('') + '<option value="__yeni">+ Yeni kategori ekle…</option>'; };
   let kayitta = false;
   const m = modal(yeni ? 'Evrak yükle' : 'Evrakı düzenle', `
     <div class="segment" id="efGrup">${Object.entries(EVRAK_GRUP).map(([k, a]) => `<button type="button" data-g="${k}" class="${x.grup === k ? 'secili' : ''}">${a} evrakı</button>`).join('')}</div>
     <div class="grup">
       <label class="f-satir ${x.grup === 'personel' ? '' : 'gizli'}" id="efPSat"><span>Personel</span><select id="efP"><option value="">Seçin</option>${pOps()}</select></label>
       <label class="f-satir"><span>Kategori</span><select id="efKat"><option value="">Seçin</option>${katOps(x.grup)}</select></label>
+      <label class="f-satir sol gizli" id="efYeniSat"><input id="efYeniKat" maxlength="60" placeholder="Yeni kategori adı (ör. Liman giriş izni)"></label>
       <label class="f-satir sol"><input id="efAd" placeholder="Evrak adı (boşsa kategori)" value="${esc(x.ad === x.kat ? '' : x.ad)}"></label>
       <label class="f-satir sol"><input id="efNo" placeholder="Belge / poliçe no" value="${esc(x.no)}"></label>
       <label class="f-satir sol"><input id="efKurum" placeholder="Veren kurum (ör. vergi dairesi, sigorta şirketi)" value="${esc(x.kurum)}"></label>
@@ -10617,8 +10676,8 @@ function evrakFormu(on) {
     <div class="btn-grup"><button type="button" class="btn renkli" id="efKamera">${ikon('kamera')} Fotoğraf çek</button><button type="button" class="btn renkli" id="efDosya">${ikon('yukle')} PDF veya resim ekle</button></div>
     <p class="dipnot">${ikon('kilit')} Dosyalar kaydederken bu cihazda şifrelenir. Tek dosya en çok 10 MB. Kimliğin ön ve arka yüzü gibi birden çok dosya eklenebilir.</p>`, {kaydet: () => {
       if (kayitta) return false;
-      x.kat = $('#efKat', m).value; x.personelId = x.grup === 'personel' ? $('#efP', m).value : '';
-      if (!x.kat) { bildir('Kategori seçin', true); return false; }
+      x.kat = $('#efKat', m).value === '__yeni' ? $('#efYeniKat', m).value.trim().replace(/\s+/g, ' ') : $('#efKat', m).value; x.personelId = x.grup === 'personel' ? $('#efP', m).value : '';
+      if (!x.kat) { bildir($('#efKat', m).value === '__yeni' ? 'Yeni kategorinin adını yazın' : 'Kategori seçin', true); return false; }
       if (x.grup === 'personel' && !x.personelId) { bildir('Personel seçin', true); return false; }
       x.ad = $('#efAd', m).value.trim() || x.kat; x.no = $('#efNo', m).value.trim(); x.kurum = $('#efKurum', m).value.trim();
       x.tarih = $('#efTarih', m).value; x.bitis = $('#efBitis', m).value; x.hatirlat = +$('#efHat', m).value || 30; x.not = $('#efNot', m).value.trim();
@@ -10643,11 +10702,13 @@ function evrakFormu(on) {
   $('#efKamera', m).onclick = () => ekle(true);
   $('#efDosya', m).onclick = () => ekle(false);
   $$('#efGrup [data-g]', m).forEach(b => b.onclick = () => {
-    x.grup = b.dataset.g; x.kat = EVRAK_KAT[x.grup].includes($('#efKat', m).value) ? $('#efKat', m).value : '';
+    x.grup = b.dataset.g; x.kat = evrakKategoriler(x.grup).includes($('#efKat', m).value) ? $('#efKat', m).value : '';
     $$('#efGrup [data-g]', m).forEach(y => y.classList.toggle('secili', y === b));
     $('#efPSat', m).classList.toggle('gizli', x.grup !== 'personel');
     $('#efKat', m).innerHTML = `<option value="">Seçin</option>${katOps(x.grup)}`;
+    $('#efYeniSat', m).classList.add('gizli');
   });
+  $('#efKat', m).onchange = e => { const y = e.target.value === '__yeni'; $('#efYeniSat', m).classList.toggle('gizli', !y); if (y) setTimeout(() => $('#efYeniKat', m).focus(), 50); };
   ciz1();
   if (on.kamera) setTimeout(() => ekle(true), 350);
 }
