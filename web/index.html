@@ -1748,6 +1748,31 @@ body.erp .erp-form .tutar-kutu small{width:140px;flex:none;font-size:12.5px;colo
 body.erp .erp-form .tutar-kutu input{flex:none;width:260px;height:32px;font-size:20px!important;font-weight:700;text-align:right!important;border:1px solid var(--erp-cizgi)!important;border-radius:2px;background:var(--erp-giris)!important;padding:0 8px!important;margin:0}
 body.erp .erp-form #mSerbest .yuzen{display:none}
 @media (max-width:1180px){body.erp .erp-form .ff-alt{grid-template-columns:minmax(0,1fr) 320px}}
+/* ================= 2.15: şifreli evrak arşivi ================= */
+.evrak-kilit{display:flex;justify-content:center;padding:12px 0 24px}
+.evrak-kilit .kart{width:100%;max-width:420px;padding:26px 22px 20px}
+.evrak-kilit h2{margin:0;text-align:center;font-size:21px}
+.evrak-kilit .kart > p{margin:6px 0 14px;text-align:center;font-size:14px;line-height:1.45}
+.evrak-kilit .kart > p.dipnot{margin:12px 0 0}
+.evrak-kilit .grup{margin:0 0 6px}
+.evrak-kilit .btn{width:100%;margin-top:6px}
+.evrak-kod{font:600 20px/1.5 ui-monospace,Consolas,monospace;letter-spacing:1px;text-align:center;padding:16px 10px;margin:12px 0;border:2px dashed var(--kenar);background:var(--kart);word-break:break-all;user-select:all}
+.evrak-tablo tbody tr{cursor:pointer}.evrak-tablo tbody tr:hover td{background:var(--dolgu)}
+.evrak-filtre{margin-bottom:12px}
+.evrak-sekme{display:flex;gap:6px;overflow-x:auto;margin:0 0 10px;padding-bottom:2px;scrollbar-width:none}
+.evrak-sekme button{flex:none;border:1px solid var(--kenar);background:var(--kart);color:var(--yazi);font:inherit;font-size:14px;padding:9px 12px;border-radius:0;cursor:pointer;white-space:nowrap}
+.evrak-sekme button.secili{background:var(--mavi);border-color:var(--mavi);color:#fff;font-weight:600}
+.evrak-pencere .fl-tarih select{height:25px;border:1px solid var(--erp-cizgi);border-radius:2px;background:var(--erp-giris);color:var(--yazi);font:inherit;padding:0 6px;min-width:240px}
+.evrak-uyarilar{padding:6px 8px 0}.evrak-uyarilar .kilit-uyari{margin:0 0 6px}
+.mavi-yazi{color:var(--mavi)}
+.evrak-pencere table.izg{width:100%;min-width:900px}
+.evrak-pencere table.izg th.izg-no{width:34px}
+.evrak-pencere .fl-ara input{width:200px}
+.evrak-bilgi{cursor:default}.evrak-bilgi:hover{border-color:var(--kenar)}
+.evrak-bilgi b{white-space:normal}
+.ek-satir .ek-sil + .ek-sil{margin-left:6px}
+.ek-satir .ek-ac{color:var(--mavi)}
+p.dipnot .i{width:14px;height:14px;vertical-align:-2px}
 </style>
 </head>
 <body>
@@ -1760,7 +1785,7 @@ body.erp .erp-form #mSerbest .yuzen{display:none}
 
 <script>
 'use strict';
-const VERSIYON = '2.14.11';
+const VERSIYON = '2.15.1';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -2553,7 +2578,7 @@ function menuCiz(aktif) {
     <div class="c-liste">${satir('panel', 'Özet', 'ev', 'mavi')}${satir('takvim', 'Takvim', 'takvim', 'pembe')}</div>
     <div class="c-liste c-ana">${gorunen.map(grupHtml).join('')}</div>
     <div class="c-bolum">Sistem</div>
-    <div class="c-liste">${satir('menu', 'Modüller', 'izgara', 'indigo', kapali ? `<span class="rozet">${kapali} kapalı</span>` : '')}${satir('ayarlar', 'Ayarlar', 'ayar', 'gri')}</div>
+    <div class="c-liste">${satir('menu', 'Modüller', 'izgara', 'indigo', kapali ? `<span class="rozet">${kapali} kapalı</span>` : '')}${satir('ayarlar', 'Ayarlar', 'ayar', 'gri')}${evrakYetkili() ? satir('evrak', 'Evrak arşivi', 'kilit', 'indigo', evrakYaklasan().length ? `<span class="rozet uyar">${evrakYaklasan().length}</span>` : '') : ''}</div>
     <button class="c-alt c-baglanti ${ortakBagli() ? (ortakDurum.hata ? 'hata' : 'ok') : 'yok'}" id="cBaglanti"><span class="c-nokta"></span><span class="c-bm">${ortakBagli()
       ? `<b>${esc(ortakOturum()?.ad || ortakOturum()?.eposta || 'Ortak veritabanı')}</b><small class="ortak-durum">${esc(ortakDurumMetni())}</small>`
       : `<b>Ortak veritabanına bağlı değil</b><small>Veriler yalnız bu cihazda · bağlanmak için dokunun</small>`}<small>PowerServ+ ${VERSIYON}</small></span></button>`;
@@ -2623,6 +2648,7 @@ function ciz0() {
   if (s === 'islemkaydi') { menuCiz('ayarlar'); islemKaydiEkrani(); return kaydirma(); }
   if (s === 'raporlar') { menuCiz('raporlar'); raporlarEkrani(p1); return kaydirma(); }
   if (s === 'takvim') { menuCiz('takvim'); takvimEkrani(); yanDuzen(); return kaydirma(); }
+  if (s === 'evrak') { menuCiz('evrak'); evrakEkrani(p1); yanDuzen(); return kaydirma(); }
   if (s === 'finans') { if (!finansOzetVar()) return git('panel', true); menuCiz('finans'); finansOzetEkrani(); yanDuzen(); return kaydirma(); }
   if (s === 'fis') { fisEkrani(p1); yanDuzen(); return kaydirma(); }
   if (!modulAcik(s)) return git('panel', true);
@@ -3453,6 +3479,9 @@ function panelEkrani() {
     if (bk.length) uy.push(`<a class="hucre kareli" href="#/servis/r-bakim">${kare('takvim', gec ? 'kirmizi' : 'turuncu')}<div class="ic"><b>${bk.length} makinenin bakımı ${gec ? `yaklaşıyor (${gec} gecikti)` : 'yaklaşıyor'}</b><small>${esc(bk.slice(0, 3).map(b => kisi(b.e.kisiId)?.ad || b.e.tekne || ekipmanAd(b.e)).join(', '))}</small></div>${CHEV}</a>`);
   }
   if (ac('stok')) { const n = D.urunler.filter(u => u.kritik > 0 && urunMiktar(u.id) <= u.kritik).length; if (n) uy.push(`<a class="hucre kareli" href="#/stok/r-kritik">${kare('depoUyari', 'kahve')}<div class="ic"><b>${n} üründe kritik stok</b><small>Stok azaldı</small></div>${CHEV}</a>`); }
+  // 2.15: süresi dolan / yaklaşan evraklar (yalnız firma sahibi; evrak adı şifreli olduğu için yalnız sayı gösterilir)
+  { const ey = evrakYaklasan(), dl = ey.filter(x => gunFark(x.b) < 0).length;
+    if (ey.length) uy.push(`<a class="hucre kareli" href="#/evrak">${kare('kilit', dl ? 'kirmizi' : 'turuncu')}<div class="ic"><b>${ey.length} evrakın süresi ${dl ? `doluyor (${dl} doldu)` : 'doluyor'}</b><small>Evrak arşivi · en yakın ${esc(tarihYaz(ey[0].b, true))}</small></div>${CHEV}</a>`); }
   if (uy.length) alt += `<section><div class="bolum">Hatırlatmalar</div><div class="grup">${uy.join('')}</div></section>`;
   if (alt) h += `<div class="ozet-alt">${alt}</div>`;
 
@@ -7302,7 +7331,7 @@ function erpCercevele() {
   const md = modul(m), baslik = ($('#ust .orta-baslik')?.textContent || '').trim();
   const cerceve = document.createElement('div');
   cerceve.className = 'fis fis-kart';
-  cerceve.innerHTML = `<div class="fis-bas"><div class="fis-ad">${ikon(md?.simge || ({ayarlar: 'ayar', fis: 'fis', kullanicilar: 'kisiler', islemkaydi: 'liste', hesaplar: 'sirket', menu: 'izgara'})[m] || 'dosya')}<div><b></b><small></small></div></div><div class="fis-arac"></div></div><div class="fis-govde erp-icerik"></div>`;
+  cerceve.innerHTML = `<div class="fis-bas"><div class="fis-ad">${ikon(md?.simge || ({ayarlar: 'ayar', fis: 'fis', kullanicilar: 'kisiler', islemkaydi: 'liste', hesaplar: 'sirket', menu: 'izgara', evrak: 'kilit'})[m] || 'dosya')}<div><b></b><small></small></div></div><div class="fis-arac"></div></div><div class="fis-govde erp-icerik"></div>`;
   $('.fis-ad b', cerceve).textContent = baslik || modulAdi(m) || '';
   $('.fis-ad small', cerceve).textContent = md ? modulAdi(m) : '';
   const arac = $('.fis-arac', cerceve), govde = $('.fis-govde', cerceve);
@@ -8451,7 +8480,7 @@ function personelDetay(id) {
   const mt = (a, v, c = '', cls = '') => `<div class="metrik"><div class="ust">${esc(a)}</div><b class="${cls}">${v}</b><small>${esc(c)}</small></div>`;
   h += `<div class="btn-izgara"><button id="pDuz2">${ikon('kalem')}Bilgileri düzenle</button><button data-o="maas">${ikon('para')}Maaş öde</button><button data-o="avans">${ikon('giris')}Avans</button><button data-o="prim">${ikon('arti')}Prim</button>
       <button id="pIzin">${ikon('takvim')}İzin ekle</button><button id="pZimmet">${ikon('kutu')}Zimmet ver</button><button id="pPuantaj">${ikon('takvim')}Puantaj</button><button id="pBordro">${ikon('dosya')}Bordro</button>
-      <button id="pKart">${ikon('yazici')}Personel kartı</button>${p.tel ? `<button id="pAra">${ikon('tel')}Ara</button>` : ''}</div>
+      <button id="pKart">${ikon('yazici')}Personel kartı</button>${evrakYetkili() ? `<button id="pEvrak">${ikon('kilit')}Evraklar</button>` : ''}${p.tel ? `<button id="pAra">${ikon('tel')}Ara</button>` : ''}</div>
     <div class="kart" style="display:flex;align-items:center;gap:12px;padding:10px 12px">${avatar(p.ad)}<div style="min-width:0;flex:1"><b style="font-size:17px">${esc(p.ad)}</b>
       <div class="soluk" style="font-size:13px">${esc([p.gorev || 'Personel', p.departman, kidemYazi(p) && kidemYazi(p) + ' kıdem'].filter(Boolean).join(' · '))}</div></div>
       ${p.aktif === false ? '<span class="hap">ayrıldı</span>' : iz ? `<span class="hap mavi">izinde · ${esc(tarihYaz(iz.bit))} dönüş</span>` : '<span class="hap yesil">çalışıyor</span>'}</div>
@@ -8481,6 +8510,7 @@ function personelDetay(id) {
   $('#pPuantaj').onclick = () => puantajFormu(p, ay);
   $('#pBordro').onclick = () => bordroDetay(p, ay);
   $('#pKart').onclick = () => yazdir(`Personel kartı ${p.ad}`, personelKartKagit(p));
+  if ($('#pEvrak')) $('#pEvrak').onclick = () => git('evrak/p-' + p.id);
   $('#pIzin').onclick = $('#pIzin2').onclick = () => izinFormu(p);
   $('#pZimmet').onclick = $('#pZimmet2').onclick = () => zimmetFormu(p);
   if ($('#pAra')) $('#pAra').onclick = () => disariAc('tel:' + p.tel.replace(/[^\d+]/g, ''));
@@ -9536,6 +9566,12 @@ function hatirlaticilar() {
           ekle(x.g, `a0-${x.o.id}-${x.g}`, 'Bugün ödenecek', `${x.o.ad}${x.o.tutar ? ' · ' + para(x.o.tutar) : ''}${hesap}`, `${h.id}|takvim`);
         } else ekle(x.g, `ar-${x.o.id}-${x.g}`, 'Bugün randevu', `${x.o.saat ? x.o.saat + ' · ' : ''}${x.o.ad}${x.o.yer ? ' · ' + x.o.yer : ''}${hesap}`, `${h.id}|takvim`);
       }
+      // 2.15: evrak bitişi: hatırlatma günü önce, 7 gün önce ve o gün (evrak adı şifreli; bildirimde yazılmaz)
+      if (h.id === H.aktif) for (const x of evrakBitisler()) {
+        if (x.h > 7) ekle(gunOnce(x.b, x.h), `e${x.h}-${x.i}`, 'Evrak süresi doluyor', `Bir evrakın süresi ${x.h} gün sonra doluyor · Evrak arşivi${hesap}`, `${h.id}|evrak`);
+        ekle(gunOnce(x.b, 7), `e7-${x.i}`, 'Evrak süresi doluyor', `Bir evrakın süresi 7 gün sonra doluyor · Evrak arşivi${hesap}`, `${h.id}|evrak`);
+        ekle(x.b, `e0-${x.i}`, 'Evrakın süresi bugün doluyor', `Evrak arşivini açıp yenisini yükleyin${hesap}`, `${h.id}|evrak`);
+      }
       if (modulAcik('teklif')) for (const f of D.faturalar) if (f.tur === 'teklif' && f.vade && teklifDurumKod(f) === 'bekliyor')
         ekle(gunOnce(f.vade, 1), `t1-${f.id}`, 'Teklif geçerliliği bitiyor', `${faturaMusteri(f)} · ${f.no} · yarın son gün${hesap}`, `${h.id}|teklif/${f.id}`);
     }
@@ -9624,7 +9660,7 @@ const KOLEKSIYON_AD = {islemler: 'Gelir/gider', kisiler: 'Cari', hareketler: 'Ca
   _bordroAyar: 'Bordro ayarları', _vergiAyar: 'Vergi ayarları', _fisNo: 'Fiş numaraları', _profil: 'Profil'};
 const ISLEM_AD = {ekle: 'Ekledi', duzenle: 'Değiştirdi', sil: 'Sildi', toplu: 'Toplu gönderim', kurulum: 'Kurulum', giris: 'Giriş', kullanici: 'Kullanıcı'};
 const KURALLAR = `rules_version = '2';
-// PowerServ+ ortak veritabanı güvenlik kuralları (2.9.2). Firebase konsolu > Firestore Database > Kurallar sekmesine yapıştırın.
+// PowerServ+ ortak veritabanı güvenlik kuralları (2.15). Firebase konsolu > Firestore Database > Kurallar sekmesine yapıştırın.
 service cloud.firestore {
   match /databases/{db}/documents {
     // Yeni firma açılışı kapalı: kimse API anahtarıyla kendine yeni firma kurup veritabanını kullanamaz.
@@ -9683,6 +9719,11 @@ service cloud.firestore {
       match /ozel/{key} {
         allow read: if uye(f) && rol(f) in ['yonetici', 'muhasebe', 'izleyici'];
         allow create, update: if finans(f) && kayitGecerli(key) && !genel(request.resource.data.k);
+      }
+      // 2.15: Şifreli evrak arşivi. Yalnız firma sahibi okur ve yazar. İçerik cihazda şifrelenip gelir; sunucuda yalnız şifreli metin durur.
+      match /kasa/{key} {
+        allow read: if uye(f) && request.auth.uid == sahip(f);
+        allow create, update: if uye(f) && request.auth.uid == sahip(f) && kayitGecerli(key) && request.resource.data.k in ['evrak', 'evrakp', 'evrakanahtar'];
       }
       // İşlem kaydı değiştirilemez ve silinemez.
       match /log/{l} {
@@ -10004,6 +10045,8 @@ async function ortakEsitle() {
     let g = 0, gHata = null;
     try { g = await ortakGonder(); } catch (e) { if (e.ag || e.oturum) throw e; gHata = e; }
     c += await ortakCek();
+    // 2.15: şifreli evrak arşivi (yalnız firma sahibi). Hatası ana eşitlemeyi durdurmaz.
+    try { await kasaEsitle(); } catch (e) { if (e.ag || e.oturum) throw e; }
     if (gHata) { if (c) ortakCizBekle = true; throw gHata; }
     if (++ortakSayac % 6 === 1) await ortakUyelikKontrol();
     Object.assign(ortakDurum, {zaman: Date.now(), hata: '', cevrimdisi: false, gonderilen: ortakDurum.gonderilen + g, cekilen: ortakDurum.cekilen + c});
@@ -10044,6 +10087,7 @@ async function ortakUyelikKontrol() {
   try { u = fsOku(await ortakIstek(o, 'GET', fsUrl(o, '/uyeler/' + s.uid))); }
   catch (e) { if (e.ag || e.oturum) throw e; if (e.durum !== 404 && e.durum !== 403) throw e; }
   if (!u || u.aktif === false) return ortakOturumKapat('Bu kullanıcının firmaya erişimi kapatıldı.');
+  await firmaSahipOku();
   if (u.rol !== s.rol || (u.ad || '') !== (s.ad || '') || (u.yetki || '') !== (s.yetki || '')) {
     const g = ortak(); g.oturum = {...g.oturum, rol: u.rol, ad: u.ad || '', yetki: u.yetki || ''}; ortakYaz(g);
     bildir('Yetkiniz güncellendi: ' + (ROLLER[u.rol]?.ad || u.rol));
@@ -10071,6 +10115,625 @@ async function ortakAyir() {
 async function ortakUyeOku(o, uid) {
   try { return fsOku(await ortakIstek(o, 'GET', fsUrl(o, '/uyeler/' + uid))); }
   catch (e) { if (e.durum === 404 || e.durum === 403) return null; throw e; }
+}
+/* ================= Şifreli evrak arşivi (2.15) =================
+   Şirket ve personel evrakları (vergi levhası, imza sirküleri, poliçe, kimlik, SGK, sağlık raporu...).
+   Yalnız firma sahibi görür: menüde yalnız ona çıkar, Firestore'da "kasa" koleksiyonunu kurallar yalnız sahibe açar.
+   Her evrakın bilgileri ve dosyaları bu cihazda AES-256-GCM ile şifrelenir. Şifreleme anahtarı rastgele üretilir ve
+   arşiv şifresinden (PBKDF2-SHA256) türetilen anahtarla sarılı saklanır; ayrıca kurtarma koduyla sarılı bir kopyası vardır.
+   Firebase'e ve cihaz depolamasına yalnız şifreli metin gider. Şifre, kurtarma kodu ve açık anahtar hiçbir yerde saklanmaz.
+   Açıkta kalan tek bilgi bitiş tarihi ve hatırlatma günüdür (süresi dolan evrak uyarısı arşiv kilitliyken de çalışsın diye).
+   Kayıtlar: kasa/evrakanahtar~ana (sarılı anahtar) · kasa/evrak~<id> (şifreli bilgiler) · kasa/evrakp~<dosya>_<n> (şifreli dosya parçaları). */
+const EVRAK_TUR = 400000, EVRAK_PARCA = 700000, EVRAK_DOSYA_SINIR = 10 * 1048576, EVRAK_RESIM_PX = 2200, EVRAK_KILIT_DK = 10;
+const EVRAK_GRUP = {sirket: 'Şirket', personel: 'Personel'};
+const EVRAK_KAT = {
+  sirket: ['Vergi levhası', 'Ticaret sicil gazetesi', 'İmza sirküleri', 'Faaliyet belgesi / oda kaydı', 'Ana sözleşme', 'Sigorta poliçesi', 'Ruhsat / izin belgesi', 'Kira sözleşmesi',
+    'Müşteri / tedarikçi sözleşmesi', 'Kalite / yetki belgesi', 'Araç ve tekne evrakı', 'Banka evrakı', 'Vekaletname', 'Diğer'],
+  personel: ['Kimlik', 'İş sözleşmesi', 'SGK işe giriş bildirgesi', 'Sağlık raporu', 'Adli sicil kaydı', 'Diploma / sertifika', 'İSG eğitim belgesi', 'Ehliyet', 'İkametgah',
+    'Banka / IBAN bilgisi', 'İzin ve istifa evrakı', 'Diğer']
+};
+const EVRAK_ZORUNLU = {sirket: ['Vergi levhası', 'Ticaret sicil gazetesi', 'İmza sirküleri', 'Faaliyet belgesi / oda kaydı'], personel: ['Kimlik', 'İş sözleşmesi', 'SGK işe giriş bildirgesi', 'Sağlık raporu', 'İSG eğitim belgesi']};
+const kasa = {dek: null, anahtarId: '', meta: new Map(), acilamayan: 0, son: 0, gizli: 0, kural: null, hata: '', mesgul: false};
+const evrakDestek = () => !!(window.crypto && crypto.subtle && crypto.getRandomValues && window.indexedDB);
+/* Yalnız firma sahibi. Ortak veritabanına bağlı olmayan cihazda arşiv yalnız bu cihazdadır ve şifreyle açılır. */
+function evrakYetkili() {
+  if (!ortakBagli()) return true;
+  const s = ortakOturum(), o = ortak();
+  return !!(s && o && o.sahip && s.uid === o.sahip);
+}
+async function firmaSahipOku() {
+  const o = ortak();
+  if (!o?.oturum || !ortakBagli()) return;
+  try { const f = fsOku(await ortakIstek(o, 'GET', fsUrl(o, ''))); const g = ortak(); if (g && (g.sahip || '') !== (f.sahip || '')) { g.sahip = f.sahip || ''; ortakYaz(g); ortakCizBekle = true; } }
+  catch (e) { if (e.ag || e.oturum) throw e; }
+}
+
+/* --- Bayt ve şifreleme yardımcıları --- */
+const ekB64 = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
+const ekB64Coz = s => { const b = atob(s), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; };
+const kasaRastgele = n => crypto.getRandomValues(new Uint8Array(n));
+const metinBayt = s => new TextEncoder().encode(s);
+async function kasaTuret(sifre, tuz, tur) {
+  const k = await crypto.subtle.importKey('raw', metinBayt(String(sifre).normalize('NFC')), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({name: 'PBKDF2', salt: tuz, iterations: tur, hash: 'SHA-256'}, k, {name: 'AES-GCM', length: 256}, false, ['wrapKey', 'unwrapKey']);
+}
+async function kasaSar(dek, sifre, tur = EVRAK_TUR) {
+  const tuz = kasaRastgele(16), iv = kasaRastgele(12), kek = await kasaTuret(sifre, tuz, tur);
+  return {tuz: ekB64(tuz), iv: ekB64(iv), tur, sar: ekB64(new Uint8Array(await crypto.subtle.wrapKey('raw', dek, kek, {name: 'AES-GCM', iv})))};
+}
+async function kasaAnahtarAc(s, sifre) {
+  const kek = await kasaTuret(sifre, ekB64Coz(s.tuz), +s.tur || EVRAK_TUR);
+  return crypto.subtle.unwrapKey('raw', ekB64Coz(s.sar), kek, {name: 'AES-GCM', iv: ekB64Coz(s.iv)}, {name: 'AES-GCM'}, true, ['encrypt', 'decrypt']);
+}
+async function kasaSifrele(bayt, aad) {
+  const iv = kasaRastgele(12);
+  return {iv: ekB64(iv), c: ekB64(new Uint8Array(await crypto.subtle.encrypt({name: 'AES-GCM', iv, additionalData: metinBayt(aad)}, kasa.dek, bayt)))};
+}
+const kasaCoz = async (iv, c, aad) => new Uint8Array(await crypto.subtle.decrypt({name: 'AES-GCM', iv: ekB64Coz(iv), additionalData: metinBayt(aad)}, kasa.dek, ekB64Coz(c)));
+const KURTAR_ABECE = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const kurtarmaKoduUret = () => [...kasaRastgele(24)].map(b => KURTAR_ABECE[b & 31]).join('').replace(/(.{4})(?!$)/g, '$1-');
+const kurtarmaNorm = k => String(k || '').toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/[O]/g, '0').replace(/[I]/g, '1');
+const kurtarmaYaz = k => kurtarmaNorm(k).replace(/(.{4})(?!$)/g, '$1-');
+
+/* --- Cihaz deposu: IndexedDB "powerserv-kasa" (yalnız şifreli metin) --- */
+let kasaDbSoz = null;
+function kasaDb() {
+  return kasaDbSoz ||= new Promise(coz => {
+    try {
+      const r = indexedDB.open('powerserv-kasa', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('k', {keyPath: 'key'});
+      r.onsuccess = () => coz(r.result);
+      r.onerror = () => coz(null);
+    } catch (e) { coz(null); }
+  });
+}
+async function kasaIslem(mod, fn) {
+  const db = await kasaDb();
+  if (!db) throw new Error('Cihaz deposu açılamadı');
+  return new Promise((coz, red) => {
+    const t = db.transaction('k', mod), s = t.objectStore('k');
+    let sonuc; const r = fn(s);
+    if (r) r.onsuccess = () => { sonuc = r.result; };
+    t.oncomplete = () => coz(sonuc);
+    t.onerror = () => red(t.error);
+    t.onabort = () => red(t.error || new Error('Cihaz deposu dolu olabilir'));
+  });
+}
+const kasaAnahtarAdi = ad => H.aktif + '|' + ad;
+const kasaOku = ad => kasaIslem('readonly', s => s.get(kasaAnahtarAdi(ad)));
+const kasaYaz = (ad, j, sil = false, gonderildi = false) => kasaIslem('readwrite', s => s.put({key: kasaAnahtarAdi(ad), hesap: H.aktif, ad, j: sil ? '' : j, s: !!sil, gonderildi}));
+async function kasaYazCok(l) { await kasaIslem('readwrite', s => { for (const [ad, j, sil] of l) s.put({key: kasaAnahtarAdi(ad), hesap: H.aktif, ad, j: sil ? '' : j, s: !!sil, gonderildi: false}); }); }
+async function kasaHepsi() { const l = await kasaIslem('readonly', s => s.getAll()); return (l || []).filter(r => r.hesap === H.aktif); }
+const kasaAnahtarKaydi = async () => { const r = await kasaOku('evrakanahtar~ana'); if (!r || r.s || !r.j) return null; try { return JSON.parse(r.j); } catch (e) { return null; } };
+
+/* Bitiş tarihleri (açık bilgi): kilitliyken de Özet ve bildirimlerde uyarı verilebilsin diye cihazda küçük bir listede tutulur */
+const EVRAK_BITIS_ANAHTAR = () => 'powerserv.kasa.bitis.' + H.aktif;
+const evrakBitisler = () => { if (!evrakYetkili()) return []; try { const l = JSON.parse(localStorage.getItem(EVRAK_BITIS_ANAHTAR())); return Array.isArray(l) ? l : []; } catch (e) { return []; } };
+async function evrakBitisYenile() {
+  const l = [];
+  for (const r of await kasaHepsi()) if (r.ad.startsWith('evrak~') && !r.s && r.j) { try { const v = JSON.parse(r.j); if (/^\d{4}-\d{2}-\d{2}$/.test(v.b || '')) l.push({i: r.ad.slice(6), b: v.b, h: Math.min(365, Math.max(0, +v.h || 30))}); } catch (e) {} }
+  try { localStorage.setItem(EVRAK_BITIS_ANAHTAR(), JSON.stringify(l)); } catch (e) {}
+  if (window.hatirlaticiPlanla) hatirlaticiPlanla();
+}
+/* Süresi dolan ya da hatırlatma aralığına giren evraklar */
+const evrakYaklasan = () => evrakBitisler().filter(x => gunFark(x.b) <= x.h).sort((a, b) => a.b.localeCompare(b.b));
+
+/* --- Kilit --- */
+function kasaKilitle(sessiz) {
+  if (!kasa.dek) return;
+  kasa.dek = null; kasa.meta.clear(); kasa.acilamayan = 0;
+  if (rota()[0] === 'evrak') { ciz(); if (!sessiz) bildir('Evrak arşivi kilitlendi'); }
+}
+window.addEventListener('pointerdown', () => { kasa.son = Date.now(); }, {passive: true, capture: true});
+window.addEventListener('keydown', () => { kasa.son = Date.now(); }, {passive: true, capture: true});
+setInterval(() => { if (kasa.dek && Date.now() - kasa.son > EVRAK_KILIT_DK * 60000) kasaKilitle(); }, 15000);
+// Uygulama arka plana alınıp 1 dakikadan uzun kalınca arşiv kilitlenir
+document.addEventListener('visibilitychange', () => { if (document.hidden) kasa.gizli = Date.now(); else { if (kasa.dek && kasa.gizli && Date.now() - kasa.gizli > 60000) kasaKilitle(true); kasa.gizli = 0; } });
+async function kasaAnahtarYukle(dek, anahtar) {
+  kasa.dek = dek; kasa.anahtarId = anahtar.id; kasa.son = Date.now(); kasa.hesap = H.aktif;
+  await kasaMetaYukle();
+}
+async function kasaMetaYukle() {
+  if (!kasa.dek) return;
+  const m = new Map(); let hata = 0;
+  for (const r of await kasaHepsi()) {
+    if (!r.ad.startsWith('evrak~') || r.s || !r.j) continue;
+    const id = r.ad.slice(6);
+    try { const v = JSON.parse(r.j); const x = JSON.parse(new TextDecoder().decode(await kasaCoz(v.iv, v.c, 'evrak:' + id))); x.id = id; x.dosyalar = Array.isArray(x.dosyalar) ? x.dosyalar : []; m.set(id, x); }
+    catch (e) { hata++; }
+  }
+  if (!kasa.dek) return;
+  kasa.meta = m; kasa.acilamayan = hata;
+}
+
+/* --- Kurulum, açma, şifre değiştirme --- */
+async function kasaKur(sifre) {
+  const dek = await crypto.subtle.generateKey({name: 'AES-GCM', length: 256}, true, ['encrypt', 'decrypt']);
+  const kod = kurtarmaKoduUret();
+  const anahtar = {v: 1, id: kimlik(), sifre: await kasaSar(dek, sifre), kurtar: await kasaSar(dek, kurtarmaNorm(kod), 100000), olusturma: Date.now()};
+  await kasaYaz('evrakanahtar~ana', JSON.stringify(anahtar));
+  await kasaAnahtarYukle(dek, anahtar);
+  kasaPlanla();
+  return kod;
+}
+async function kasaSifreDegistir(yeni, kurtarmaYenile) {
+  const a = await kasaAnahtarKaydi();
+  if (!a || !kasa.dek) throw new Error('Arşiv açık değil');
+  a.sifre = await kasaSar(kasa.dek, yeni);
+  let kod = null;
+  if (kurtarmaYenile) { kod = kurtarmaKoduUret(); a.kurtar = await kasaSar(kasa.dek, kurtarmaNorm(kod), 100000); }
+  a.guncelleme = Date.now();
+  await kasaYaz('evrakanahtar~ana', JSON.stringify(a));
+  kasaPlanla();
+  return kod;
+}
+
+/* --- Evrak kaydı: bilgiler ve dosyalar şifrelenip parçalara bölünür --- */
+async function evrakKaydet(x, yeniDosyalar, kaldirilan) {
+  if (!kasa.dek) throw new Error('Arşiv kilitli');
+  const yaz = [];
+  for (const d of yeniDosyalar) {
+    const e = await kasaSifrele(d.veri, 'dosya:' + d.i), p = Math.max(1, Math.ceil(e.c.length / EVRAK_PARCA));
+    for (let n = 0; n < p; n++) yaz.push([`evrakp~${d.i}_${n}`, e.c.slice(n * EVRAK_PARCA, (n + 1) * EVRAK_PARCA)]);
+    x.dosyalar.push({i: d.i, ad: d.ad, tip: d.tip, mime: d.mime, boyut: d.veri.length, iv: e.iv, p});
+  }
+  for (const d of kaldirilan) for (let n = 0; n < (d.p || 1); n++) yaz.push([`evrakp~${d.i}_${n}`, '', true]);
+  x.guncelleme = Date.now(); x.olusturma ||= x.guncelleme;
+  const {id, ...ic} = x, e = await kasaSifrele(metinBayt(JSON.stringify(ic)), 'evrak:' + id);
+  yaz.push(['evrak~' + id, JSON.stringify({v: 1, a: kasa.anahtarId, iv: e.iv, c: e.c, b: x.bitis || '', h: x.bitis ? +x.hatirlat || 30 : 0})]);
+  await kasaYazCok(yaz);
+  kasa.meta.set(id, x);
+  await evrakBitisYenile();
+  kasaPlanla();
+}
+async function evrakSil(x) {
+  const yaz = [['evrak~' + x.id, '', true]];
+  for (const d of x.dosyalar) for (let n = 0; n < (d.p || 1); n++) yaz.push([`evrakp~${d.i}_${n}`, '', true]);
+  await kasaYazCok(yaz);
+  kasa.meta.delete(x.id);
+  await evrakBitisYenile();
+  kasaPlanla();
+}
+/* Dosyayı çözer (base64 döner). Parça bu cihazda yoksa sunucudan tek tek alınır. */
+async function evrakDosyaCoz(d) {
+  let c = '';
+  for (let n = 0; n < (d.p || 1); n++) {
+    const ad = `evrakp~${d.i}_${n}`;
+    let r = await kasaOku(ad);
+    if ((!r || r.s) && ortakBagli() && ortakOturum()) {
+      try { const b = fsOku(await ortakIstek(ortak(), 'GET', fsUrl(ortak(), '/kasa/' + ad))); if (!b.s && typeof b.j === 'string') { await kasaIslem('readwrite', s => s.put({key: kasaAnahtarAdi(ad), hesap: H.aktif, ad, j: b.j, s: false, gonderildi: true})); r = {j: b.j}; } }
+      catch (e) { if (e.ag) throw new Error('Dosya bu cihaza inmedi, internet bağlantısı yok'); }
+    }
+    if (!r || r.s || typeof r.j !== 'string') throw new Error('Dosya bu cihazda bulunamadı. Eşitleyip tekrar deneyin.');
+    c += r.j;
+  }
+  return ekB64(await kasaCoz(d.iv, c, 'dosya:' + d.i));
+}
+
+/* --- Eşitleme: yalnız firma sahibinin oturumunda. Kurallar yayınlanmadıysa (403) evraklar bu cihazda kalır. --- */
+let kasaZaman = 0;
+function kasaPlanla() { clearTimeout(kasaZaman); if (ortakBagli() && ortakOturum()) kasaZaman = setTimeout(() => kasaEsitle().catch(() => {}), 1200); }
+async function kasaEsitle() {
+  const o = ortak(), s = ortakOturum();
+  if (!o || !s || !ortakBagli() || !evrakDestek()) return 0;
+  if (!o.sahip) await firmaSahipOku();
+  if (!evrakYetkili() || kasa.mesgul) return 0;
+  kasa.mesgul = true;
+  let n = 0;
+  try {
+    // Gönder: önce anahtar. Sunucuda başka bir cihazın kurduğu farklı bir anahtar varsa üzerine yazılmaz.
+    const l = (await kasaHepsi()).filter(r => !r.gonderildi).sort((a, b) => (b.ad === 'evrakanahtar~ana') - (a.ad === 'evrakanahtar~ana'));
+    for (const r of l) {
+      if (r.ad === 'evrakanahtar~ana' && !r.s) {
+        let sv = null;
+        try { sv = fsOku(await ortakIstek(o, 'GET', fsUrl(o, '/kasa/evrakanahtar~ana'))); } catch (e) { if (e.durum !== 404) throw e; }
+        if (sv && sv.j) { let a = null, b = null; try { a = JSON.parse(sv.j); b = JSON.parse(r.j); } catch (e) {}
+          if (a && b && a.id !== b.id) { kasa.hata = 'Başka bir cihazda farklı şifreyle arşiv kurulmuş. Bu cihazdaki evraklar gönderilmedi.'; return n; } }
+      }
+      await ortakIstek(o, 'POST', `${FS}/v1/${belgeKok(o)}:commit`, {writes: [{update: {name: firmaYol(o, '/kasa/' + r.ad), fields: fsAlanlar({k: r.ad.split('~')[0], j: r.j, s: !!r.s, u: s.uid})}, updateTransforms: [zYaz()]}]});
+      await kasaIslem('readwrite', st => { const q = st.get(r.key); q.onsuccess = () => { const y = q.result; if (y && y.j === r.j && y.s === r.s) st.put({...y, gonderildi: true}); }; });
+    }
+    // Çek: sunucu zamanı son çekilenden büyük olanlar. Bu cihazda gönderilmemiş değişiklik ezilmez.
+    let degisti = false;
+    for (let tur = 0; tur < 400; tur++) {
+      const iz = izOku();
+      const q = {structuredQuery: {from: [{collectionId: 'kasa'}], orderBy: [{field: {fieldPath: 'z'}, direction: 'ASCENDING'}], limit: 20}};
+      if (iz.sonKasa) q.structuredQuery.where = {fieldFilter: {field: {fieldPath: 'z'}, op: 'GREATER_THAN_OR_EQUAL', value: {timestampValue: iz.sonKasa}}};
+      const r = await ortakIstek(o, 'POST', `${FS}/v1/${firmaYol(o)}:runQuery`, q);
+      const gelen = (r || []).filter(x => x.document).map(x => fsOku(x.document));
+      let son = iz.sonKasa || '';
+      for (const b of gelen) {
+        const ad = b._ad, z = zNorm(b.z);
+        if (z > son) son = z;
+        if (!/^(evrak|evrakp|evrakanahtar)~[\w-]+$/.test(ad) || typeof b.j !== 'string') continue;
+        const y = await kasaOku(ad);
+        if (y && !y.gonderildi) continue;
+        if (y && y.j === (b.s ? '' : b.j) && y.s === !!b.s) continue;
+        await kasaIslem('readwrite', st => st.put({key: kasaAnahtarAdi(ad), hesap: H.aktif, ad, j: b.s ? '' : b.j, s: !!b.s, gonderildi: true}));
+        n++; if (!ad.startsWith('evrakp~')) degisti = true;
+      }
+      const ilerledi = son !== (iz.sonKasa || '');
+      const iz2 = izOku(); iz2.sonKasa = son; izYaz(iz2);
+      if (gelen.length < 20 || !ilerledi) break;
+    }
+    kasa.kural = true; kasa.hata = '';
+    if (degisti) {
+      await evrakBitisYenile();
+      // Anahtar değiştiyse (başka cihazda şifre değişti) açık arşiv aynı anahtarla açık kalır; yeni evraklar çözülür.
+      if (kasa.dek) await kasaMetaYukle();
+      if (rota()[0] === 'evrak') ortakCizBekle = true;
+    }
+  } catch (e) {
+    if (e.durum === 403) { kasa.kural = false; kasa.hata = ''; }
+    else if (!e.ag && !e.oturum) kasa.hata = e.message;
+    else throw e;
+  } finally { kasa.mesgul = false; }
+  return n;
+}
+
+/* --- Dosya seçme: PDF ya da fotoğraf (fotoğraf okunaklı kalacak kadar küçültülür) --- */
+function evrakResimKucult(dataUrl) {
+  return new Promise((coz, red) => {
+    const img = new Image();
+    img.onload = () => {
+      const o = Math.min(1, EVRAK_RESIM_PX / Math.max(img.width, img.height)), c = document.createElement('canvas');
+      c.width = Math.round(img.width * o); c.height = Math.round(img.height * o);
+      const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
+      coz(c.toDataURL('image/jpeg', .85));
+    };
+    img.onerror = () => red(new Error('resim'));
+    img.src = dataUrl;
+  });
+}
+async function evrakDosyaSec(kamera) {
+  const f = await dosyaSec(kamera ? 'image/*' : 'image/*,application/pdf', kamera);
+  if (!f) return null;
+  const pdf = f.type === 'application/pdf' || /\.pdf$/i.test(f.name);
+  if (!pdf && !f.type.startsWith('image/')) { bildir('Yalnızca PDF veya fotoğraf eklenebilir', true); return null; }
+  if (f.size > EVRAK_DOSYA_SINIR) { bildir('Dosya en çok 10 MB olabilir', true); return null; }
+  let veri, mime = pdf ? 'application/pdf' : 'image/jpeg';
+  try {
+    if (pdf) veri = new Uint8Array(await f.arrayBuffer());
+    else { const u = await evrakResimKucult(await dataUrlOku(f)); veri = ekB64Coz(u.slice(u.indexOf(',') + 1)); }
+  } catch (e) { bildir('Dosya okunamadı', true); return null; }
+  const ad = ((f.name || '').trim() || (pdf ? 'evrak.pdf' : 'evrak-' + bugun() + '.jpg')).replace(/[\\/:*?"<>|]/g, '_').slice(0, 120);
+  return {i: kimlik(), ad: pdf ? ad : ad.replace(/\.[a-z0-9]+$/i, '') + '.jpg', tip: pdf ? 'pdf' : 'resim', mime, veri};
+}
+/* Dosyayı gösterir. PDF: telefonda uygulamanın geçici klasöründen açılır (İndirilenler'e yazılmaz), PC'de geçici klasörden açılır, kapanışta silinir. */
+async function evrakDosyaAc(d) {
+  let v;
+  try { bildir('Dosya çözülüyor…'); v = await evrakDosyaCoz(d); } catch (e) { return bildir(e.message || 'Dosya açılamadı', true); }
+  if (d.tip === 'resim') return modal(d.ad, `<div class="belge-goster"><img src="data:image/jpeg;base64,${v}" alt="${esc(d.ad)}"></div><p class="dipnot">${esc(boyutYaz(d.boyut || 0))} · şifreli saklanıyor</p>`, {solAd: 'Kapat', tam: true});
+  if (window.Android && Android.gizliBelgeAc) { if (!Android.gizliBelgeAc(d.ad, v, d.mime || 'application/pdf')) bildir('PDF açılamadı. Telefonda PDF görüntüleyici yüklü olmalı.', true); return; }
+  if (window.PowerServ && PowerServ.gizliAc) { const y = await PowerServ.gizliAc(d.ad, v); if (!y) bildir('PDF açılamadı', true); return; }
+  evrakIndir(d, v);
+}
+function evrakIndir(d, v) {
+  if (window.Android && Android.belgeAc) { if (!Android.belgeAc(d.ad, v, d.mime || 'application/pdf')) bildir('Kaydedilemedi', true); else bildir('İndirilenler/PowerServ+ klasörüne kaydedildi'); return; }
+  const u = URL.createObjectURL(new Blob([ekB64Coz(v)], {type: d.mime || 'application/octet-stream'}));
+  const a = document.createElement('a'); a.href = u; a.download = d.ad; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(u), 60000);
+}
+
+/* ================= Ekranlar ================= */
+const evrakSahip = x => x.grup === 'personel' ? (personel(x.personelId)?.ad || x.personelAd || 'Personel') : 'Şirket';
+function evrakDurum(x) {
+  if (!x.bitis) return {sinif: '', yazi: 'süresiz', kod: 'suresiz'};
+  const g = gunFark(x.bitis), h = +x.hatirlat || 30;
+  if (g < 0) return {sinif: 'kirmizi', yazi: `süresi doldu (${-g} gün)`, kod: 'doldu'};
+  if (g === 0) return {sinif: 'kirmizi', yazi: 'bugün bitiyor', kod: 'yaklasan'};
+  if (g <= h) return {sinif: 'turuncu', yazi: `${g} gün kaldı`, kod: 'yaklasan'};
+  return {sinif: 'yesil', yazi: 'geçerli', kod: 'gecerli'};
+}
+function evrakEkrani(p1) {
+  ui.evrakFiltre ||= {sekme: 'hepsi', kat: '', ara: ''};
+  const pid = p1 && p1.startsWith('p-') ? p1.slice(2) : '';
+  let h = sayfa(pid ? 'Evraklar · ' + (personel(pid)?.ad || 'Personel') : 'Evrak arşivi', pid ? {geri: 'personel/' + pid, geriAd: 'Personel'} : {});
+  const kok = $('#icerik');
+  const kutu = (ic) => `<div class="evrak-kilit"><div class="kart">${ic}</div></div>`;
+  if (!evrakYetkili()) { kok.innerHTML = h + bosDurum('kilit', 'gri', 'Bu bölüm yalnız firma sahibine açık', 'Evrak arşivini yalnız firmanın ana kullanıcısı görebilir.'); return; }
+  if (!evrakDestek()) { kok.innerHTML = h + bosDurum('uyari', 'turuncu', 'Bu cihaz şifrelemeyi desteklemiyor', 'Uygulamayı güncelleyin ya da başka bir cihazdan açın.'); return; }
+  if (kasa.dek && kasa.hesap !== H.aktif) { kasa.dek = null; kasa.meta.clear(); }
+  if (kasa.dek) return evrakListe(h, pid);
+  kok.innerHTML = h + kutu(`<div class="kilit-simge">${ikon('kilit')}</div><p class="soluk" style="text-align:center">Açılıyor…</p>`);
+  (async () => {
+    // İlk açılışta sunucudaki anahtar beklenir (başka cihazda kurulmuşsa aynı şifre kullanılır)
+    let a = await kasaAnahtarKaydi();
+    if (!a && ortakBagli() && ortakOturum()) { try { await kasaEsitle(); } catch (e) {} a = await kasaAnahtarKaydi(); }
+    if (rota()[0] !== 'evrak' || kasa.dek) { if (kasa.dek && rota()[0] === 'evrak') evrakListe(h, pid); return; }
+    if (!a) return evrakKurulumEkrani(h, kutu);
+    evrakKilitEkrani(h, kutu, a, pid);
+  })().catch(e => bildir(e.message || 'Arşiv açılamadı', true));
+}
+const evrakSifreUygun = s => s.length >= 8 && /[a-zğüşöçı]/i.test(s) && /\d/.test(s);
+function evrakKurulumEkrani(h, kutu) {
+  $('#icerik').innerHTML = h + kutu(`<div class="kilit-simge">${ikon('kilit')}</div>
+    <h2>Şifreli evrak arşivi</h2>
+    <p>Şirket ve personel evraklarınız bu cihazda şifrelenir, Firebase'e yalnız şifreli hali gider. Arşivi yalnız siz görürsünüz.</p>
+    <p class="soluk">Giriş şifrenizden farklı, en az 8 karakter, harf ve rakam içeren bir arşiv şifresi belirleyin.</p>
+    <form id="evKur" autocomplete="off">
+      <div class="grup"><label class="f-satir sol"><input type="password" id="evS1" autocomplete="new-password" placeholder="Arşiv şifresi"></label>
+        <label class="f-satir sol"><input type="password" id="evS2" autocomplete="new-password" placeholder="Arşiv şifresi (tekrar)"></label></div>
+      <p class="giris-hata gider" id="evHata"></p>
+      <button class="btn" id="evKurBtn">Arşivi oluştur</button>
+    </form>
+    ${kasa.kural === false ? '<p class="dipnot">Sunucu kuralı henüz yayınlanmadı: evraklar şimdilik yalnız bu cihazda durur, kural yayınlanınca kendiliğinden eşitlenir.</p>' : ''}`);
+  const f = $('#evKur'), hata = m => { $('#evHata').textContent = m || ''; };
+  f.onsubmit = async e => {
+    e.preventDefault();
+    const s1 = $('#evS1').value, s2 = $('#evS2').value;
+    if (!evrakSifreUygun(s1)) return hata('Şifre en az 8 karakter olmalı, harf ve rakam içermeli');
+    if (s1 !== s2) return hata('Şifreler aynı değil');
+    $('#evKurBtn').disabled = true; hata(''); $('#evKurBtn').textContent = 'Oluşturuluyor…';
+    try { const kod = await kasaKur(s1); evrakKurtarmaGoster(kod, true); }
+    catch (x) { hata('Arşiv oluşturulamadı: ' + (x.message || x)); $('#evKurBtn').disabled = false; $('#evKurBtn').textContent = 'Arşivi oluştur'; }
+  };
+  setTimeout(() => $('#evS1')?.focus(), 100);
+}
+function evrakKurtarmaGoster(kod, ilk) {
+  const m = modal('Kurtarma kodu', `
+    <div class="kilit-uyari">${ikon('uyari')}<div><b>Bu kodu şimdi yazdırın ya da kâğıda yazın</b><small>Arşiv şifresini unutursanız evraklarınızı yalnız bu kodla açabilirsiniz. Kod bir daha gösterilmez, bizde de kopyası yoktur.</small></div></div>
+    <div class="evrak-kod" id="evKod">${esc(kod)}</div>
+    <div class="btn-grup"><button type="button" class="btn renkli" id="evKodYaz">${ikon('yazici')} Yazdır</button><button type="button" class="btn renkli" id="evKodKopya">${ikon('kayitlar')} Kopyala</button></div>
+    <div class="grup"><label class="f-satir"><span>Kodu güvenli bir yere kaydettim</span>${anahtar('evKodOk')}</label></div>`, {kaydet: () => {
+      if (!$('#evKodOk', m).checked) { bildir('Önce kodu kaydettiğinizi işaretleyin', true); return false; }
+      if (ilk) setTimeout(() => ciz(), 0);
+    }, kaydetAd: 'Tamam', solAd: 'Kapat'});
+  $('#evKodYaz', m).onclick = () => yazdir('Evrak arşivi kurtarma kodu', `<div class="kagit">${firmaBaslik('EVRAK ARŞİVİ KURTARMA KODU', esc(tarihYaz(bugun(), true)))}
+    <p style="font-size:14px;margin:24px 0 8px">Arşiv şifresini unutursanız PowerServ+ > Evrak arşivi > "Şifremi unuttum" ekranına bu kodu yazın.</p>
+    <p style="font:600 26px/1.4 monospace;letter-spacing:2px;border:2px solid #000;padding:16px;text-align:center;margin:12px 0">${esc(kod)}</p>
+    <p style="font-size:13px">Bu kâğıdı kasada ya da güvenli bir yerde saklayın. Kodu bilen kişi arşivi açabilir.</p></div>`);
+  $('#evKodKopya', m).onclick = async () => { try { await navigator.clipboard.writeText(kod); bildir('Kopyalandı'); } catch (e) { bildir('Kopyalanamadı, kodu elle yazın', true); } };
+  // Kapat ile çıkılırsa da arşiv ekranı yenilenir
+  const perde = m.closest('.perde'), once = perde?._kapaninca;
+  if (perde && ilk) perde._kapaninca = () => { once && once(); setTimeout(() => { if (!yigin.length && rota()[0] === 'evrak') ciz(); }, 320); };
+}
+function evrakKilitEkrani(h, kutu, a, pid) {
+  $('#icerik').innerHTML = h + kutu(`<div class="kilit-simge">${ikon('kilit')}</div>
+    <h2>Evrak arşivi kilitli</h2><p class="soluk">Arşiv şifrenizi girin. ${EVRAK_KILIT_DK} dakika işlem yapılmazsa yeniden kilitlenir.</p>
+    <form id="evAcForm" autocomplete="off">
+      <div class="grup"><label class="f-satir sol"><input type="password" id="evSifre" autocomplete="current-password" placeholder="Arşiv şifresi"></label></div>
+      <p class="giris-hata gider" id="evHata"></p>
+      <button class="btn" id="evAcBtn">Kilidi aç</button>
+    </form>
+    <div class="giris-alt"><button class="bag" id="evUnuttum">Şifremi unuttum</button></div>
+    ${evrakYaklasan().length ? `<p class="dipnot">${evrakYaklasan().length} evrakın süresi dolmuş ya da dolmak üzere.</p>` : ''}`);
+  const hata = m => { $('#evHata').textContent = m || ''; };
+  let yanlis = 0;
+  $('#evAcForm').onsubmit = async e => {
+    e.preventDefault();
+    const s = $('#evSifre').value;
+    if (!s) return hata('Şifreyi girin');
+    if (yanlis >= 5) return hata('Çok fazla yanlış deneme. Ekranı yeniden açın.');
+    $('#evAcBtn').disabled = true; hata(''); $('#evAcBtn').textContent = 'Açılıyor…';
+    try { const dek = await kasaAnahtarAc(a.sifre, s); await kasaAnahtarYukle(dek, a); ciz(); }
+    catch (x) { yanlis++; hata('Şifre yanlış'); $('#evAcBtn').disabled = false; $('#evAcBtn').textContent = 'Kilidi aç'; $('#evSifre').select(); }
+  };
+  $('#evUnuttum').onclick = () => evrakKurtarFormu(a);
+  setTimeout(() => $('#evSifre')?.focus(), 100);
+}
+function evrakKurtarFormu(a) {
+  const m = modal('Kurtarma koduyla aç', `
+    <p class="dipnot">Arşivi kurarken verilen 24 karakterlik kurtarma kodunu yazın, sonra yeni bir arşiv şifresi belirleyin.</p>
+    <div class="grup"><label class="f-satir sol"><input id="evKurtarKod" autocomplete="off" autocapitalize="characters" placeholder="Kurtarma kodu (XXXX-XXXX-…)"></label></div>
+    <div class="grup"><label class="f-satir sol"><input type="password" id="evY1" autocomplete="new-password" placeholder="Yeni arşiv şifresi"></label>
+      <label class="f-satir sol"><input type="password" id="evY2" autocomplete="new-password" placeholder="Yeni arşiv şifresi (tekrar)"></label></div>`, {kaydet: () => {
+      const kod = $('#evKurtarKod', m).value, s1 = $('#evY1', m).value, s2 = $('#evY2', m).value;
+      if (kurtarmaNorm(kod).length !== 24) { bildir('Kurtarma kodu 24 karakter olmalı', true); return false; }
+      if (!evrakSifreUygun(s1)) { bildir('Şifre en az 8 karakter olmalı, harf ve rakam içermeli', true); return false; }
+      if (s1 !== s2) { bildir('Şifreler aynı değil', true); return false; }
+      (async () => {
+        let dek;
+        try { dek = await kasaAnahtarAc(a.kurtar, kurtarmaNorm(kod)); } catch (e) { return bildir('Kurtarma kodu yanlış', true); }
+        await kasaAnahtarYukle(dek, a);
+        const yeniKod = await kasaSifreDegistir(s1, true);
+        kapat(); bildir('Yeni arşiv şifresi kaydedildi');
+        evrakKurtarmaGoster(yeniKod, true);
+      })().catch(e => bildir(e.message || 'Açılamadı', true));
+      return false;
+    }, kaydetAd: 'Aç ve şifreyi değiştir'});
+}
+/* 2.15.1: kategori listesi = hazır kategoriler + kullanıcının bir kez yazdığı yeni kategoriler (evraklardan toplanır) */
+function evrakKategoriler(grup) {
+  const l = grup ? [...EVRAK_KAT[grup]] : [...new Set([...EVRAK_KAT.sirket, ...EVRAK_KAT.personel])];
+  for (const x of kasa.meta.values()) if (x.kat && (!grup || x.grup === grup) && !l.includes(x.kat)) l.splice(Math.max(0, l.length - 1), 0, x.kat);
+  return l;
+}
+const EVRAK_SEKME = [['hepsi', 'Tüm evraklar'], ['sirket', 'Şirket evrakları'], ['personel', 'Personel evrakları'], ['suresi', 'Süresi dolan / yaklaşan'], ['eksik', 'Eksik evraklar']];
+function evrakListe(h, pid) {
+  const f = ui.evrakFiltre, masa = masaustuMu();
+  if (!EVRAK_SEKME.some(([k]) => k === f.sekme)) f.sekme = 'hepsi';
+  const hepsi = [...kasa.meta.values()];
+  const sek = pid ? (f.sekme === 'eksik' ? 'eksik' : 'personel') : f.sekme;
+  const temel = hepsi.filter(x => (!pid || (x.grup === 'personel' && x.personelId === pid))
+    && (sek === 'hepsi' || sek === 'eksik' || (sek === 'suresi' ? ['doldu', 'yaklasan'].includes(evrakDurum(x).kod) : x.grup === sek)));
+  const ara = (f.ara || '').toLocaleLowerCase('tr-TR');
+  const l = temel.filter(x => (!f.kat || x.kat === f.kat)
+      && (!ara || [x.ad, x.kat, x.no, x.kurum, x.not, evrakSahip(x), ...x.dosyalar.map(d => d.ad)].join(' ').toLocaleLowerCase('tr-TR').includes(ara)))
+    .sort((a, b) => (a.bitis || '9999').localeCompare(b.bitis || '9999') * (sek === 'suresi' ? 1 : 0) || evrakSahip(a).localeCompare(evrakSahip(b), 'tr') || (a.kat || '').localeCompare(b.kat || '', 'tr') || (b.olusturma || 0) - (a.olusturma || 0));
+  // Eksik zorunlu evraklar
+  const varMi = (grup, kat, p) => hepsi.some(x => x.grup === grup && x.kat === kat && (grup !== 'personel' || x.personelId === p));
+  const eksik = [...(pid ? [] : EVRAK_ZORUNLU.sirket.filter(k => !varMi('sirket', k)).map(k => ({grup: 'sirket', kat: k, p: null}))),
+    ...D.personeller.filter(p => p.aktif !== false && (!pid || p.id === pid)).flatMap(p => EVRAK_ZORUNLU.personel.filter(k => !varMi('personel', k, p.id)).map(k => ({grup: 'personel', kat: k, p})))];
+  const katlar = evrakKategoriler(sek === 'sirket' || sek === 'personel' ? sek : null);
+  if (f.kat && !katlar.includes(f.kat)) f.kat = '';
+  const uyarilar = (kasa.kural === false ? `<div class="kilit-uyari">${ikon('bulut')}<div><b>Evraklar şimdilik yalnız bu cihazda</b><small>Sunucu kuralı yayınlanınca diğer cihazlarınızla kendiliğinden eşitlenir.</small></div></div>`
+    : kasa.hata ? `<div class="kilit-uyari">${ikon('uyari')}<div><b>Eşitlenemedi</b><small>${esc(kasa.hata)}</small></div></div>` : '')
+    + (kasa.acilamayan ? `<div class="kilit-uyari">${ikon('uyari')}<div><b>${kasa.acilamayan} evrak bu şifreyle açılamadı</b><small>Başka bir cihazda farklı şifreyle kurulmuş arşivden gelmiş olabilir.</small></div></div>` : '');
+  const sekmeler = (pid ? [['personel', 'Evrakları'], ['eksik', 'Eksik evraklar']] : EVRAK_SEKME).map(([k, a]) => {
+    const n = k === 'eksik' ? eksik.length : k === 'suresi' ? hepsi.filter(x => ['doldu', 'yaklasan'].includes(evrakDurum(x).kod)).length : k === 'hepsi' ? hepsi.length : pid ? temel.length : hepsi.filter(x => x.grup === k).length;
+    return [k, `${a} (${n})`]; });
+  const katSec = `<select id="evKat"><option value="">Tüm kategoriler</option>${katlar.map(k => `<option ${k === f.kat ? 'selected' : ''}>${esc(k)}</option>`).join('')}</select>`;
+  const bosMetin = hepsi.length ? 'Bu listede evrak yok. Sekmeyi ya da kategoriyi değiştirin.' : 'Henüz evrak yok. Evrak yükle ile PDF ya da fotoğraf ekleyin; hepsi şifreli saklanır.';
+  let govde;
+  if (masa) {
+    $('#icerik').classList.add('erp-tam');
+    const satirlar = sek === 'eksik'
+      ? `<table class="izg salt-tablo liste"><thead><tr><th class="izg-no"></th><th style="width:300px">Eksik evrak</th><th style="width:120px">Tür</th><th style="width:240px">Kime ait</th><th style="width:120px"></th></tr></thead><tbody>
+        ${eksik.map((e, n) => `<tr class="tik" data-eksik="${e.grup}|${esc(e.kat)}|${esc(e.p?.id || '')}"><td class="izg-no">${n + 1}</td><td class="salt">${esc(e.kat)}</td><td class="salt">${EVRAK_GRUP[e.grup]}</td><td class="salt">${esc(e.p ? e.p.ad : 'Şirket')}</td><td class="salt"><b class="mavi-yazi">Yükle</b></td></tr>`).join('')}</tbody></table>
+        ${eksik.length ? '' : '<div class="izg-bos">Zorunlu evrakların hepsi yüklenmiş.</div>'}`
+      : `<table class="izg salt-tablo liste evrak-tablo"><thead><tr><th class="izg-no"></th>${[['Evrak', 15], ['Kategori', 13], ['Kime ait', 12], ['Belge no', 10], ['Veren kurum', 12], ['Tarih', 8], ['Bitiş', 9], ['Durum', 14], ['Dosya', 7]].map(([a, w]) => `<th style="width:${w}%">${a}</th>`).join('')}</tr></thead><tbody>
+        ${l.map((x, n) => { const d = evrakDurum(x); return `<tr class="tik ${d.kod === 'doldu' ? 'd-uyar' : ''}" data-ev="${esc(x.id)}" tabindex="-1"><td class="izg-no">${n + 1}</td><td class="salt"><b>${esc(x.ad || x.kat)}</b></td><td class="salt">${esc(x.kat)}</td><td class="salt">${esc(evrakSahip(x))}</td><td class="salt">${esc(x.no || '')}</td><td class="salt">${esc(x.kurum || '')}</td><td class="salt">${x.tarih ? esc(tarihYaz(x.tarih, true)) : ''}</td><td class="salt">${x.bitis ? esc(tarihYaz(x.bitis, true)) : ''}</td><td class="salt"><span class="hap ${d.sinif}">${esc(d.yazi)}</span></td><td class="salt sg">${x.dosyalar.length} · ${esc(boyutYaz(x.dosyalar.reduce((t, y) => t + (y.boyut || 0), 0)))}</td></tr>`; }).join('')}</tbody></table>
+        ${l.length ? '' : `<div class="izg-bos">${esc(bosMetin)}</div>`}`;
+    govde = `<div class="fis fis-liste evrak-pencere">
+      <div class="fis-bas"><div class="fis-ad">${ikon('kilit')}<div><b>${esc(pid ? 'Evraklar · ' + (personel(pid)?.ad || '') : 'Evrak arşivi')}</b><small>Şifreli · yalnız siz görürsünüz</small></div></div>
+        <div class="fis-arac"><button class="fa" id="evYeni">${ikon('yukle')}<span>Evrak yükle</span></button><span class="fa-ayir"></span>
+          <button class="fa" id="evAc">${ikon('dosya')}<span>Aç</span></button><button class="fa fa-sil" id="evSilBtn">${ikon('cop')}<span>Sil</span></button><span class="fa-ayir"></span>
+          <button class="fa" id="evKilit">${ikon('kilit')}<span>Kilitle</span></button><button class="fa" id="evAyar">${ikon('ayar')}<span>Şifre</span></button></div></div>
+      ${uyarilar ? `<div class="evrak-uyarilar">${uyarilar}</div>` : ''}
+      <div class="fis-sekmeler">${sekmeler.map(([k, a]) => `<button class="fs-s ${k === sek ? 'aktif' : ''}" data-sk="${k}">${esc(a)}</button>`).join('')}
+        <span class="fl-ara">${ikon('ara')}<input type="search" id="evAra" placeholder="Listede ara" value="${esc(f.ara)}"></span></div>
+      ${sek === 'eksik' ? '' : `<div class="fl-tarih"><label>Kategori</label>${katSec}</div>`}
+      <div class="fis-govde"><div class="izg-kap uzun" id="evTablo">${satirlar}</div></div>
+      <div class="fis-alt"><div class="ft"><div class="ft-kolon"><span>Kayıt</span><b>${sek === 'eksik' ? eksik.length : l.length}</b></div><span class="soluk ft-ipucu">Açmak için satıra çift tıklayın ya da seçip Enter'a basın. 10 dakika işlem yapılmazsa arşiv kilitlenir.</span></div></div></div>`;
+    $('#icerik').innerHTML = govde;
+  } else {
+    h += `<div class="btn-izgara"><button id="evYeni">${ikon('yukle')}Evrak yükle</button><button id="evKamera">${ikon('kamera')}Fotoğraf çek</button><button id="evKilit">${ikon('kilit')}Kilitle</button><button id="evAyar">${ikon('ayar')}Şifre</button></div>${uyarilar}`;
+    h += `<div class="evrak-sekme">${sekmeler.map(([k, a]) => `<button data-sk="${k}" class="${k === sek ? 'secili' : ''}">${esc(a)}</button>`).join('')}</div>`;
+    if (sek !== 'eksik') h += `<div class="grup evrak-filtre"><label class="f-satir sol"><input id="evAra" type="search" placeholder="Ara (evrak, kişi, belge no)" value="${esc(f.ara)}"></label><label class="f-satir"><span>Kategori</span>${katSec}</label></div>`;
+    if (sek === 'eksik') h += eksik.length ? `<div class="grup">${eksik.map(e => `<button class="hucre kareli" data-eksik="${e.grup}|${esc(e.kat)}|${esc(e.p?.id || '')}">${kare('uyari', 'gri')}<div class="ic"><b>${esc(e.kat)}</b><small>${esc(e.p ? e.p.ad : 'Şirket')}</small></div><span class="deger">Yükle</span></button>`).join('')}</div>`
+      : bosDurum('tamam', 'yesil', 'Eksik evrak yok', 'Zorunlu evrakların hepsi yüklenmiş.');
+    else h += `<div class="bolum">Evraklar (${l.length})</div>` + (l.length ? `<div class="grup">${l.map(x => { const d = evrakDurum(x); return `<button class="hucre kareli" data-ev="${esc(x.id)}">${kare(x.grup === 'personel' ? 'kisi' : 'sirket', x.grup === 'personel' ? 'camgobegi' : 'indigo')}<div class="ic"><b>${esc(x.ad || x.kat)}</b><small>${esc([evrakSahip(x), x.kat !== x.ad ? x.kat : '', x.no].filter(Boolean).join(' · '))}</small></div><span class="hap ${d.sinif}">${esc(d.yazi)}</span></button>`; }).join('')}</div>`
+      : bosDurum('dosya', 'indigo', hepsi.length ? 'Bu listede evrak yok' : 'Henüz evrak yok', bosMetin));
+    h += `<p class="dipnot">${ikon('kilit')} Evraklar AES-256 ile şifreli saklanır. ${EVRAK_KILIT_DK} dakika işlem yapılmazsa arşiv kilitlenir.</p>`;
+    $('#icerik').innerHTML = h;
+  }
+  const yeni = (on = {}) => evrakFormu({grup: pid || sek === 'personel' ? 'personel' : 'sirket', personelId: pid, kat: f.kat || '', ...on});
+  $('#evYeni').onclick = () => yeni();
+  if ($('#evKamera')) $('#evKamera').onclick = () => yeni({kamera: true});
+  $('#evKilit').onclick = () => kasaKilitle();
+  $('#evAyar').onclick = () => evrakGuvenlik();
+  $$('[data-sk]').forEach(b => b.onclick = () => { f.sekme = b.dataset.sk; ciz(); });
+  if ($('#evKat')) $('#evKat').onchange = e => { f.kat = e.target.value; ciz(); };
+  if ($('#evAra')) { let z; $('#evAra').oninput = e => { clearTimeout(z); z = setTimeout(() => { f.ara = e.target.value; ciz(); const i = $('#evAra'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }, 300); }; }
+  $$('[data-eksik]').forEach(b => b.onclick = () => { const [grup, kat, p] = b.dataset.eksik.split('|'); evrakFormu({grup, kat, ad: kat, personelId: p}); });
+  if (masa) {
+    let secili = '';
+    $$('#evTablo tr[data-ev]').forEach(tr => {
+      tr.onclick = () => { secili = tr.dataset.ev; $$('#evTablo tr.secili').forEach(x => x.classList.remove('secili')); tr.classList.add('secili'); tr.focus(); };
+      tr.ondblclick = () => evrakDetay(kasa.meta.get(tr.dataset.ev));
+      tr.onkeydown = e => {
+        if (e.key === 'Enter') evrakDetay(kasa.meta.get(tr.dataset.ev));
+        else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const y = e.key === 'ArrowDown' ? tr.nextElementSibling : tr.previousElementSibling; if (y) y.click(); }
+      };
+    });
+    $('#evAc').onclick = () => secili ? evrakDetay(kasa.meta.get(secili)) : bildir('Önce listeden bir evrak seçin');
+    $('#evSilBtn').onclick = async () => {
+      const x = kasa.meta.get(secili);
+      if (!x) return bildir('Önce listeden silinecek evrakı seçin', true);
+      if (!await onay('Evrak silinsin mi?', `${x.ad || x.kat} · ${evrakSahip(x)} · dosyaları da silinir, geri alınamaz`)) return;
+      try { await evrakSil(x); bildir('Evrak silindi'); ciz(); } catch (e) { bildir(e.message || 'Silinemedi', true); }
+    };
+  } else $$('[data-ev]').forEach(b => b.onclick = () => evrakDetay(kasa.meta.get(b.dataset.ev)));
+}
+function evrakDetay(x) {
+  if (!x) return;
+  const d = evrakDurum(x);
+  const satir = [['Evrak', x.ad || x.kat], ['Kategori', x.kat], ['Kime ait', evrakSahip(x)], ['Belge no', x.no], ['Veren kurum', x.kurum], ['Düzenleme tarihi', x.tarih ? tarihYaz(x.tarih, true) : ''],
+    ['Bitiş', x.bitis ? `${tarihYaz(x.bitis, true)} · ${d.yazi}` : 'Süresiz'], ['Hatırlatma', x.bitis ? `${+x.hatirlat || 30} gün önce` : ''], ['Not', x.not]];
+  const m = modal(x.ad || x.kat, `
+    <div class="bilgi-izgara evrak-bilgi">${satir.map(([a, v]) => `<div><small>${esc(a)}</small><b class="${v ? '' : 'yok'}">${esc(v || '—')}</b></div>`).join('')}</div>
+    <div class="bolum">Dosyalar</div>
+    <div class="grup">${x.dosyalar.length ? x.dosyalar.map(y => `<div class="hucre kareli ek-satir">${kare(y.tip === 'pdf' ? 'dosya' : 'kamera', y.tip === 'pdf' ? 'kirmizi' : 'mavi')}<div class="ic"><b>${esc(y.ad)}</b><small>${y.tip === 'pdf' ? 'PDF' : 'Fotoğraf'} · ${esc(boyutYaz(y.boyut || 0))}</small></div>
+      <button type="button" class="ek-sil ek-ac" data-ac="${esc(y.i)}">Aç</button><button type="button" class="ek-sil ek-ac" data-indir="${esc(y.i)}">İndir</button></div>`).join('') : '<div class="hucre"><div class="ic"><small>Dosya yok</small></div></div>'}</div>
+    <div class="grup"><button class="hucre" id="evDuz">${ikon('kalem')} Düzenle</button><button class="hucre tehlike" id="evSil">Evrakı sil</button></div>`, {solAd: 'Kapat', tam: true});
+  $$('[data-ac]', m).forEach(b => b.onclick = () => evrakDosyaAc(x.dosyalar.find(y => y.i === b.dataset.ac)));
+  $$('[data-indir]', m).forEach(b => b.onclick = async () => {
+    const y = x.dosyalar.find(q => q.i === b.dataset.indir);
+    if (!await onay('Dosya şifresiz kaydedilsin mi?', 'Dosyanın açık bir kopyası İndirilenler/PowerServ+ klasörüne yazılır. İşiniz bitince silin.', 'Kaydet')) return;
+    try { evrakIndir(y, await evrakDosyaCoz(y)); } catch (e) { bildir(e.message || 'Kaydedilemedi', true); }
+  });
+  $('#evDuz', m).onclick = () => { kapat(); setTimeout(() => evrakFormu(x), 320); };
+  $('#evSil', m).onclick = async () => {
+    if (!await onay('Evrak silinsin mi?', `${x.ad || x.kat} · ${evrakSahip(x)} · dosyaları da silinir, geri alınamaz`)) return;
+    try { await evrakSil(x); kapat(); bildir('Evrak silindi'); ciz(); } catch (e) { bildir(e.message || 'Silinemedi', true); }
+  };
+}
+function evrakFormu(on) {
+  const yeni = !on.id, x = yeni ? {id: kimlik(), grup: on.grup || 'sirket', personelId: on.personelId || '', kat: on.kat || '', ad: on.ad || '', no: '', kurum: '', tarih: '', bitis: '', hatirlat: 30, not: '', dosyalar: []}
+    : JSON.parse(JSON.stringify(on));
+  const eklenen = [], kaldirilan = [];
+  const pOps = () => D.personeller.slice().sort((a, b) => (a.aktif === false) - (b.aktif === false) || a.ad.localeCompare(b.ad, 'tr')).map(p => `<option value="${esc(p.id)}" ${p.id === x.personelId ? 'selected' : ''}>${esc(p.ad)}${p.aktif === false ? ' (ayrıldı)' : ''}</option>`).join('');
+  // 2.15.1: hazır kategoriler + daha önce yazılmış yeni kategoriler; "Yeni kategori" bir kez yazılır, sonra listede ve filtrede çıkar
+  const katOps = g => { const l = evrakKategoriler(g); if (x.kat && !l.includes(x.kat)) l.unshift(x.kat);
+    return l.map(k => `<option ${k === x.kat ? 'selected' : ''}>${esc(k)}</option>`).join('') + '<option value="__yeni">+ Yeni kategori ekle…</option>'; };
+  let kayitta = false;
+  const m = modal(yeni ? 'Evrak yükle' : 'Evrakı düzenle', `
+    <div class="segment" id="efGrup">${Object.entries(EVRAK_GRUP).map(([k, a]) => `<button type="button" data-g="${k}" class="${x.grup === k ? 'secili' : ''}">${a} evrakı</button>`).join('')}</div>
+    <div class="grup">
+      <label class="f-satir ${x.grup === 'personel' ? '' : 'gizli'}" id="efPSat"><span>Personel</span><select id="efP"><option value="">Seçin</option>${pOps()}</select></label>
+      <label class="f-satir"><span>Kategori</span><select id="efKat"><option value="">Seçin</option>${katOps(x.grup)}</select></label>
+      <label class="f-satir sol gizli" id="efYeniSat"><input id="efYeniKat" maxlength="60" placeholder="Yeni kategori adı (ör. Liman giriş izni)"></label>
+      <label class="f-satir sol"><input id="efAd" placeholder="Evrak adı (boşsa kategori)" value="${esc(x.ad === x.kat ? '' : x.ad)}"></label>
+      <label class="f-satir sol"><input id="efNo" placeholder="Belge / poliçe no" value="${esc(x.no)}"></label>
+      <label class="f-satir sol"><input id="efKurum" placeholder="Veren kurum (ör. vergi dairesi, sigorta şirketi)" value="${esc(x.kurum)}"></label>
+      <label class="f-satir"><span>Düzenleme tarihi</span><input type="date" id="efTarih" value="${esc(x.tarih)}"></label>
+      <label class="f-satir"><span>Bitiş (geçerlilik)</span><input type="date" id="efBitis" value="${esc(x.bitis)}"></label>
+      <label class="f-satir"><span>Kaç gün önce hatırlat</span><select id="efHat">${[7, 15, 30, 45, 60, 90].map(g => `<option value="${g}" ${g === (+x.hatirlat || 30) ? 'selected' : ''}>${g} gün</option>`).join('')}</select></label>
+      <label class="f-satir sol"><textarea id="efNot" rows="2" placeholder="Not">${esc(x.not)}</textarea></label>
+    </div>
+    <div class="bolum">Dosyalar</div><div class="grup" id="efDosyalar"></div>
+    <div class="btn-grup"><button type="button" class="btn renkli" id="efKamera">${ikon('kamera')} Fotoğraf çek</button><button type="button" class="btn renkli" id="efDosya">${ikon('yukle')} PDF veya resim ekle</button></div>
+    <p class="dipnot">${ikon('kilit')} Dosyalar kaydederken bu cihazda şifrelenir. Tek dosya en çok 10 MB. Kimliğin ön ve arka yüzü gibi birden çok dosya eklenebilir.</p>`, {kaydet: () => {
+      if (kayitta) return false;
+      x.kat = $('#efKat', m).value === '__yeni' ? $('#efYeniKat', m).value.trim().replace(/\s+/g, ' ') : $('#efKat', m).value; x.personelId = x.grup === 'personel' ? $('#efP', m).value : '';
+      if (!x.kat) { bildir($('#efKat', m).value === '__yeni' ? 'Yeni kategorinin adını yazın' : 'Kategori seçin', true); return false; }
+      if (x.grup === 'personel' && !x.personelId) { bildir('Personel seçin', true); return false; }
+      x.ad = $('#efAd', m).value.trim() || x.kat; x.no = $('#efNo', m).value.trim(); x.kurum = $('#efKurum', m).value.trim();
+      x.tarih = $('#efTarih', m).value; x.bitis = $('#efBitis', m).value; x.hatirlat = +$('#efHat', m).value || 30; x.not = $('#efNot', m).value.trim();
+      if (x.personelId) x.personelAd = personel(x.personelId)?.ad || '';
+      if (!x.dosyalar.length && !eklenen.length) { bildir('En az bir dosya ekleyin', true); return false; }
+      kayitta = true; const btn = $('[data-sag]', m); if (btn) { btn.disabled = true; btn.textContent = 'Şifreleniyor…'; }
+      evrakKaydet(x, eklenen, kaldirilan).then(() => { kapat(); bildir('Evrak şifrelenip kaydedildi'); ciz(); })
+        .catch(e => { kayitta = false; if (btn) { btn.disabled = false; btn.textContent = 'Kaydet'; } bildir('Kaydedilemedi: ' + (e.message || 'cihaz deposu dolu olabilir'), true); });
+      return false;
+    }, kaydetAd: 'Kaydet'});
+  const ciz1 = () => {
+    const l = [...x.dosyalar.map(d => ({...d, eski: true})), ...eklenen.map(d => ({...d, boyut: d.veri.length}))];
+    $('#efDosyalar', m).innerHTML = l.length ? l.map(d => `<div class="hucre kareli ek-satir">${kare(d.tip === 'pdf' ? 'dosya' : 'kamera', d.tip === 'pdf' ? 'kirmizi' : 'mavi')}<div class="ic"><b>${esc(d.ad)}</b><small>${d.tip === 'pdf' ? 'PDF' : 'Fotoğraf'} · ${esc(boyutYaz(d.boyut || 0))}${d.eski ? '' : ' · yeni'}</small></div><button type="button" class="ek-sil" data-efsil="${esc(d.i)}">Kaldır</button></div>`).join('')
+      : '<div class="hucre"><div class="ic"><small>PDF ya da fotoğraf ekleyin. Telefonda "Fotoğraf çek" kamerayı açar.</small></div></div>';
+    $$('[data-efsil]', m).forEach(b => b.onclick = () => {
+      const i = b.dataset.efsil, e = x.dosyalar.find(d => d.i === i);
+      if (e) { x.dosyalar = x.dosyalar.filter(d => d.i !== i); kaldirilan.push(e); } else eklenen.splice(eklenen.findIndex(d => d.i === i), 1);
+      ciz1();
+    });
+  };
+  const ekle = async kamera => { const d = await evrakDosyaSec(kamera); if (d) { eklenen.push(d); ciz1(); } };
+  $('#efKamera', m).onclick = () => ekle(true);
+  $('#efDosya', m).onclick = () => ekle(false);
+  $$('#efGrup [data-g]', m).forEach(b => b.onclick = () => {
+    x.grup = b.dataset.g; x.kat = evrakKategoriler(x.grup).includes($('#efKat', m).value) ? $('#efKat', m).value : '';
+    $$('#efGrup [data-g]', m).forEach(y => y.classList.toggle('secili', y === b));
+    $('#efPSat', m).classList.toggle('gizli', x.grup !== 'personel');
+    $('#efKat', m).innerHTML = `<option value="">Seçin</option>${katOps(x.grup)}`;
+    $('#efYeniSat', m).classList.add('gizli');
+  });
+  $('#efKat', m).onchange = e => { const y = e.target.value === '__yeni'; $('#efYeniSat', m).classList.toggle('gizli', !y); if (y) setTimeout(() => $('#efYeniKat', m).focus(), 50); };
+  ciz1();
+  if (on.kamera) setTimeout(() => ekle(true), 350);
+}
+function evrakGuvenlik() {
+  const m = modal('Şifre ve güvenlik', `
+    <div class="bolum">Arşiv şifresini değiştir</div>
+    <div class="grup"><label class="f-satir sol"><input type="password" id="egEski" autocomplete="current-password" placeholder="Şu anki arşiv şifresi"></label>
+      <label class="f-satir sol"><input type="password" id="egY1" autocomplete="new-password" placeholder="Yeni arşiv şifresi"></label>
+      <label class="f-satir sol"><input type="password" id="egY2" autocomplete="new-password" placeholder="Yeni arşiv şifresi (tekrar)"></label>
+      <label class="f-satir"><span>Yeni kurtarma kodu da üret</span>${anahtar('egKod')}</label></div>
+    <p class="dipnot">Şifre değişince evraklar yeniden şifrelenmez; anahtar yeni şifreyle sarılır. Diğer cihazlarınızda da yeni şifre geçerli olur.</p>
+    <div class="bolum">Durum</div>
+    <div class="grup"><div class="hucre"><div class="ic"><b>${kasa.meta.size} evrak</b><small>${esc(kasa.kural === false ? 'Sunucu kuralı yayınlanmadı, yalnız bu cihazda' : ortakBagli() ? 'Ortak veritabanında şifreli olarak eşitleniyor' : 'Yalnız bu cihazda')}</small></div></div></div>`, {kaydet: () => {
+      const e = $('#egEski', m).value, s1 = $('#egY1', m).value, s2 = $('#egY2', m).value, yk = $('#egKod', m).checked;
+      if (!evrakSifreUygun(s1)) { bildir('Şifre en az 8 karakter olmalı, harf ve rakam içermeli', true); return false; }
+      if (s1 !== s2) { bildir('Yeni şifreler aynı değil', true); return false; }
+      (async () => {
+        const a = await kasaAnahtarKaydi();
+        try { await kasaAnahtarAc(a.sifre, e); } catch (x) { return bildir('Şu anki şifre yanlış', true); }
+        const kod = await kasaSifreDegistir(s1, yk);
+        kapat(); bildir('Arşiv şifresi değiştirildi');
+        if (kod) setTimeout(() => evrakKurtarmaGoster(kod, false), 320);
+      })().catch(x => bildir(x.message || 'Değiştirilemedi', true));
+      return false;
+    }, kaydetAd: 'Şifreyi değiştir'});
 }
 /* ================= Güvenlik (2.7): ekran kilidi, şifre kuralı, giriş denemesi sınırı =================
    Ekran kilidi hesap şifresiyle açılır. Şifrenin kendisi saklanmaz; cihazda yalnızca tuzlanmış PBKDF2 özeti (150.000 tur) durur,
@@ -10148,6 +10811,7 @@ document.addEventListener('visibilitychange', () => {
   if (a.kilitli || (a.dk > 0 && Date.now() - Math.max(ekranSon, a.son || 0) > a.dk * 60000)) ekranKilitle();
 });
 function ekranKilitle() {
+  if (window.kasaKilitle) kasaKilitle(true);
   const s = ortakOturum();
   if (!s || $('#ekranKilit') || $('#girisEkran')) return;
   ekranAyarYaz({kilitli: true});

@@ -83,5 +83,23 @@ ipcMain.handle('gunluk-yedek', async (e, ad, icerik) => {
 ipcMain.handle('yedek-klasoru', async () => { const fs = require('fs'); const k = yedekKlasor(); fs.mkdirSync(k, {recursive: true}); return shell.openPath(k); });
 
 app.on('second-instance', () => { if (pencere) { if (pencere.isMinimized()) pencere.restore(); pencere.focus(); } });
-app.whenReady().then(ac);
+// 2.15: şifreli evrak arşivinden açılan PDF: İndirilenler'e değil geçici klasöre yazılır, varsayılan uygulamayla açılır.
+// Klasör uygulama açılırken ve kapanırken silinir; böylece çözülmüş evrak bilgisayarda kalmaz.
+const geciciKlasor = () => path.join(app.getPath('temp'), 'PowerServ-evrak');
+const geciciTemizle = () => { try { require('fs').rmSync(geciciKlasor(), {recursive: true, force: true}); } catch (e) {} };
+ipcMain.handle('gizli-ac', async (e, ad, b64) => {
+  const fs = require('fs');
+  try {
+    const temiz = path.basename(String(ad || '')).replace(/[<>:"/\\|?*\x00-\x1f]/g, '_').replace(/^\.+/, '') || 'evrak.pdf';
+    if (!/\.pdf$/i.test(temiz) || typeof b64 !== 'string' || !b64) return '';
+    const k = path.join(geciciKlasor(), Date.now().toString(36) + Math.random().toString(36).slice(2, 8));
+    fs.mkdirSync(k, {recursive: true});
+    const yol = path.join(k, temiz);
+    fs.writeFileSync(yol, Buffer.from(b64, 'base64'));
+    const hata = await shell.openPath(yol);
+    return hata ? '' : yol;
+  } catch (x) { return ''; }
+});
+app.on('will-quit', geciciTemizle);
+app.whenReady().then(() => { geciciTemizle(); ac(); });
 app.on('window-all-closed', () => app.quit());

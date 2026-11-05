@@ -1,5 +1,5 @@
 rules_version = '2';
-// PowerServ+ ortak veritabanı güvenlik kuralları (2.9.2). Firebase konsolu > Firestore Database > Kurallar sekmesine yapıştırın.
+// PowerServ+ ortak veritabanı güvenlik kuralları (2.15). Firebase konsolu > Firestore Database > Kurallar sekmesine yapıştırın.
 service cloud.firestore {
   match /databases/{db}/documents {
     // Yeni firma açılışı kapalı: kimse API anahtarıyla kendine yeni firma kurup veritabanını kullanamaz.
@@ -58,6 +58,11 @@ service cloud.firestore {
       match /ozel/{key} {
         allow read: if uye(f) && rol(f) in ['yonetici', 'muhasebe', 'izleyici'];
         allow create, update: if finans(f) && kayitGecerli(key) && !genel(request.resource.data.k);
+      }
+      // 2.15: Şifreli evrak arşivi. Yalnız firma sahibi okur ve yazar. İçerik cihazda şifrelenip gelir; sunucuda yalnız şifreli metin durur.
+      match /kasa/{key} {
+        allow read: if uye(f) && request.auth.uid == sahip(f);
+        allow create, update: if uye(f) && request.auth.uid == sahip(f) && kayitGecerli(key) && request.resource.data.k in ['evrak', 'evrakp', 'evrakanahtar'];
       }
       // İşlem kaydı değiştirilemez ve silinemez.
       match /log/{l} {
