@@ -1421,6 +1421,18 @@ html.apk #cekmece .c-alt-menu a{min-height:42px!important;font-size:15px!importa
 .tk-ozet .tk-ekle{margin:0}
 .tk-15 .bolum{margin-top:4px}
 .ozet-selam{padding-top:10px!important;padding-bottom:10px!important}
+/* 2.16: Özet uyarı merkezi */
+.uy-sayac{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 12px}
+.uy-s{display:flex;align-items:baseline;gap:8px;padding:10px 12px;border:1px solid var(--kenar);border-left:4px solid var(--c);background:var(--kart,#fff);color:var(--yazi,inherit);text-decoration:none;border-radius:4px;min-width:0}
+.uy-s.r-kirmizi,.uy-s.r-turuncu,.uy-s.r-mavi{background:var(--kart,#fff)}
+.uy-s b{font-size:22px;line-height:1;color:var(--c)}.uy-s span{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.uy-s.bos{opacity:.55}.uy-s.bos b{color:var(--ikincil)}
+.uy-grup .bolum{display:flex;align-items:center;gap:6px}.uy-grup .bolum small{font-weight:400;text-transform:none;letter-spacing:0}
+.uy-nokta{display:inline-block;width:9px;height:9px;border-radius:50%;flex:none}
+.uy-kirmizi>.grup{border-left:3px solid var(--kirmizi)}.uy-turuncu>.grup{border-left:3px solid var(--turuncu)}.uy-mavi>.grup{border-left:3px solid var(--mavi)}
+.uy-kap .hucre .ic small{white-space:normal}
+.ozet-dip{margin-top:14px}
+@media (min-width:1000px){.uy-kap{max-width:none}.uy-sayac{max-width:560px}}
 @media (min-width:1000px){.ozet-alt{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px;align-items:start}.ozet-alt>section>.bolum:first-child{margin-top:0}}
 .tk-ozet .grup{margin:0}
 .tk-kap{background:var(--kart);border:1px solid var(--kenar);border-radius:var(--r,10px);padding:8px}
@@ -1785,7 +1797,7 @@ p.dipnot .i{width:14px;height:14px;vertical-align:-2px}
 
 <script>
 'use strict';
-const VERSIYON = '2.15.1';
+const VERSIYON = '2.16.0';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -2575,7 +2587,7 @@ function menuCiz(aktif) {
   $('#cekmece').innerHTML = `<button class="c-ust" id="cProfil">${kare(p.simge, p.renk)}<div style="min-width:0;flex:1"><b>${esc(D.ad || 'Firma hesabı')}</b><small>Hesap değiştir</small></div>${ikon('ileri', 'chev')}</button>
     ${H.liste.length > 1 ? `<div class="c-hesaplar">${H.liste.filter(x => x.id !== H.aktif).map(x => `<button data-hgec="${x.id}">${kare(x.profil ? PROFILLER[x.profil].simge : 'kisi', x.profil ? PROFILLER[x.profil].renk : 'gri')}<span>${esc(hesapAdi(x))}</span></button>`).join('')}</div>` : ''}
     <div class="c-bolum">Gezinti</div>
-    <div class="c-liste">${satir('panel', 'Özet', 'ev', 'mavi')}${satir('takvim', 'Takvim', 'takvim', 'pembe')}</div>
+    <div class="c-liste">${satir('panel', 'Özet', 'ev', 'mavi', (() => { try { const n = ozetUyarilar().filter(x => x.s === 0).length; return n ? `<span class="rozet uyar">${n}</span>` : ''; } catch (e) { return ''; } })())}${satir('takvim', 'Takvim', 'takvim', 'pembe')}</div>
     <div class="c-liste c-ana">${gorunen.map(grupHtml).join('')}</div>
     <div class="c-bolum">Sistem</div>
     <div class="c-liste">${satir('menu', 'Modüller', 'izgara', 'indigo', kapali ? `<span class="rozet">${kapali} kapalı</span>` : '')}${satir('ayarlar', 'Ayarlar', 'ayar', 'gri')}${evrakYetkili() ? satir('evrak', 'Evrak arşivi', 'kilit', 'indigo', evrakYaklasan().length ? `<span class="rozet uyar">${evrakYaklasan().length}</span>` : '') : ''}</div>
@@ -3408,7 +3420,7 @@ function ajandaFormu(o, tur = 'gider', gun) {
     $$('[data-aj]', m).forEach(e => e.style.display = e.dataset.aj === t ? '' : 'none');
     $('#ajBitisS', m).style.display = $('#ajTekrar', m).value ? '' : 'none';
     $('#ajAd', m).placeholder = t === 'gider' ? 'Başlık (ör. Dükkan kirası, Kredi taksiti)' : 'Başlık (ör. Mavi Deniz, motor bakımı)';
-    $('#ajDip', m).textContent = t === 'gider' ? 'Sabit gider tutarı yalnız Takvim ekranında görünür; Özet ekranında yalnız günü işaretlenir. Ödeme günü yaklaşınca hatırlatılır.' : 'Randevu günü Özet ekranındaki takvimde işaretlenir ve o sabah hatırlatılır.';
+    $('#ajDip', m).textContent = t === 'gider' ? 'Sabit gider tutarı yalnız Takvim ekranında görünür; Özet ekranında tutar gösterilmez. Ödeme günü yaklaşınca Özet ekranında uyarı çıkar ve hatırlatılır.' : 'Randevu Özet ekranındaki önümüzdeki 15 gün listesinde görünür ve o sabah hatırlatılır.';
   };
   $$('input[name=ajTur]', m).forEach(r => r.onchange = tip); $('#ajTekrar', m).onchange = tip; tip();
   if (!yeni) $('#ajSil', m).onclick = async () => { if (!await onay(`${o.ad} silinsin mi?`, '')) return; D.ajanda = D.ajanda.filter(z => z.id !== o.id); kaydet(); kapat(); setTimeout(ciz, 10); };
@@ -3444,12 +3456,203 @@ function ozet15Gun() {
     l.push({g: v.tarih, sira: 0, html: `<a class="hucre kareli" href="#/kdv">${kare('takvim', 'pembe')}<div class="ic"><b>${esc(v.ad)}</b><small>${esc(tarihYaz(v.tarih, true))} · ${esc(v.alt)}</small></div>${kalan(v.tarih, false)}</a>`});
   l.sort((a, b) => a.g.localeCompare(b.g) || a.sira - b.sira);
   return `<div class="tk-15"><div class="bolum">Önümüzdeki 15 gün<a href="#/takvim">Takvim</a></div><div class="grup">${l.length ? l.slice(0, 14).map(x => x.html).join('') + (l.length > 14 ? `<a class="hucre" href="#/takvim"><div class="ic"><b>+${l.length - 14} kayıt daha</b><small>Takvimde görün</small></div>${CHEV}</a>` : '')
-    : `<div class="hucre"><div class="ic"><b>Önümüzdeki 15 günde kayıt yok</b><small>Sabit gider ve randevuları yukarıdaki düğmelerle ekleyin</small></div></div>`}</div></div>`;
+    : `<div class="hucre"><div class="ic"><b>Önümüzdeki 15 günde kayıt yok</b><small>Sabit gider ve randevuları sol menüdeki Takvim'den ekleyin</small></div></div>`}</div></div>`;
+}
+/* ================= 2.16: Özet = uyarı merkezi =================
+   Bütün uyarılar tek listede acilden bilgiye sıralanır. Hangi bölümlerin görüneceği ve alış faturası uyarı süresi
+   "Özeti düzenle" ile seçilir (cihaz başına). Kayıt hataları tek tek gizlenebilir. Özet hiç tutar göstermez. */
+const OZET_ANAHTAR = 'powerserv.ozet';
+const OZET_BOLUM = [
+  ['evrak', 'Evrak süreleri', 'Süresi dolan ve yaklaşan evraklar'],
+  ['alis', 'Ödenmemiş alış faturaları', 'Süresi geçen ve vadesi yaklaşan ödemeler'],
+  ['tahsilat', 'Geciken tahsilatlar', 'Vadesi geçen satış faturaları'],
+  ['odeme', 'Sabit gider, kart ve vergi günleri', 'Geciken ve yaklaşan ödeme günleri'],
+  ['hata', 'Kayıt ve evrak hataları', 'Eksik bilgi, tutmayan toplam, kur, mükerrer kayıt'],
+  ['servis', 'Servis ve bakım', 'Gecikmiş bakım, eski iş emirleri'],
+  ['stok', 'Stok', 'Kritik ve eksi stok'],
+  ['teklif', 'Teklif süreleri', 'Geçerliliği biten teklifler'],
+  ['gun15', 'Önümüzdeki 15 gün', 'Ödeme, randevu ve vade listesi'],
+  ['teklifler', 'Bekleyen teklifler', 'Yanıt beklenen teklif listesi'],
+];
+const OZET_ALIS_GUN = [15, 30, 45, 60, 90];
+function ozetAyar() {
+  let a; try { a = JSON.parse(localStorage.getItem(OZET_ANAHTAR)) || {}; } catch (e) { a = {}; }
+  return {kapali: Array.isArray(a.kapali) ? a.kapali : [], alisGun: OZET_ALIS_GUN.includes(+a.alisGun) ? +a.alisGun : 30};
+}
+const ozetAyarYaz = a => { try { localStorage.setItem(OZET_ANAHTAR, JSON.stringify(a)); } catch (e) {} };
+const ozetGizliAnahtar = () => 'powerserv.ozet.gizli.' + H.aktif;
+function ozetGizli() { try { const g = JSON.parse(localStorage.getItem(ozetGizliAnahtar())); return g && typeof g === 'object' && !Array.isArray(g) ? g : {}; } catch (e) { return {}; } }
+const ozetGizliYaz = g => { try { localStorage.setItem(ozetGizliAnahtar(), JSON.stringify(g)); } catch (e) {} };
+const gunSonra = n => { const d = tarihNesne(bugun()); d.setDate(d.getDate() + n); return tarihStr(d); };
+const kalanYazi = n => n === 0 ? 'bugün' : n === 1 ? 'yarın' : n < 0 ? -n + ' gün geçti' : n + ' gün kaldı';
+
+/* Ödenmemiş alış faturaları: süresi (fatura tarihinden bu yana) eşiği geçen ya da vadesi geçen = acil, vadesi 7 gün içinde = önemli */
+function alisUyarilari(esik = ozetAyar().alisGun) {
+  const acil = [], yakin = [], diger = [];
+  for (const f of D.faturalar) {
+    if (f.tur !== 'alis' || !faturaliMi(f) || f.odendi || faturaKalan(f) <= 0) continue;
+    const yas = f.tarih ? -gunFark(f.tarih) : 0, vg = f.vade ? gunFark(f.vade) : null;
+    if (yas >= esik || (vg !== null && vg < 0)) acil.push({f, yas, vg});
+    else if (vg !== null && vg <= 7) yakin.push({f, yas, vg});
+    else diger.push({f, yas, vg});
+  }
+  acil.sort((a, b) => (a.vg ?? -a.yas) - (b.vg ?? -b.yas) || b.yas - a.yas);
+  yakin.sort((a, b) => a.vg - b.vg);
+  return {acil, yakin, diger};
+}
+
+/* Kayıt hataları: faturalar (yüklenen PDF / e-Fatura dahil), cariler ve stok. Her biri {k, ad, alt, yol}. */
+const KDV_ORANLARI = [0, 1, 8, 10, 18, 20];
+function kayitHatalari() {
+  const l = [], ac = modulAcik;
+  const ekle = (k, ad, alt, yol) => l.push({k, ad, alt, yol});
+  if (ac('fatura')) {
+    const fl = D.faturalar.filter(f => (f.tur === 'fatura' || f.tur === 'alis') && f.durum === 'gonderildi');
+    const ayni = {};
+    for (const f of fl) {
+      if (f.no) (ayni[f.tur + '|' + String(f.no).trim().toLocaleUpperCase('tr-TR')] ||= []).push(f);
+      if (f.ettn) (ayni['ettn|' + String(f.ettn).toLowerCase()] ||= []).push(f);
+    }
+    const mukerrer = new Set();
+    for (const [k, g] of Object.entries(ayni)) if (g.length > 1) {
+      const ids = g.map(f => f.id).sort().join(',');
+      if (mukerrer.has(ids)) continue; mukerrer.add(ids);
+      ekle('muk-' + ids, `Aynı fatura ${g.length} kez kayıtlı`, `${faturaTurAd(g[0])} ${g[0].no || ''} · ${faturaMusteri(g[0])}${k.startsWith('ettn') ? ' · aynı ETTN' : ''}`, 'fatura/' + g[0].id);
+    }
+    for (const f of fl) {
+      const s = [], t = faturaHesap(f), kl = f.kalemler || [];
+      if (!f.kisiId && !f.musteriAd) s.push(f.tur === 'alis' ? 'satıcı seçilmemiş' : 'müşteri seçilmemiş');
+      else if (f.kisiId && !kisi(f.kisiId)) s.push('bağlı cari kaydı silinmiş');
+      if (!f.no) s.push('fatura numarası yok');
+      if (!f.tarih) s.push('fatura tarihi yok');
+      else if (gunFark(f.tarih) > 1) s.push('ileri tarihli');
+      if (f.vade && f.tarih && f.vade < f.tarih) s.push('vade fatura tarihinden önce');
+      if (t.toplam <= 0) s.push('toplam sıfır');
+      else {
+        const fiyatsiz = kl.filter(k => (k.miktar || 0) > 0 && !((k.fiyat || 0) > 0) && String(k.ad || '').trim()).length;
+        if (fiyatsiz) s.push(`${fiyatsiz} kalemde fiyat yok`);
+      }
+      const adsiz = kl.filter(k => (k.fiyat || 0) > 0 && !String(k.ad || '').trim()).length;
+      if (adsiz) s.push(`${adsiz} kalemde açıklama yok`);
+      const oran = [...new Set(kl.map(k => +k.kdv || 0).filter(o => !KDV_ORANLARI.includes(o)))];
+      if (oran.length) s.push('olağan dışı KDV oranı %' + oran.join(', %'));
+      // Belgeden (PDF / XML) okunan toplam ile hesaplanan toplam
+      if (f.belgeToplam > 0) {
+        const h = f.dovizBilgi && f.dovizBilgi.toplam ? f.dovizBilgi.toplam : t.toplam, tol = Math.max(2, kl.length);
+        if (Math.abs(h - f.belgeToplam) > tol && Math.abs(t.toplam - f.belgeToplam) > tol) s.push('kayıttaki toplam yüklenen belgedekiyle aynı değil');
+      }
+      if (!f.dovizBilgi && /Kur bulunamadı/.test(f.not || '')) s.push('döviz kuru seçilmemiş');
+      if (f.dovizBilgi && !(f.dovizBilgi.kur > 0)) s.push('döviz kuru eksik');
+      if (faturaOdenen(f) > t.toplam + Math.max(2, kl.length) && t.toplam > 0) s.push('ödenen tutar faturadan fazla');
+      if (s.length) ekle('f-' + f.id + '-' + s.length, `${faturaTurAd(f)} ${f.no || '(numarasız)'}`, `${faturaMusteri(f)} · ${s.join(', ')}`, 'fatura/' + f.id);
+    }
+  }
+  if (ac('veresiye') || ac('fatura')) {
+    const v = {};
+    for (const k of D.kisiler) { const n = vknTemiz(k.vno || ''); if (n.length >= 10) (v[n] ||= []).push(k); }
+    for (const [n, g] of Object.entries(v)) if (g.length > 1)
+      ekle('vkn-' + n, `${g.length} cari aynı vergi numarasıyla açılmış`, `${g.map(k => k.ad).slice(0, 3).join(', ')} · ${n.length === 11 ? 'TCKN' : 'VKN'} ${n}`, 'veresiye/' + g[0].id);
+    for (const k of D.kisiler) { const n = vknTemiz(k.vno || ''); if (n && n.length !== 10 && n.length !== 11) ekle('vknu-' + k.id, k.ad || 'Adsız cari', `Vergi numarası ${n.length} hane (VKN 10, TCKN 11 olmalı)`, 'veresiye/' + k.id); }
+  }
+  if (ac('stok')) for (const u of D.urunler) { const n = urunMiktar(u.id); if (n < 0) ekle('eksi-' + u.id, u.ad || u.kod || 'Ürün', `Stok eksiye düştü (${sayiFmt(n)} ${u.birim || ''}); giriş kaydı eksik olabilir`, 'stok/' + u.id); }
+  // Evrak arşivi: bitiş tarihi okunamayan kayıt ya da hatırlatma süresi bitişten uzun (açık bilgilerden; evrak adı şifreli)
+  for (const x of evrakBitisler()) if (!/^\d{4}-\d{2}-\d{2}$/.test(x.b || '') || isNaN(tarihNesne(x.b))) ekle('evb-' + x.i, 'Evrakta bitiş tarihi hatalı', 'Evrak arşivini açıp tarihi düzeltin', 'evrak');
+  return l;
+}
+
+/* Bütün uyarılar: {s: 0 acil | 1 önemli | 2 bilgi, b: bölüm, ad, alt, sag, renk, simge, yol, g (sıralama günü), hata?} */
+function ozetUyarilar() {
+  const ay = ozetAyar(), acik = id => !ay.kapali.includes(id), ac = modulAcik, l = [], bas = bugun();
+  const u = o => l.push(o);
+  if (acik('evrak')) for (const x of evrakYaklasan()) {
+    const n = gunFark(x.b);
+    u({s: n <= 0 ? 0 : n <= 7 ? 1 : 2, b: 'evrak', simge: 'kilit', renk: n <= 0 ? 'kirmizi' : 'turuncu', ad: n < 0 ? 'Evrakın süresi doldu' : n === 0 ? 'Evrakın süresi bugün doluyor' : 'Evrakın süresi doluyor',
+      alt: `Evrak arşivi · bitiş ${tarihYaz(x.b, true)}`, sag: kalanYazi(n), yol: 'evrak', g: x.b});
+  }
+  if (acik('alis') && ac('fatura')) {
+    const a = alisUyarilari(ay.alisGun);
+    for (const x of a.acil) u({s: 0, b: 'alis', simge: 'giris', renk: 'kirmizi', ad: `Ödenmedi: ${faturaMusteri(x.f)}`,
+      alt: [x.f.no, x.f.tarih ? tarihYaz(x.f.tarih, true) : '', x.vg !== null && x.vg < 0 ? `vadesi ${-x.vg} gün geçti` : `${x.yas} gündür ödenmedi`].filter(Boolean).join(' · '),
+      sag: x.vg !== null && x.vg < 0 ? -x.vg + ' gün geçti' : x.yas + ' gün', yol: 'fatura/' + x.f.id, g: x.f.vade || x.f.tarih || bas});
+    for (const x of a.yakin) u({s: 1, b: 'alis', simge: 'giris', renk: 'turuncu', ad: `Ödeme yaklaşıyor: ${faturaMusteri(x.f)}`, alt: [x.f.no, 'vade ' + tarihYaz(x.f.vade, true)].filter(Boolean).join(' · '), sag: kalanYazi(x.vg), yol: 'fatura/' + x.f.id, g: x.f.vade});
+    if (a.diger.length) u({s: 2, b: 'alis', simge: 'kumSaati', renk: 'gri', ad: `${a.diger.length} alış faturası ödenecek`, alt: `Henüz ${ay.alisGun} günü geçmedi`, sag: '', yol: 'fatura/r-odenecek', g: '9'});
+  }
+  if (acik('tahsilat') && ac('fatura')) for (const f of D.faturalar) {
+    if (f.tur !== 'fatura' || !faturaliMi(f) || f.odendi || !f.vade || f.vade >= bas || faturaKalan(f) <= 0) continue;
+    const n = gunFark(f.vade);
+    u({s: n <= -30 ? 0 : 1, b: 'tahsilat', simge: 'dosya', renk: n <= -30 ? 'kirmizi' : 'turuncu', ad: `Tahsil edilmedi: ${faturaMusteri(f)}`, alt: [f.no, 'vade ' + tarihYaz(f.vade, true)].filter(Boolean).join(' · '), sag: -n + ' gün geçti', yol: 'fatura/' + f.id, g: f.vade});
+  }
+  if (acik('odeme')) {
+    const gecmis = ajandaOlaylar(ayKaydir(bas.slice(0, 7), -2) + '-01', gunSonra(-1)).filter(x => x.o.tur === 'gider' && !x.odendi);
+    for (const x of gecmis) u({s: 0, b: 'odeme', simge: 'cuzdan', renk: 'kirmizi', ad: `Ödenmedi: ${x.o.ad}`, alt: `Sabit gider · ${tarihYaz(x.g, true)}`, sag: -gunFark(x.g) + ' gün geçti', yol: 'takvim', g: x.g, tkg: x.g});
+    for (const x of ajandaOlaylar(bas, gunSonra(3))) if (!x.odendi) {
+      const n = gunFark(x.g), gider = x.o.tur === 'gider';
+      if (gider) u({s: 1, b: 'odeme', simge: 'cuzdan', renk: 'turuncu', ad: x.o.ad, alt: `Sabit gider · ${tarihYaz(x.g, true)}`, sag: kalanYazi(n), yol: 'takvim', g: x.g, tkg: x.g});
+      else if (n <= 1) u({s: 2, b: 'odeme', simge: 'takvim', renk: 'mavi', ad: `Randevu: ${x.o.ad}`, alt: [tarihYaz(x.g, true), x.o.saat, x.o.yer].filter(Boolean).join(' · '), sag: kalanYazi(n), yol: 'takvim', g: x.g, tkg: x.g});
+    }
+    if (ac('banka')) for (const k of aktifHesaplar().filter(h => h.tur === 'kart')) {
+      const so = kartSonOdeme(k);
+      if (so && -hesapBakiye(k) > 0 && gunFark(so) >= 0 && gunFark(so) <= 7) { const n = gunFark(so);
+        u({s: n <= 1 ? 0 : 1, b: 'odeme', simge: 'kart', renk: n <= 1 ? 'kirmizi' : 'turuncu', ad: `${k.ad} son ödeme`, alt: `Kredi kartı · ${tarihYaz(so, true)}`, sag: kalanYazi(n), yol: 'banka/' + k.id, g: so}); }
+    }
+    if (ac('kdv')) for (const v of vergiTakvimi(bas.slice(0, 7)).concat(vergiTakvimi(ayKaydir(bas.slice(0, 7), 1)))) {
+      const n = gunFark(v.tarih);
+      if (n >= 0 && n <= 7) u({s: n <= 1 ? 0 : 1, b: 'odeme', simge: 'takvim', renk: n <= 1 ? 'kirmizi' : 'pembe', ad: v.ad, alt: `${tarihYaz(v.tarih, true)} · ${v.alt}`, sag: kalanYazi(n), yol: 'kdv', g: v.tarih});
+    }
+  }
+  if (acik('hata')) { const gz = ozetGizli();
+    for (const x of kayitHatalari()) if (!gz[x.k]) u({s: 1, b: 'hata', simge: 'uyari', renk: 'turuncu', ad: x.ad, alt: x.alt, sag: 'kontrol et', yol: x.yol, g: '8', hata: x.k}); }
+  if (acik('servis') && ac('servis')) {
+    for (const b of yaklasanBakimlar()) u({s: b.durum === 'gecikti' ? 0 : 2, b: 'servis', simge: 'bakim', renk: b.durum === 'gecikti' ? 'kirmizi' : 'mor', ad: `Bakım ${b.durum === 'gecikti' ? 'gecikti' : 'yaklaşıyor'}: ${kisi(b.e.kisiId)?.ad || b.e.tekne || ekipmanAd(b.e)}`,
+      alt: [b.e.tekne, ekipmanAd(b.e)].filter(Boolean).join(' · '), sag: bakimKalanYazi(b), yol: 'servis/b-' + b.e.id, g: '7'});
+    const ac2 = D.servisler.filter(servisAcikMi), eski = ac2.filter(s => s.tarih && gunFark(s.tarih) <= -7), pb = ac2.filter(s => s.durum === 'parca').length;
+    if (eski.length) u({s: 1, b: 'servis', simge: 'pano', renk: 'turuncu', ad: `${eski.length} iş emri 7 günden uzun süredir açık`, alt: eski.slice(0, 3).map(servisMusteri).join(', '), sag: '', yol: 'servis/r-acik', g: '7'});
+    if (ac2.length) u({s: 2, b: 'servis', simge: 'pano', renk: 'mor', ad: `${ac2.length} açık iş emri`, alt: pb ? `${pb} iş parça bekliyor` : 'Servis', sag: '', yol: 'servis/r-acik', g: '9'});
+  }
+  if (acik('stok') && ac('stok')) {
+    const ks = D.urunler.filter(x => x.kritik > 0 && urunMiktar(x.id) <= x.kritik);
+    if (ks.length) u({s: 1, b: 'stok', simge: 'depoUyari', renk: 'kahve', ad: `${ks.length} üründe kritik stok`, alt: ks.slice(0, 3).map(x => x.ad).join(', ') + (ks.length > 3 ? ` ve ${ks.length - 3} ürün daha` : ''), sag: '', yol: 'stok/r-kritik', g: '8'});
+  }
+  if (acik('teklif') && ac('teklif')) for (const f of D.faturalar) if (f.tur === 'teklif' && f.vade && teklifDurumKod(f) === 'bekliyor') {
+    const n = gunFark(f.vade);
+    if (n >= -7 && n <= 2) u({s: n < 0 ? 2 : 1, b: 'teklif', simge: 'teklif', renk: n < 0 ? 'gri' : 'indigo', ad: `Teklif ${n < 0 ? 'süresi doldu' : 'süresi bitiyor'}: ${faturaMusteri(f)}`, alt: [f.no, 'geçerlilik ' + tarihYaz(f.vade, true)].filter(Boolean).join(' · '), sag: kalanYazi(n), yol: 'teklif/' + f.id, g: f.vade});
+  }
+  return l.sort((a, b) => a.s - b.s || String(a.g).localeCompare(String(b.g)));
+}
+const OZET_SEVIYE = [['Acil', 'kirmizi', 'Hemen ilgilenin'], ['Önemli', 'turuncu', 'Bu hafta bakın'], ['Bilgi', 'mavi', 'Takip için']];
+function ozetUyariHtml(l) {
+  if (!l.length) return `<div class="grup"><div class="hucre kareli">${kare('tamam', 'yesil')}<div class="ic"><b>Şu an uyarı yok</b><small>Süresi dolan evrak, ödenmemiş fatura ya da hatalı kayıt bulunmadı</small></div></div></div>`;
+  let h = `<div class="uy-sayac">${OZET_SEVIYE.map(([ad, r], i) => { const n = l.filter(x => x.s === i).length; return `<a href="#" data-uyseviye="${i}" class="uy-s r-${r}${n ? '' : ' bos'}"><b>${n}</b><span>${ad}</span></a>`; }).join('')}</div>`;
+  OZET_SEVIYE.forEach(([ad, r, alt], i) => {
+    const s = l.filter(x => x.s === i);
+    if (!s.length) return;
+    const SINIR = i === 2 ? 6 : 12, gor = s.slice(0, SINIR);
+    h += `<section class="uy-grup uy-${r}" id="uySeviye${i}"><div class="bolum"><span class="uy-nokta r-${r}"></span>${ad} (${s.length})<small class="soluk"> · ${alt}</small></div><div class="grup">`
+      + gor.map(x => `<button class="hucre kareli" data-uy="${l.indexOf(x)}">${kare(x.simge, x.renk)}<div class="ic"><b>${esc(x.ad)}</b><small>${esc(x.alt)}</small></div>${x.sag ? `<span class="deger vade ${i === 0 ? 'gider' : i === 1 ? 'turuncu' : ''}">${esc(x.sag)}</span>` : CHEV}</button>`).join('')
+      + (s.length > SINIR ? `<button class="hucre" data-uyhepsi="${i}"><div class="ic"><b>+${s.length - SINIR} uyarı daha</b><small>Hepsini göster</small></div>${CHEV}</button>` : '') + '</div></section>';
+  });
+  return h;
+}
+function ozetDuzenle() {
+  const a = ozetAyar(), gz = Object.keys(ozetGizli()).length;
+  const m = modal('Özeti düzenle', `
+    <p class="dipnot" style="margin-top:0">Özet'te görmek istediğiniz bölümleri seçin. Uyarılar her zaman acilden bilgiye doğru sıralanır. Bu seçim yalnız bu cihazda geçerlidir.</p>
+    <div class="grup">${OZET_BOLUM.map(([id, ad, alt]) => `<label class="hucre"><div class="ic"><b>${esc(ad)}</b><small>${esc(alt)}</small></div><span class="anahtar"><input type="checkbox" data-ozb="${id}" ${a.kapali.includes(id) ? '' : 'checked'}><span></span></span></label>`).join('')}</div>
+    <div class="grup"><label class="f-satir"><span>Alış faturası uyarısı</span><select id="ozAlis">${OZET_ALIS_GUN.map(g => `<option value="${g}" ${g === a.alisGun ? 'selected' : ''}>${g} gün</option>`).join('')}</select></label></div>
+    <p class="dipnot">Fatura tarihinden bu yana bu süre geçen ya da vadesi geçen ödenmemiş alış faturaları Acil bölümünde gösterilir ve bildirim gelir.</p>
+    ${gz ? `<div class="grup"><button class="hucre" id="ozGizliAc"><div class="ic"><b>Gizlenen ${gz} uyarıyı geri getir</b><small>Kayıt hatalarında "Bu uyarıyı gizle" ile kapattıklarınız</small></div></button></div>` : ''}
+    <div class="grup"><button class="hucre" id="ozVarsayilan"><div class="ic"><b>Varsayılana dön</b><small>Bütün bölümler açık, alış faturası 30 gün</small></div></button></div>`,
+    {kaydet: () => {
+      ozetAyarYaz({kapali: $$('[data-ozb]', m).filter(c => !c.checked).map(c => c.dataset.ozb), alisGun: +$('#ozAlis', m).value});
+      hatirlaticiPlanla(); bildir('Özet düzenlendi'); setTimeout(ciz, 10);
+    }});
+  if ($('#ozGizliAc', m)) $('#ozGizliAc', m).onclick = () => { ozetGizliYaz({}); bildir('Gizlenen uyarılar geri geldi'); kapat(); setTimeout(ciz, 10); };
+  $('#ozVarsayilan', m).onclick = () => { $$('[data-ozb]', m).forEach(c => { c.checked = true; }); $('#ozAlis', m).value = '30'; };
 }
 function panelEkrani() {
-  const p = PROFILLER[D.profil], t = T(), ac = modulAcik;
+  const p = PROFILLER[D.profil], t = T(), ac = modulAcik, ay = ozetAyar(), acik = id => !ay.kapali.includes(id);
   const tarih = new Date().toLocaleDateString('tr-TR', {weekday:'long', day:'numeric', month:'long'});
-  let h = sayfa(D.ad || p.ad + ' hesabı', {sag: `<button class="nav-btn" id="ayarBtn" aria-label="Ayarlar">${ikon('ayar')}</button>`});
+  let h = sayfa(D.ad || p.ad + ' hesabı', {sag: `<button class="nav-btn" id="ozDuzenle" aria-label="Özeti düzenle">${ikon('kalem')}</button><button class="nav-btn" id="ayarBtn" aria-label="Ayarlar">${ikon('ayar')}</button>`});
   const saat = new Date().getHours(), selam = saat < 6 ? 'İyi geceler' : saat < 12 ? 'Günaydın' : saat < 18 ? 'İyi günler' : 'İyi akşamlar';
   const bos = hesapBosMu();
   h += `<section class="kahraman kompakt ozet-selam"><div class="k-ust"><span><b>${selam}</b> · <span style="text-transform:capitalize">${esc(tarih)}</span></span><span class="k-surum">v${VERSIYON}</span></div></section>`;
@@ -3460,34 +3663,44 @@ function panelEkrani() {
     else if (ac('veresiye')) ad.push(['cari', `İlk ${kucult(t.kisi)} kaydını açın`, 'Borç ve tahsilatları tek yerde izleyin']);
     h += `<div class="bolum">Başlarken</div><div class="grup">${ad.map(([id, b, s], i) => `<button class="hucre" data-bas="${id}"><span class="adim">${String(i + 1).padStart(2, '0')}</span><div class="ic"><b>${esc(b)}</b><small>${esc(s)}</small></div>${CHEV}</button>`).join('')}</div>`;
   }
-  // Takvim (en üstte), ekleme düğmeleri ve 15 günlük liste
-  h += ozetTakvim();
-  // Bekleyen teklifler (tutarsız) ve hatırlatmalar
+  // Uyarılar: acil → önemli → bilgi
+  const uy = ozetUyarilar();
+  ui.ozetUy = uy;
+  h += `<div class="bolum">Uyarılar<a href="#" id="ozDuzenle2">Özeti düzenle</a></div><div class="uy-kap">${ozetUyariHtml(uy)}</div>`;
+  // Altta: önümüzdeki 15 gün ve bekleyen teklifler (seçilebilir)
   let alt = '';
-  if (ac('teklif')) {
+  if (acik('gun15')) alt += `<section>${ozet15Gun()}</section>`;
+  if (acik('teklifler') && ac('teklif')) {
     const l = D.faturalar.filter(f => f.tur === 'teklif' && teklifDurumKod(f) === 'bekliyor').sort((a, b) => (a.vade || '9').localeCompare(b.vade || '9') || (b.tarih || '').localeCompare(a.tarih || ''));
     alt += `<section><div class="bolum">Bekleyen teklifler${l.length ? ` (${l.length})` : ''}<a href="#/teklif/r-bekleyen">Tümü</a></div><div class="grup">${l.length ? l.slice(0, 6).map(f => { const g = f.vade ? gunFark(f.vade) : null;
       return `<button class="hucre kareli" data-fatura="${f.id}">${kare('teklif', 'indigo')}<div class="ic"><b>${esc(faturaMusteri(f))}</b><small>${esc([f.no, f.tarih ? tarihYaz(f.tarih, true) : ''].filter(Boolean).join(' · '))}</small></div><span class="deger vade ${g !== null && g <= 2 ? 'turuncu' : ''}">${g === null ? 'süresiz' : g < 0 ? 'süresi doldu' : g === 0 ? 'bugün bitiyor' : g + ' gün geçerli'}</span></button>`; }).join('')
       + (l.length > 6 ? `<a class="hucre" href="#/teklif/r-bekleyen"><div class="ic"><b>+${l.length - 6} teklif daha</b></div>${CHEV}</a>` : '')
       : `<div class="hucre"><div class="ic"><b>Bekleyen teklif yok</b><small>Yanıt beklenen teklif kalmadı</small></div></div>`}</div></section>`;
   }
-  const uy = [];
-  if (ac('servis')) {
-    const n = D.servisler.filter(servisAcikMi).length;
-    if (n) uy.push(`<a class="hucre kareli" href="#/servis/r-acik">${kare('pano', 'mor')}<div class="ic"><b>${n} açık iş emri</b><small>Servis</small></div>${CHEV}</a>`);
-    const bk = yaklasanBakimlar(), gec = bk.filter(b => b.durum === 'gecikti').length;
-    if (bk.length) uy.push(`<a class="hucre kareli" href="#/servis/r-bakim">${kare('takvim', gec ? 'kirmizi' : 'turuncu')}<div class="ic"><b>${bk.length} makinenin bakımı ${gec ? `yaklaşıyor (${gec} gecikti)` : 'yaklaşıyor'}</b><small>${esc(bk.slice(0, 3).map(b => kisi(b.e.kisiId)?.ad || b.e.tekne || ekipmanAd(b.e)).join(', '))}</small></div>${CHEV}</a>`);
-  }
-  if (ac('stok')) { const n = D.urunler.filter(u => u.kritik > 0 && urunMiktar(u.id) <= u.kritik).length; if (n) uy.push(`<a class="hucre kareli" href="#/stok/r-kritik">${kare('depoUyari', 'kahve')}<div class="ic"><b>${n} üründe kritik stok</b><small>Stok azaldı</small></div>${CHEV}</a>`); }
-  // 2.15: süresi dolan / yaklaşan evraklar (yalnız firma sahibi; evrak adı şifreli olduğu için yalnız sayı gösterilir)
-  { const ey = evrakYaklasan(), dl = ey.filter(x => gunFark(x.b) < 0).length;
-    if (ey.length) uy.push(`<a class="hucre kareli" href="#/evrak">${kare('kilit', dl ? 'kirmizi' : 'turuncu')}<div class="ic"><b>${ey.length} evrakın süresi ${dl ? `doluyor (${dl} doldu)` : 'doluyor'}</b><small>Evrak arşivi · en yakın ${esc(tarihYaz(ey[0].b, true))}</small></div>${CHEV}</a>`); }
-  if (uy.length) alt += `<section><div class="bolum">Hatırlatmalar</div><div class="grup">${uy.join('')}</div></section>`;
   if (alt) h += `<div class="ozet-alt">${alt}</div>`;
+  h += `<p class="dipnot ozet-dip">Takvim sol menüde. Bölümleri seçmek için sağ üstteki kalem simgesine ya da Özeti düzenle'ye basın.</p>`;
 
   $('#icerik').innerHTML = h;
   $('#ayarBtn').onclick = () => git('ayarlar');
-  ozetTakvimBagla();
+  $('#ozDuzenle').onclick = ozetDuzenle;
+  $('#ozDuzenle2').onclick = e => { e.preventDefault(); ozetDuzenle(); };
+  $$('[data-uyseviye]').forEach(b => b.onclick = e => { e.preventDefault(); $('#uySeviye' + b.dataset.uyseviye)?.scrollIntoView({behavior: 'smooth', block: 'start'}); });
+  $$('[data-uyhepsi]').forEach(b => b.onclick = () => {
+    const i = +b.dataset.uyhepsi, s = uy.filter(x => x.s === i), grup = b.parentElement;
+    b.remove();
+    grup.insertAdjacentHTML('beforeend', s.slice(i === 2 ? 6 : 12).map(x => `<button class="hucre kareli" data-uy="${uy.indexOf(x)}">${kare(x.simge, x.renk)}<div class="ic"><b>${esc(x.ad)}</b><small>${esc(x.alt)}</small></div>${x.sag ? `<span class="deger vade ${i === 0 ? 'gider' : i === 1 ? 'turuncu' : ''}">${esc(x.sag)}</span>` : CHEV}</button>`).join(''));
+    uyBagla(grup);
+  });
+  const uyBagla = kok => $$('[data-uy]', kok).forEach(b => b.onclick = async () => {
+    const x = uy[+b.dataset.uy]; if (!x) return;
+    if (x.tkg) { ui.takvimAy = x.tkg.slice(0, 7); ui.takvimGun = x.tkg; }
+    if (!x.hata) return git(x.yol);
+    const s = await eylemSayfa(x.ad, x.alt, [{ad: 'Kaydı aç', deger: 'ac'}, {ad: 'Bu uyarıyı gizle', deger: 'gizle'}]);
+    if (s === 'ac') git(x.yol);
+    else if (s === 'gizle') { const g = ozetGizli(); g[x.hata] = bugun(); ozetGizliYaz(g); bildir('Uyarı gizlendi. Özeti düzenle\'den geri getirebilirsiniz'); ciz(); }
+  });
+  uyBagla(document);
+  $$('.tk-15 [data-tko]').forEach(b => b.onclick = () => { ui.takvimAy = b.dataset.tkg.slice(0, 7); ui.takvimGun = b.dataset.tkg; git('takvim'); });
   $$('[data-bas]').forEach(b => b.onclick = () => { const x = b.dataset.bas; x === 'gelir' ? islemFormu(null, 'gelir') : x === 'fatura' ? faturaFormu(null, 'fatura') : x === 'cari' ? git('veresiye') : ornekSor(); });
   faturaTiklari();
 }
@@ -4488,6 +4701,8 @@ async function eFaturaAktar(s) {
     } else f.not = [f.not, `Döviz: ${dv}. Kur bulunamadı, tutarlar ${dv} olarak yazıldı; faturayı düzenleyip para birimini ve kuru seçin.`].filter(Boolean).join('\n');
   }
   if (u.tevkifat) f.tevkifat = u.tevkifat;
+  // 2.16: belgedeki ödenecek tutar saklanır; Özet'te kayıtla tutmazsa uyarı verilir
+  if (u.odenecek > 0 && u.pdfOkuma !== 'toplam') { f.belgeToplam = u.odenecek; if (dv !== 'TL') f.belgeDoviz = dv; }
   if (ekler.length) f.ekler = ekler;
   if (u.tip === 'IADE') f.not = ['İade faturası', f.not].filter(Boolean).join('\n');
   if (s.pdfden) f.not = [f.not, s.xml ? "PDF'teki e-Fatura XML'inden okundu" : u.pdfOkuma === 'toplam' ? "PDF'den okundu. Kalem tablosu okunamadığı için kalemler KDV oranına göre toplam tutardan yazıldı." : "PDF'den okundu"].filter(Boolean).join('\n');
@@ -9549,7 +9764,13 @@ function hatirlaticilar() {
       if (modulAcik('fatura')) { const vg = D.faturalar.filter(f => faturaliMi(f) && !f.odendi && f.vade && f.vade < bugunT);
         const al = vg.filter(f => f.tur === 'alis'), st = vg.filter(f => f.tur !== 'alis'), top = l => para(l.reduce((t, f) => t + faturaKalan(f), 0));
         if (st.length) durum('vgs', `${st.length} faturanın vadesi geçti`, `Tahsil edilecek ${top(st)}`, 'fatura/r-vade');
-        if (al.length) durum('vga', `${al.length} ödemenin vadesi geçti`, `Ödenecek ${top(al)}`, 'fatura/r-vade'); }
+        if (al.length) durum('vga', `${al.length} ödemenin vadesi geçti`, `Ödenecek ${top(al)}`, 'fatura/r-vade');
+        // 2.16: fatura tarihinden bu yana Özet'te seçilen süre (varsayılan 30 gün) geçen ödenmemiş alış faturaları
+        const esik = ozetAyar().alisGun, es = alisUyarilari(esik).acil.filter(x => x.yas >= esik);
+        if (es.length) durum('a30', `${es.length} alış faturası ${esik} gündür ödenmedi`, `Ödenecek ${top(es.map(x => x.f))} · ${es.slice(0, 2).map(x => faturaMusteri(x.f)).join(', ')}`, 'fatura/r-odenecek'); }
+      // 2.16: kayıt hataları (eksik bilgi, tutmayan toplam, mükerrer fatura...)
+      if (h.id === H.aktif) { const gz = ozetGizli(), hl = kayitHatalari().filter(x => !gz[x.k]);
+        if (hl.length) durum('kh', `${hl.length} kayıtta hata var`, hl.slice(0, 2).map(x => x.ad).join(', ') + ' · Özet ekranında görün', 'panel'); }
       if (modulAcik('stok')) { const ks = D.urunler.filter(u => u.kritik > 0 && urunMiktar(u.id) <= u.kritik);
         if (ks.length) durum('ks', `${ks.length} ürün kritik stokta`, ks.slice(0, 3).map(u => u.ad).join(', ') + (ks.length > 3 ? ` ve ${ks.length - 3} ürün daha` : ''), 'stok/r-kritik'); }
       if (modulAcik('servis')) {
