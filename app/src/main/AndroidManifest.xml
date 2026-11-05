@@ -27,6 +27,13 @@
             </intent-filter>
         </activity>
 
+        <!-- 2.15: şifreli evrak arşivinden açılan PDF'ler uygulamanın geçici klasöründen, yalnız okuma izniyle verilir -->
+        <provider
+            android:name=".GeciciDosya"
+            android:authorities="com.dnmarine.muhasebe.gecici"
+            android:exported="false"
+            android:grantUriPermissions="true" />
+
         <!-- Günlük vade ve vergi hatırlatmaları; telefon yeniden başlayınca alarm yeniden kurulur -->
         <receiver android:name=".Hatirlatici" android:exported="false">
             <intent-filter>

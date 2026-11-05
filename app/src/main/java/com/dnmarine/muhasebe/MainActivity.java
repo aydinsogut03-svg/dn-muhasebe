@@ -56,6 +56,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle durum) {
         super.onCreate(durum);
+        GeciciDosya.temizle(this, 0);
 
         FrameLayout kok = new FrameLayout(this);
         kok.setBackgroundColor(getColor(R.color.zemin));
@@ -262,6 +263,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        // 2.15: görüntüleyiciden dönülünce şifresi çözülmüş geçici evrak dosyaları silinir
+        GeciciDosya.temizle(this, 30000);
         if (web != null) web.evaluateJavascript("window.onPlan && window.onPlan()", null);
     }
 
@@ -498,6 +501,35 @@ public class MainActivity extends Activity {
                     ac.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     try { startActivity(Intent.createChooser(ac, ad)); }
                     catch (Exception e) { Toast.makeText(MainActivity.this, "İndirilenler/PowerServ+ klasörüne kaydedildi", Toast.LENGTH_LONG).show(); }
+                });
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        /** 2.15: şifreli evraktan çözülen dosyayı İndirilenler'e değil, uygulamanın geçici klasörüne yazar ve görüntüleyiciyle açar. */
+        @JavascriptInterface
+        public boolean gizliBelgeAc(String ad, String base64, String tur) {
+            try {
+                byte[] veri = android.util.Base64.decode(base64, android.util.Base64.DEFAULT);
+                GeciciDosya.temizle(MainActivity.this, 0);
+                String klasorAd = Long.toString(System.currentTimeMillis(), 36) + Integer.toString(new java.security.SecureRandom().nextInt(1 << 30), 36);
+                java.io.File k = new java.io.File(GeciciDosya.klasor(MainActivity.this), klasorAd);
+                if (!k.mkdirs()) return false;
+                String temiz = ad == null ? "" : ad.replaceAll("[\\\\/:*?\"<>|\\x00-\\x1f]", "_").trim();
+                if (temiz.isEmpty() || temiz.startsWith(".")) temiz = "evrak.pdf";
+                java.io.File f = new java.io.File(k, temiz);
+                try (java.io.FileOutputStream o = new java.io.FileOutputStream(f)) { o.write(veri); }
+                final Uri u = new Uri.Builder().scheme("content").authority(GeciciDosya.YETKI).appendPath(klasorAd).appendPath(temiz).build();
+                final String mime = tur == null || tur.isEmpty() ? "application/pdf" : tur;
+                final String baslik = temiz;
+                runOnUiThread(() -> {
+                    Intent ac = new Intent(Intent.ACTION_VIEW);
+                    ac.setDataAndType(u, mime);
+                    ac.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    try { startActivity(Intent.createChooser(ac, baslik)); }
+                    catch (Exception e) { Toast.makeText(MainActivity.this, "PDF görüntüleyici bulunamadı", Toast.LENGTH_LONG).show(); }
                 });
                 return true;
             } catch (Exception e) {
