@@ -1460,6 +1460,7 @@ html.apk #cekmece .c-alt-menu a{min-height:42px!important;font-size:15px!importa
   .tk-ekran .tk-olaylar{display:none}
   .tk-ust b{min-width:0;flex:1}
 }
+.fo-tl{display:block;font-size:13px;font-weight:500;color:var(--ikincil);margin-top:2px}
 .bekleyenler{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-bottom:14px}
 @media (max-width:1000px){.bekleyenler{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .bk-kutu{display:flex;flex-direction:column;gap:1px;min-width:0;background:var(--kart);border:1px solid var(--kenar);border-radius:14px;padding:10px 10px 9px;color:var(--yazi);text-decoration:none}
@@ -1759,7 +1760,7 @@ body.erp .erp-form #mSerbest .yuzen{display:none}
 
 <script>
 'use strict';
-const VERSIYON = '2.14.10';
+const VERSIYON = '2.14.11';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -4239,8 +4240,13 @@ function pdfFaturaCoz(satirlar) {
   const tevM = /Tevkifat[^\n]{0,60}?(?:\(\s*(\d)\s*\/\s*10\s*\)|(\d)\s*\/\s*10|%\s*(\d{2,3}))/i.exec(T);
   const tevkifat = tevM ? +(tevM[1] || tevM[2] || Math.round(sayi(tevM[3]) / 10)) : 0;
   const paraM = [odenecek, vergiDahil, malHizmet].find(x => x && x.para && !/TL|TRY|₺/.test(x.para));
-  const doviz = paraM ? ({'$': 'USD', '€': 'EUR', '£': 'GBP'}[paraM.para] || paraM.para) : 'TRY';
-  const kurM = /D[öo]viz\s*Kuru\s*[:.]?\s*([\d.,]+)/i.exec(duz);
+  // 2.14.11: toplamların yanında para kodu yoksa belgedeki para kodları sayılır (USD 900,00 ya da 900,00 USD)
+  const paraSay = kod => (duz.match(new RegExp('(?:^|[^A-Za-z])' + kod + '(?![A-Za-z])', 'g')) || []).length;
+  const dvSay = ['USD', 'EUR', 'GBP'].map(d => [d, paraSay(d) + (duz.match(new RegExp('\\d\\s*\\' + {USD: '$', EUR: '€', GBP: '£'}[d] + '|\\' + {USD: '$', EUR: '€', GBP: '£'}[d] + '\\s*\\d', 'g')) || []).length]).sort((a, b) => b[1] - a[1])[0];
+  const tlSay = paraSay('TL') + paraSay('TRY') + (duz.match(/₺/g) || []).length;
+  const dovizSayim = dvSay[1] >= 2 && dvSay[1] > tlSay ? dvSay[0] : '';
+  const doviz = paraM ? ({'$': 'USD', '€': 'EUR', '£': 'GBP'}[paraM.para] || paraM.para) : dovizSayim || 'TRY';
+  const kurM = /D[öo]viz\s*Kuru\s*[:.]?\s*([\d.,]+)/i.exec(duz) || /(?:Kur|Exchange\s*Rate)\s*[:.]?\s*([\d]{1,3}[.,]\d{2,6})\b/i.exec(duz);
   const kur = doviz !== 'TRY' && kurM ? sayi(kurM[1]) || 1 : 1;
   const tl = k => Math.round(k * kur);
   // Kalem tablosu
@@ -4346,7 +4352,8 @@ function pdfKalemler(satirlar, kdvlar) {
   bosalt();
   // Sıra no sütunu ayrılamadıysa adın başındaki 1, 2, 3… atılır
   if (sonuc.length && sonuc.every((k, i) => new RegExp('^' + (i + 1) + '\\.?\\s').test(k.ad))) sonuc.forEach(k => k.ad = k.ad.replace(/^\d+\.?\s+/, ''));
-  sonuc.forEach(k => { delete k.y; delete k.s; k.ad = k.ad.replace(/\s+/g, ' ').trim() || 'Kalem'; });
+  // 2.14.11: adın içine karışan tutar ve para kodları (900,00 USD, Tutarı) atılır
+  sonuc.forEach(k => { delete k.y; delete k.s; k.ad = k.ad.replace(/(^|\s)(?:-?\d{1,3}(?:[.,]\d{3})*[.,]\d{2}|USD|EUR|GBP|TRY|TL|₺|\$|€|£)(?=\s|$)/g, ' ').replace(/^\s*(Tutar[ıi]?|Fiyat[ıi]?)\s+/i, '').replace(/\s+/g, ' ').trim() || 'Kalem'; });
   return sonuc;
 }
 const PDF_BIRIM = t => {
@@ -4437,8 +4444,20 @@ async function eFaturaAktar(s) {
   const ekler = (await Promise.all([eFaturaBelge(s.pdf, 'pdf', 'application/pdf'), eFaturaBelge(s.xml, 'xml', 'application/xml'), eFaturaBelge(s.html, 'html', 'text/html')])).filter(Boolean);
   const f = {id: kimlik(), olusturma: Date.now(), tur, no: u.no, ettn: u.ettn, eBelge: efTur(u), tarih: u.tarih || bugun(), vade: u.vade || '',
     kisiId: k ? k.id : null, musteriAd: k ? '' : taraf.ad || '', kalemler: u.kalemler.length ? u.kalemler : [yeniKalem()],
-    not: [u.not, u.doviz !== 'TRY' ? `Döviz: ${u.doviz}, kur ${sayiFmt(u.kur)}` : ''].filter(Boolean).join('\n'),
+    not: u.not || '',
     durum: 'gonderildi', odendi: false, odemeler: [], cariyeIsle: !!k, stokDus: false};
+  // 2.14.11: dövizli fatura: kalemler TL'ye çevrilmiş geldiyse (belgedeki kur) döviz fiyatları geri bulunur; kur yoksa TCMB kuru
+  const dv = {TRY: 'TL', TL: 'TL', USD: 'USD', EUR: 'EUR', GBP: 'GBP'}[u.doviz] || 'TL';
+  if (dv !== 'TL' && DOVIZLER.includes(dv)) {
+    const belgeKur = u.kur > 1 ? u.kur : 0, kur = belgeKur || kurAl(dv) || 0;
+    if (kur) {
+      const fiyatlar = f.kalemler.map(x => belgeKur ? Math.round((x.fiyat || 0) / belgeKur) : x.fiyat || 0);
+      if (!belgeKur) for (const x of f.kalemler) x.fiyat = Math.round((x.fiyat || 0) * kur);
+      const dvx = {kalemler: f.kalemler.map((x, i) => ({...x, fiyat: fiyatlar[i]})), tevkifat: f.tevkifat};
+      f.dovizBilgi = {doviz: dv, kur, toplam: faturaHesap(dvx).toplam, fiyatlar};
+      if (!belgeKur) f.not = [f.not, `Belgede kur bulunamadı; TCMB kuru kullanıldı (1 ${dv} = ${kurYaz(kur)} TL). Faturayı düzenleyerek kuru değiştirebilirsiniz.`].filter(Boolean).join('\n');
+    } else f.not = [f.not, `Döviz: ${dv}. Kur bulunamadı, tutarlar ${dv} olarak yazıldı; faturayı düzenleyip para birimini ve kuru seçin.`].filter(Boolean).join('\n');
+  }
   if (u.tevkifat) f.tevkifat = u.tevkifat;
   if (ekler.length) f.ekler = ekler;
   if (u.tip === 'IADE') f.not = ['İade faturası', f.not].filter(Boolean).join('\n');
@@ -5282,6 +5301,13 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
   const x = f ? JSON.parse(JSON.stringify(f)) : {tur, no: sonrakiNo(tur), tarih: bugun(), vade: '', kisiId, musteriAd: '', kalemler: ilkKalemler || [yeniKalem(D.profil === 'bireysel' ? 0 : 20)], not: '', durum: 'gonderildi', odendi: false, odemeler: [], cariyeIsle: true, stokDus: true};
   const ver = modulAcik('veresiye'), stok = modulAcik('stok');
   const teklif = x.tur === 'teklif', alisF = x.tur === 'alis';
+  // 2.14.11: dövizli fatura TL saklanır (dovizBilgi); düzenlerken döviz fiyatlarıyla açılır
+  if (!teklif && x.dovizBilgi && DOVIZLER.includes(x.dovizBilgi.doviz) && x.dovizBilgi.kur > 0) {
+    const db = x.dovizBilgi, fl = Array.isArray(db.fiyatlar) && db.fiyatlar.length === x.kalemler.length ? db.fiyatlar : null;
+    x.kalemler.forEach((k, i) => k.fiyat = fl ? fl[i] : Math.round((k.fiyat || 0) / db.kur));
+    x.doviz = db.doviz; x.kur = db.kur;
+    delete x.dovizBilgi;
+  }
   if (yeni && alisF) x.no = '';
   if (yeni && x.tur !== 'teklif' && x.kisiId && kisi(x.kisiId)?.vadeGun) { const d = tarihNesne(x.tarih); d.setDate(d.getDate() + kisi(x.kisiId).vadeGun); x.vade = tarihStr(d); }
   const m = modal(yeni ? (teklif ? 'Yeni teklif' : alisF ? 'Alış faturası' : 'Yeni fatura') : (teklif ? 'Teklifi düzenle' : 'Faturayı düzenle'), `
@@ -5296,9 +5322,9 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
       <label class="f-satir"><span>${teklif ? 'Teklif no' : 'Fatura no'}</span><input type="text" id="fNo" value="${esc(x.no)}" placeholder="${alisF ? 'Satıcının fatura no' : ''}"></label>
       <label class="f-satir"><span>Tarih</span><input type="date" id="fTarih" value="${x.tarih}"></label>
       <label class="f-satir"><span>${teklif ? 'Geçerlilik' : 'Vade'}</span><input type="date" id="fVade" value="${x.vade || ''}"></label>
-      ${teklif ? `<label class="f-satir"><span>ID / referans</span><input type="text" id="fRef" value="${esc(x.ref || '')}" placeholder="—"></label>
-      <label class="f-satir"><span>Para birimi</span><select id="fDoviz">${DOVIZLER.map(d => `<option value="${d}" ${fDoviz(x) === d ? 'selected' : ''}>${d} · ${esc(DOVIZ_AD[d])}</option>`).join('')}</select></label>
-      <label class="f-satir ${fDoviz(x) === 'TL' ? 'gizli' : ''}" id="fKurSatir"><span>Kur (1 döviz = TL)</span><input id="fKur" inputmode="decimal" value="${fDoviz(x) === 'TL' ? '' : kurYaz(teklifKur(x))}" placeholder="TCMB satış"></label>` : ''}
+      ${teklif ? `<label class="f-satir"><span>ID / referans</span><input type="text" id="fRef" value="${esc(x.ref || '')}" placeholder="—"></label>` : ''}
+      ${D.profil !== 'bireysel' || teklif ? `<label class="f-satir"><span>Para birimi</span><select id="fDoviz">${DOVIZLER.map(d => `<option value="${d}" ${fDoviz(x) === d ? 'selected' : ''}>${d} · ${esc(DOVIZ_AD[d])}</option>`).join('')}</select></label>
+      <label class="f-satir ${fDoviz(x) === 'TL' ? 'gizli' : ''}" id="fKurSatir"><span>Kur (TL)</span><input id="fKur" inputmode="decimal" value="${fDoviz(x) === 'TL' ? '' : kurYaz(teklifKur(x))}" placeholder="TCMB satış"></label>` : ''}
     </div></div></div>
     <div class="ff-kalem"><div class="bolum">Kalemler<span class="erp-yalniz ff-ipucu">Enter: sonraki hücre · son hücrede yeni satır · boş satırlar kaydedilmez</span></div>
     <div id="kalemler"></div>
@@ -5413,7 +5439,8 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
       let yeniKur = d === 'TL' ? 1 : kurAl(d);
       if (d !== 'TL' && !yeniKur) { bildir('Kur alınıyor…'); await kurGuncelle(true); yeniKur = kurAl(d); }
       if (d !== 'TL' && !yeniKur) bildir(`${d} kuru alınamadı; kuru elle yazın`, true);
-      if (eski && yeniKur) for (const k of x.kalemler) if (k.fiyat) k.fiyat = Math.round(k.fiyat * eski / yeniKur);
+      if (teklif && eski && yeniKur) for (const k of x.kalemler) if (k.fiyat) k.fiyat = Math.round(k.fiyat * eski / yeniKur);
+      else if (!teklif && x.kalemler.some(k => k.fiyat)) bildir(`Fiyatlar ${d} olarak alındı`);
       if (d === 'TL') { delete x.doviz; delete x.kur; } else { x.doviz = d; x.kur = yeniKur || 0; }
       $('#fKurSatir', m).classList.toggle('gizli', d === 'TL'); $('#fKur', m).value = d === 'TL' ? '' : kurYaz(x.kur);
       kalemCiz();
@@ -5457,8 +5484,14 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
       if (x.durum !== 'iptal') x.durum = $('#fTaslak', m).checked ? 'taslak' : 'gonderildi';
     }
     if (yeni && teklif && m._bakimEkipman) { x.ekipmanId = m._bakimEkipman; x.bakimTeklif = true; }
-    if (teklif && fDoviz(x) !== 'TL' && !(x.kur > 0)) { bildir('Döviz kuru yazın', true); return false; }
-    if (fDoviz(x) === 'TL') { delete x.doviz; delete x.kur; }
+    if (fDoviz(x) !== 'TL' && !(x.kur > 0)) { bildir('Döviz kuru yazın', true); return false; }
+    if (fDoviz(x) === 'TL') { delete x.doviz; delete x.kur; if (!teklif) delete x.dovizBilgi; }
+    else if (!teklif) {
+      const d = fDoviz(x), kur = x.kur, top = faturaHesap(x).toplam, fiyatlar = x.kalemler.map(k => k.fiyat || 0);
+      for (const k of x.kalemler) k.fiyat = Math.round((k.fiyat || 0) * kur);
+      x.dovizBilgi = {doviz: d, kur, toplam: top, fiyatlar};
+      delete x.doviz; delete x.kur;
+    }
     const sp = yeni && alisF && m._siparis && D.faturalar.find(y => y.id === m._siparis);
     if (yeni) { x.id = kimlik(); x.olusturma = Date.now(); D.faturalar.push(x); }
     else D.faturalar[D.faturalar.findIndex(y => y.id === x.id)] = x;
@@ -5797,7 +5830,7 @@ function faturaEkrani(id) {
   const yuzde = t.toplam ? Math.min(100, Math.round(odenen / t.toplam * 100)) : 0;
   h += `<div class="kart fatura-ozet"><div class="fo-ust"><div style="flex:1;min-width:0"><small>${esc(faturaTurAd(f))} · ${esc(f.no)}</small><b class="fo-ad">${esc(faturaMusteri(f))}</b>
         <span class="fo-vade ${!f.odendi && vg !== null && vg < 0 && faturaliMi(f) ? 'gider' : ''}">${ikon('saat', 'kucuk-simge')}${esc(vadeYazi)}</span></div><span class="hap ${r}" style="margin:0">${d}</span></div>
-      <div class="fo-tutar">${para(t.toplam)}</div>
+      <div class="fo-tutar">${f.dovizBilgi && f.dovizBilgi.doviz ? `${dovizPara(f.dovizBilgi.toplam, f.dovizBilgi.doviz)}<small class="fo-tl">${para(t.toplam)} · 1 ${esc(f.dovizBilgi.doviz)} = ${kurYaz(f.dovizBilgi.kur)} TL</small>` : para(t.toplam)}</div>
       ${faturaliMi(f) ? `<div class="fo-cubuk"><i style="width:${yuzde}%"></i></div>
       <div class="fo-alt"><div><small>${alis ? 'Ödenen' : 'Tahsil edilen'}</small><b class="gelir">${para(odenen)}</b></div><div style="text-align:right"><small>Kalan</small><b class="${kalan ? 'gider' : ''}">${para(kalan)}</b></div></div>` : ''}
     </div>
