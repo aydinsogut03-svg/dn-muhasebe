@@ -297,6 +297,42 @@ public class MainActivity extends Activity {
 
     /** Sayfadaki JavaScript'in "Android" adıyla çağırdığı yöntemler. */
     private class Kopru {
+        /** Günlük otomatik yedek: İndirilenler/PowerServ+/Yedek klasörüne aynı adla (haftanın günü) üzerine yazar. Yer adını, hata olursa "" döner. */
+        @JavascriptInterface
+        public String gunlukYedekYaz(String ad, String icerik) {
+            if (Build.VERSION.SDK_INT < 29) return "";
+            return gunlukYedekDosyasi(ad, icerik) ? "İndirilenler/PowerServ+/Yedek" : "";
+        }
+
+        /** TCMB döviz kurlarını (today.xml) arka planda indirir; sonuç window.kurGeldi(xml) ile sayfaya döner.
+         *  WebView'deki sayfa TCMB'ye doğrudan bağlanamaz (CORS); bu yüzden uygulama kendi bağlantısını kullanır. */
+        @JavascriptInterface
+        public void kurIste() {
+            new Thread(() -> {
+                String xml = "";
+                java.net.HttpURLConnection c = null;
+                try {
+                    c = (java.net.HttpURLConnection) new java.net.URL("https://www.tcmb.gov.tr/kurlar/today.xml").openConnection();
+                    c.setConnectTimeout(10000); c.setReadTimeout(10000);
+                    c.setRequestProperty("User-Agent", "PowerServ+");
+                    if (c.getResponseCode() == 200) {
+                        java.io.InputStream in = c.getInputStream();
+                        java.io.ByteArrayOutputStream b = new java.io.ByteArrayOutputStream();
+                        byte[] t = new byte[8192]; int n;
+                        while ((n = in.read(t)) > 0 && b.size() < 2_000_000) b.write(t, 0, n);
+                        in.close();
+                        xml = new String(b.toByteArray(), StandardCharsets.ISO_8859_1);
+                    }
+                } catch (Exception e) {
+                    xml = "";
+                } finally {
+                    if (c != null) c.disconnect();
+                }
+                final String sonuc = xml;
+                runOnUiThread(() -> { if (web != null) web.evaluateJavascript("window.kurGeldi && window.kurGeldi(" + JSONObject.quote(sonuc) + ")", null); });
+            }).start();
+        }
+
         /** Düğmeye dokununca kısa dokunma titreşimi (telefonun dokunma geri bildirimi ayarına uyar). */
         @JavascriptInterface
         public void titret() {
@@ -483,6 +519,34 @@ public class MainActivity extends Activity {
                 return "paylaşım ekranı";
             }
             return indirilenlereYaz(ad, icerik, tur) != null ? "İndirilenler/PowerServ+" : "";
+        }
+    }
+
+    /** Android 10+ : yedek dosyasını adına göre bulur (yoksa oluşturur) ve içeriğini baştan yazar. */
+    @android.annotation.TargetApi(29)
+    private boolean gunlukYedekDosyasi(String ad, String icerik) {
+        String klasor = Environment.DIRECTORY_DOWNLOADS + "/PowerServ+/Yedek/";
+        try {
+            Uri u = null;
+            try (Cursor c = getContentResolver().query(MediaStore.Downloads.EXTERNAL_CONTENT_URI, new String[]{MediaStore.MediaColumns._ID},
+                    MediaStore.MediaColumns.DISPLAY_NAME + "=? AND " + MediaStore.MediaColumns.RELATIVE_PATH + "=?", new String[]{ad, klasor}, null)) {
+                if (c != null && c.moveToFirst()) u = android.content.ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, c.getLong(0));
+            }
+            if (u == null) {
+                ContentValues d = new ContentValues();
+                d.put(MediaStore.MediaColumns.DISPLAY_NAME, ad);
+                d.put(MediaStore.MediaColumns.MIME_TYPE, "application/json");
+                d.put(MediaStore.MediaColumns.RELATIVE_PATH, klasor);
+                u = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, d);
+            }
+            if (u == null) return false;
+            try (OutputStream o = getContentResolver().openOutputStream(u, "wt")) {
+                if (o == null) return false;
+                o.write(icerik.getBytes(StandardCharsets.UTF_8));
+            }
+            return true;
+        } catch (Exception e) {
+            return false;
         }
     }
 
