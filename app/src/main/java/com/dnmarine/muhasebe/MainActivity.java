@@ -153,6 +153,8 @@ public class MainActivity extends Activity {
                 sec.addCategory(Intent.CATEGORY_OPENABLE);
                 String[] turler = p.getAcceptTypes();
                 sec.setType(turler != null && turler.length == 1 && turler[0].contains("/") ? turler[0] : "*/*");
+                // 2.19.1: Service Report'a birden çok fotoğraf
+                if (p.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE) sec.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
                 try {
                     startActivityForResult(Intent.createChooser(sec, "Dosya seç"), DOSYA_SEC);
                     return true;
@@ -246,6 +248,11 @@ public class MainActivity extends Activity {
                 if (sonuc == RESULT_OK) dosyaGeriDonus.onReceiveValue(new Uri[]{kameraUri});
                 else { try { getContentResolver().delete(kameraUri, null, null); } catch (Exception e) { } dosyaGeriDonus.onReceiveValue(null); }
                 kameraUri = null;
+            } else if (sonuc == RESULT_OK && veri != null && veri.getClipData() != null && veri.getClipData().getItemCount() > 0) {
+                android.content.ClipData cd = veri.getClipData();
+                Uri[] l = new Uri[cd.getItemCount()];
+                for (int i = 0; i < l.length; i++) l[i] = cd.getItemAt(i).getUri();
+                dosyaGeriDonus.onReceiveValue(l);
             } else dosyaGeriDonus.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(sonuc, veri));
             dosyaGeriDonus = null;
             return;
