@@ -1826,6 +1826,47 @@ body.erp .erp-form #mSerbest .yuzen{display:none}
 .ek-satir .ek-sil + .ek-sil{margin-left:6px}
 .ek-satir .ek-ac{color:var(--mavi)}
 p.dipnot .i{width:14px;height:14px;vertical-align:-2px}
+/* 2.20: servis formu iki dil, fotoğraf sayfası, kaşe, çeviri */
+.servis-kagit .sf-alan span i{display:block;font-style:normal;font-weight:500;font-size:.8em;color:#8a8a8a;line-height:1.1}
+.servis-kagit .sf-l i{font-style:normal;font-weight:500;color:#8a8a8a}
+.servis-kagit .sf-l i::before{content:' / '}
+.servis-kagit .sf-bar em{font-style:normal;font-weight:500;opacity:.85}
+.servis-kagit .sf-tablo th i,.servis-kagit .sf-ib i{display:block;font-style:normal;font-weight:500;font-size:.85em;opacity:.8}
+.servis-kagit .sf-baslik small{display:block;font-size:11px;letter-spacing:.14em;color:#5e5e5e;margin-top:1px}
+.servis-kagit .sf-beyan span{font-weight:500;opacity:.85}
+.servis-kagit .sf-foto-not{margin:3px 0 0;font-size:9.5px;color:#5e5e5e}
+.servis-kagit .sf-ia.kaseli{height:auto;min-height:60px;padding:2px}
+.servis-kagit .sf-ia.kaseli img{max-height:86px;max-width:96%}
+.kagit.sf-foto-sayfa{margin-top:16px}
+.sf-foto-sayfa .sf-cerceve{border:2px solid var(--sf);min-height:800px;display:flex;flex-direction:column;box-sizing:border-box}
+.sf-foto-sayfa .sf-fs-bar{margin:0}
+.sf-foto-sayfa .sf-fs-ust{display:flex;align-items:center;gap:12px;padding:6px 8px;border-bottom:1px solid #c5cad6}
+.sf-foto-sayfa .sf-fs-ust>img{width:96px;max-height:42px;object-fit:contain}
+.sf-foto-sayfa .sf-fs-bilgi{flex:1;min-width:0}
+.sf-foto-sayfa .sf-fs-bilgi .sf-alan span{min-width:80px}
+.sf-foto-sayfa .sf-fs-no{text-align:right;font-size:9.5px;color:#5e5e5e}
+.sf-foto-sayfa .sf-fs-no b{display:block;color:var(--sf);font-size:12px}
+.sf-foto-sayfa .sf-fotolar{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px}
+.sf-foto-sayfa .sf-fotolar.tek{grid-template-columns:1fr}
+.sf-foto-sayfa figure{margin:0;break-inside:avoid}
+.sf-foto-sayfa .sf-fc{border:1px solid #9aa3b5;background:#f4f5f8;padding:3px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.sf-foto-sayfa .sf-fc img{max-width:100%;max-height:100%;object-fit:contain}
+.sf-foto-sayfa figcaption{font-size:9.5px;color:#333;margin-top:2px}
+.sf-foto-sayfa .sf-etiket{display:inline-block;color:#fff;font-weight:700;font-size:8.5px;padding:1px 5px;margin-right:5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.sf-foto-sayfa .sf-etiket.once{background:#8a5a12}.sf-foto-sayfa .sf-etiket.sonra{background:#1d6b3a}
+.sf-foto-sayfa .sf-fs-dip{margin-top:auto;border-top:1px solid #c5cad6;padding:4px 8px;text-align:center;font-size:8px;color:#777}
+.sf-kucukler{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:0 0 8px}
+.sf-kucuk{background:var(--kart);border:1px solid var(--ayirici);border-radius:8px;padding:6px;display:flex;flex-direction:column;gap:5px;min-width:0}
+.sf-kucuk-res{aspect-ratio:4/3;background:var(--dolgu);border-radius:4px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.sf-kucuk-res img{width:100%;height:100%;object-fit:cover;display:block}
+.sf-kucuk-tur{border:0;border-radius:4px;color:#fff;font-weight:700;font-size:12px;padding:6px;min-height:32px}
+.sf-kucuk-tur.once{background:#8a5a12}.sf-kucuk-tur.sonra{background:#1d6b3a}
+.sf-kucuk .ek-sil{align-self:flex-end}
+.sf-fnot{width:100%;font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--ayirici);border-radius:6px;background:var(--kart);color:inherit;box-sizing:border-box}
+.cevir-btn{display:inline-flex;align-items:center;gap:6px;margin:6px 0 2px;padding:6px 10px;border:1px solid var(--ayirici);border-radius:6px;background:var(--kart);color:var(--mavi);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.cevir-btn svg{width:16px;height:16px}
+.eylem .grup{max-height:calc(100dvh - 110px);overflow-y:auto}
+@media print{#yazdirAlani .kagit.sf-foto-sayfa{break-before:page;page-break-before:always;margin-top:0;zoom:1}#yazdirAlani .sf-foto-sayfa .sf-cerceve{min-height:262mm}}
 </style>
 </head>
 <body>
@@ -1838,7 +1879,7 @@ p.dipnot .i{width:14px;height:14px;vertical-align:-2px}
 
 <script>
 'use strict';
-const VERSIYON = '2.18.0';
+const VERSIYON = '2.20.1';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -2062,6 +2103,8 @@ function duzelt(d) {
   const garantiEski = !d.servisAyar?.garanti6;
   d.servisAyar = {...y.servisAyar, ...d.servisAyar};
   if (garantiEski) { d.servisAyar.garantiAy = '6'; d.servisAyar.garanti6 = true; }
+  // 2.20.1: kaşe yüklüyse servis formuna varsayılan olarak basılır; 2.20.0'da kendiliğinden kaydedilen "kapalı" değerleri bir kez temizlenir.
+  if (!d.servisAyar.kase201) { for (const s of d.servisler || []) if (s.kaseBas === false) delete s.kaseBas; d.servisAyar.kase201 = true; }
   // 2.9.12: firma adında ve bilgilerinde "&" işareti kullanılmaz ("D&N" → "DN").
   d.ad = ampersandsiz(d.ad);
   for (const a in d.firma) if (typeof d.firma[a] === 'string') d.firma[a] = ampersandsiz(d.firma[a]);
@@ -2211,6 +2254,29 @@ async function kagitPdf(ad, html) {
     catch (e) { /* aşağıdaki görüntülü PDF'ye geç */ }
   }
   bildir('PDF hazırlanıyor…');
+  // 2.20: html'de birden çok kâğıt varsa (servis formu + fotoğraf sayfası) her biri ayrı sayfadan başlar
+  const parca = document.createElement('div'); parca.innerHTML = html;
+  const kagitlar = [...parca.children].map(e => e.outerHTML);
+  try {
+    const sayfalar = [];
+    for (const h of kagitlar) sayfalar.push(...await kagitSayfalari(h));
+    const pdf = pdfYaz(sayfalar, 595.28, 841.89);
+    if (window.Android && Android.belgeAc) {
+      let ikili = ''; for (let i = 0; i < pdf.length; i += 0x8000) ikili += String.fromCharCode.apply(null, pdf.subarray(i, i + 0x8000));
+      if (!Android.belgeAc(ad, btoa(ikili), 'application/pdf')) bildir('PDF kaydedilemedi', true);
+      else bildir('PDF İndirilenler/PowerServ+ klasörüne kaydedildi');
+      return;
+    }
+    const url = URL.createObjectURL(new Blob([pdf], {type: 'application/pdf'}));
+    const a = document.createElement('a'); a.href = url; a.download = ad; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    bildir('PDF indirildi');
+  } catch (e) {
+    bildir('PDF oluşturulamadı; Yazdır ile "PDF olarak kaydet" seçebilirsiniz', true);
+  }
+}
+/* Tek kâğıdı A4 JPEG sayfalarına çevirir */
+async function kagitSayfalari(html) {
   const G = 880, OLCEK = 2.4;
   const kap = document.createElement('div');
   kap.style.cssText = `position:fixed;left:-20000px;top:0;width:${G}px;background:#fff`;
@@ -2250,19 +2316,7 @@ async function kagitPdf(ad, html) {
       const b64 = p.toDataURL('image/jpeg', 0.9).split(',')[1];
       sayfalar.push({jpg: Uint8Array.from(atob(b64), ch => ch.charCodeAt(0)), w: p.width, h, x: solX, y: PH - KB - h * pxPt, cw: p.width * pxPt, ch: h * pxPt});
     }
-    const pdf = pdfYaz(sayfalar, PW, PH);
-    if (window.Android && Android.belgeAc) {
-      let ikili = ''; for (let i = 0; i < pdf.length; i += 0x8000) ikili += String.fromCharCode.apply(null, pdf.subarray(i, i + 0x8000));
-      if (!Android.belgeAc(ad, btoa(ikili), 'application/pdf')) bildir('PDF kaydedilemedi', true);
-      else bildir('PDF İndirilenler/PowerServ+ klasörüne kaydedildi');
-      return;
-    }
-    const url = URL.createObjectURL(new Blob([pdf], {type: 'application/pdf'}));
-    const a = document.createElement('a'); a.href = url; a.download = ad; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
-    bildir('PDF indirildi');
-  } catch (e) {
-    bildir('PDF oluşturulamadı; Yazdır ile "PDF olarak kaydet" seçebilirsiniz', true);
+    return sayfalar;
   } finally { kap.remove(); }
 }
 /* Görüntülü (JPEG) sayfalardan en küçük geçerli PDF dosyası. */
@@ -7347,9 +7401,9 @@ function servisFormu(s, on = {}) {
     <div class="bolum">Servis türü</div>
     <div class="cipler" id="sTurler">${Object.entries(SERVIS_TUR).map(([v, a]) => `<button type="button" class="cip ${x.turler.includes(v) ? 'secili' : ''}" data-tur="${v}">${a}</button>`).join('')}</div>
     <div class="bolum">Müşteri şikâyeti / arıza tanımı</div>
-    <div class="grup"><label class="f-satir sol"><textarea id="sSikayet" rows="3" placeholder="Müşterinin bildirdiği arıza">${esc(x.sikayet)}</textarea></label></div>
+    <div class="grup"><label class="f-satir sol"><textarea id="sSikayet" data-cevir rows="3" placeholder="Müşterinin bildirdiği arıza">${esc(x.sikayet)}</textarea></label></div>
     <div class="bolum">Tespitler ve yapılan işlemler</div>
-    <div class="grup"><label class="f-satir sol"><textarea id="sIslem" rows="5" placeholder="Tespit edilenler ve yapılan işler">${esc(x.islemler)}</textarea></label></div>
+    <div class="grup"><label class="f-satir sol"><textarea id="sIslem" data-cevir rows="5" placeholder="Tespit edilenler ve yapılan işler">${esc(x.islemler)}</textarea></label></div>
     <div class="bolum">Kullanılan parça ve malzemeler</div>
     <div id="sParcalar"></div>
     <div class="btn-grup">${stok && D.urunler.length ? `<button class="btn renkli" id="sStoktan">${ikon('kutu')} Stoktan</button>` : ''}<button class="btn renkli" id="sParcaEkle">${ikon('arti')} Parça ekle</button></div>
@@ -7365,8 +7419,13 @@ function servisFormu(s, on = {}) {
       <label class="f-satir"><span>Test süresi (dk)</span><input id="sTestSure" inputmode="numeric" value="${esc(x.testSure)}" placeholder="—"></label>
       <label class="f-satir"><span>Sonraki bakım</span><input type="date" id="sSonraki" value="${x.sonrakiBakim || ''}"></label>
       <label class="f-satir"><span>Sonraki bakım saati</span><input id="sSonrakiSaat" inputmode="decimal" value="${esc(x.sonrakiBakimSaat)}" placeholder="—"></label>
-      <label class="f-satir sol"><textarea id="sOneri" rows="3" placeholder="Öneriler">${esc(x.oneriler)}</textarea></label>
+      <label class="f-satir sol"><textarea id="sOneri" data-cevir rows="3" placeholder="Öneriler">${esc(x.oneriler)}</textarea></label>
     </div>
+    <div class="bolum">Fotoğraflar / Photographs</div>
+    <div id="sFotolar"></div>
+    <div class="bolum">Kaşe / imza</div>
+    <div class="grup"><label class="f-satir"><span style="flex:1">Firma kaşesini forma bas</span>${anahtar('sKase', x.kaseBas !== false)}</label></div>
+    <p class="dipnot">${D.firma.imza ? 'Kaşe servis teknisyeni imza kutusuna basılır.' : 'Kaşe yüklenmemiş: Ayarlar > Servis formu > Kaşe / imza.'}</p>
     <p class="dipnot">Servis formunda fiyat yer almaz. Fiyatlandırma için servis ekranındaki "Faturala" taslak fatura oluşturur.</p>`,
     {kaydet: kaydetS, kaydetAd: yeni ? 'Oluştur' : 'Kaydet', tam: true});
 
@@ -7400,6 +7459,8 @@ function servisFormu(s, on = {}) {
     });
   };
   parcaCiz(); iscilikCiz();
+  servisFotoAlani($('#sFotolar', m), x, () => {}, saltOkunur());
+  ceviriBagla(m);
   $('#sParcaEkle', m).onclick = () => { x.parcalar.push({ad: '', parcaNo: '', birim: 'adet', adet: 1, durum: 'yeni'}); parcaCiz(); $$('[data-p] input[data-a=ad]', m).pop().focus(); };
   if ($('#sStoktan', m)) $('#sStoktan', m).onclick = () => urunSec(u => { x.parcalar.push({urunId: u.id, ad: u.ad, parcaNo: u.kod || '', birim: u.birim, adet: 1, durum: 'yeni'}); parcaCiz(); });
   $('#sIsEkle', m).onclick = () => { const o = x.iscilik[x.iscilik.length - 1]; x.iscilik.push({teknisyen: o?.teknisyen || '', tarih: $('#sTarih', m).value || bugun(), is: '', bas: '', bit: '', sure: 0}); iscilikCiz(); };
@@ -7440,6 +7501,8 @@ function servisFormu(s, on = {}) {
     x.teslim = $('#sTeslim', m).value; x.testSure = $('#sTestSure', m).value.trim();
     x.sonrakiBakim = $('#sSonraki', m).value; x.sonrakiBakimSaat = $('#sSonrakiSaat', m).value.trim(); x.oneriler = $('#sOneri', m).value.trim();
     if ($('#sStokDus', m)) x.stokDus = $('#sStokDus', m).checked;
+    x.kaseBas = $('#sKase', m).checked;
+    if (!x.fotolar?.length) delete x.fotolar;
     const e = ekipman(x.ekipmanId);
     if (e && x.calismaSaati > (e.saat || 0)) e.saat = x.calismaSaati;
     if (yeni) { x.id = kimlik(); x.olusturma = Date.now(); D.servisler.push(x); }
@@ -7478,7 +7541,7 @@ function servisEkrani1(id) {
     <div class="bolum">Servis formu önizleme</div>
     <div class="kagit-kap">${servisKagit(s)}</div>`;
   $('#icerik').innerHTML = h;
-  { const kap = $('.kagit-kap'), w = kap.clientWidth; if (w && w < 600) $('.servis-kagit', kap).style.zoom = (w / 600).toFixed(3); }
+  { const kap = $('.kagit-kap'), w = kap.clientWidth; if (w && w < 600) $$('.servis-kagit', kap).forEach(k => { k.style.zoom = (w / 600).toFixed(3); }); resimDoldur(kap); }
   const yenile = () => { servisTuret(s); kaydet(); ciz(); };
   $('#sDuzenle').onclick = () => servisFormu(s);
   if ($('#sBitir')) $('#sBitir').onclick = () => { s.durum = 'tamam'; s.bitis = bugun(); if (!s.teslim) s.teslim = 'calisir'; yenile(); bildir('Servis tamamlandı'); };
@@ -7488,8 +7551,8 @@ function servisEkrani1(id) {
     if (v === 'tamam') s.bitis = bugun();
     s.durum = v; yenile(); bildir(SERVIS_DURUM[v][0]);
   };
-  $('#sPdf').onclick = () => yazdir(`Servis formu ${s.no}`, servisKagit(s));
-  $('#sPdfIndir').onclick = () => kagitPdf(`Servis-formu-${s.no}.pdf`, servisKagit(s));
+  $('#sPdf').onclick = () => servisCikti(s, 'yazdir');
+  $('#sPdfIndir').onclick = () => servisCikti(s, 'pdf');
   if ($('#sFatura')) $('#sFatura').onclick = () => servisFaturala(s);
   if ($('#sFatGit')) $('#sFatGit').onclick = () => git('fatura/' + f.id);
   if ($('#sWa')) $('#sWa').onclick = () => {
@@ -7502,11 +7565,12 @@ function servisEkrani1(id) {
     if (v === 'yeni') yeniServis({kisiId: s.kisiId, ekipmanId: s.ekipmanId});
     else if (v === 'kopya') {
       const y = {...JSON.parse(JSON.stringify(s)), id: kimlik(), no: sonrakiServisNo(), tarih: bugun(), durum: 'acik', olusturma: Date.now()};
-      delete y.imzaMusteri; delete y.imzaTeknisyen; delete y.faturaId; delete y.bitis;
+      delete y.imzaMusteri; delete y.imzaTeknisyen; delete y.faturaId; delete y.bitis; delete y.fotolar;
       D.servisler.push(y); servisTuret(y); kaydet(); bildir('Kopya oluşturuldu'); git('servis/' + y.id);
     } else if (v === 'sil') {
       if (!await onay(`${s.no} silinsin mi?`, 'Stoktan düşülen parçalar stoğa geri döner. Oluşturulan fatura silinmez.')) return;
       turetilenleriSil(s.id);
+      for (const f of s.fotolar || []) belgeSil(f.id);
       D.servisler = D.servisler.filter(y => y.id !== s.id);
       for (const y of D.faturalar) if (y.servisId === s.id) delete y.servisId;
       kaydet(); bildir('Silindi'); git('servis', true);
@@ -7888,7 +7952,7 @@ function izgara(kap, {kolonlar, satirlar, salt = false, satirSinif = () => '', d
 }
 
 /* --- Servis fişi penceresi --- */
-const FIS_SEKMELER = [['genel', 'Genel Bilgiler'], ['ariza', 'Arıza'], ['islem', 'Servis İşlemleri'], ['dis', 'Dış Servis'], ['sonuc', 'Sonuç ve Teslim'], ['bag', 'Bağlantılar'], ['form', 'Form Önizleme']];
+const FIS_SEKMELER = [['genel', 'Genel Bilgiler'], ['ariza', 'Arıza'], ['islem', 'Servis İşlemleri'], ['dis', 'Dış Servis'], ['sonuc', 'Sonuç ve Teslim'], ['foto', 'Fotoğraflar'], ['bag', 'Bağlantılar'], ['form', 'Form Önizleme']];
 const simdiYerel = () => { const d = new Date(); return `${tarihStr(d)}T${iki(d.getHours())}:${iki(d.getMinutes())}`; };
 const zamanYaz = z => z ? `${tarihYaz(z.slice(0, 10), true)} ${z.slice(11, 16)}` : '';
 function servisFisi(id) {
@@ -7992,9 +8056,9 @@ function servisFisi(id) {
       if ($('#fkCariSil', g)) $('#fkCariSil', g).onclick = () => { x.musteriAd = x.musteriAd || k?.ad || ''; x.kisiId = null; degis(); ciz(); };
     },
     ariza: g => {
-      g.innerHTML = `<div class="fk-ikili"><fieldset class="fk"><legend>Müşteri şikâyeti / arıza tanımı</legend><textarea data-f="sikayet" rows="12" placeholder="Müşterinin bildirdiği arıza">${esc(x.sikayet)}</textarea></fieldset>
-        <fieldset class="fk"><legend>Tespitler ve yapılan işlemler</legend><textarea data-f="islemler" rows="12" placeholder="Tespit edilenler ve yapılan işler (servis formuna yazılır)">${esc(x.islemler)}</textarea></fieldset></div>`;
-      alanBagla(g);
+      g.innerHTML = `<div class="fk-ikili"><fieldset class="fk"><legend>Müşteri şikâyeti / arıza tanımı</legend><textarea data-f="sikayet" data-cevir rows="12" placeholder="Müşterinin bildirdiği arıza">${esc(x.sikayet)}</textarea></fieldset>
+        <fieldset class="fk"><legend>Tespitler ve yapılan işlemler</legend><textarea data-f="islemler" data-cevir rows="12" placeholder="Tespit edilenler ve yapılan işler (servis formuna yazılır)">${esc(x.islemler)}</textarea></fieldset></div>`;
+      alanBagla(g); ceviriBagla(g);
     },
     islem: g => {
       const stok = modulAcik('stok');
@@ -8105,6 +8169,7 @@ function servisFisi(id) {
           ${S('Teslim durumu', `<select data-f="teslim"><option value="">—</option>${Object.entries(TESLIM).map(([v, a]) => `<option value="${v}" ${v === x.teslim ? 'selected' : ''}>${a}</option>`).join('')}</select>`)}
           ${S('Test süresi (dk)', G('testSure'))}
           <div class="fk-satir ust"><label>Test / deneme</label>${kutular('testler', TESTLER)}</div>
+          <div class="fk-satir"><label>Kaşe / imza</label><div class="fk-kutular"><label><input type="checkbox" data-f="kaseBas" ${x.kaseBas !== false ? 'checked' : ''}><span>Firma kaşesini forma bas${D.firma.imza ? '' : ' (önce Ayarlar > Servis formu > Kaşe / imza)'}</span></label></div></div>
         </fieldset>
         <fieldset class="fk"><legend>Sonraki bakım</legend>${S('Bakım tarihi', G('sonrakiBakim', {tip: 'date'}))}${S('Bakım saati', G('sonrakiBakimSaat', {ph: 'Çalışma saati'}))}</fieldset>
         <fieldset class="fk"><legend>Fiyatlandırma</legend>
@@ -8112,8 +8177,12 @@ function servisFisi(id) {
           ${S('İşçilik KDV %', `<input type="text" data-f="iscilikKdv" data-t="sayi" data-bos="sil" value="${esc(x.iscilikKdv ?? '')}" placeholder="20" inputmode="decimal">`)}
           <p class="fk-not">Fiyatlar yalnız bu ekranda ve faturada görünür; servis formu fiyatsızdır.</p>
         </fieldset></div>
-        <fieldset class="fk"><legend>Öneriler</legend><textarea data-f="oneriler" rows="5" placeholder="Müşteriye öneriler (servis formuna yazılır)">${esc(x.oneriler)}</textarea></fieldset>`;
-      alanBagla(g);
+        <fieldset class="fk"><legend>Öneriler</legend><textarea data-f="oneriler" data-cevir rows="5" placeholder="Müşteriye öneriler (servis formuna yazılır)">${esc(x.oneriler)}</textarea></fieldset>`;
+      alanBagla(g); ceviriBagla(g);
+    },
+    foto: g => {
+      g.innerHTML = `<fieldset class="fk"><legend>Fotoğraflar / Photographs</legend><div id="fkFoto"></div></fieldset>`;
+      servisFotoAlani($('#fkFoto', g), x, degis, ro);
     },
     bag: g => {
       const tk = x.teklifRef && D.faturalar.find(y => y.tur === 'teklif' && y.no === x.teklifRef);
@@ -8133,6 +8202,7 @@ function servisFisi(id) {
     },
     form: g => {
       g.innerHTML = `<div class="kagit-kap">${servisKagit(x)}</div>`;
+      resimDoldur(g);
     }
   };
   SEKME[sk]($('#fisGovde'));
@@ -8177,12 +8247,12 @@ function servisFisi(id) {
       if (t.kirli) { if (!await onay('Önce fiş kaydedilsin mi?', 'Fatura, fişin kayıtlı hâlinden oluşturulur.', 'Kaydet ve faturala')) return; if (!servisFisKaydet(t, id, true)) return; }
       const s = servis(id); if (s) { taslakSil(yol); servisFaturala(s); }
     },
-    pdf: () => kagitPdf(`Servis-formu-${x.no}.pdf`, servisKagit(x)),
-    yazdir: () => yazdir(`Servis formu ${x.no}`, servisKagit(x)),
+    pdf: () => servisCikti(x, 'pdf'),
+    yazdir: () => servisCikti(x, 'yazdir'),
     kopya: () => {
       const s = servis(id); if (!s) return;
       const y = {...kopya(s), id: kimlik(), no: sonrakiServisNo(), isEmriNo: sonrakiIsEmriNo(), tarih: bugun(), durum: 'acik', olusturma: Date.now()};
-      for (const a of ['imzaMusteri', 'imzaTeknisyen', 'faturaId', 'bitis', 'giris', 'teslimZaman']) delete y[a];
+      for (const a of ['imzaMusteri', 'imzaTeknisyen', 'faturaId', 'bitis', 'giris', 'teslimZaman', 'fotolar']) delete y[a];
       for (const w of y.iscilik) w.durum = 'yapilacak';
       D.servisler.push(y); servisTuret(y); kaydet(); bildir('Kopya oluşturuldu'); git('servis/' + y.id);
     },
@@ -8190,6 +8260,7 @@ function servisFisi(id) {
       const s = servis(id); if (!s) return;
       if (!await onay(`${s.no} silinsin mi?`, 'Stoktan düşülen parçalar stoğa geri döner. Oluşturulan fatura silinmez.')) return;
       turetilenleriSil(s.id);
+      for (const f of s.fotolar || []) belgeSil(f.id);
       D.servisler = D.servisler.filter(y => y.id !== s.id);
       for (const y of D.faturalar) if (y.servisId === s.id) delete y.servisId;
       kaydet(); taslakSil(yol); fisKilitBirak(yol);
@@ -8415,48 +8486,234 @@ function servisYasal() {
     `Uyuşmazlıklarda ${D.servisAyar.mahkeme || 'İstanbul'} Mahkemeleri ve İcra Daireleri yetkilidir. Tüketici işlemlerinde 6502 sayılı Tüketicinin Korunması Hakkında Kanun hükümleri saklıdır.`
   ];
 }
-function servisKagit(s) {
+function servisKagit(s, resim = {}) {
   const e = ekipman(s.ekipmanId) || s.ekipmanKopya || {}, k = s.kisiId && kisi(s.kisiId);
-  const alan = (l, v) => `<div class="sf-alan"><span>${esc(l)}</span><b>${esc(v || '')}</b></div>`;
-  const bar = t => `<div class="sf-bar">${esc(t)}</div>`;
+  // 2.20: başlıklar Türkçe + İngilizce ("Türkçe | English")
+  const iki = t => { const [tr, en] = String(t).split(' | '); return `${esc(tr)}${en ? `<i>${esc(en)}</i>` : ''}`; };
+  const alan = (l, v) => `<div class="sf-alan"><span>${iki(l)}</span><b>${esc(v || '')}</b></div>`;
+  const bar = t => { const [tr, en] = t.split(' | '); return `<div class="sf-bar">${esc(tr)}${en ? `<em> / ${esc(en)}</em>` : ''}</div>`; };
   const metin = (t, n) => `<div class="sf-metin" style="min-height:${n * 1.5}em">${esc(t || '').replace(/\n/g, '<br>')}</div>`;
+  const ik = (tr, en) => `${tr} / ${en}`;
   const parca = [...s.parcalar]; while (parca.length < 3) parca.push(null);
   const iscG = s.iscilik.filter(w => w.durum !== 'iptal'), isc = [...iscG]; while (isc.length < 2) isc.push(null);
   const F = [['ADRES', firmaAlan('adres')], [(firmaAlan('vd') ? firmaAlan('vd').toLocaleUpperCase('tr-TR') + ' VD' : 'VD'), firmaAlan('vno')], ['MERSİS', firmaAlan('mersis')], ['TEL', firmaAlan('tel')], ['SERVİS', firmaAlan('servisTel')], ['E-POSTA', firmaAlan('eposta')], ['WEB', firmaAlan('web')]].filter(([, v]) => v);
+  const th = (t, w) => `<th${w ? ` style="width:${w}"` : ''}>${iki(t)}</th>`;
+  const logo = D.firma.logo || LOGO;
+  const fl = [...(s.fotolar || []).filter(f => f.tur === 'once'), ...(s.fotolar || []).filter(f => f.tur !== 'once')];
+  const n = fl.length, yuk = n === 1 ? 600 : n === 2 ? 300 : n <= 4 ? 270 : n <= 6 ? 178 : 132;
+  const img = f => resim[f.id] ? `<img src="${resim[f.id]}" alt="">` : `<img data-fres="${esc(f.id)}" alt="">`;
+  const fotoSayfa = n ? `<div class="kagit servis-kagit sf-foto-sayfa"><div class="sf-cerceve">
+      <div class="sf-bar sf-fs-bar">FOTOĞRAFLAR<em> / PHOTOGRAPHS</em></div>
+      <div class="sf-fs-ust"><img src="${logo}" alt=""><div class="sf-fs-bilgi">${alan('Müşteri | Customer', servisMusteri(s))}${alan('Tekne | Vessel', s.tekne || e.tekne)}${alan('Makine | Equipment', [EKIPMAN_TUR[e.tur] && e.tur !== 'diger' ? EKIPMAN_TUR[e.tur] : e.turDiger, e.marka, e.model].filter(Boolean).join(' · '))}</div>
+        <div class="sf-fs-no"><b>${esc(s.no)}</b><span>${esc(tarihYaz(s.tarih, true))}</span></div></div>
+      <div class="sf-fotolar${n <= 2 ? ' tek' : ''}">${fl.map((f, i) => `<figure><div class="sf-fc" style="height:${yuk}px">${img(f)}</div>
+        <figcaption><span class="sf-etiket ${f.tur === 'once' ? 'once' : 'sonra'}">${f.tur === 'once' ? 'ÖNCESİ / BEFORE' : 'SONRASI / AFTER'}</span><b>${i + 1}</b>${f.not ? ' – ' + esc(f.not) : ''}</figcaption></figure>`).join('')}</div>
+      <div class="sf-fs-dip">${esc(firmaUnvan())} · Servis Formu / Service Report ${esc(s.no)} · Fotoğraflar / Photographs</div></div></div>` : '';
   return `<div class="kagit servis-kagit">
     <div class="sf-ust"><div class="sf-firma"><b>${esc(firmaUnvan()).replace(/ (Makine)/, '<br>$1')}</b>
       <table>${F.map(([a, v]) => `<tr><td>${esc(a)}:</td><td>${esc(v)}</td></tr>`).join('')}</table></div>
-      <div class="sf-sag"><img class="sf-logo" src="${D.firma.logo || LOGO}" alt="">
-      <table><tr><td>Tarih:</td><td>${esc(tarihYaz(s.tarih, true))}</td></tr><tr><td>Servis Form No:</td><td>${esc(s.no)}</td></tr><tr><td>İş Emri No:</td><td>${esc(s.isEmriNo)}</td></tr><tr><td>Teklif Ref. No:</td><td>${esc(s.teklifRef)}</td></tr></table></div></div>
-    <h2 class="sf-baslik">SERVİS FORMU</h2>
-    ${bar('MÜŞTERİ VE TEKNE BİLGİLERİ')}
-    <div class="sf-ikili">${alan('Firma / Müşteri', servisMusteri(s))}${alan('Yetkili Kişi', s.yetkili)}${alan('Telefon', s.tel || k?.tel)}${alan('E-posta', s.eposta)}${alan('Tekne Adı', s.tekne || e.tekne)}${alan('Bağlama Limanı', s.liman || e.liman)}${alan('Servis Yeri', s.servisYeri)}${alan('Servis Tarihi', tarihYaz(s.tarih, true))}</div>
-    ${bar('MAKİNE / EKİPMAN BİLGİLERİ')}
-    <div class="sf-satir"><span class="sf-l">Ekipman:</span>${Object.entries(EKIPMAN_TUR).map(([v, a]) => kutu(e.tur === v, v === 'diger' && e.tur === 'diger' && e.turDiger ? 'Diğer: ' + e.turDiger : a)).join('')}</div>
-    <div class="sf-ikili">${alan('Marka / Model', [e.marka, e.model].filter(Boolean).join(' / '))}${alan('Seri No', e.seriNo)}${alan('Motor No', e.motorNo)}${alan('Çalışma Saati', s.calismaSaati ? sayiFmt(s.calismaSaati) : '')}</div>
-    ${bar('SERVİS TÜRÜ')}
-    <div class="sf-satir">${Object.entries(SERVIS_TUR).map(([v, a]) => kutu(s.turler.includes(v), a)).join('')}</div>
-    ${bar('MÜŞTERİ ŞİKÂYETİ / ARIZA TANIMI')}${metin(s.sikayet, 2)}
-    ${bar('TESPİTLER VE YAPILAN İŞLEMLER')}${metin(s.islemler, 4)}
-    ${bar('KULLANILAN PARÇA VE MALZEMELER')}
-    <table class="sf-tablo"><thead><tr><th style="width:18%">Parça No</th><th style="width:9%">Birim</th><th>Açıklama</th><th style="width:8%">Adet</th><th style="width:22%">Durum (Yeni / Revizyon / Müşteri Malı)</th></tr></thead>
-      <tbody>${parca.map(p => p ? `<tr><td>${esc(p.parcaNo)}</td><td>${esc(p.birim)}</td><td>${esc(p.ad)}</td><td class="sg">${sayiFmt(p.adet)}</td><td>${esc(PARCA_DURUM[p.durum] || '')}</td></tr>` : '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>').join('')}</tbody></table>
-    ${bar('İŞÇİLİK KAYDI')}
-    <table class="sf-tablo"><thead><tr><th style="width:24%">Teknisyen</th><th style="width:13%">Tarih</th><th>Yapılan İş</th><th style="width:10%">Başlangıç</th><th style="width:9%">Bitiş</th><th style="width:10%">Süre (Saat)</th></tr></thead>
+      <div class="sf-sag"><img class="sf-logo" src="${logo}" alt="">
+      <table><tr><td>Tarih / Date:</td><td>${esc(tarihYaz(s.tarih, true))}</td></tr><tr><td>Servis Form No / Report No:</td><td>${esc(s.no)}</td></tr><tr><td>İş Emri No / Job No:</td><td>${esc(s.isEmriNo)}</td></tr><tr><td>Teklif Ref. / Quotation Ref.:</td><td>${esc(s.teklifRef)}</td></tr></table></div></div>
+    <h2 class="sf-baslik">SERVİS FORMU<small>SERVICE REPORT</small></h2>
+    ${bar('MÜŞTERİ VE TEKNE BİLGİLERİ | CUSTOMER AND VESSEL')}
+    <div class="sf-ikili">${alan('Firma / Müşteri | Customer', servisMusteri(s))}${alan('Yetkili Kişi | Contact', s.yetkili)}${alan('Telefon | Phone', s.tel || k?.tel)}${alan('E-posta | E-mail', s.eposta)}${alan('Tekne Adı | Vessel', s.tekne || e.tekne)}${alan('Bağlama Limanı | Port', s.liman || e.liman)}${alan('Servis Yeri | Place of Service', s.servisYeri)}${alan('Servis Tarihi | Service Date', tarihYaz(s.tarih, true))}</div>
+    ${bar('MAKİNE / EKİPMAN BİLGİLERİ | EQUIPMENT')}
+    <div class="sf-satir"><span class="sf-l">${iki('Ekipman | Equipment')}:</span>${Object.entries(EKIPMAN_TUR).map(([v, a]) => kutu(e.tur === v, v === 'diger' && e.tur === 'diger' && e.turDiger ? 'Diğer / Other: ' + e.turDiger : ik(a, EKIPMAN_TUR_EN[v]))).join('')}</div>
+    <div class="sf-ikili">${alan('Marka / Model | Maker / Model', [e.marka, e.model].filter(Boolean).join(' / '))}${alan('Seri No | Serial No', e.seriNo)}${alan('Motor No | Engine No', e.motorNo)}${alan('Çalışma Saati | Running Hours', s.calismaSaati ? sayiFmt(s.calismaSaati) : '')}</div>
+    ${bar('SERVİS TÜRÜ | TYPE OF SERVICE')}
+    <div class="sf-satir">${Object.entries(SERVIS_TUR).map(([v, a]) => kutu(s.turler.includes(v), ik(a, SERVIS_TUR_EN[v]))).join('')}</div>
+    ${bar('MÜŞTERİ ŞİKÂYETİ / ARIZA TANIMI | CUSTOMER COMPLAINT')}${metin(s.sikayet, 2)}
+    ${bar('TESPİTLER VE YAPILAN İŞLEMLER | FINDINGS AND WORK DONE')}${metin(s.islemler, 4)}
+    ${bar('KULLANILAN PARÇA VE MALZEMELER | SPARE PARTS USED')}
+    <table class="sf-tablo"><thead><tr>${th('Parça No | Part No', '18%')}${th('Birim | Unit', '9%')}${th('Açıklama | Description')}${th('Adet | Qty', '8%')}${th('Durum | Condition', '22%')}</tr></thead>
+      <tbody>${parca.map(p => p ? `<tr><td>${esc(p.parcaNo)}</td><td>${esc(p.birim)}</td><td>${esc(p.ad)}</td><td class="sg">${sayiFmt(p.adet)}</td><td>${esc(PARCA_DURUM[p.durum] ? ik(PARCA_DURUM[p.durum], PARCA_DURUM_EN[p.durum]) : '')}</td></tr>` : '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>').join('')}</tbody></table>
+    ${bar('İŞÇİLİK KAYDI | WORKING TIME')}
+    <table class="sf-tablo"><thead><tr>${th('Teknisyen | Technician', '24%')}${th('Tarih | Date', '13%')}${th('Yapılan İş | Work Done')}${th('Başlangıç | Start', '10%')}${th('Bitiş | Finish', '9%')}${th('Süre (Saat) | Hours', '10%')}</tr></thead>
       <tbody>${isc.map(w => w ? `<tr><td>${esc(w.teknisyen)}</td><td>${w.tarih ? esc(tarihYaz(w.tarih, true)) : ''}</td><td>${esc(w.is)}</td><td>${esc(w.bas)}</td><td>${esc(w.bit)}</td><td class="sg">${w.sure ? sayiFmt(w.sure) : ''}</td></tr>` : '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>').join('')}
-      ${iscG.length > 1 ? `<tr class="top"><td colspan="5">Toplam</td><td class="sg">${sayiFmt(iscilikSaat(s))}</td></tr>` : ''}</tbody></table>
-    ${bar('SONUÇ VE ÖNERİLER')}
-    <div class="sf-satir"><span class="sf-l">Teslim Durumu:</span>${Object.entries(TESLIM).map(([v, a]) => kutu(s.teslim === v, a)).join('')}</div>
-    <div class="sf-satir"><span class="sf-l">Test / Deneme:</span>${Object.entries(TESTLER).map(([v, a]) => kutu(s.testler.includes(v), a)).join('')}<span class="sf-kutu">Test süresi: ${s.testSure ? esc(s.testSure) : '______'} dk</span></div>
-    <div class="sf-ikili">${alan('Sonraki Bakım', s.sonrakiBakim ? tarihYaz(s.sonrakiBakim, true) : '')}${alan('Sonraki Bakım Saati', s.sonrakiBakimSaat)}</div>
-    <div class="sf-satir" style="align-items:flex-start"><span class="sf-l">Öneriler:</span></div>${metin(s.oneriler, 2)}
-    ${bar('YASAL BİLGİLENDİRME VE SERVİS ŞARTLARI')}
+      ${iscG.length > 1 ? `<tr class="top"><td colspan="5">Toplam / Total</td><td class="sg">${sayiFmt(iscilikSaat(s))}</td></tr>` : ''}</tbody></table>
+    ${bar('SONUÇ VE ÖNERİLER | RESULT AND RECOMMENDATIONS')}
+    <div class="sf-satir"><span class="sf-l">${iki('Teslim Durumu | Delivery')}:</span>${Object.entries(TESLIM).map(([v, a]) => kutu(s.teslim === v, ik(a, TESLIM_EN[v]))).join('')}</div>
+    <div class="sf-satir"><span class="sf-l">${iki('Test / Deneme | Tests')}:</span>${Object.entries(TESTLER).map(([v, a]) => kutu(s.testler.includes(v), ik(a, TESTLER_EN[v]))).join('')}<span class="sf-kutu">Test süresi / Duration: ${s.testSure ? esc(s.testSure) : '______'} dk / min</span></div>
+    <div class="sf-ikili">${alan('Sonraki Bakım | Next Service', s.sonrakiBakim ? tarihYaz(s.sonrakiBakim, true) : '')}${alan('Sonraki Bakım Saati | Next Service Hours', s.sonrakiBakimSaat)}</div>
+    <div class="sf-satir" style="align-items:flex-start"><span class="sf-l">${iki('Öneriler | Recommendations')}:</span></div>${metin(s.oneriler, 2)}
+    ${n ? `<p class="sf-foto-not">Fotoğraflar / Photographs: ${n} adet, 2. sayfada / see page 2.</p>` : ''}
+    ${bar('YASAL BİLGİLENDİRME VE SERVİS ŞARTLARI | TERMS AND CONDITIONS')}
     <ol class="sf-yasal">${servisYasal().map(t => `<li>${esc(t)}</li>`).join('')}</ol>
-    <p class="sf-beyan">Yukarıdaki işlerin yapıldığını, ekipmanı belirtilen durumda teslim aldığımı ve yasal bilgilendirmeyi okuyup kabul ettiğimi beyan ederim.</p>
-    <div class="sf-imzalar"><div><div class="sf-ib">SERVİS TEKNİSYENİ (AD SOYAD / İMZA)</div><div class="sf-ia"></div><small>Tarih / Saat: ____/____/________   ____:____</small></div>
-      <div><div class="sf-ib">MÜŞTERİ / YETKİLİ (AD SOYAD / KAŞE İMZA)</div><div class="sf-ia"></div><small>Tarih / Saat: ____/____/________   ____:____</small></div></div>
-    <div class="sf-dip">${esc(firmaUnvan())} · Servis Formu · ${esc(s.no)}</div>
-  </div>`;
+    <p class="sf-beyan">Yukarıdaki işlerin yapıldığını, ekipmanı belirtilen durumda teslim aldığımı ve yasal bilgilendirmeyi okuyup kabul ettiğimi beyan ederim.<br><span>I confirm that the above work has been carried out and the equipment has been received in the stated condition.</span></p>
+    <div class="sf-imzalar"><div><div class="sf-ib">SERVİS TEKNİSYENİ (AD SOYAD / İMZA)<i>SERVICE ENGINEER (NAME / SIGNATURE)</i></div><div class="sf-ia${s.kaseBas !== false && D.firma.imza ? ' kaseli' : ''}">${s.kaseBas !== false && D.firma.imza ? `<img src="${D.firma.imza}" alt="">` : ''}</div><small>Tarih / Saat (Date / Time): ____/____/________   ____:____</small></div>
+      <div><div class="sf-ib">MÜŞTERİ / YETKİLİ (AD SOYAD / KAŞE İMZA)<i>CUSTOMER / CHIEF ENGINEER (NAME / STAMP / SIGNATURE)</i></div><div class="sf-ia"></div><small>Tarih / Saat (Date / Time): ____/____/________   ____:____</small></div></div>
+    <div class="sf-dip">${esc(firmaUnvan())} · Servis Formu / Service Report · ${esc(s.no)}</div>
+  </div>${fotoSayfa}`;
+}
+/* ================= 2.20: Servis fotoğrafları ve açıklama çevirisi =================
+   Fotoğraflar belge eki olarak cihazda (IndexedDB) durur, kayıtta s.fotolar = [{id, ad, tip, boyut, tur: once|sonra, not}].
+   Servis formu PDF'inde 2. sayfada çerçeveli fotoğraf sayfası olarak basılır. */
+const EKIPMAN_TUR_EN = {ana: 'Main engine', jenerator: 'Generator', sanziman: 'Gearbox', pervane: 'Propeller / Shaft', elektrik: 'Electrical / Electronic', diger: 'Other'};
+const SERVIS_TUR_EN = {periyodik: 'Periodic maintenance', ariza: 'Repair', garanti: 'Under warranty', montaj: 'Installation / Commissioning', ekspertiz: 'Survey / Inspection', acil: 'Emergency call'};
+const PARCA_DURUM_EN = {yeni: 'New', revizyon: 'Overhauled', musteri: 'Customer supplied'};
+const TESLIM_EN = {calisir: 'Delivered in working order', kismen: 'Partially completed', parca: 'Awaiting spare parts', onay: 'Awaiting customer approval'};
+const TESTLER_EN = {rolanti: 'Idle test', yuk: 'Load test', seyir: 'Sea trial', kacak: 'Leak check'};
+function dosyalarSec(accept) {
+  return new Promise(coz => {
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = accept; inp.multiple = true;
+    inp.onchange = () => coz([...(inp.files || [])]);
+    inp.click();
+  });
+}
+/* Fotoğraf ekle: kamerayla tek, galeriden birden çok (en çok 20) */
+async function servisFotoSec(kamera) {
+  const l = kamera ? [await dosyaSec('image/*', true)].filter(Boolean) : (await dosyalarSec('image/*')).slice(0, 20), sonuc = [];
+  for (const f of l) {
+    if (!f.type.startsWith('image/')) continue;
+    let veri;
+    try { veri = await resimKucult(await dataUrlOku(f)); } catch (e) { bildir('Fotoğraf okunamadı', true); continue; }
+    const ek = {id: kimlik(), ad: (f.name || '').trim() || 'servis-' + bugun() + '.jpg', tip: 'resim', boyut: Math.round(veri.length * .75)};
+    try { await belgeYaz({...ek, hesap: H.aktif, veri, tarih: Date.now(), gonderildi: false}); } catch (e) { bildir('Kaydedilemedi. Cihaz depolaması dolu olabilir.', true); break; }
+    sonuc.push(ek);
+  }
+  return sonuc;
+}
+async function servisResimler(s) {
+  const o = {};
+  for (const f of s.fotolar || []) { try { const b = await belgeOku(f.id); if (b && belgeVeriGecerli(b)) o[f.id] = b.veri; } catch (e) {} }
+  return o;
+}
+/* Önizlemede fotoğraflar sonradan doldurulur */
+function resimDoldur(kok) {
+  $$('img[data-fres]', kok).forEach(async img => {
+    if (img.getAttribute('src')) return;
+    const b = await belgeOku(img.dataset.fres).catch(() => null);
+    if (b && belgeVeriGecerli(b)) img.src = b.veri; else img.replaceWith(Object.assign(document.createElement('small'), {textContent: 'Fotoğraf bu cihazda yok'}));
+  });
+}
+async function servisCikti(s, tur) {
+  const html = servisKagit(s, await servisResimler(s));
+  if (tur === 'pdf') kagitPdf(`Servis-formu-${s.no}.pdf`, html); else yazdir(`Servis formu ${s.no}`, html);
+}
+/* Fotoğraf alanı: telefondaki formda ve PC fişinde aynı. degisti() kaydı kirli işaretler. */
+function servisFotoAlani(kok, x, degisti, ro) {
+  x.fotolar ||= [];
+  const ciz1 = () => {
+    kok.innerHTML = `<div class="sf-kucukler">${x.fotolar.length ? x.fotolar.map((f, i) => `<div class="sf-kucuk">
+        <div class="sf-kucuk-res"><img data-fres="${esc(f.id)}" alt=""></div>
+        <button type="button" class="sf-kucuk-tur ${f.tur === 'once' ? 'once' : 'sonra'}" data-ftur="${i}" ${ro ? 'disabled' : ''}>${f.tur === 'once' ? 'Öncesi / Before' : 'Sonrası / After'}</button>
+        <input type="text" class="sf-fnot" data-fnot="${i}" value="${esc(f.not || '')}" placeholder="Açıklama / Caption" ${ro ? 'disabled' : ''}>
+        ${ro ? '' : `<button type="button" class="ek-sil" data-fsil="${i}">Kaldır</button>`}</div>`).join('') : '<p class="dipnot">Fotoğraf yok. Öncesi ya da Sonrası ile ekleyin; birden çok fotoğraf seçebilirsiniz.</p>'}</div>
+      ${ro ? '' : `<div class="btn-grup"><button type="button" class="btn renkli" data-fekle="once">${ikon('kamera')} Öncesi / Before</button><button type="button" class="btn renkli" data-fekle="sonra">${ikon('kamera')} Sonrası / After</button></div>`}
+      <p class="dipnot">Fotoğraflar servis formu PDF'inin 2. sayfasında çerçeveli fotoğraf sayfası olarak basılır. Etikete dokunarak Öncesi / Sonrası değişir.</p>`;
+    resimDoldur(kok);
+    $$('[data-ftur]', kok).forEach(b => b.onclick = () => { const f = x.fotolar[+b.dataset.ftur]; f.tur = f.tur === 'once' ? 'sonra' : 'once'; degisti(); ciz1(); });
+    $$('[data-fnot]', kok).forEach(i => i.oninput = () => { x.fotolar[+i.dataset.fnot].not = i.value; degisti(); });
+    $$('[data-fsil]', kok).forEach(b => b.onclick = () => { x.fotolar.splice(+b.dataset.fsil, 1); degisti(); ciz1(); });
+    $$('[data-fekle]', kok).forEach(b => b.onclick = async () => {
+      const tur = b.dataset.fekle;
+      let kamera = false;
+      if (window.Android || dokunmatik()) { const v = await eylemSayfa(tur === 'once' ? 'Öncesi fotoğrafı' : 'Sonrası fotoğrafı', null, [{ad: 'Fotoğraf çek', deger: 'k'}, {ad: 'Galeriden seç (birden çok)', deger: 'g'}]); if (!v) return; kamera = v === 'k'; }
+      const l = await servisFotoSec(kamera);
+      if (!l.length) return;
+      for (const ek of l) x.fotolar.push({...ek, tur, not: ''});
+      degisti(); ciz1();
+      if (l.length > 1) bildir(`${l.length} fotoğraf eklendi`);
+    });
+  };
+  ciz1();
+}
+
+/* ---- Açıklama çevirisi: kullanıcı istediği dilde yazar, çevirisini görüp onaylayarak ekler ---- */
+const CEVIRI_DIL = {en: 'English', tr: 'Türkçe', de: 'Deutsch', el: 'Ελληνικά', ru: 'Русский', it: 'Italiano', fr: 'Français', es: 'Español', ar: 'العربية'};
+let ceviriBekleyen = null;
+window.ceviriGeldi = j => { const r = ceviriBekleyen; ceviriBekleyen = null; if (r) r(j || ''); };
+async function ceviriYap(metin, sl, tl) {
+  let j = '';
+  if (window.PowerServ && PowerServ.ceviri) j = await PowerServ.ceviri(metin, sl, tl);
+  else if (window.Android && Android.ceviriIste) j = await new Promise(r => { ceviriBekleyen = r; Android.ceviriIste(metin, sl, tl); setTimeout(() => { if (ceviriBekleyen === r) window.ceviriGeldi(''); }, 20000); });
+  else {
+    try { const c = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&dt=t&sl=${sl}&tl=${tl}&q=${encodeURIComponent(metin.slice(0, 4000))}`); if (c.ok) j = await c.text(); } catch (e) { j = ''; }
+  }
+  try { const v = JSON.parse(j); if (Array.isArray(v) && Array.isArray(v[0])) return {metin: v[0].map(p => Array.isArray(p) ? String(p[0] ?? '') : '').join(''), kaynak: typeof v[2] === 'string' ? v[2] : sl}; } catch (e) {}
+  return null;
+}
+function ceviriPenceresi(alan) {
+  const tl0 = ui.ceviriHedef || 'en';
+  const m = modal('Çeviri / Translate', `
+    <p class="dipnot">Metni istediğiniz dilde yazın. Çeviriyi kontrol edip düzeltin, sonra "Yerine yaz" ya da "Altına ekle" ile alana aktarın. Çeviri için internet gerekir.</p>
+    <div class="grup"><label class="f-satir"><span>Çevrilecek dil</span><select id="cvHedef">${Object.entries(CEVIRI_DIL).map(([k, a]) => `<option value="${k}" ${k === tl0 ? 'selected' : ''}>${a}</option>`).join('')}</select></label></div>
+    <div class="bolum">Metin <small class="soluk" id="cvKaynak"></small></div>
+    <div class="grup tek-sutun"><label class="f-satir sol"><textarea id="cvMetin" rows="5">${esc(alan.value)}</textarea></label></div>
+    <div class="btn-grup"><button type="button" class="btn renkli" id="cvCevir">${ikon('donustur')} Çevir</button></div>
+    <div class="bolum">Çeviri (düzenlenebilir)</div>
+    <div class="grup tek-sutun"><label class="f-satir sol"><textarea id="cvSonuc" rows="5" placeholder="Çeviri burada görünür"></textarea></label></div>
+    <div class="btn-grup"><button type="button" class="btn renkli" id="cvYerine">${ikon('tamam')} Yerine yaz</button><button type="button" class="btn renkli" id="cvAltina">${ikon('arti')} Altına ekle</button></div>`, {solAd: 'Kapat', tam: true});
+  const cevir = async () => {
+    const t = $('#cvMetin', m).value.trim();
+    if (!t) return bildir('Önce metni yazın', true);
+    const tl = $('#cvHedef', m).value; ui.ceviriHedef = tl;
+    const b = $('#cvCevir', m); b.disabled = true; b.lastChild.textContent = ' Çevriliyor…';
+    const r = await ceviriYap(t, 'auto', tl);
+    b.disabled = false; b.lastChild.textContent = ' Çevir';
+    if (!r) return bildir('Çeviri yapılamadı. İnternet bağlantısını kontrol edin.', true);
+    $('#cvSonuc', m).value = r.metin.trim();
+    $('#cvKaynak', m).textContent = CEVIRI_DIL[r.kaynak] ? `(algılanan dil: ${CEVIRI_DIL[r.kaynak]})` : '';
+  };
+  $('#cvCevir', m).onclick = cevir;
+  $('#cvHedef', m).onchange = () => { if ($('#cvSonuc', m).value) cevir(); };
+  const aktar = ek => {
+    const c = $('#cvSonuc', m).value.trim();
+    if (!c) return bildir('Önce Çevir\'e basın', true);
+    alan.value = ek && alan.value.trim() ? alan.value.replace(/\s+$/, '') + '\n' + c : c;
+    alan.dispatchEvent(new Event('input', {bubbles: true}));
+    kapat(); bildir('Çeviri alana yazıldı');
+  };
+  $('#cvYerine', m).onclick = () => aktar(false);
+  $('#cvAltina', m).onclick = () => aktar(true);
+  if (alan.value.trim()) cevir();
+}
+/* data-cevir işaretli metin alanlarının altına küçük "Çevir" düğmesi koyar */
+function ceviriBagla(kok) {
+  $$('textarea[data-cevir]', kok).forEach(t => {
+    if (t.disabled || t.dataset.cevirBagli) return;
+    t.dataset.cevirBagli = '1';
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'cevir-btn'; b.innerHTML = `${ikon('donustur')}<span>Çevir / Translate</span>`;
+    b.onclick = e => { e.preventDefault(); ceviriPenceresi(t); };
+    (t.closest('label') || t).insertAdjacentElement('afterend', b);
+  });
+}
+/* 2.20: kaşe / imza fotoğrafını temizler: kâğıt ve gölge saydam olur, yalnız mürekkep kalır, kenarlar kırpılır.
+   renk: 'mavi' (mürekkebin kendi rengi, koyulaştırılmış) ya da 'siyah' (renksiz). */
+function kaseTemizle(img, renk = 'mavi') {
+  const o = Math.min(1, 1400 / Math.max(img.width, img.height)), W = Math.round(img.width * o), Hh = Math.round(img.height * o);
+  const c = document.createElement('canvas'); c.width = W; c.height = Hh;
+  const x = c.getContext('2d'); x.drawImage(img, 0, 0, W, Hh);
+  const d = x.getImageData(0, 0, W, Hh), p = d.data, N = W * Hh;
+  // Renkli mürekkep: doygunluk; renk yoksa (siyah mürekkep) koyuluk kullanılır
+  let renkli = 0;
+  for (let i = 0; i < N; i++) { const r = p[i * 4], g = p[i * 4 + 1], b = p[i * 4 + 2], mx = Math.max(r, g, b), mn = Math.min(r, g, b); if (mx - mn > 70) renkli++; }
+  const doyMod = renkli > N * .003;
+  let a0 = 1e9, a1 = -1, b0 = 1e9, b1 = -1;
+  const alfa = new Uint8ClampedArray(N);
+  for (let i = 0; i < N; i++) {
+    const r = p[i * 4], g = p[i * 4 + 1], b = p[i * 4 + 2], mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+    const s = doyMod ? (mx - mn) / 255 : 1 - (r * .3 + g * .59 + b * .11) / 255;
+    const a = Math.max(0, Math.min(1, doyMod ? (s - .16) / .22 : (s - .45) / .25));
+    alfa[i] = Math.round(a * 255);
+    if (a > .35) { const xx = i % W, yy = (i / W) | 0; if (xx < a0) a0 = xx; if (xx > a1) a1 = xx; if (yy < b0) b0 = yy; if (yy > b1) b1 = yy; }
+  }
+  if (a1 < 0) return null;
+  for (let i = 0; i < N; i++) {
+    const a = alfa[i];
+    if (renk === 'siyah') { p[i * 4] = p[i * 4 + 1] = p[i * 4 + 2] = 25; }
+    else { const r = p[i * 4], g = p[i * 4 + 1], b = p[i * 4 + 2], k = .62; p[i * 4] = r * k; p[i * 4 + 1] = g * k; p[i * 4 + 2] = Math.min(255, b * k + 40); }
+    p[i * 4 + 3] = a;
+  }
+  x.putImageData(d, 0, 0);
+  const pay = Math.round(Math.max(a1 - a0, b1 - b0) * .03) + 4;
+  a0 = Math.max(0, a0 - pay); b0 = Math.max(0, b0 - pay); a1 = Math.min(W - 1, a1 + pay); b1 = Math.min(Hh - 1, b1 + pay);
+  const cw = a1 - a0 + 1, ch = b1 - b0 + 1, k2 = Math.min(1, 600 / cw, 360 / ch);
+  const s2 = document.createElement('canvas'); s2.width = Math.round(cw * k2); s2.height = Math.round(ch * k2);
+  s2.getContext('2d').drawImage(c, a0, b0, cw, ch, 0, 0, s2.width, s2.height);
+  return s2.toDataURL('image/png');
 }
 /* Cari ekranındaki tekne/makine ve servis geçmişi bölümü */
 function cariServisBolum(k) {
@@ -9494,10 +9751,13 @@ function raporKagit(bas, son, ad, liste) {
 async function imzaSec() {
   if (D.firma.imza) { const v = await eylemSayfa('Kaşe / imza', null, [{ad: 'Yeni görsel seç', deger: 'sec'}, {ad: 'Kaşe / imzayı kaldır', deger: 'sil', tehlike: true}]); if (v === 'sil') { delete D.firma.imza; kaydet(); return ciz(); } if (v !== 'sec') return; }
   const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
-  inp.onchange = () => { const f = inp.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { const img = new Image(); img.onload = () => {
-    const o = Math.min(1, 520 / img.width, 260 / img.height), c = document.createElement('canvas'); c.width = Math.round(img.width * o); c.height = Math.round(img.height * o);
-    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-    D.firma.imza = c.toDataURL('image/png'); kaydet(); bildir('Kaşe / imza kaydedildi; tekliflere basılacak'); ciz(); }; img.src = r.result; }; r.readAsDataURL(f); };
+  inp.onchange = () => { const f = inp.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { const img = new Image(); img.onload = async () => {
+    // 2.20: kâğıt fotoğrafından kaşe: arka plan saydam yapılır, kenarlar kırpılır
+    const v = await eylemSayfa('Kaşe rengi', 'Kâğıt ve gölge silinir, yalnız kaşe ve imza kalır.', [{ad: 'Mavi (kaşenin kendi rengi)', deger: 'mavi'}, {ad: 'Siyah (renksiz)', deger: 'siyah'}, {ad: 'Olduğu gibi (temizleme)', deger: 'ham'}]);
+    if (!v) return;
+    let veri = v === 'ham' ? null : kaseTemizle(img, v);
+    if (!veri) { const o = Math.min(1, 520 / img.width, 260 / img.height), c = document.createElement('canvas'); c.width = Math.round(img.width * o); c.height = Math.round(img.height * o); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); veri = c.toDataURL('image/png'); }
+    D.firma.imza = veri; kaydet(); bildir('Kaşe / imza kaydedildi; teklif ve servis formunda kullanılır'); ciz(); }; img.src = r.result; }; r.readAsDataURL(f); };
   inp.click();
 }
 async function logoSec() {
@@ -9512,7 +9772,7 @@ async function logoSec() {
 function servisAyarFormu() {
   const m = modal('Servis formu', `<div class="grup">
       <button class="hucre kareli" id="logoSec">${D.firma.logo ? `<img src="${D.firma.logo}" alt="" style="height:28px;max-width:80px;object-fit:contain;background:#fff;border-radius:4px">` : kare('yukle', 'mor')}<div class="ic"><b>Firma logosu</b><small>${D.firma.logo ? 'Yüklendi · değiştir' : 'DN Marine logosu kullanılıyor'}</small></div>${CHEV}</button>
-      <button class="hucre kareli" id="imzaSec">${D.firma.imza ? `<img src="${D.firma.imza}" alt="" style="height:28px;max-width:80px;object-fit:contain;background:#fff;border-radius:4px">` : kare('kalem', 'indigo')}<div class="ic"><b>Kaşe / imza</b><small>${D.firma.imza ? 'Tekliflere basılıyor · değiştir' : 'Yüklenirse teklif PDF ve Excel\'ine basılır'}</small></div>${CHEV}</button>
+      <button class="hucre kareli" id="imzaSec">${D.firma.imza ? `<img src="${D.firma.imza}" alt="" style="height:28px;max-width:80px;object-fit:contain;background:#fff;border-radius:4px">` : kare('kalem', 'indigo')}<div class="ic"><b>Kaşe / imza</b><small>${D.firma.imza ? 'Teklife ve seçilen servis formlarına basılıyor · değiştir' : 'Kâğıttaki kaşenin fotoğrafını seçin; arka plan temizlenir'}</small></div>${CHEV}</button>
       <label class="f-satir"><span>İşçilik garantisi (ay)</span><input data-servis="garantiAy" inputmode="numeric" value="${esc(D.servisAyar.garantiAy)}" placeholder="___"></label>
       <label class="f-satir"><span>veya çalışma saati</span><input data-servis="garantiSaat" inputmode="numeric" value="${esc(D.servisAyar.garantiSaat)}" placeholder="___"></label>
       <label class="f-satir"><span>Yetkili mahkeme</span><input data-servis="mahkeme" value="${esc(D.servisAyar.mahkeme)}" placeholder="İstanbul"></label>

@@ -153,6 +153,8 @@ public class MainActivity extends Activity {
                 sec.addCategory(Intent.CATEGORY_OPENABLE);
                 String[] turler = p.getAcceptTypes();
                 sec.setType(turler != null && turler.length == 1 && turler[0].contains("/") ? turler[0] : "*/*");
+                // 2.19.1: Service Report'a birden çok fotoğraf
+                if (p.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE) sec.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
                 try {
                     startActivityForResult(Intent.createChooser(sec, "Dosya seç"), DOSYA_SEC);
                     return true;
@@ -246,6 +248,11 @@ public class MainActivity extends Activity {
                 if (sonuc == RESULT_OK) dosyaGeriDonus.onReceiveValue(new Uri[]{kameraUri});
                 else { try { getContentResolver().delete(kameraUri, null, null); } catch (Exception e) { } dosyaGeriDonus.onReceiveValue(null); }
                 kameraUri = null;
+            } else if (sonuc == RESULT_OK && veri != null && veri.getClipData() != null && veri.getClipData().getItemCount() > 0) {
+                android.content.ClipData cd = veri.getClipData();
+                Uri[] l = new Uri[cd.getItemCount()];
+                for (int i = 0; i < l.length; i++) l[i] = cd.getItemAt(i).getUri();
+                dosyaGeriDonus.onReceiveValue(l);
             } else dosyaGeriDonus.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(sonuc, veri));
             dosyaGeriDonus = null;
             return;
@@ -305,6 +312,39 @@ public class MainActivity extends Activity {
         public String gunlukYedekYaz(String ad, String icerik) {
             if (Build.VERSION.SDK_INT < 29) return "";
             return gunlukYedekDosyasi(ad, icerik) ? "İndirilenler/PowerServ+/Yedek" : "";
+        }
+
+        /** 2.20: servis açıklamaları için kısa çeviri (Google Translate). Sonuç window.ceviriGeldi(json) ile döner.
+         *  Yalnızca bu sabit adres ve iki harfli dil kodları kullanılır; metin en çok 4000 karakter. */
+        @JavascriptInterface
+        public void ceviriIste(String metin, String kaynak, String hedef) {
+            final String m = metin == null ? "" : (metin.length() > 4000 ? metin.substring(0, 4000) : metin);
+            final String sl = kaynak != null && kaynak.matches("auto|[a-z]{2}") ? kaynak : "auto";
+            final String tl = hedef != null && hedef.matches("[a-z]{2}") ? hedef : "en";
+            new Thread(() -> {
+                String yanit = "";
+                java.net.HttpURLConnection c = null;
+                try {
+                    String adres = "https://translate.googleapis.com/translate_a/single?client=gtx&dt=t&sl=" + sl + "&tl=" + tl + "&q=" + java.net.URLEncoder.encode(m, "UTF-8");
+                    c = (java.net.HttpURLConnection) new java.net.URL(adres).openConnection();
+                    c.setConnectTimeout(10000); c.setReadTimeout(15000);
+                    c.setRequestProperty("User-Agent", "Mozilla/5.0");
+                    if (c.getResponseCode() == 200) {
+                        java.io.InputStream in = c.getInputStream();
+                        java.io.ByteArrayOutputStream b = new java.io.ByteArrayOutputStream();
+                        byte[] t = new byte[8192]; int n;
+                        while ((n = in.read(t)) > 0 && b.size() < 1_000_000) b.write(t, 0, n);
+                        in.close();
+                        yanit = new String(b.toByteArray(), StandardCharsets.UTF_8);
+                    }
+                } catch (Exception e) {
+                    yanit = "";
+                } finally {
+                    if (c != null) c.disconnect();
+                }
+                final String sonuc = yanit;
+                runOnUiThread(() -> { if (web != null) web.evaluateJavascript("window.ceviriGeldi && window.ceviriGeldi(" + JSONObject.quote(sonuc) + ")", null); });
+            }).start();
         }
 
         /** TCMB döviz kurlarını (today.xml) arka planda indirir; sonuç window.kurGeldi(xml) ile sayfaya döner.

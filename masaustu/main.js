@@ -66,6 +66,17 @@ ipcMain.handle('kur-getir', async () => {
   } catch (e) { return ''; }
 });
 
+// 2.20: servis açıklamaları için kısa çeviri (Google Translate); yalnız bu sabit adres ve dil kodları.
+ipcMain.handle('ceviri', async (e, metin, sl, tl) => {
+  try {
+    const {net} = require('electron');
+    const m = String(metin || '').slice(0, 4000), k = /^(auto|[a-z]{2})$/.test(sl) ? sl : 'auto', h = /^[a-z]{2}$/.test(tl) ? tl : 'en';
+    const c = await net.fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&dt=t&sl=${k}&tl=${h}&q=${encodeURIComponent(m)}`, {headers: {'User-Agent': 'Mozilla/5.0'}});
+    if (!c.ok) return '';
+    return (await c.text()).slice(0, 1000000);
+  } catch (e) { return ''; }
+});
+
 // Günlük otomatik yedek: Belgeler\PowerServ+\Yedekler klasörüne yazılır, en yeni 30 yedek tutulur.
 const yedekKlasor = () => path.join(app.getPath('documents'), 'PowerServ+', 'Yedekler');
 ipcMain.handle('gunluk-yedek', async (e, ad, icerik) => {

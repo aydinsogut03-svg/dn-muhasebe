@@ -27,7 +27,7 @@ const csp = [
   "img-src data: blob:",
   "font-src data:",
   "media-src data: blob:",
-  "connect-src https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com",
+  "connect-src https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://translate.googleapis.com",
   "frame-src 'none'",
   "object-src 'none'",
   "base-uri 'none'",
