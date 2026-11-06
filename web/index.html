@@ -1826,6 +1826,56 @@ body.erp .erp-form #mSerbest .yuzen{display:none}
 .ek-satir .ek-sil + .ek-sil{margin-left:6px}
 .ek-satir .ek-ac{color:var(--mavi)}
 p.dipnot .i{width:14px;height:14px;vertical-align:-2px}
+/* İngilizce Service Report kâğıdı (2.19) */
+.sr-kagit{--sf:#1f2f5a;font-size:11.5px;line-height:1.4;color:#111;width:760px;max-width:none;background:#fff}
+.sr-kagit p{margin:0 0 2px}
+.sr-kagit .sr-ust{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;border-bottom:2px solid var(--sf);padding-bottom:8px;margin-bottom:6px}
+.sr-kagit .sr-logo{width:170px;max-height:70px;object-fit:contain;display:block;margin-bottom:4px}
+.sr-kagit .sr-firma b{display:block;font-size:12.5px;text-transform:uppercase;margin-bottom:3px}
+.sr-kagit .sr-firma table,.sr-kagit .sr-sag table{margin:0;width:auto;font-size:10px}
+.sr-kagit .sr-firma td,.sr-kagit .sr-sag td{border:0;padding:0 8px 1px 0;vertical-align:top}
+.sr-kagit .sr-firma td:first-child,.sr-kagit .sr-sag td:first-child{color:#555;font-weight:600;white-space:nowrap}
+.sr-kagit .sr-sag{text-align:right;display:flex;flex-direction:column;align-items:flex-end}
+.sr-kagit .sr-sag h2{color:var(--sf);font-size:22px;letter-spacing:.08em;margin:0 0 8px}
+.sr-kagit .sr-sag td:last-child{font-weight:700}
+.sr-kagit .sr-blok{break-inside:avoid;page-break-inside:avoid;padding-bottom:2px}
+.sr-kagit .sr-bar{background:var(--sf);color:#fff;font-weight:700;font-size:11px;padding:3px 8px;margin:8px 0 4px;display:flex;gap:8px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.sr-kagit .sr-bar span{min-width:16px}
+.sr-kagit .sr-ikili{display:grid;grid-template-columns:1fr 1fr;column-gap:18px}
+.sr-kagit .sr-alan{display:flex;gap:6px;align-items:baseline;padding:2px 0}
+.sr-kagit .sr-alan span{color:#5e5e5e;font-weight:600;white-space:nowrap;min-width:110px}
+.sr-kagit .sr-alan b{flex:1;font-weight:600;border-bottom:1px dotted #999;min-height:1.3em}
+.sr-kagit .sr-metin{padding:2px 8px}
+.sr-kagit .sr-metin ol{margin:0;padding-left:20px}
+.sr-kagit .sr-metin li{margin:1px 0}
+.sr-kagit .sr-tablo{width:100%;margin:2px 0;font-size:10.5px;border-collapse:collapse}
+.sr-kagit .sr-tablo th{background:#e9ecf3;color:var(--sf);border:1px solid #8a8a8a;text-align:center;font-size:10px;padding:3px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.sr-kagit .sr-tablo td{border:1px solid #8a8a8a;padding:3px 5px}
+.sr-kagit .sr-tablo td.sg{text-align:center}
+.sr-kagit .sr-fotolar{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sr-kagit figure{margin:0;break-inside:avoid}
+.sr-kagit figure img{width:100%;height:230px;object-fit:contain;border:1px solid #bbb;background:#f6f6f6;display:block}
+.sr-kagit figcaption{font-size:10px;color:#444;margin-top:2px}
+.sr-kagit .sr-foto-yok{border:1px dashed #999;color:#777;padding:30px 8px;text-align:center;font-size:10px}
+.sr-kagit .sr-beyan{font-style:italic;color:var(--sf);font-weight:600;margin:4px 0 6px;text-align:center}
+.sr-kagit .sr-imzalar{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.sr-kagit .sr-ib{border:1px solid #7f7f7f;text-align:center;font-weight:700;font-size:10.5px;padding:4px;background:#e9ecf3;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.sr-kagit .sr-ic{border:1px solid #7f7f7f;border-top:0;padding:6px 8px 8px;min-height:150px}
+.sr-kagit .sr-is{display:flex;gap:6px;align-items:baseline;padding:6px 0 0}
+.sr-kagit .sr-is span{color:#5e5e5e;font-weight:600;min-width:64px}
+.sr-kagit .sr-is b{flex:1;border-bottom:1px solid #999;min-height:1.4em}
+.sr-kagit .sr-kase{margin:10px auto 0;width:150px;height:72px;border:1px dashed #888;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#888;font-size:10px}
+.sr-kagit .sr-ekler-liste{font-size:10.5px;margin-top:8px}
+.sr-kagit .sr-dip{text-align:center;color:#777;font-size:8.5px;margin-top:10px}
+.sr-kagit .sr-ek .sr-bar{background:#1f2f5b}
+.sr-kagit .sr-ek img{width:100%;max-height:980px;object-fit:contain;display:block;border:1px solid #bbb}
+.sr-kagit .sr-sayfa-kes{break-before:page;page-break-before:always;padding-top:4px}
+#yazdirAlani .sr-kagit{width:auto}
+.sr-kap{overflow-x:hidden}
+.sr-fnot{width:100%;margin-top:4px;font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--ayirici);border-radius:6px;background:var(--kart);color:inherit}
+.eylem .grup{max-height:calc(100dvh - 110px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+@media (min-width:1000px){.sr-cift{display:grid!important;grid-template-columns:1fr 1fr}}
+@media print{#yazdirAlani .sr-kagit{font-size:11px;zoom:.92}#yazdirAlani .sr-kagit .sr-ek img{max-height:250mm}}
 </style>
 </head>
 <body>
@@ -1838,7 +1888,7 @@ p.dipnot .i{width:14px;height:14px;vertical-align:-2px}
 
 <script>
 'use strict';
-const VERSIYON = '2.18.0';
+const VERSIYON = '2.19.0';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -2211,7 +2261,8 @@ async function kagitPdf(ad, html) {
     catch (e) { /* aşağıdaki görüntülü PDF'ye geç */ }
   }
   bildir('PDF hazırlanıyor…');
-  const G = 880, OLCEK = 2.4;
+  // 2.19: Service Report kendi genişliğinde çizilir ve bölümler sayfa sonunda bölünmez
+  const rapor = /class="kagit sr-kagit"/.test(html), G = rapor ? 760 : 880, OLCEK = rapor ? 2.2 : 2.4;
   const kap = document.createElement('div');
   kap.style.cssText = `position:fixed;left:-20000px;top:0;width:${G}px;background:#fff`;
   kap.innerHTML = html;
@@ -2234,16 +2285,42 @@ async function kagitPdf(ad, html) {
     tuval.width = Math.round(G * OLCEK); tuval.height = Math.round(Y * OLCEK);
     const c = tuval.getContext('2d'); c.fillStyle = '#fff'; c.fillRect(0, 0, tuval.width, tuval.height);
     c.drawImage(img, 0, 0, tuval.width, tuval.height);
+    // Service Report: sayfa sonu, çizilen görüntüden bulunur (bölüm başlığı şeritlerinin üstü ya da boş satır).
+    // Ek sayfa şeridi #1f2f5b renginde çizilir ve her zaman yeni sayfada başlar.
+    let kesler = null, zorla = [], bosSatir = null;
+    if (rapor) {
+      const W = tuval.width, H = tuval.height, sx = Math.round(21 * OLCEK), sx2 = W - Math.round(24 * OLCEK);
+      const v = c.getImageData(0, 0, W, H).data, px = (x, y) => (y * W + x) * 4;
+      const koyu = (x, y) => { const i = px(x, y); return v[i] < 70 && v[i + 1] < 80 && v[i + 2] > 60 && v[i + 2] > v[i] + 20; };
+      kesler = [];
+      for (let y = 1, bas = -1; y < H; y++) {
+        const d = koyu(sx, y) && koyu(sx2, y);
+        if (d && bas < 0) bas = y;
+        if (!d && bas >= 0) { const boy = (y - bas) / OLCEK; if (boy >= 12 && boy <= 32) { const i = px(sx, bas + 3); (v[i] === 31 && v[i + 1] === 47 && v[i + 2] === 91 ? zorla : kesler).push(bas - Math.round(4 * OLCEK)); } bas = -1; }
+      }
+      const x0 = Math.round(16 * OLCEK), x1 = W - x0;
+      bosSatir = y => { for (let x = x0; x < x1; x += 3) { const i = px(x, y); if (v[i] < 235 || v[i + 1] < 235 || v[i + 2] < 235) return false; } return true; };
+    }
     // A4: 595,28 × 841,89 pt, 10 mm kenar boşluğu
     const PW = 595.28, PH = 841.89, KB = 28.35, icG = PW - 2 * KB, icY = PH - 2 * KB;
     let pxPt = icG / tuval.width;
     // Tek sayfayı biraz aşan form küçültülerek tek A4'e sığdırılır; çok uzunsa sayfalara bölünür.
-    const tekSayfa = tuval.height * pxPt <= icY * 1.45;
+    const tekSayfa = !kesler && tuval.height * pxPt <= icY * 1.45;
     if (tekSayfa && tuval.height * pxPt > icY) pxPt = icY / tuval.height;
     const dilim = tekSayfa ? tuval.height : Math.floor(icY / pxPt), solX = KB + (icG - tuval.width * pxPt) / 2;
     const sayfalar = [];
-    for (let y = 0; y < tuval.height; y += dilim) {
-      const h = Math.min(dilim, tuval.height - y);
+    for (let y = 0, son; y < tuval.height; y = son) {
+      son = Math.min(y + dilim, tuval.height);
+      if (kesler) {
+        const z = zorla.find(v => v > y + 20 && v < son);
+        if (z) son = z;
+        else if (son < tuval.height) {
+          const c = kesler.filter(v => v > y + dilim * .35 && v <= son);
+          if (c.length) son = Math.max(...c);
+          else for (let b = son; b > y + dilim * .35; b--) if (bosSatir(b)) { son = b; break; }
+        }
+      }
+      const h = son - y;
       if (h < 20 && sayfalar.length) break;
       const p = document.createElement('canvas'); p.width = tuval.width; p.height = h;
       const pc = p.getContext('2d'); pc.fillStyle = '#fff'; pc.fillRect(0, 0, p.width, h); pc.drawImage(tuval, 0, y, p.width, h, 0, 0, p.width, h);
@@ -7462,6 +7539,7 @@ function servisEkrani1(id) {
   b.push(`<button id="sDurumBtn">${ikon('donustur')}Durum</button>`);
   b.push(`<button id="sPdfIndir">${ikon('indir')}PDF indir</button>`);
   b.push(`<button id="sPdf">${ikon('yazici')}Yazdır</button>`);
+  b.push(`<button id="sRapor">${ikon('dosya')}Service Report</button>`);
   if (modulAcik('fatura')) b.push(f ? `<button id="sFatGit">${ikon('dosya')}Fatura</button>` : `<button id="sFatura">${ikon('dosya')}Faturala</button>`);
   if (s.tel) b.push(`<button id="sWa">${ikon('mesaj')}WhatsApp</button>`);
   b.push(`<button id="sDiger">${ikon('dahafazla')}Diğer</button>`);
@@ -7490,6 +7568,7 @@ function servisEkrani1(id) {
   };
   $('#sPdf').onclick = () => yazdir(`Servis formu ${s.no}`, servisKagit(s));
   $('#sPdfIndir').onclick = () => kagitPdf(`Servis-formu-${s.no}.pdf`, servisKagit(s));
+  $('#sRapor').onclick = () => servisRaporu(s);
   if ($('#sFatura')) $('#sFatura').onclick = () => servisFaturala(s);
   if ($('#sFatGit')) $('#sFatGit').onclick = () => git('fatura/' + f.id);
   if ($('#sWa')) $('#sWa').onclick = () => {
@@ -7502,7 +7581,7 @@ function servisEkrani1(id) {
     if (v === 'yeni') yeniServis({kisiId: s.kisiId, ekipmanId: s.ekipmanId});
     else if (v === 'kopya') {
       const y = {...JSON.parse(JSON.stringify(s)), id: kimlik(), no: sonrakiServisNo(), tarih: bugun(), durum: 'acik', olusturma: Date.now()};
-      delete y.imzaMusteri; delete y.imzaTeknisyen; delete y.faturaId; delete y.bitis;
+      delete y.imzaMusteri; delete y.imzaTeknisyen; delete y.faturaId; delete y.bitis; delete y.rapor;
       D.servisler.push(y); servisTuret(y); kaydet(); bildir('Kopya oluşturuldu'); git('servis/' + y.id);
     } else if (v === 'sil') {
       if (!await onay(`${s.no} silinsin mi?`, 'Stoktan düşülen parçalar stoğa geri döner. Oluşturulan fatura silinmez.')) return;
@@ -7908,7 +7987,7 @@ function servisFisi(id) {
   const arac = [A('kaydet', 'tamam', 'Kaydet', {kapali: ro, ipucu: 'Kaydet (Ctrl+S)'}), A('yeni', 'arti', 'Yeni'), ayir,
     A('cariBul', 'ara', 'Cari bul', {kapali: ro}), A('cariAc', 'cariKart', 'Cari aç', {kapali: !x.kisiId || !modulAcik('veresiye')}), A('makine', 'tekne', 'Makine', {kapali: ro}), ayir,
     A('giris', 'giris', 'Giriş', {kapali: ro, ipucu: 'Makinenin servise giriş zamanını yaz'}), A('teslim', 'cikis', 'Teslim', {kapali: ro || x.durum === 'tamam', ipucu: 'Tamamla, teslim et ve kaydet'}), A('durum', 'donustur', 'Durum', {kapali: ro}), ayir,
-    fat ? A('fatura', 'faturaTL', f ? 'Fatura' : 'Faturala', {kapali: yeni || (!f && ro)}) : '', A('pdf', 'indir', 'PDF'), A('yazdir', 'yazici', 'Yazdır'), ayir,
+    fat ? A('fatura', 'faturaTL', f ? 'Fatura' : 'Faturala', {kapali: yeni || (!f && ro)}) : '', A('pdf', 'indir', 'PDF'), A('yazdir', 'yazici', 'Yazdır'), A('rapor', 'dosya', 'Service Report', {kapali: yeni, ipucu: 'İngilizce Service Report (gemi yönetim şirketleri için)'}), ayir,
     A('kopya', 'kayitlar', 'Kopyala', {kapali: yeni || ro}), A('sil', 'cop', 'Sil', {kapali: yeni || ro}), A('kapat', 'kapat', 'Kapat')].join('');
   const uyari = [];
   if (baskasi) uyari.push(`<div class="fis-uyari">${ikon('kilit')}<span><b>${esc(kl.ad)}</b> bu fişi düzenliyor. Fiş şu an yalnızca görüntülenebilir.</span></div>`);
@@ -8179,10 +8258,14 @@ function servisFisi(id) {
     },
     pdf: () => kagitPdf(`Servis-formu-${x.no}.pdf`, servisKagit(x)),
     yazdir: () => yazdir(`Servis formu ${x.no}`, servisKagit(x)),
+    rapor: async () => {
+      if (t.kirli && !ro) { if (!await onay('Önce fiş kaydedilsin mi?', 'Service Report, fişin kayıtlı hâlinden hazırlanır.', 'Kaydet ve devam et')) return; if (!servisFisKaydet(t, id, true)) return; }
+      const s = servis(id); if (s) servisRaporu(s);
+    },
     kopya: () => {
       const s = servis(id); if (!s) return;
       const y = {...kopya(s), id: kimlik(), no: sonrakiServisNo(), isEmriNo: sonrakiIsEmriNo(), tarih: bugun(), durum: 'acik', olusturma: Date.now()};
-      for (const a of ['imzaMusteri', 'imzaTeknisyen', 'faturaId', 'bitis', 'giris', 'teslimZaman']) delete y[a];
+      for (const a of ['imzaMusteri', 'imzaTeknisyen', 'faturaId', 'bitis', 'giris', 'teslimZaman', 'rapor']) delete y[a];
       for (const w of y.iscilik) w.durum = 'yapilacak';
       D.servisler.push(y); servisTuret(y); kaydet(); bildir('Kopya oluşturuldu'); git('servis/' + y.id);
     },
@@ -8457,6 +8540,346 @@ function servisKagit(s) {
       <div><div class="sf-ib">MÜŞTERİ / YETKİLİ (AD SOYAD / KAŞE İMZA)</div><div class="sf-ia"></div><small>Tarih / Saat: ____/____/________   ____:____</small></div></div>
     <div class="sf-dip">${esc(firmaUnvan())} · Servis Formu · ${esc(s.no)}</div>
   </div>`;
+}
+/* ================= İngilizce Service Report (2.19) =================
+   Gemi yönetim şirketleri (ör. Hellespont) faturayı onaylamak için İngilizce servis raporu ister.
+   Rapor servis kaydından üretilir; ek bilgiler s.rapor altında tutulur. Fiyat yoktur.
+   Kullanıcı 3-8. bölümleri Türkçe yazar, hazır İngilizce kalıp cümlelerle çevirir; İngilizce metni onaylamadan PDF çıkmaz.
+   Fotoğraflar ve imzalı service sheet belge eki olarak (IndexedDB, ortak veritabanında ozel/belgeler) saklanır. */
+const SR_EKIPMAN_EN = {ana: 'Main Engine', jenerator: 'Generator', sanziman: 'Gearbox', pervane: 'Propeller / Shaft', elektrik: 'Electrical / Electronic Equipment', diger: 'Equipment'};
+const SR_TEST_EN = {rolanti: 'Idle running test', yuk: 'Load test', seyir: 'Sea trial', kacak: 'Leak check'};
+const SR_TESLIM_EN = {calisir: 'Equipment tested and found in good working condition.', kismen: 'Work partially completed.', parca: 'Work not completed; awaiting spare parts.', onay: 'Additional work pending customer approval.'};
+const SR_BIRIM_EN = {adet: 'pcs', 'takım': 'set', lt: 'ltr', kg: 'kg', m: 'm', saat: 'hrs', set: 'set', paket: 'pack'};
+const SR_PARCA_EN = {yeni: 'New', revizyon: 'Overhauled', musteri: 'Customer supplied'};
+/* Hazır kalıp cümleler: [Türkçe, İngilizce]. Seçilen kalıp her iki kutuya da eklenir. */
+const SR_KALIP = {
+  sikayet: [
+    ['Makine çalışmıyor.', 'The equipment is not operating.'],
+    ['Makine çalışırken anormal ses ve titreşim var.', 'Abnormal noise and vibration during operation.'],
+    ['Yağ kaçağı var.', 'Oil leakage reported.'],
+    ['Su kaçağı var.', 'Water leakage reported.'],
+    ['Aşırı ısınma var.', 'Overheating reported.'],
+    ['Makine çalışmaya başlamıyor.', 'The equipment does not start.'],
+    ['Elektrik arızası var.', 'Electrical fault reported.'],
+    ['Mil sıkışıyor, dönmüyor.', 'Spindle is jamming and does not rotate.'],
+    ['Hassasiyet kaybı var, ölçü tutmuyor.', 'Loss of accuracy; machining tolerances cannot be maintained.'],
+    ['Devir ayarı çalışmıyor.', 'Speed selection is not working.'],
+    ['Periyodik bakım talep edildi.', 'Periodic maintenance requested.'],
+    ['Genel kontrol ve bakım talep edildi.', 'General inspection and overhaul requested.']
+  ],
+  tespit: [
+    ['Rulmanlar aşınmış bulundu.', 'Bearings found worn.'],
+    ['Kayışlar gevşek ve aşınmış bulundu.', 'Drive belts found loose and worn.'],
+    ['Yağ seviyesi düşük bulundu.', 'Oil level found low.'],
+    ['Yağ kirli ve kullanım ömrünü doldurmuş bulundu.', 'Oil found contaminated and beyond service life.'],
+    ['Conta hasarlı bulundu, kaçak buradan geliyor.', 'Gasket found damaged; leakage originates from this point.'],
+    ['Keçe hasarlı bulundu.', 'Seal found damaged.'],
+    ['Dişliler aşınmış bulundu.', 'Gears found worn.'],
+    ['Kızaklarda aşırı boşluk bulundu.', 'Excessive play found on slideways.'],
+    ['Elektrik bağlantıları gevşek ve oksitlenmiş bulundu.', 'Electrical connections found loose and corroded.'],
+    ['Kontaktör arızalı bulundu.', 'Contactor found defective.'],
+    ['Elektrik motoru arızalı bulundu.', 'Electric motor found defective.'],
+    ['Soğutma sistemi tıkalı bulundu.', 'Cooling system found clogged.'],
+    ['Arızanın nedeni aşınma ve bakımsızlıktır.', 'Root cause: normal wear and lack of maintenance.'],
+    ['Başka bir arıza bulunmadı.', 'No other defects found.']
+  ],
+  islem: [
+    ['Makine söküldü.', 'Equipment dismantled.'],
+    ['Parçalar temizlendi ve kontrol edildi.', 'All parts cleaned and inspected.'],
+    ['Arızalı parçalar değiştirildi.', 'Defective parts replaced.'],
+    ['Rulmanlar değiştirildi.', 'Bearings renewed.'],
+    ['Kayışlar değiştirildi ve gerginlik ayarı yapıldı.', 'Drive belts renewed and tension adjusted.'],
+    ['Conta ve keçeler değiştirildi.', 'Gaskets and seals renewed.'],
+    ['Boşluk ayarları yapıldı.', 'Clearances adjusted.'],
+    ['Kızak ayarı yapıldı.', 'Slideways adjusted.'],
+    ['Yağ değiştirildi.', 'Oil renewed.'],
+    ['Yağlama yapıldı.', 'Lubrication carried out.'],
+    ['Elektrik bağlantıları kontrol edildi ve sıkıldı.', 'Electrical connections checked and tightened.'],
+    ['Tezgâhta işlenerek tamir edildi.', 'Repaired by machining.'],
+    ['Kaynak ile tamir edildi.', 'Repaired by welding.'],
+    ['Makine yeniden monte edildi.', 'Equipment reassembled.'],
+    ['Makine gemiye teslim edildi.', 'Equipment handed over to the vessel.']
+  ],
+  test: [
+    ['Çalıştırma testi yapıldı.', 'Running test carried out.'],
+    ['Yüksüz ve yüklü test yapıldı.', 'Tested under no-load and load conditions.'],
+    ['Kaçak kontrolü yapıldı, kaçak yok.', 'Leak check carried out; no leakage found.'],
+    ['Torna test edildi ve çalışır durumda bulundu.', 'Lathe tested and found in good working condition.'],
+    ['Makine test edildi ve çalışır durumda bulundu.', 'Equipment tested and found in good working condition.'],
+    ['İş tamamlanmadı, parça bekleniyor.', 'Work not completed; awaiting spare parts.']
+  ],
+  oneri: [
+    ['Düzenli yağlama yapılmalı.', 'Regular lubrication is recommended.'],
+    ['Aşınmış parçalar bir sonraki bakımda değiştirilmeli.', 'Worn parts should be renewed at the next maintenance.'],
+    ['Periyodik bakım önerilir.', 'Periodic maintenance is recommended.'],
+    ['Makine üretici talimatlarına göre kullanılmalı.', 'Equipment should be operated according to the maker\'s instructions.'],
+    ['Öneri yok.', 'No further recommendations.']
+  ]
+};
+const SR_BOLUM = [['sikayet', '3. Müşteri şikâyeti', 'Customer complaint / defect reported'], ['tespit', '4. Tespit', 'Findings'], ['islem', '5. Yapılan işler', 'Work done'],
+  ['test', '7. Test ve sonuç', 'Test and result'], ['oneri', '8. Öneriler', 'Recommendations']];
+const srNorm = t => String(t || '').toLocaleLowerCase('tr-TR').replace(/^[\s\-–•*\d.)]+/, '').replace(/[.\s]+$/, '').replace(/\s+/g, ' ').trim();
+const SR_SOZLUK = new Map(Object.values(SR_KALIP).flat().map(([tr, en]) => [srNorm(tr), en]));
+const srTurkce = t => /[çğıöşüÇĞİÖŞÜ]/.test(t || '');
+/* Türkçe satırları kalıp sözlüğüyle çevirir; bilinmeyen satır Türkçe kalır (kullanıcı düzeltir). */
+function srCevir(tr) {
+  let bilinmeyen = 0;
+  const satirlar = String(tr || '').split('\n').map(s => s.trim()).filter(Boolean).map(s => {
+    const en = SR_SOZLUK.get(srNorm(s));
+    if (en) return en;
+    bilinmeyen++; return s;
+  });
+  return {metin: satirlar.join('\n'), bilinmeyen};
+}
+const SR_AY = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const srTarih = t => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(t || ''); return m ? `${m[3]} ${SR_AY[+m[2] - 1]} ${m[1]}` : ''; };
+const srGun = t => typeof t === 'string' ? t.slice(0, 10) : '';
+/* Servis kaydından raporun başlangıç değerleri (kayıtlı rapor alanları üstüne yazılmaz) */
+function srVarsayilan(s) {
+  const e = ekipman(s.ekipmanId) || s.ekipmanKopya || {};
+  const tek = teknisyenleri(s);
+  const tr = {
+    sikayet: s.sikayet || '', islem: s.islemler || '', oneri: s.oneriler || '', tespit: '',
+    test: [s.testler?.length ? s.testler.map(v => TESTLER[v]).filter(Boolean).join(', ') + ' yapıldı' + (s.testSure ? ` (${s.testSure} dk).` : '.') : '', s.teslim ? TESLIM[s.teslim] + '.' : ''].filter(Boolean).join('\n')
+  };
+  const en = {
+    test: [s.testler?.length ? s.testler.map(v => SR_TEST_EN[v]).filter(Boolean).join(', ') + ' carried out' + (s.testSure ? ` (${s.testSure} min).` : '.') : '', s.teslim ? SR_TESLIM_EN[s.teslim] : ''].filter(Boolean).join('\n')
+  };
+  return {
+    no: 'SR-' + (s.no || ''), tarih: srGun(s.teslimZaman) || s.bitis || bugun(), po: '', gemi: s.tekne || e.tekne || '', imo: '', musteri: servisMusteri(s), yonetim: '',
+    yer: s.servisYeri || s.liman || e.liman || '', bas: srGun(s.giris) || s.tarih || bugun(), bit: srGun(s.teslimZaman) || s.bitis || s.tarih || bugun(),
+    ekipman: e.tur ? (e.tur === 'diger' ? '' : SR_EKIPMAN_EN[e.tur]) : '', marka: e.marka || '', model: e.model || '', seri: e.seriNo || '',
+    tr, en, muhendis: tek[0] || '', chief: '', teknisyen: tek.length || '', sureNot: '', fotolar: [], ekler: [], onay: false
+  };
+}
+const teknisyenleri = s => [...new Set((s.iscilik || []).filter(w => w.durum !== 'iptal').map(w => String(w.teknisyen || '').trim()).filter(Boolean))];
+function srVeri(s) {
+  const v = srVarsayilan(s), r = s.rapor || {};
+  return {...v, ...r, tr: {...v.tr, ...(r.tr || {})}, en: {...v.en, ...(r.en || {})}, fotolar: r.fotolar || [], ekler: r.ekler || []};
+}
+/* Rapor kâğıdı (fotoğraflar ve ek görüntüleri önceden yüklenip verilir) */
+function srKagit(s, r, resim = {}) {
+  const e = ekipman(s.ekipmanId) || s.ekipmanKopya || {};
+  const alan = (l, v) => `<div class="sr-alan"><span>${esc(l)}</span><b>${esc(v || '—')}</b></div>`;
+  const bas = (n, t) => `<div class="sr-bar"><span>${n}</span>${esc(t)}</div>`;
+  const paragraf = t => { const l = String(t || '').split('\n').map(x => x.trim()).filter(Boolean); return l.length ? l.map(x => `<p>${esc(x)}</p>`).join('') : '<p>None.</p>'; };
+  const madde = t => { const l = String(t || '').split('\n').map(x => x.trim().replace(/^[\-–•*]\s*|^\d+[.)]\s*/, '')).filter(Boolean); return l.length ? `<ol>${l.map(x => `<li>${esc(x)}</li>`).join('')}</ol>` : '<p>None.</p>'; };
+  const parcalar = (s.parcalar || []).filter(p => (p.ad || '').trim() || (p.parcaNo || '').trim());
+  const isc = (s.iscilik || []).filter(w => w.durum !== 'iptal' && (w.teknisyen || w.bas || w.bit || w.sure));
+  const toplam = Math.round(isc.reduce((t, w) => t + (w.sure || 0), 0) * 100) / 100;
+  const F = [['Address', firmaAlan('adres')], ['Tel', firmaAlan('tel')], ['Service', firmaAlan('servisTel')], ['E-mail', firmaAlan('eposta')], ['Web', firmaAlan('web')]].filter(([, v]) => v);
+  const musteri = [r.musteri, r.yonetim && 'c/o ' + r.yonetim].filter(Boolean).join(' ');
+  const donem = r.bas && r.bit && r.bas !== r.bit ? `${srTarih(r.bas)} – ${srTarih(r.bit)}` : srTarih(r.bas || r.bit);
+  const fl = [...r.fotolar.filter(f => f.tur === 'once'), ...r.fotolar.filter(f => f.tur !== 'once')];
+  const fotoHtml = fl.length ? `<div class="sr-fotolar">${fl.map(f => `<figure>${resim[f.id] ? `<img src="${resim[f.id]}" alt="">` : '<div class="sr-foto-yok">Photo not available on this device</div>'}<figcaption><b>${f.tur === 'once' ? 'Before' : 'After'}</b>${f.not ? ': ' + esc(f.not) : ''}</figcaption></figure>`).join('')}</div>` : '';
+  const ekler = r.ekler.map((x, i) => ({...x, n: i + 1}));
+  return `<div class="kagit sr-kagit" lang="en">
+    <div class="sr-ust"><div class="sr-firma"><img class="sr-logo" src="${D.firma.logo || LOGO}" alt=""><b>${esc(firmaUnvan())}</b>
+      <table>${F.map(([a, v]) => `<tr><td>${esc(a)}:</td><td>${esc(v)}</td></tr>`).join('')}</table></div>
+      <div class="sr-sag"><h2>SERVICE REPORT</h2><table>
+        <tr><td>Report No:</td><td>${esc(r.no)}</td></tr><tr><td>Date:</td><td>${esc(srTarih(r.tarih))}</td></tr>
+        <tr><td>PO Ref:</td><td>${esc(r.po || '—')}</td></tr>${s.isEmriNo ? `<tr><td>Job No:</td><td>${esc(s.isEmriNo)}</td></tr>` : ''}</table></div></div>
+    <div class="sr-blok">${bas(1, 'GENERAL INFORMATION')}
+      <div class="sr-ikili">${alan('Vessel', r.gemi)}${alan('IMO No', r.imo)}</div>
+      ${alan('Customer', musteri)}
+      <div class="sr-ikili">${alan('Place of Service', r.yer)}${alan('Service Period', donem)}</div></div>
+    <div class="sr-blok">${bas(2, 'EQUIPMENT')}
+      <div class="sr-ikili">${alan('Equipment', r.ekipman || (e.tur === 'diger' ? e.turDiger : ''))}${alan('Maker', r.marka)}${alan('Model / Type', r.model)}${alan('Serial No', r.seri)}${s.calismaSaati ? alan('Running Hours', sayiFmt(s.calismaSaati)) : ''}</div></div>
+    <div class="sr-blok">${bas(3, 'CUSTOMER COMPLAINT / DEFECT REPORTED')}<div class="sr-metin">${paragraf(r.en.sikayet)}</div></div>
+    <div class="sr-blok">${bas(4, 'FINDINGS')}<div class="sr-metin">${paragraf(r.en.tespit)}</div></div>
+    <div class="sr-blok">${bas(5, 'WORK DONE')}<div class="sr-metin">${madde(r.en.islem)}</div></div>
+    <div class="sr-blok">${bas(6, 'SPARE PARTS USED')}
+      ${parcalar.length ? `<table class="sr-tablo"><thead><tr><th style="width:6%">No</th><th style="width:20%">Part No</th><th>Description</th><th style="width:10%">Qty</th><th style="width:10%">Unit</th><th style="width:17%">Condition</th></tr></thead>
+        <tbody>${parcalar.map((p, i) => `<tr><td class="sg">${i + 1}</td><td>${esc(p.parcaNo)}</td><td>${esc(p.adEn || p.ad)}</td><td class="sg">${sayiFmt(p.adet)}</td><td>${esc(SR_BIRIM_EN[p.birim] || p.birim || 'pcs')}</td><td>${esc(SR_PARCA_EN[p.durum] || '')}</td></tr>`).join('')}</tbody></table>` : '<div class="sr-metin"><p>None.</p></div>'}</div>
+    <div class="sr-blok">${bas(7, 'TEST AND RESULT')}<div class="sr-metin">${paragraf(r.en.test)}</div></div>
+    <div class="sr-blok">${bas(8, 'RECOMMENDATIONS')}<div class="sr-metin">${paragraf(r.en.oneri)}</div></div>
+    <div class="sr-blok">${bas(9, 'WORKING TIME')}
+      <div class="sr-ikili">${alan('Number of Technicians', r.teknisyen ? String(r.teknisyen) : '')}${alan('Total Working Hours', toplam ? sayiFmt(toplam) + ' hrs' : '')}</div>
+      ${isc.length ? `<table class="sr-tablo"><thead><tr><th style="width:16%">Date</th><th>Technician</th><th style="width:13%">Start</th><th style="width:13%">Finish</th><th style="width:12%">Hours</th></tr></thead>
+        <tbody>${isc.map(w => `<tr><td>${esc(srTarih(w.tarih))}</td><td>${esc(w.teknisyen)}</td><td class="sg">${esc(w.bas || '')}</td><td class="sg">${esc(w.bit || '')}</td><td class="sg">${w.sure ? sayiFmt(w.sure) : ''}</td></tr>`).join('')}</tbody></table>` : ''}
+      ${r.sureNot ? `<div class="sr-metin">${paragraf(r.sureNot)}</div>` : ''}</div>
+    <div class="sr-blok">${bas(10, 'PHOTOGRAPHS')}${fotoHtml || '<div class="sr-metin"><p>No photographs attached.</p></div>'}</div>
+    <div class="sr-blok sr-imza-blok">${bas(11, 'SIGNATURES AND ACCEPTANCE')}
+      <p class="sr-beyan">The work described in this report has been carried out and the equipment has been handed over to the vessel in the condition stated above.</p>
+      <div class="sr-imzalar">
+        <div><div class="sr-ib">DN MARINE SERVICE ENGINEER</div><div class="sr-ic"><div class="sr-is"><span>Name:</span><b>${esc(r.muhendis)}</b></div><div class="sr-is"><span>Signature:</span><b></b></div><div class="sr-is"><span>Date:</span><b></b></div></div></div>
+        <div><div class="sr-ib">VESSEL: CHIEF ENGINEER</div><div class="sr-ic"><div class="sr-is"><span>Name:</span><b>${esc(r.chief)}</b></div><div class="sr-is"><span>Signature:</span><b></b></div><div class="sr-is"><span>Date:</span><b></b></div><div class="sr-kase">Vessel's Stamp</div></div></div>
+      </div></div>
+    ${ekler.length ? `<div class="sr-blok"><div class="sr-ekler-liste"><b>Attachments:</b> ${ekler.map(x => `Annex ${x.n}: Signed service sheet${x.tip === 'pdf' ? ` (separate PDF file: ${esc(x.ad)})` : ''}`).join('; ')}</div></div>` : ''}
+    <div class="sr-dip">${esc(firmaUnvan())} · Service Report ${esc(r.no)}</div>
+    ${ekler.filter(x => x.tip !== 'pdf').map(x => `<div class="sr-sayfa-kes sr-ek"><div class="sr-bar"><span>A${x.n}</span>ANNEX ${x.n}: SIGNED SERVICE SHEET</div>${resim[x.id] ? `<img src="${resim[x.id]}" alt="">` : '<div class="sr-foto-yok">Attachment not available on this device</div>'}</div>`).join('')}
+  </div>`;
+}
+async function srResimler(r) {
+  const o = {};
+  for (const f of [...r.fotolar, ...r.ekler]) { if (f.tip === 'pdf') continue; try { const b = await belgeOku(f.id); if (b && belgeVeriGecerli(b)) o[f.id] = b.veri; } catch (e) {} }
+  return o;
+}
+async function srCikti(s, tur) {
+  const r = srVeri(s);
+  if (!r.onay) { bildir('Önce İngilizce metni kontrol edip onaylayın', true); return; }
+  const html = srKagit(s, r, await srResimler(r)), ad = `Service-Report-${String(r.no).replace(/[^\w.-]+/g, '-')}`;
+  if (tur === 'pdf') kagitPdf(ad + '.pdf', html); else yazdir(ad, html);
+}
+/* Fotoğraf seçtir (kamera ya da galeri), küçültüp belge olarak sakla */
+async function srResimEkle(kamera, pdfOlur) {
+  const f = await dosyaSec(pdfOlur && !kamera ? 'image/*,application/pdf' : 'image/*', kamera);
+  if (!f) return null;
+  const pdf = f.type === 'application/pdf' || /\.pdf$/i.test(f.name);
+  if (pdf && !pdfOlur) { bildir('Yalnızca fotoğraf eklenebilir', true); return null; }
+  if (!pdf && !f.type.startsWith('image/')) { bildir('Yalnızca fotoğraf veya PDF eklenebilir', true); return null; }
+  if (pdf && f.size > BELGE_PDF_SINIR) { bildir('PDF en çok 600 KB olabilir. Fotoğrafını çekip ekleyin.', true); return null; }
+  let veri;
+  try { veri = await dataUrlOku(f); if (!pdf) veri = await resimKucult(veri); } catch (e) { bildir('Dosya okunamadı', true); return null; }
+  const ek = {id: kimlik(), ad: (f.name || '').trim() || (pdf ? 'service-sheet.pdf' : 'foto-' + bugun() + '.jpg'), tip: pdf ? 'pdf' : 'resim', boyut: Math.round(veri.length * .75)};
+  try { await belgeYaz({...ek, hesap: H.aktif, veri, tarih: Date.now(), gonderildi: false}); } catch (e) { bildir('Kaydedilemedi. Cihaz depolaması dolu olabilir.', true); return null; }
+  return ek;
+}
+/* Rapor ekranı: servis kaydı üzerinde çalışır */
+function servisRaporu(s) {
+  const r = srVeri(s);
+  const parcalar = (s.parcalar || []).map(p => ({...p}));
+  const yeniEk = [], kaldirilan = [];
+  let kayitli = false;
+  const G = (id, etiket, v, ph = '', tip = 'text') => `<label class="f-satir"><span>${esc(etiket)}</span><input type="${tip}" id="${id}" value="${esc(v || '')}" placeholder="${esc(ph)}"></label>`;
+  const bolum = ([k, tr, en]) => `<div class="bolum">${esc(tr)}<small class="soluk">&nbsp;·&nbsp;${esc(en)}</small></div>
+    <div class="grup tek-sutun sr-cift"><label class="f-satir sol"><textarea data-tr="${k}" rows="3" placeholder="Türkçe yazın (her madde ayrı satır)">${esc(r.tr[k])}</textarea></label>
+      <label class="f-satir sol"><textarea data-en="${k}" rows="3" placeholder="English (raporda bu metin yazar)">${esc(r.en[k])}</textarea></label></div>
+    <div class="btn-grup"><button type="button" class="btn renkli" data-kalip="${k}">${ikon('arti')} Hazır cümle</button><button type="button" class="btn renkli" data-cevir="${k}">${ikon('donustur')} Çevir</button></div>`;
+  const m = modal('Service Report (İngilizce)', `
+    <p class="dipnot">Gemi yönetim şirketleri için İngilizce servis raporu. Fiyat içermez. Türkçe yazın, "Hazır cümle" ya da "Çevir" ile İngilizcesini oluşturun, İngilizce kutuyu kontrol edin ve en altta onaylayın.</p>
+    <div class="bolum">1. Başlık bilgileri</div>
+    <div class="grup">${G('srNo', 'Rapor no', r.no)}${G('srTarih', 'Rapor tarihi', r.tarih, '', 'date')}${G('srPo', 'PO Ref', r.po, 'PRID-900135/PO')}
+      ${G('srGemi', 'Gemi (Vessel)', r.gemi, 'M/T VS Pride')}${G('srImo', 'IMO no', r.imo, '9351414')}
+      ${G('srMusteri', 'Müşteri (armatör)', r.musteri, 'Valloeby Pride Ltd.')}${G('srYonetim', 'c/o yönetim şirketi', r.yonetim, 'Hellespont Ship Management')}
+      ${G('srYer', 'İşin yapıldığı yer', r.yer, 'Port of Tuzla / DN Marine workshop')}${G('srBas', 'Başlangıç tarihi', r.bas, '', 'date')}${G('srBit', 'Bitiş tarihi', r.bit, '', 'date')}</div>
+    <div class="bolum">2. Ekipman bilgisi</div>
+    <div class="grup">${G('srEkipman', 'Ekipman (İngilizce)', r.ekipman, 'Workshop Lathe')}${G('srMarka', 'Marka (Maker)', r.marka)}${G('srModel', 'Model', r.model)}${G('srSeri', 'Seri no', r.seri)}</div>
+    ${SR_BOLUM.slice(0, 3).map(bolum).join('')}
+    <div class="bolum">6. Değişen parçalar<small class="soluk">&nbsp;·&nbsp;Spare parts used</small></div>
+    ${parcalar.length ? `<div class="grup tek-sutun">${parcalar.map((p, i) => `<label class="f-satir sol"><input type="text" data-pen="${i}" value="${esc(p.adEn || '')}" placeholder="${esc((p.ad || p.parcaNo) + ' (İngilizce adı)')}"></label>`).join('')}</div>
+      <p class="dipnot">Parçalar servis kaydından gelir (${parcalar.length} kalem). İngilizce adını yazın; boş bırakılırsa kayıttaki ad yazılır.</p>` : '<p class="dipnot">Serviste parça kullanılmadı. Raporda "None." yazar.</p>'}
+    ${SR_BOLUM.slice(3).map(bolum).join('')}
+    <div class="bolum">9. Çalışma süresi</div>
+    <div class="grup">${G('srTek', 'Teknisyen sayısı', r.teknisyen)}<label class="f-satir sol"><input type="text" id="srSureNot" value="${esc(r.sureNot)}" placeholder="İsteğe bağlı not (English), ör. 2 technicians, 08:00-17:00"></label></div>
+    <p class="dipnot">Başlangıç-bitiş saatleri servis kaydının işçilik satırlarından gelir (${teknisyenleri(s).length} teknisyen, ${sayiFmt(iscilikSaat(s))} saat).</p>
+    <div class="bolum">10. Fotoğraflar</div>
+    <div class="grup" id="srFotoListe"></div>
+    <div class="btn-grup"><button type="button" class="btn renkli" data-foto="once">${ikon('kamera')} Öncesi</button><button type="button" class="btn renkli" data-foto="sonra">${ikon('kamera')} Sonrası</button></div>
+    <div class="bolum">11. İmzalar</div>
+    <div class="grup">${G('srMuhendis', 'DN Marine servis mühendisi', r.muhendis)}${G('srChief', 'Chief Engineer adı', r.chief, 'Boş bırakılırsa elle yazılır')}</div>
+    <p class="dipnot">İmzalar ıslak imzadır. Chief Engineer imzası ve gemi kaşesi çıktı üzerine alınır.</p>
+    <div class="bolum">Ek: imzalı service sheet</div>
+    <div class="grup" id="srEkListe"></div>
+    <div class="btn-grup"><button type="button" class="btn renkli" id="srEkKamera">${ikon('kamera')} Fotoğraf çek</button><button type="button" class="btn renkli" id="srEkDosya">${ikon('yukle')} Dosya ekle</button></div>
+    <div class="bolum">Onay</div>
+    <div class="grup"><label class="f-satir"><span style="flex:1">İngilizce metinleri kontrol ettim, onaylıyorum</span>${anahtar('srOnay', r.onay)}</label></div>
+    <p class="dipnot" id="srUyari"></p>
+    <div class="btn-grup"><button type="button" class="btn renkli" id="srOnizle">${ikon('dosya')} Önizleme</button><button type="button" class="btn renkli" id="srPdf">${ikon('indir')} PDF indir</button><button type="button" class="btn renkli" id="srYaz">${ikon('yazici')} Yazdır</button></div>`,
+    {kaydet: () => kaydetR(), kaydetAd: 'Kaydet', tam: true});
+
+  const perde = m.closest('.perde'), once = perde?._kapaninca;
+  const sil1 = id => belgeIslem('readwrite', st => st ? st.delete(id) : void belgeBellek.delete(id));
+  if (perde) perde._kapaninca = () => { once && once(); if (!kayitli) for (const id of yeniEk) sil1(id); };
+  const onayKaldir = () => { const o = $('#srOnay', m); if (o && o.checked) { o.checked = false; o.dispatchEvent(new Event('change')); } };
+  const uyari = () => {
+    const l = SR_BOLUM.filter(([k]) => srTurkce($(`[data-en="${k}"]`, m).value)).map(([, tr]) => tr.replace(/^\d+\.\s*/, ''));
+    if (srTurkce($('#srYer', m).value)) l.push('İşin yapıldığı yer');
+    if (srTurkce($('#srEkipman', m).value)) l.push('Ekipman');
+    if ([$('#srSureNot', m), ...$$('[data-fnot]', m)].some(i => srTurkce(i.value))) l.push('Çalışma notu / fotoğraf açıklaması');
+    $('#srUyari', m).textContent = l.length ? `Uyarı: şu İngilizce kutularda Türkçe harf var, kontrol edin: ${l.join(', ')}.` : '';
+  };
+  $$('[data-en]', m).forEach(t => t.addEventListener('input', () => { onayKaldir(); uyari(); }));
+  $$('[data-pen]', m).forEach(t => t.addEventListener('input', onayKaldir));
+  ['srYer', 'srEkipman', 'srSureNot'].forEach(id => $('#' + id, m).addEventListener('input', () => { onayKaldir(); uyari(); }));
+  $$('[data-kalip]', m).forEach(b => b.onclick = async () => {
+    const k = b.dataset.kalip, l = SR_KALIP[k];
+    const v = await eylemSayfa('Hazır cümle', 'Seçilen cümle Türkçe ve İngilizce kutuya eklenir.', l.map(([tr, en], i) => ({ad: `${tr}  →  ${en}`, deger: i + 1})));
+    if (!v) return;
+    const [tr, en] = l[v - 1], ek = (el, t) => { el.value = el.value.trim() ? el.value.replace(/\s+$/, '') + '\n' + t : t; };
+    ek($(`[data-tr="${k}"]`, m), tr); ek($(`[data-en="${k}"]`, m), en); onayKaldir(); uyari();
+  });
+  $$('[data-cevir]', m).forEach(b => b.onclick = async () => {
+    const k = b.dataset.cevir, trEl = $(`[data-tr="${k}"]`, m), enEl = $(`[data-en="${k}"]`, m);
+    if (!trEl.value.trim()) return bildir('Önce Türkçe metni yazın', true);
+    if (enEl.value.trim() && !await onay('İngilizce metin değiştirilsin mi?', 'Kutudaki İngilizce metin silinir, Türkçe metnin kalıp çevirisi yazılır.', 'Değiştir')) return;
+    const c = srCevir(trEl.value);
+    enEl.value = c.metin; onayKaldir(); uyari();
+    bildir(c.bilinmeyen ? `${c.bilinmeyen} satır kalıplarda yok, Türkçe kaldı. İngilizcesini kendiniz yazın.` : 'Çevrildi. Kontrol edip onaylayın.', !!c.bilinmeyen);
+  });
+  // Fotoğraflar ve ekler
+  const ekSatir = (f, i, liste) => `<div class="hucre kareli ek-satir">${kare(f.tip === 'pdf' ? 'dosya' : 'kamera', f.tip === 'pdf' ? 'kirmizi' : 'mavi')}<div class="ic">${liste === 'foto'
+      ? `<b>${f.tur === 'once' ? 'Öncesi' : 'Sonrası'}</b><input type="text" class="sr-fnot" data-fnot="${i}" value="${esc(f.not || '')}" placeholder="Açıklama (English, isteğe bağlı)">`
+      : `<b>${esc(f.ad)}</b><small>${f.tip === 'pdf' ? 'PDF, rapora ayrı dosya olarak not edilir' : 'Rapora ek sayfa olarak basılır'}</small>`}</div><button type="button" class="ek-sil" data-${liste}sil="${i}">Kaldır</button></div>`;
+  const listeCiz = () => {
+    $('#srFotoListe', m).innerHTML = r.fotolar.length ? r.fotolar.map((f, i) => ekSatir(f, i, 'foto')).join('') : '<div class="hucre"><div class="ic"><small>Fotoğraf yok. Öncesi / Sonrası ile ekleyin; telefonda kamera açılır.</small></div></div>';
+    $('#srEkListe', m).innerHTML = r.ekler.length ? r.ekler.map((f, i) => ekSatir(f, i, 'ek')).join('') : '<div class="hucre"><div class="ic"><small>Gemiden imzalı iş formu aldıysanız fotoğrafını çekin ya da PDF\'ini ekleyin.</small></div></div>';
+    $$('[data-fnot]', m).forEach(inp => inp.oninput = () => { r.fotolar[+inp.dataset.fnot].not = inp.value; onayKaldir(); uyari(); });
+    $$('[data-fotosil]', m).forEach(b => b.onclick = () => { kaldirilan.push(r.fotolar[+b.dataset.fotosil].id); r.fotolar.splice(+b.dataset.fotosil, 1); listeCiz(); });
+    $$('[data-eksil]', m).forEach(b => b.onclick = () => { kaldirilan.push(r.ekler[+b.dataset.eksil].id); r.ekler.splice(+b.dataset.eksil, 1); listeCiz(); });
+    if (saltOkunur()) $$('#srFotoListe input, #srFotoListe button, #srEkListe button', m).forEach(e => { e.disabled = true; });
+  };
+  const fotoAl = async tur => {
+    let kamera = false;
+    if (window.Android || dokunmatik()) { const v = await eylemSayfa(tur === 'once' ? 'Öncesi fotoğrafı' : 'Sonrası fotoğrafı', null, [{ad: 'Fotoğraf çek', deger: 'k'}, {ad: 'Galeriden seç', deger: 'g'}]); if (!v) return; kamera = v === 'k'; }
+    const ek = await srResimEkle(kamera, false);
+    if (ek) { yeniEk.push(ek.id); r.fotolar.push({...ek, tur, not: ''}); listeCiz(); }
+  };
+  $$('[data-foto]', m).forEach(b => b.onclick = () => fotoAl(b.dataset.foto));
+  const ekAl = async kamera => { const ek = await srResimEkle(kamera, true); if (ek) { yeniEk.push(ek.id); r.ekler.push(ek); listeCiz(); } };
+  $('#srEkKamera', m).onclick = () => ekAl(true);
+  $('#srEkDosya', m).onclick = () => ekAl(false);
+  listeCiz(); uyari();
+  // Türkçe harf kalan İngilizce metin onaylanamaz
+  $('#srOnay', m).addEventListener('change', e => {
+    if (!e.target.checked) return;
+    uyari();
+    if ($('#srUyari', m).textContent) { e.target.checked = false; const g = e.target.nextElementSibling?.querySelector('input'); if (g) g.checked = false; bildir('İngilizce kutularda Türkçe metin kaldı; önce düzeltin', true); }
+  });
+
+  function oku() {
+    const v = id => $('#' + id, m).value.trim();
+    Object.assign(r, {no: v('srNo') || 'SR-' + s.no, tarih: v('srTarih') || bugun(), po: v('srPo'), gemi: v('srGemi'), imo: v('srImo'), musteri: v('srMusteri'), yonetim: v('srYonetim'),
+      yer: v('srYer'), bas: v('srBas'), bit: v('srBit'), ekipman: v('srEkipman'), marka: v('srMarka'), model: v('srModel'), seri: v('srSeri'),
+      teknisyen: v('srTek'), sureNot: v('srSureNot'), muhendis: v('srMuhendis'), chief: v('srChief'), onay: $('#srOnay', m).checked});
+    if (r.bas && r.bit && r.bit < r.bas) [r.bas, r.bit] = [r.bit, r.bas];
+    for (const [k] of SR_BOLUM) { r.tr[k] = $(`[data-tr="${k}"]`, m).value.trim(); r.en[k] = $(`[data-en="${k}"]`, m).value.trim(); }
+    $$('[data-pen]', m).forEach(inp => { parcalar[+inp.dataset.pen].adEn = inp.value.trim(); });
+  }
+  function kaydetR(sessiz) {
+    if (saltOkunur('servis')) { bildir('Bu kaydı değiştirme yetkiniz yok', true); return false; }
+    const asil = servis(s.id);
+    if (!asil) { bildir('Servis kaydı bulunamadı', true); return false; }
+    oku();
+    if (r.onay) { r.onayKim = ortak()?.oturum?.ad || ''; r.onayZaman = Date.now(); }
+    const {tr} = r;
+    asil.sikayet = tr.sikayet; asil.islemler = tr.islem; asil.oneriler = tr.oneri;
+    asil.parcalar.forEach((p, i) => { const y = parcalar[i]; if (y && y.adEn) p.adEn = y.adEn; else delete p.adEn; });
+    const sakla = {...r, tr: {tespit: tr.tespit, test: tr.test}, en: {...r.en}};
+    delete sakla.fotolar; delete sakla.ekler;
+    asil.rapor = {...sakla, fotolar: r.fotolar.map(({id, ad, tip, boyut, tur, not}) => ({id, ad, tip, boyut, tur, not})), ekler: r.ekler.map(({id, ad, tip, boyut}) => ({id, ad, tip, boyut}))};
+    kayitli = true;
+    for (const id of kaldirilan) yeniEk.includes(id) ? sil1(id) : belgeSil(id);
+    yeniEk.length = 0; kaldirilan.length = 0;
+    kaydet();
+    if (!sessiz) { bildir('Service Report kaydedildi'); setTimeout(() => ciz(), 10); }
+    return true;
+  }
+  const kaydetVeCikti = async tur => {
+    if (!saltOkunur('servis')) { if (!kaydetR(true)) return; }
+    if (!$('#srOnay', m).checked) { bildir('Önce İngilizce metni kontrol edip "onaylıyorum" anahtarını açın', true); return; }
+    srCikti(servis(s.id) || s, tur);
+  };
+  $('#srPdf', m).onclick = () => kaydetVeCikti('pdf');
+  $('#srYaz', m).onclick = () => kaydetVeCikti('yazdir');
+  $('#srOnizle', m).onclick = async () => {
+    oku();
+    const html = srKagit({...s, parcalar: s.parcalar.map((p, i) => ({...p, adEn: parcalar[i]?.adEn}))}, r, await srResimler(r));
+    const o = modal('Önizleme', `<div class="kagit-kap sr-kap">${html}</div>`, {solAd: 'Kapat', tam: true});
+    const kap = $('.sr-kap', o), w = kap.clientWidth; if (w && w < 760) $('.sr-kagit', kap).style.zoom = (w / 760).toFixed(3);
+  };
+  // Salt okunur kullanıcı da PDF alabilsin
+  if (saltOkunur()) ['srOnizle', 'srPdf', 'srYaz'].forEach(id => { const b = $('#' + id, m); if (b) b.disabled = false; });
 }
 /* Cari ekranındaki tekne/makine ve servis geçmişi bölümü */
 function cariServisBolum(k) {
@@ -11658,7 +12081,7 @@ function formuKilitle(m) {
   m.classList.add('salt-okunur');
 }
 const KILITLI_FORM = [['islemFormu', 'islemler', 0], ['kisiFormu', 'kisiler', 0], ['hareketFormu', 'hareketler', 1], ['urunFormu', 'urunler', 0], ['faturaFormu', 'faturalar', 0],
-  ['odemeFormu', 'faturalar', 0], ['finansHesapFormu', 'finansHesap', 0], ['virmanFormu', 'virmanlar', 0], ['ekipmanFormu', 'ekipmanlar', 0], ['servisFormu', 'servisler', 0],
+  ['odemeFormu', 'faturalar', 0], ['finansHesapFormu', 'finansHesap', 0], ['virmanFormu', 'virmanlar', 0], ['ekipmanFormu', 'ekipmanlar', 0], ['servisFormu', 'servisler', 0], ['servisRaporu', 'servisler', 0],
   ['personelFormu', 'personeller', 0], ['hedefFormu', 'hedefler', 0]];
 for (const [ad, k, i] of KILITLI_FORM) {
   const asil = window[ad];
