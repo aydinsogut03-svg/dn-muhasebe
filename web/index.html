@@ -1879,7 +1879,7 @@ p.dipnot .i{width:14px;height:14px;vertical-align:-2px}
 
 <script>
 'use strict';
-const VERSIYON = '2.20.0';
+const VERSIYON = '2.20.1';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -2103,6 +2103,8 @@ function duzelt(d) {
   const garantiEski = !d.servisAyar?.garanti6;
   d.servisAyar = {...y.servisAyar, ...d.servisAyar};
   if (garantiEski) { d.servisAyar.garantiAy = '6'; d.servisAyar.garanti6 = true; }
+  // 2.20.1: kaşe yüklüyse servis formuna varsayılan olarak basılır; 2.20.0'da kendiliğinden kaydedilen "kapalı" değerleri bir kez temizlenir.
+  if (!d.servisAyar.kase201) { for (const s of d.servisler || []) if (s.kaseBas === false) delete s.kaseBas; d.servisAyar.kase201 = true; }
   // 2.9.12: firma adında ve bilgilerinde "&" işareti kullanılmaz ("D&N" → "DN").
   d.ad = ampersandsiz(d.ad);
   for (const a in d.firma) if (typeof d.firma[a] === 'string') d.firma[a] = ampersandsiz(d.firma[a]);
@@ -7422,7 +7424,7 @@ function servisFormu(s, on = {}) {
     <div class="bolum">Fotoğraflar / Photographs</div>
     <div id="sFotolar"></div>
     <div class="bolum">Kaşe / imza</div>
-    <div class="grup"><label class="f-satir"><span style="flex:1">Firma kaşesini forma bas</span>${anahtar('sKase', x.kaseBas)}</label></div>
+    <div class="grup"><label class="f-satir"><span style="flex:1">Firma kaşesini forma bas</span>${anahtar('sKase', x.kaseBas !== false)}</label></div>
     <p class="dipnot">${D.firma.imza ? 'Kaşe servis teknisyeni imza kutusuna basılır.' : 'Kaşe yüklenmemiş: Ayarlar > Servis formu > Kaşe / imza.'}</p>
     <p class="dipnot">Servis formunda fiyat yer almaz. Fiyatlandırma için servis ekranındaki "Faturala" taslak fatura oluşturur.</p>`,
     {kaydet: kaydetS, kaydetAd: yeni ? 'Oluştur' : 'Kaydet', tam: true});
@@ -8167,7 +8169,7 @@ function servisFisi(id) {
           ${S('Teslim durumu', `<select data-f="teslim"><option value="">—</option>${Object.entries(TESLIM).map(([v, a]) => `<option value="${v}" ${v === x.teslim ? 'selected' : ''}>${a}</option>`).join('')}</select>`)}
           ${S('Test süresi (dk)', G('testSure'))}
           <div class="fk-satir ust"><label>Test / deneme</label>${kutular('testler', TESTLER)}</div>
-          <div class="fk-satir"><label>Kaşe / imza</label><div class="fk-kutular"><label><input type="checkbox" data-f="kaseBas" ${x.kaseBas ? 'checked' : ''}><span>Firma kaşesini forma bas${D.firma.imza ? '' : ' (önce Ayarlar > Servis formu > Kaşe / imza)'}</span></label></div></div>
+          <div class="fk-satir"><label>Kaşe / imza</label><div class="fk-kutular"><label><input type="checkbox" data-f="kaseBas" ${x.kaseBas !== false ? 'checked' : ''}><span>Firma kaşesini forma bas${D.firma.imza ? '' : ' (önce Ayarlar > Servis formu > Kaşe / imza)'}</span></label></div></div>
         </fieldset>
         <fieldset class="fk"><legend>Sonraki bakım</legend>${S('Bakım tarihi', G('sonrakiBakim', {tip: 'date'}))}${S('Bakım saati', G('sonrakiBakimSaat', {ph: 'Çalışma saati'}))}</fieldset>
         <fieldset class="fk"><legend>Fiyatlandırma</legend>
@@ -8538,7 +8540,7 @@ function servisKagit(s, resim = {}) {
     ${bar('YASAL BİLGİLENDİRME VE SERVİS ŞARTLARI | TERMS AND CONDITIONS')}
     <ol class="sf-yasal">${servisYasal().map(t => `<li>${esc(t)}</li>`).join('')}</ol>
     <p class="sf-beyan">Yukarıdaki işlerin yapıldığını, ekipmanı belirtilen durumda teslim aldığımı ve yasal bilgilendirmeyi okuyup kabul ettiğimi beyan ederim.<br><span>I confirm that the above work has been carried out and the equipment has been received in the stated condition.</span></p>
-    <div class="sf-imzalar"><div><div class="sf-ib">SERVİS TEKNİSYENİ (AD SOYAD / İMZA)<i>SERVICE ENGINEER (NAME / SIGNATURE)</i></div><div class="sf-ia${s.kaseBas && D.firma.imza ? ' kaseli' : ''}">${s.kaseBas && D.firma.imza ? `<img src="${D.firma.imza}" alt="">` : ''}</div><small>Tarih / Saat (Date / Time): ____/____/________   ____:____</small></div>
+    <div class="sf-imzalar"><div><div class="sf-ib">SERVİS TEKNİSYENİ (AD SOYAD / İMZA)<i>SERVICE ENGINEER (NAME / SIGNATURE)</i></div><div class="sf-ia${s.kaseBas !== false && D.firma.imza ? ' kaseli' : ''}">${s.kaseBas !== false && D.firma.imza ? `<img src="${D.firma.imza}" alt="">` : ''}</div><small>Tarih / Saat (Date / Time): ____/____/________   ____:____</small></div>
       <div><div class="sf-ib">MÜŞTERİ / YETKİLİ (AD SOYAD / KAŞE İMZA)<i>CUSTOMER / CHIEF ENGINEER (NAME / STAMP / SIGNATURE)</i></div><div class="sf-ia"></div><small>Tarih / Saat (Date / Time): ____/____/________   ____:____</small></div></div>
     <div class="sf-dip">${esc(firmaUnvan())} · Servis Formu / Service Report · ${esc(s.no)}</div>
   </div>${fotoSayfa}`;
