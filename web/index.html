@@ -1797,7 +1797,7 @@ p.dipnot .i{width:14px;height:14px;vertical-align:-2px}
 
 <script>
 'use strict';
-const VERSIYON = '2.16.0';
+const VERSIYON = '2.17.0';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -10016,8 +10016,8 @@ const firmaYol = (o, ek = '') => `${belgeKok(o)}/firmalar/${o.f}${ek}`;
 const fsUrl = (o, ek) => `${FS}/v1/${firmaYol(o, ek)}`;
 function ortakHataMetni(kod) {
   const k = String(kod || '');
-  const t = [['EMAIL_EXISTS', 'Bu e-posta ile zaten bir kullanıcı var'], ['INVALID_LOGIN_CREDENTIALS', 'E-posta veya şifre yanlış'], ['INVALID_PASSWORD', 'E-posta veya şifre yanlış'],
-    ['EMAIL_NOT_FOUND', 'E-posta veya şifre yanlış'], ['WEAK_PASSWORD', 'Şifre çok zayıf: en az 8 karakter, harf ve rakam kullanın'], ['PASSWORD_DOES_NOT_MEET_REQUIREMENTS', 'Şifre çok zayıf: en az 8 karakter, harf ve rakam kullanın'], ['INVALID_EMAIL', 'E-posta adresi geçersiz'], ['MISSING_PASSWORD', 'Şifre girin'],
+  const t = [['EMAIL_EXISTS', 'Bu kullanıcı adı ya da e-posta zaten kullanılıyor'], ['INVALID_LOGIN_CREDENTIALS', 'Kullanıcı adı, e-posta veya şifre yanlış'], ['INVALID_PASSWORD', 'Kullanıcı adı, e-posta veya şifre yanlış'],
+    ['EMAIL_NOT_FOUND', 'Kullanıcı adı, e-posta veya şifre yanlış'], ['WEAK_PASSWORD', 'Şifre çok zayıf: en az 8 karakter, harf ve rakam kullanın'], ['PASSWORD_DOES_NOT_MEET_REQUIREMENTS', 'Şifre çok zayıf: en az 8 karakter, harf ve rakam kullanın'], ['INVALID_EMAIL', 'Kullanıcı adı ya da e-posta geçersiz'], ['MISSING_PASSWORD', 'Şifre girin'],
     ['TOO_MANY_ATTEMPTS', 'Çok fazla deneme yapıldı, birkaç dakika sonra tekrar deneyin'], ['USER_DISABLED', 'Bu kullanıcı kapatılmış'],
     ['TOKEN_EXPIRED', 'Oturum süresi doldu, yeniden giriş yapın'], ['INVALID_REFRESH_TOKEN', 'Oturum süresi doldu, yeniden giriş yapın'], ['USER_NOT_FOUND', 'Oturum süresi doldu, yeniden giriş yapın'],
     ['API key not valid', 'Firebase API anahtarı geçersiz'], ['API_KEY_INVALID', 'Firebase API anahtarı geçersiz'],
@@ -10056,6 +10056,19 @@ async function ortakJeton(o) {
   const g = ortak(); if (g && g.oturum && g.oturum.uid === s.uid) { g.oturum = {...g.oturum, tok: s.tok, yen: s.yen, bitis: s.bitis}; ortakYaz(g); }
   return s.tok;
 }
+/* Kullanıcı adıyla giriş: şirketin tek e-postası olduğu için her kullanıcıya ad soyaddan bir kullanıcı adı verilir
+   (ör. "Aydın Söğüt" → aydin.sogut). Firebase yalnız e-postayla hesap açtığından kullanıcı adı, projenin kendi
+   firebaseapp.com alanında dahili bir adrese çevrilir; bu adres ekranda hiç görünmez, e-posta da gönderilmez. */
+function kadUret(t) {
+  return kucult(t).replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ö/g, 'o').replace(/ç/g, 'c').replace(/ı/g, 'i').replace(/â/g, 'a').replace(/î/g, 'i').replace(/û/g, 'u')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\s_-]+/g, '.').replace(/[^a-z0-9.]/g, '').replace(/\.{2,}/g, '.').replace(/^\.|\.$/g, '').slice(0, 40).replace(/\.$/, '');
+}
+const kadAlan = o => '@' + ((o && o.p) || ORTAK_VARSAYILAN.p) + '.firebaseapp.com';
+const kadMi = (e, o = ortak()) => String(e || '').toLowerCase().endsWith(kadAlan(o));
+/* Girişte yazılan: @ varsa e-posta, yoksa kullanıcı adı (ad soyad da yazılabilir, aynı biçime çevrilir) */
+const girisAdresi = (t, o = ortak()) => { t = String(t || '').trim(); return !t || t.includes('@') ? t : (kadUret(t) ? kadUret(t) + kadAlan(o) : ''); };
+/* Ekranda gösterilen: dahili adres yerine kullanıcı adı */
+const girisGoster = (e, o = ortak()) => kadMi(e, o) ? String(e).slice(0, -kadAlan(o).length) : String(e || '');
 async function ortakGirisYap(o, eposta, sifre, yeni) {
   const j = await ortakIstek(o, 'POST', `${KIM}/v1/accounts:${yeni ? 'signUp' : 'signInWithPassword'}?key=${encodeURIComponent(o.a)}`, {email: eposta, password: sifre, returnSecureToken: true}, {yetki: false});
   return {uid: j.localId, eposta: j.email || eposta, tok: j.idToken, yen: j.refreshToken, bitis: Date.now() + (+j.expiresIn || 3600) * 1000};
@@ -11041,7 +11054,7 @@ function ekranKilitle() {
   const el = document.createElement('div'); el.id = 'ekranKilit'; el.className = 'giris-perde';
   el.innerHTML = `<div class="giris-kutu">
       <div class="kilit-simge">${ikon('kilit')}</div>
-      <h2>Ekran kilitli</h2><p>${esc(s.ad || s.eposta)} · ${esc(ROLLER[s.rol]?.ad || '')}</p>
+      <h2>Ekran kilitli</h2><p>${esc(s.ad || girisGoster(s.eposta))} · ${esc(ROLLER[s.rol]?.ad || '')}</p>
       <form id="ekForm" autocomplete="off">
         <input type="email" autocomplete="username" value="${esc(s.eposta)}" hidden>
         <div class="grup"><label class="f-satir sol"><input type="password" id="ekSifre" autocomplete="current-password" placeholder="Hesap şifreniz"></label></div>
@@ -11096,7 +11109,7 @@ function girisEkrani(neden) {
       <img class="giris-logo" src="${LOGO}" alt="DN Marine">
       <h2>PowerServ+</h2><p>${esc(o.firmaAd || 'Ortak veritabanı')} · kullanıcı girişi</p>
       ${neden ? `<div class="giris-uyari">${esc(neden)}</div>` : ''}
-      <div class="grup"><label class="f-satir sol"><input type="email" id="gEposta" autocomplete="username" placeholder="E-posta" value="${esc(o.sonEposta || '')}"></label>
+      <div class="grup"><label class="f-satir sol"><input type="text" id="gEposta" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Kullanıcı adı veya e-posta" value="${esc(girisGoster(o.sonEposta || '', o))}"></label>
         <label class="f-satir sol"><input type="password" id="gSifre" autocomplete="current-password" placeholder="Şifre"></label></div>
       <p class="giris-hata gider" id="gHata"></p>
       <button class="btn" id="gGiris">Giriş yap</button>
@@ -11106,8 +11119,8 @@ function girisEkrani(neden) {
   yuzenEtiket(el);
   const hata = m => { $('#gHata').textContent = m || ''; };
   const giris = async () => {
-    const e = $('#gEposta').value.trim(), s = $('#gSifre').value;
-    if (!e || !s) return hata('E-posta ve şifre girin');
+    const e = girisAdresi($('#gEposta').value, ortak()), s = $('#gSifre').value;
+    if (!e || !s) return hata('Kullanıcı adı ve şifre girin');
     const bk = girisBekleme();
     if (bk) return hata(beklemeMetni(bk));
     const b = $('#gGiris'); b.disabled = true; b.textContent = 'Giriş yapılıyor…'; hata('');
@@ -11130,6 +11143,7 @@ function girisEkrani(neden) {
   $('#gUnuttum').onclick = async () => {
     const e = $('#gEposta').value.trim();
     if (!e) return hata('Önce e-posta adresinizi yazın');
+    if (!e.includes('@')) return hata('Kullanıcı adıyla açılan hesapta şifre e-postayla sıfırlanamaz. Yöneticiniz Kullanıcılar ekranında size yeni giriş açabilir.');
     try { await ortakIstek(ortak(), 'POST', `${KIM}/v1/accounts:sendOobCode?key=${encodeURIComponent(o.a)}`, {requestType: 'PASSWORD_RESET', email: e}, {yetki: false}); hata(''); bildir('Şifre sıfırlama bağlantısı e-postanıza gönderildi'); }
     catch (x) { hata(x.message); }
   };
@@ -11213,7 +11227,8 @@ function ortakKurFormu() {
   }
 }
 const ortakBilgiMetni = (e, sf) => { const o = ortak(), v = o && o.p === ORTAK_VARSAYILAN.p && o.f === ORTAK_VARSAYILAN.f;
-  return `PowerServ+ girişi\nE-posta: ${e}\nŞifre: ${sf}\n` + (v ? 'Programı açın > Mevcut firmaya bağlan (ya da Ayarlar > Ortak veritabanı > Mevcut firmaya bağlan) > e-posta ve şifreyi girin.' : 'Bağlantı kodu: ' + baglantiKodu(o)); };
+  const k = kadMi(e, o), ne = k ? 'kullanıcı adı' : 'e-posta';
+  return `PowerServ+ girişi\n${k ? 'Kullanıcı adı' : 'E-posta'}: ${girisGoster(e, o)}\nŞifre: ${sf}\n` + (v ? `Programı açın > Mevcut firmaya bağlan (ya da Ayarlar > Ortak veritabanı > Mevcut firmaya bağlan) > ${ne} ve şifreyi girin.` : 'Bağlantı kodu: ' + baglantiKodu(o)) + (k ? '\nİlk girişten sonra Ayarlar > Ortak veritabanı > Şifremi değiştir ile kendi şifrenizi belirleyin.' : ''); };
 function baglantiKoduGoster() {
   const o = ortak();
   if (!o) return;
@@ -11226,10 +11241,10 @@ function baglantiKoduGoster() {
 }
 function ortakKatilFormu() {
   const m = modal('Mevcut firmaya bağlan', `
-    <p class="dipnot" style="margin-top:0">Yöneticinin size açtığı e-posta ve şifreyi girin. Firma verileri bu cihazda <b>yeni bir hesap</b> olarak açılır; mevcut hesaplarınıza dokunulmaz.</p>
+    <p class="dipnot" style="margin-top:0">Yöneticinin size açtığı kullanıcı adı (ya da e-posta) ve şifreyi girin. Firma verileri bu cihazda <b>yeni bir hesap</b> olarak açılır; mevcut hesaplarınıza dokunulmaz.</p>
     <div class="grup gizli" id="okKodGrup"><label class="f-satir sol"><textarea id="okKod" rows="3" placeholder="Bağlantı kodu (PS1-…)"></textarea></label></div>
     <div class="grup">
-      <label class="f-satir sol"><input id="okEposta" type="email" autocomplete="username" placeholder="E-posta"></label>
+      <label class="f-satir sol"><input id="okEposta" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Kullanıcı adı veya e-posta"></label>
       <label class="f-satir sol"><input id="okSifre" type="password" autocomplete="current-password" placeholder="Şifre"></label>
     </div>
     <p class="dipnot"><button class="bag" id="okKodAc">Başka bir firmaya bağlantı koduyla bağlan</button></p>
@@ -11239,9 +11254,10 @@ function ortakKatilFormu() {
   let calisiyor = false;
   async function baglan() {
     if (calisiyor) return;
-    const kod = $('#okKod', m).value.trim(), c = kod ? baglantiKoduCoz(kod) : ORTAK_VARSAYILAN, e = $('#okEposta', m).value.trim(), s = $('#okSifre', m).value;
+    const kod = $('#okKod', m).value.trim(), c = kod ? baglantiKoduCoz(kod) : ORTAK_VARSAYILAN, s = $('#okSifre', m).value;
     if (!c) return hata('Bağlantı kodu geçersiz');
-    if (!e || !s) return hata('E-posta ve şifre girin');
+    const e = girisAdresi($('#okEposta', m).value, c);
+    if (!e || !s) return hata('Kullanıcı adı ve şifre girin');
     const bk = girisBekleme();
     if (bk) return hata(beklemeMetni(bk));
     const b = $('[data-sag]', m); calisiyor = true; b.disabled = true; b.textContent = 'Bağlanıyor…'; hata('');
@@ -11285,7 +11301,7 @@ function ortakAyarHtml() {
     <p class="dipnot">Masaüstü ve telefonlar aynı veriyi kullanır, her kullanıcı kendi şifresiyle girer. İnternet yokken de çalışır; bağlantı gelince eşitlenir. Ücretsiz bir Firebase projesi gerekir.</p>`;
   if (o.hesap !== H.aktif) { const hx = H.liste.find(x => x.id === o.hesap); return h + `<div class="grup"><button class="hucre kareli" id="ortakHesap">${kare('bulut', 'gri')}<div class="ic"><b>${esc(hx ? hesapAdi(hx) : 'Başka bir hesap')} hesabına bağlı</b><small>Bu hesap ortak veritabanını kullanmıyor</small></div><span class="deger">Geç</span>${CHEV}</button></div>`; }
   return h + `<div class="grup">
-      <div class="hucre kareli">${kare('kisi', 'mavi')}<div class="ic"><b>${esc(s?.ad || s?.eposta || '')}</b><small>${esc(s?.eposta || '')} · ${esc(o.firmaAd || o.f)}</small></div><span class="hap mavi">${esc(ROLLER[r]?.ad || '')}</span></div>
+      <div class="hucre kareli">${kare('kisi', 'mavi')}<div class="ic"><b>${esc(s?.ad || girisGoster(s?.eposta, o) || '')}</b><small>${esc(girisGoster(s?.eposta, o))} · ${esc(o.firmaAd || o.f)}</small></div><span class="hap mavi">${esc(ROLLER[r]?.ad || '')}</span></div>
       <button class="hucre kareli" id="ortakSimdi">${kare('donustur', 'nane')}<div class="ic"><b>Şimdi eşitle</b><small class="ortak-durum">${esc(ortakDurumMetni())}</small></div>${CHEV}</button>
       ${r === 'yonetici' ? `<button class="hucre kareli" id="ortakKullanici">${kare('kisiler', 'indigo')}<div class="ic"><b>Kullanıcılar ve yetkiler</b><small>Kullanıcı ekle, rol ver, erişimi kapat</small></div>${CHEV}</button>
       ${o.p === ORTAK_VARSAYILAN.p ? '' : `<button class="hucre kareli" id="ortakKod">${kare('kilit', 'mor')}<div class="ic"><b>Bağlantı kodu</b><small>Yeni cihazı firmaya bağlamak için</small></div>${CHEV}</button>`}` : ''}
@@ -11293,6 +11309,7 @@ function ortakAyarHtml() {
       ${r === 'yonetici' ? `<button class="hucre kareli" id="ortakKural">${kare('dosya', 'gri')}<div class="ic"><b>Güvenlik kuralları</b><small>Firebase'e yapıştırılacak metin</small></div>${CHEV}</button>` : ''}
       <label class="hucre kareli">${kare('kilit', 'mavi')}<div class="ic"><b>Ekran kilidi</b><small>Hareketsiz kalınca hesap şifresi sorulur</small></div>
         <select class="secim" id="ortakKilitDk">${KILIT_SURELERI.map(d => `<option value="${d}"${ekranAyar().dk === d ? ' selected' : ''}>${d ? d + ' dakika' : 'Kapalı'}</option>`).join('')}</select></label>
+      <button class="hucre kareli" id="ortakSifre">${kare('kilit', 'nane')}<div class="ic"><b>Şifremi değiştir</b><small>Yöneticinin verdiği geçici şifre yerine kendi şifreniz</small></div>${CHEV}</button>
       <button class="hucre kareli" id="ortakKilitSimdi">${kare('kilit', 'gri')}<div class="ic"><b>Şimdi kilitle</b><small>Masadan kalkarken</small></div>${CHEV}</button>
       <button class="hucre kareli" id="ortakCikis">${kare('cikis', 'gri')}<div class="ic"><b>Oturumu kapat</b></div>${CHEV}</button>
       <button class="hucre kareli" id="ortakAyir">${kare('kapat', 'gri')}<div class="ic"><b>Bu cihazı ayır</b><small>Veriler bu cihazda kalır, eşitleme durur</small></div>${CHEV}</button></div>
@@ -11304,11 +11321,51 @@ function ortakAyarBagla() {
   b('ortakHesap', () => hesabaGec(ortak().hesap));
   b('ortakSimdi', async () => { await ortakEsitle(); bildir(ortakDurum.hata ? 'Eşitlenemedi: ' + ortakDurum.hata : 'Eşitlendi', !!ortakDurum.hata); });
   b('ortakKullanici', () => git('kullanicilar')); b('ortakLog', () => git('islemkaydi'));
-  b('ortakCikis', async () => { if (await onay('Oturum kapatılsın mı?', 'Yeniden girmek için e-posta ve şifre gerekir.', 'Oturumu kapat')) { await ortakEsitle(); ortakOturumKapat(''); } });
+  b('ortakCikis', async () => { if (await onay('Oturum kapatılsın mı?', 'Yeniden girmek için kullanıcı adı (ya da e-posta) ve şifre gerekir.', 'Oturumu kapat')) { await ortakEsitle(); ortakOturumKapat(''); } });
   b('ortakAyir', ortakAyir);
   b('ortakKilitSimdi', ekranKilitle);
+  b('ortakSifre', sifreDegistirFormu);
   const kd = $('#ortakKilitDk');
   if (kd) kd.onchange = () => { ekranAyarYaz({dk: +kd.value}); ekranEtkinlik(); bildir(+kd.value ? `Ekran ${kd.value} dakika hareketsizlikte kilitlenecek` : 'Ekran kilidi kapatıldı'); };
+}
+
+/* --- Şifre değiştir: kullanıcı kendi şifresini değiştirir (kullanıcı adlı hesaplarda e-postayla sıfırlama yok) --- */
+function sifreDegistirFormu() {
+  const o = ortak(), s0 = o?.oturum;
+  if (!s0) return;
+  const m = modal('Şifremi değiştir', `
+    <p class="dipnot" style="margin-top:0"><b>${esc(s0.ad || girisGoster(s0.eposta, o))}</b> · ${esc(girisGoster(s0.eposta, o))}</p>
+    <div class="grup">
+      <input type="text" autocomplete="username" value="${esc(s0.eposta)}" hidden>
+      <label class="f-satir sol"><input id="sdEski" type="password" autocomplete="current-password" placeholder="Şu anki şifre"></label>
+      <label class="f-satir sol"><input id="sdYeni" type="password" autocomplete="new-password" placeholder="Yeni şifre (en az 8 karakter, harf ve rakam)"></label>
+      <label class="f-satir sol"><input id="sdYeni2" type="password" autocomplete="new-password" placeholder="Yeni şifre (tekrar)"></label>
+    </div>
+    <p class="giris-hata gider" id="sdHata"></p>`, {kaydetAd: 'Şifreyi değiştir', kaydet: () => { degistir(); return false; }});
+  const hata = t => { $('#sdHata', m).textContent = t || ''; };
+  let calisiyor = false;
+  async function degistir() {
+    if (calisiyor) return;
+    const eski = $('#sdEski', m).value, y = $('#sdYeni', m).value, y2 = $('#sdYeni2', m).value;
+    if (!eski) return hata('Şu anki şifrenizi girin');
+    const zayif = sifreGuclu(y);
+    if (zayif) return hata(zayif);
+    if (y !== y2) return hata('Yeni şifreler aynı değil');
+    if (y === eski) return hata('Yeni şifre eskisiyle aynı');
+    const b = $('[data-sag]', m); calisiyor = true; b.disabled = true; hata('');
+    try {
+      const g = ortak();
+      let ot;
+      try { ot = await ortakGirisYap(g, g.oturum.eposta, eski); } catch (x) { throw x.ag ? x : new Error('Şu anki şifre yanlış'); }
+      if (ot.uid !== g.oturum.uid) throw new Error('Oturum bilgisi uyuşmuyor, yeniden giriş yapın');
+      const j = await ortakIstek(g, 'POST', `${KIM}/v1/accounts:update?key=${encodeURIComponent(g.a)}`, {idToken: ot.tok, password: y, returnSecureToken: true}, {yetki: false});
+      const g2 = ortak();
+      if (j.idToken) g2.oturum = {...g2.oturum, tok: j.idToken, yen: j.refreshToken || ot.yen, bitis: Date.now() + (+j.expiresIn || 3600) * 1000};
+      ortakYaz(g2); await sifreOzetiKaydet(g2.oturum.uid, y);
+      ortakGirisLogu('Şifre değiştirildi');
+      kapat(); bildir('Şifreniz değiştirildi');
+    } catch (x) { hata(x.message); calisiyor = false; b.disabled = false; }
+  }
 }
 
 /* --- Kullanıcılar (yalnızca yönetici) --- */
@@ -11317,27 +11374,28 @@ async function kullanicilarEkrani() {
   const o = ortak();
   $('#icerik').innerHTML = sayfa('Kullanıcılar', {geri: 'ayarlar', geriAd: 'Ayarlar'}) + `<div class="yan-arac"><button id="kYeni">${ikon('arti')}Kullanıcı ekle</button>${o.p === ORTAK_VARSAYILAN.p ? '' : `<button id="kKod">${ikon('kilit')}Bağlantı kodu</button>`}</div><div id="kListe"><p class="soluk">Yükleniyor…</p></div>`;
   yanDuzen();
-  $('#kYeni').onclick = () => kullaniciFormu(null, o);
+  $('#kYeni').onclick = () => kullaniciFormu(null, o, l || []);
   if ($('#kKod')) $('#kKod').onclick = baglantiKoduGoster;
   let l;
   try { const r = await ortakIstek(o, 'GET', fsUrl(o, '/uyeler') + '?pageSize=300'); l = (r?.documents || []).map(fsOku); }
   catch (e) { if ($('#kListe')) $('#kListe').innerHTML = `<p class="gider">${esc(e.message)}</p>`; return; }
   if (rota()[0] !== 'kullanicilar') return;
   l.sort((a, b) => (b.aktif !== false) - (a.aktif !== false) || String(a.ad || a.eposta).localeCompare(String(b.ad || b.eposta), 'tr'));
-  $('#kListe').innerHTML = `<div class="grup">${l.map((u, i) => `<button class="hucre kareli" data-ku="${i}">${kare('kisi', u.aktif === false ? 'gri' : 'mavi')}<div class="ic"><b>${esc(u.ad || u.eposta)}${u._ad === o.oturum.uid ? ' <span class="hap">siz</span>' : ''}</b><small>${esc(u.eposta || '')}</small></div>
+  $('#kListe').innerHTML = `<div class="grup">${l.map((u, i) => `<button class="hucre kareli" data-ku="${i}">${kare('kisi', u.aktif === false ? 'gri' : 'mavi')}<div class="ic"><b>${esc(u.ad || girisGoster(u.eposta, o))}${u._ad === o.oturum.uid ? ' <span class="hap">siz</span>' : ''}</b><small>${esc(kadMi(u.eposta, o) ? 'Kullanıcı adı: ' + girisGoster(u.eposta, o) : u.eposta || '')}</small></div>
       ${u.yetki && u.aktif !== false ? '<span class="hap turuncu" style="margin-right:6px">özel erişim</span>' : ''}<span class="hap ${u.aktif === false ? 'kirmizi' : u.rol === 'yonetici' ? 'mavi' : ''}">${u.aktif === false ? 'Kapalı' : esc(ROLLER[u.rol]?.ad || u.rol)}</span>${CHEV}</button>`).join('')}</div>
     <p class="dipnot">${Object.entries(ROLLER).map(([, r]) => `<b>${r.ad}:</b> ${r.aciklama}`).join('<br>')}</p>`;
   $$('[data-ku]').forEach(b => b.onclick = () => kullaniciFormu(l[+b.dataset.ku], o, l));
 }
 function kullaniciFormu(u, o, liste = []) {
   const yeni = !u, ben = u && u._ad === o.oturum.uid;
-  const m = modal(yeni ? 'Yeni kullanıcı' : (u.ad || u.eposta), `
+  const m = modal(yeni ? 'Yeni kullanıcı' : (u.ad || girisGoster(u.eposta, o)), `
     <div class="grup">
       <label class="f-satir sol"><input id="kuAd" placeholder="Ad soyad" value="${esc(u?.ad || '')}"></label>
-      ${yeni ? `<label class="f-satir sol"><input id="kuEposta" type="email" placeholder="E-posta" autocomplete="off"></label>
+      ${yeni ? `<label class="f-satir sol"><input id="kuEposta" type="text" placeholder="Kullanıcı adı veya e-posta" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false"></label>
       <label class="f-satir sol"><input id="kuSifre" type="text" placeholder="Geçici şifre (en az 8 karakter, harf ve rakam)" autocomplete="off" value="${sifreUret()}"></label>`
-        : `<div class="hucre"><div class="ic"><b>${esc(u.eposta || '')}</b><small>E-posta</small></div></div>`}
+        : `<div class="hucre"><div class="ic"><b>${esc(girisGoster(u.eposta, o))}</b><small>${kadMi(u.eposta, o) ? 'Kullanıcı adı' : 'E-posta'}</small></div></div>`}
     </div>
+    ${yeni ? '<p class="dipnot">Kullanıcı adı ad soyaddan kendiliğinden yazılır, isterseniz değiştirin. Şirketin tek e-postası olduğu için e-posta gerekmez; kişinin kendi e-postası varsa onu da yazabilirsiniz.</p>' : ''}
     <div class="bolum">Yetki</div>
     <div class="grup" id="kuRol">${Object.entries(ROLLER).map(([k, r]) => `<label class="hucre"><div class="ic"><b>${r.ad}</b><small>${r.aciklama}</small></div><input type="radio" name="kuRol" value="${k}" ${(u?.rol || 'servis') === k ? 'checked' : ''} ${ben ? 'disabled' : ''}></label>`).join('')}</div>
     <div class="bolum">Modül erişimi</div>
@@ -11346,7 +11404,7 @@ function kullaniciFormu(u, o, liste = []) {
       Gelir/gider, banka, personel ve vergi verileri Servis rolündeki kullanıcının cihazına hiç indirilmez (sunucu kuralı).</p>
     ${!yeni ? `<div class="grup"><label class="hucre kareli">${kare('kilit', 'gri')}<div class="ic"><b>Erişim açık</b><small>Kapatılırsa bu kullanıcı giremez</small></div><span class="anahtar"><input type="checkbox" id="kuAktif" ${u.aktif !== false ? 'checked' : ''} ${ben ? 'disabled' : ''}><span></span></span></label></div>` : ''}
     ${ben ? '<p class="dipnot">Kendi yetkinizi ve erişiminizi değiştiremezsiniz.</p>' : ''}
-    ${yeni ? '<p class="dipnot">Kullanıcıya e-posta ve geçici şifreyi iletin. Şifresini girişte "Şifremi unuttum" ile değiştirebilir.</p>' : ''}
+    ${yeni ? '<p class="dipnot">Kullanıcıya kullanıcı adını ve geçici şifreyi iletin. İlk girişten sonra Ayarlar > Ortak veritabanı > Şifremi değiştir ile kendi şifresini belirler.</p>' : ''}
     <p class="giris-hata gider" id="kuHata"></p>`, {kaydetAd: yeni ? 'Kullanıcıyı ekle' : 'Kaydet', kaydet: () => { kaydetK(); return false; }});
   const hata = t => { $('#kuHata', m).textContent = t || ''; };
   const ySec = yetkiCoz(u?.yetki);
@@ -11358,6 +11416,9 @@ function kullaniciFormu(u, o, liste = []) {
   };
   const yetkiTopla = rol => { const o = {}; for (const md of yetkiModulleri()) { const v = ($(`[name="ky-${md.id}"]:checked`, m) || {}).value; if (v && v !== rolSeviye(rol, md.id)) o[md.id] = v; } return yetkiYaz(o); };
   yetkiCiz(); $$('[name=kuRol]', m).forEach(i => i.addEventListener('change', yetkiCiz));
+  if (yeni) { const ka = $('#kuEposta', m); let elle = false;
+    ka.oninput = () => { elle = !!ka.value.trim(); };
+    $('#kuAd', m).addEventListener('input', () => { if (!elle) ka.value = kadUret($('#kuAd', m).value); }); }
   let calisiyor = false;
   async function kaydetK() {
     if (calisiyor) return;
@@ -11367,15 +11428,18 @@ function kullaniciFormu(u, o, liste = []) {
     try {
       const s = ortak().oturum;
       if (yeni) {
-        const e = $('#kuEposta', m).value.trim(), sf = $('#kuSifre', m).value;
-        if (!e) throw new Error('E-posta girin');
+        const yazilan = $('#kuEposta', m).value.trim(), e = girisAdresi(yazilan, o), sf = $('#kuSifre', m).value;
+        if (!e) throw new Error('Kullanıcı adı girin');
+        if (!yazilan.includes('@') && kadUret(yazilan).length < 3) throw new Error('Kullanıcı adı en az 3 harf olmalı');
         const zayif = sifreGuclu(sf);
         if (zayif) throw new Error(zayif);
-        if (liste.some(x => (x.eposta || '').toLowerCase() === e.toLowerCase())) throw new Error('Bu e-posta zaten listede');
-        const yeniK = await ortakGirisYap(ortak(), e, sf, true);   // yalnızca hesabı açar; yöneticinin oturumu değişmez
+        if (liste.some(x => (x.eposta || '').toLowerCase() === e.toLowerCase())) throw new Error(yazilan.includes('@') ? 'Bu e-posta zaten listede' : 'Bu kullanıcı adı zaten listede, başka bir kullanıcı adı yazın (ör. ' + kadUret(yazilan) + '2)');
+        let yeniK;
+        try { yeniK = await ortakGirisYap(ortak(), e, sf, true); }   // yalnızca hesabı açar; yöneticinin oturumu değişmez
+        catch (x) { if (x.kod === 'EMAIL_EXISTS') throw new Error(yazilan.includes('@') ? 'Bu e-postayla zaten bir hesap var. Şirket e-postası tek ise kullanıcı adı yazın (ör. ' + (kadUret(ad) || 'ad.soyad') + ').' : 'Bu kullanıcı adı daha önce alınmış, başka bir kullanıcı adı yazın (ör. ' + kadUret(yazilan) + '2)'); throw x; }
         await ortakIstek(ortak(), 'POST', `${FS}/v1/${belgeKok(o)}:commit`, {writes: [
           {update: {name: firmaYol(o, '/uyeler/' + yeniK.uid), fields: fsAlanlar({ad, eposta: yeniK.eposta, rol, aktif: true, ekleyen: s.uid, eklenme: Date.now(), yetki: yetkiTopla(rol)})}},
-          logYazimi(o, s, 'kullanici', '', `${ad} (${yeniK.eposta}) eklendi · ${ROLLER[rol].ad}`)]});
+          logYazimi(o, s, 'kullanici', '', `${ad} (${girisGoster(yeniK.eposta, o)}) eklendi · ${ROLLER[rol].ad}`)]});
         kapat(); bildir('Kullanıcı eklendi');
         setTimeout(() => modal('Kullanıcı eklendi', `<p class="dipnot" style="margin-top:0">Bu bilgileri <b>${esc(ad)}</b> ile paylaşın:</p>
           <div class="grup"><textarea class="kod-alan" readonly rows="6">${esc(ortakBilgiMetni(yeniK.eposta, sf))}</textarea></div><button class="btn" id="kuKopya">Bilgileri kopyala</button>`), 330);
