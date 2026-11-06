@@ -1421,6 +1421,47 @@ html.apk #cekmece .c-alt-menu a{min-height:42px!important;font-size:15px!importa
 .tk-ozet .tk-ekle{margin:0}
 .tk-15 .bolum{margin-top:4px}
 .ozet-selam{padding-top:10px!important;padding-bottom:10px!important}
+/* 2.18: Özet grafik paneli */
+.og-kutular{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 0 6px}
+@media (max-width:699px){.og-kutu:last-child:nth-child(odd){grid-column:span 2}}
+@media (min-width:700px){.og-kutular{grid-template-columns:repeat(5,minmax(0,1fr))}}
+.og-kutu{display:flex;flex-direction:column;gap:2px;padding:12px 12px 10px;background:var(--kart);border:1px solid var(--kenar);border-top:3px solid var(--c);border-radius:6px;color:var(--yazi);text-decoration:none;min-width:0}
+.og-kutu b{font-size:26px;line-height:1.1;font-weight:700;color:var(--c)}
+.og-kutu span{font-size:13px;font-weight:600}
+.og-kutu small{font-size:11.5px;color:var(--ikincil);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.og-izgara{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin-bottom:6px}
+@media (min-width:760px){.og-izgara{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1200px){.og-izgara{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.og-kart{display:flex;flex-direction:column;gap:12px;padding:14px;background:var(--kart);border:1px solid var(--kenar);border-radius:6px;color:var(--yazi);text-decoration:none;min-width:0}
+.og-kart:active{background:var(--kart2)}
+.og-bas{display:flex;flex-direction:column;gap:2px}.og-bas b{font-size:15px}.og-bas small{font-size:12px;color:var(--ikincil)}
+.og-sutunlar{display:flex;align-items:flex-end;gap:8px;height:150px}
+.og-ay{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%}
+.og-et{font-size:11px;font-weight:600;color:var(--ikincil);min-height:14px;white-space:nowrap}
+.og-cubuk{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:3px;border-bottom:1px solid var(--kenar)}
+.og-cubuk span{display:block;width:min(16px,40%);border-radius:3px 3px 0 0}
+.og-cubuk.yigin{flex-direction:column-reverse;align-items:center;justify-content:flex-start}
+.og-cubuk.yigin span{width:min(28px,70%);border-radius:0}.og-cubuk.yigin span:last-child{border-radius:3px 3px 0 0}
+.og-ay small{font-size:11px;color:var(--ikincil)}.og-ay.simdi small{color:var(--yazi);font-weight:700}
+.og-ay:not(.simdi) .og-cubuk span{opacity:.75}
+.og-seri{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ikincil)}
+.og-seri i,.og-lejant i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.og-halka-kap{display:flex;align-items:center;gap:16px;min-width:0}
+.og-halka{flex:none;width:118px;height:118px;border-radius:50%;display:grid;place-items:center}
+.og-halka-ic{width:80px;height:80px;border-radius:50%;background:var(--kart);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.og-halka-ic b{font-size:22px;line-height:1}.og-halka-ic small{font-size:11px;color:var(--ikincil)}
+.og-lejant{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px;flex:1;min-width:0;font-size:13px}
+.og-lejant li{display:flex;align-items:center;gap:4px;min-width:0}
+.og-lejant span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.og-lejant b{font-weight:700;text-align:right}.og-lejant b small{display:block;font-size:11px;font-weight:500;color:var(--ikincil)}
+.og-yatay{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+.og-yatay li{display:grid;grid-template-columns:minmax(0,9fr) minmax(0,8fr) auto;align-items:center;gap:8px;font-size:13px}
+.og-y-ad{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.og-y-iz{height:10px;background:var(--dolgu);border-radius:5px;overflow:hidden}.og-y-iz i{display:block;height:100%;border-radius:5px}
+.og-yatay b{font-size:12.5px;min-width:34px;text-align:right}
+.og-bos{margin:0;color:var(--ikincil);font-size:13px;padding:8px 0}
+.uy-yok{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--kart);border:1px solid var(--kenar);border-left:4px solid var(--yesil);border-radius:6px;font-size:13px;color:var(--ikincil);margin-bottom:6px}
+.uy-yok b{color:var(--yazi)}.uy-yok svg{flex:none;width:20px;height:20px;color:var(--yesil)}
 /* 2.16: Özet uyarı merkezi */
 .uy-sayac{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 12px}
 .uy-s{display:flex;align-items:baseline;gap:8px;padding:10px 12px;border:1px solid var(--kenar);border-left:4px solid var(--c);background:var(--kart,#fff);color:var(--yazi,inherit);text-decoration:none;border-radius:4px;min-width:0}
@@ -1797,7 +1838,7 @@ p.dipnot .i{width:14px;height:14px;vertical-align:-2px}
 
 <script>
 'use strict';
-const VERSIYON = '2.17.0';
+const VERSIYON = '2.18.0';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -3463,6 +3504,8 @@ function ozet15Gun() {
    "Özeti düzenle" ile seçilir (cihaz başına). Kayıt hataları tek tek gizlenebilir. Özet hiç tutar göstermez. */
 const OZET_ANAHTAR = 'powerserv.ozet';
 const OZET_BOLUM = [
+  ['kutular', 'Sayı kutuları', 'Açık iş, bekleyen teklif, tahsil ve ödenecek fatura, kritik stok'],
+  ['grafik', 'Grafikler', 'Servis, gelir-gider, tahsilat, alış, teklif, müşteriler'],
   ['evrak', 'Evrak süreleri', 'Süresi dolan ve yaklaşan evraklar'],
   ['alis', 'Ödenmemiş alış faturaları', 'Süresi geçen ve vadesi yaklaşan ödemeler'],
   ['tahsilat', 'Geciken tahsilatlar', 'Vadesi geçen satış faturaları'],
@@ -3477,7 +3520,7 @@ const OZET_BOLUM = [
 const OZET_ALIS_GUN = [15, 30, 45, 60, 90];
 function ozetAyar() {
   let a; try { a = JSON.parse(localStorage.getItem(OZET_ANAHTAR)) || {}; } catch (e) { a = {}; }
-  return {kapali: Array.isArray(a.kapali) ? a.kapali : [], alisGun: OZET_ALIS_GUN.includes(+a.alisGun) ? +a.alisGun : 30};
+  return {kapali: Array.isArray(a.kapali) ? a.kapali : [], alisGun: OZET_ALIS_GUN.includes(+a.alisGun) ? +a.alisGun : 30, tutar: a.tutar === true};
 }
 const ozetAyarYaz = a => { try { localStorage.setItem(OZET_ANAHTAR, JSON.stringify(a)); } catch (e) {} };
 const ozetGizliAnahtar = () => 'powerserv.ozet.gizli.' + H.aktif;
@@ -3621,7 +3664,7 @@ function ozetUyarilar() {
 }
 const OZET_SEVIYE = [['Acil', 'kirmizi', 'Hemen ilgilenin'], ['Önemli', 'turuncu', 'Bu hafta bakın'], ['Bilgi', 'mavi', 'Takip için']];
 function ozetUyariHtml(l) {
-  if (!l.length) return `<div class="grup"><div class="hucre kareli">${kare('tamam', 'yesil')}<div class="ic"><b>Şu an uyarı yok</b><small>Süresi dolan evrak, ödenmemiş fatura ya da hatalı kayıt bulunmadı</small></div></div></div>`;
+  if (!l.length) return `<div class="uy-yok">${ikon('tamam')}<span><b>Şu an uyarı yok.</b> Süresi dolan evrak, ödenmemiş fatura ya da hatalı kayıt bulunmadı.</span></div>`;
   let h = `<div class="uy-sayac">${OZET_SEVIYE.map(([ad, r], i) => { const n = l.filter(x => x.s === i).length; return `<a href="#" data-uyseviye="${i}" class="uy-s r-${r}${n ? '' : ' bos'}"><b>${n}</b><span>${ad}</span></a>`; }).join('')}</div>`;
   OZET_SEVIYE.forEach(([ad, r, alt], i) => {
     const s = l.filter(x => x.s === i);
@@ -3638,16 +3681,99 @@ function ozetDuzenle() {
   const m = modal('Özeti düzenle', `
     <p class="dipnot" style="margin-top:0">Özet'te görmek istediğiniz bölümleri seçin. Uyarılar her zaman acilden bilgiye doğru sıralanır. Bu seçim yalnız bu cihazda geçerlidir.</p>
     <div class="grup">${OZET_BOLUM.map(([id, ad, alt]) => `<label class="hucre"><div class="ic"><b>${esc(ad)}</b><small>${esc(alt)}</small></div><span class="anahtar"><input type="checkbox" data-ozb="${id}" ${a.kapali.includes(id) ? '' : 'checked'}><span></span></span></label>`).join('')}</div>
+    <div class="grup"><label class="hucre"><div class="ic"><b>TL tutarları göster</b><small>Sayı kutularında ve grafiklerde tutarlar da yazar</small></div><span class="anahtar"><input type="checkbox" id="ozTutar" ${a.tutar ? 'checked' : ''}><span></span></span></label></div>
     <div class="grup"><label class="f-satir"><span>Alış faturası uyarısı</span><select id="ozAlis">${OZET_ALIS_GUN.map(g => `<option value="${g}" ${g === a.alisGun ? 'selected' : ''}>${g} gün</option>`).join('')}</select></label></div>
     <p class="dipnot">Fatura tarihinden bu yana bu süre geçen ya da vadesi geçen ödenmemiş alış faturaları Acil bölümünde gösterilir ve bildirim gelir.</p>
     ${gz ? `<div class="grup"><button class="hucre" id="ozGizliAc"><div class="ic"><b>Gizlenen ${gz} uyarıyı geri getir</b><small>Kayıt hatalarında "Bu uyarıyı gizle" ile kapattıklarınız</small></div></button></div>` : ''}
-    <div class="grup"><button class="hucre" id="ozVarsayilan"><div class="ic"><b>Varsayılana dön</b><small>Bütün bölümler açık, alış faturası 30 gün</small></div></button></div>`,
+    <div class="grup"><button class="hucre" id="ozVarsayilan"><div class="ic"><b>Varsayılana dön</b><small>Bütün bölümler açık, tutarlar gizli, alış faturası 30 gün</small></div></button></div>`,
     {kaydet: () => {
-      ozetAyarYaz({kapali: $$('[data-ozb]', m).filter(c => !c.checked).map(c => c.dataset.ozb), alisGun: +$('#ozAlis', m).value});
+      ozetAyarYaz({kapali: $$('[data-ozb]', m).filter(c => !c.checked).map(c => c.dataset.ozb), alisGun: +$('#ozAlis', m).value, tutar: $('#ozTutar', m).checked});
       hatirlaticiPlanla(); bildir('Özet düzenlendi'); setTimeout(ciz, 10);
     }});
   if ($('#ozGizliAc', m)) $('#ozGizliAc', m).onclick = () => { ozetGizliYaz({}); bildir('Gizlenen uyarılar geri geldi'); kapat(); setTimeout(ciz, 10); };
-  $('#ozVarsayilan', m).onclick = () => { $$('[data-ozb]', m).forEach(c => { c.checked = true; }); $('#ozAlis', m).value = '30'; };
+  $('#ozVarsayilan', m).onclick = () => { $$('[data-ozb]', m).forEach(c => { c.checked = true; }); $('#ozAlis', m).value = '30'; $('#ozTutar', m).checked = false; };
+}
+/* ================= 2.18: Özet grafik paneli =================
+   Sayı kutuları ve grafikler (servis, tahsilat, teklif, alış, gelir-gider, müşteriler). Varsayılan yalnız adet ve yüzde;
+   Özeti düzenle > "TL tutarları göster" açıkken tutarlar da yazar. Grafikler div ve conic-gradient ile çizilir (SVG yok). */
+const ogYuzde = (a, b) => b ? Math.round(a / b * 100) : 0;
+const ogAyKisa = a => tarihNesne(a + '-01').toLocaleDateString('tr-TR', {month: 'short'}).replace('.', '');
+function ogKart(baslik, alt, govde, yol, genis) {
+  return `<a class="og-kart${genis ? ' og-genis' : ''}" href="#/${yol}"><div class="og-bas"><b>${esc(baslik)}</b>${alt ? `<small>${esc(alt)}</small>` : ''}</div>${govde}</a>`;
+}
+/* Halka grafik: dilimler [{ad, n, renk, ek}] · merkez: büyük yazı, alt: küçük yazı */
+function ogHalka(dilimler, merkez, alt) {
+  const top = dilimler.reduce((s, d) => s + d.n, 0); let a = 0;
+  const grad = top ? dilimler.filter(d => d.n > 0).map(d => { const b = a; a += d.n / top * 360; return `var(--${d.renk}) ${b.toFixed(2)}deg ${a.toFixed(2)}deg`; }).join(',') : 'var(--dolgu2) 0deg 360deg';
+  return `<div class="og-halka-kap"><div class="og-halka" style="background:conic-gradient(${grad})"><div class="og-halka-ic"><b>${esc(merkez)}</b><small>${esc(alt)}</small></div></div>
+    <ul class="og-lejant">${dilimler.map(d => `<li><i style="background:var(--${d.renk})"></i><span>${esc(d.ad)}</span><b>${d.n}${d.ek ? `<small>${esc(d.ek)}</small>` : ''}</b></li>`).join('')}</ul></div>`;
+}
+/* Sütun grafik: aylar [{ad, simdi, d: [değer...], etiket}] · seriler [{ad, renk}] */
+function ogSutun(aylar, seriler, yigin) {
+  const en = Math.max(1, ...aylar.map(x => yigin ? x.d.reduce((s, v) => s + v, 0) : Math.max(...x.d)));
+  const boy = v => v > 0 ? Math.max(3, Math.round(v / en * 100)) : 0;
+  return `<div class="og-sutunlar">${aylar.map(x => `<div class="og-ay${x.simdi ? ' simdi' : ''}"><span class="og-et">${esc(x.etiket ?? '')}</span>
+      <div class="og-cubuk${yigin ? ' yigin' : ''}">${x.d.map((v, i) => `<span style="height:${boy(v)}%;background:var(--${seriler[i].renk})"></span>`).join('')}</div><small>${esc(x.ad)}</small></div>`).join('')}</div>
+    <div class="og-seri">${seriler.map(s => `<span><i style="background:var(--${s.renk})"></i>${esc(s.ad)}</span>`).join('')}</div>`;
+}
+/* Yatay çubuklar: [{ad, n, renk, ek}] */
+function ogYatay(l, bos) {
+  if (!l.length) return `<p class="og-bos">${esc(bos)}</p>`;
+  const en = Math.max(1, ...l.map(x => x.n));
+  return `<ul class="og-yatay">${l.map(x => `<li><span class="og-y-ad">${esc(x.ad)}</span><span class="og-y-iz"><i style="width:${Math.max(4, Math.round(x.n / en * 100))}%;background:var(--${x.renk || 'mavi'})"></i></span><b>${esc(x.ek ?? String(x.n))}</b></li>`).join('')}</ul>`;
+}
+function ozetKutular(tl) {
+  const ac = modulAcik, k = [], buAy = bugun().slice(0, 7);
+  const kutu = (yol, renk, n, ad, alt) => k.push(`<a class="og-kutu r-${renk}" href="#/${yol}"><b>${n}</b><span>${esc(ad)}</span>${alt ? `<small>${esc(alt)}</small>` : ''}</a>`);
+  if (ac('servis')) {
+    kutu('servis/r-acik', 'mor', D.servisler.filter(servisAcikMi).length, 'Açık iş emri', `bu ay ${D.servisler.filter(s => (s.tarih || '').startsWith(buAy)).length} yeni iş`);
+  }
+  if (ac('teklif')) { const l = D.faturalar.filter(f => f.tur === 'teklif' && teklifDurumKod(f) === 'bekliyor'); kutu('teklif/r-bekleyen', 'indigo', l.length, 'Bekleyen teklif', tl && l.length ? kisaPara(l.reduce((s, f) => s + faturaHesap(f).toplam, 0)) : ''); }
+  if (ac('fatura')) {
+    const st = D.faturalar.filter(f => f.tur === 'fatura' && faturaliMi(f) && !f.odendi), al = D.faturalar.filter(f => f.tur === 'alis' && faturaliMi(f) && !f.odendi);
+    const top = l => kisaPara(l.reduce((s, f) => s + faturaKalan(f), 0));
+    kutu('fatura/r-tahsil', 'yesil', st.length, 'Tahsil edilecek fatura', tl && st.length ? top(st) : `${st.filter(f => f.vade && f.vade < bugun()).length} tanesi gecikti`);
+    kutu('fatura/r-odenecek', 'turuncu', al.length, 'Ödenecek alış faturası', tl && al.length ? top(al) : `${al.filter(f => f.vade && f.vade < bugun()).length} tanesi gecikti`);
+  }
+  if (ac('stok')) kutu('stok/r-kritik', 'kahve', D.urunler.filter(u => u.kritik > 0 && urunMiktar(u.id) <= u.kritik).length, 'Kritik stok', `${D.urunler.length} ürün kayıtlı`);
+  return k.length ? `<div class="og-kutular">${k.join('')}</div>` : '';
+}
+function ozetGrafikler(tl) {
+  const ac = modulAcik, k = [], buAy = bugun().slice(0, 7), aylar = Array.from({length: 6}, (_, i) => ayKaydir(buAy, i - 5));
+  const yilOnce = (() => { const d = tarihNesne(bugun()); d.setFullYear(d.getFullYear() - 1); return tarihStr(d); })();
+  if (ac('servis')) {
+    const v = aylar.map(a => { const l = D.servisler.filter(s => (s.tarih || '').startsWith(a) && s.durum !== 'iptal'); const t = l.filter(s => s.durum === 'tamam').length; return {ad: ogAyKisa(a), simdi: a === buAy, d: [t, l.length - t], etiket: l.length || ''}; });
+    const top = v.reduce((s, x) => s + x.d[0] + x.d[1], 0);
+    k.push(ogKart('Servis işleri', `Son 6 ay · ${top} iş`, ogSutun(v, [{ad: 'Tamamlanan', renk: 'yesil'}, {ad: 'Devam eden', renk: 'mavi'}], true), 'servis/r-acik'));
+  }
+  if (ac('kasa') || ac('fatura')) {
+    const v = aylar.map(a => { const t = ayToplam(a); return {ad: ogAyKisa(a), simdi: a === buAy, d: [t.gelir, t.gider], etiket: tl ? kisaPara(t.gelir - t.gider) : ''}; });
+    const art = v.filter(x => x.d[0] > x.d[1]).length;
+    k.push(ogKart('Gelir ve gider', tl ? 'Son 6 ay · üstte aylık net' : `Son 6 ay · ${art} ay gelir giderden fazla`, ogSutun(v, [{ad: 'Gelir', renk: 'yesil'}, {ad: 'Gider', renk: 'kirmizi'}]), 'finans'));
+  }
+  if (ac('fatura')) {
+    const l = D.faturalar.filter(f => f.tur === 'fatura' && faturaliMi(f) && (f.tarih || '') >= yilOnce), b = bugun();
+    const od = l.filter(f => f.odendi), gec = l.filter(f => !f.odendi && f.vade && f.vade < b), kis = l.filter(f => !f.odendi && !gec.includes(f) && faturaOdenen(f) > 0), bek = l.filter(f => !f.odendi && !gec.includes(f) && !kis.includes(f));
+    const ek = x => tl && x.length ? kisaPara(x.reduce((s, f) => s + (f.odendi ? faturaHesap(f).toplam : faturaKalan(f)), 0)) : '';
+    k.push(ogKart('Satış faturaları tahsilatı', `Son 12 ay · ${l.length} fatura`, ogHalka([{ad: 'Tahsil edildi', n: od.length, renk: 'yesil', ek: ek(od)}, {ad: 'Kısmen ödendi', n: kis.length, renk: 'mavi', ek: ek(kis)}, {ad: 'Bekliyor', n: bek.length, renk: 'turuncu', ek: ek(bek)}, {ad: 'Vadesi geçti', n: gec.length, renk: 'kirmizi', ek: ek(gec)}], '%' + ogYuzde(od.length, l.length), 'tahsil'), 'fatura/r-satis'));
+    const a = D.faturalar.filter(f => f.tur === 'alis' && faturaliMi(f) && (f.tarih || '') >= yilOnce);
+    const aod = a.filter(f => f.odendi), agec = a.filter(f => !f.odendi && f.vade && f.vade < b), abek = a.filter(f => !f.odendi && !agec.includes(f));
+    k.push(ogKart('Alış faturaları ödemesi', `Son 12 ay · ${a.length} fatura`, ogHalka([{ad: 'Ödendi', n: aod.length, renk: 'yesil', ek: ek(aod)}, {ad: 'Ödenecek', n: abek.length, renk: 'turuncu', ek: ek(abek)}, {ad: 'Vadesi geçti', n: agec.length, renk: 'kirmizi', ek: ek(agec)}], '%' + ogYuzde(aod.length, a.length), 'ödendi'), 'fatura/r-odenecek'));
+  }
+  if (ac('teklif')) {
+    const l = D.faturalar.filter(f => f.tur === 'teklif' && f.durum !== 'iptal' && (f.tarih || '') >= yilOnce), say = kod => l.filter(f => teklifDurumKod(f) === kod).length;
+    const kaz = say('fatura') + say('kabul');
+    k.push(ogKart('Teklif sonuçları', `Son 12 ay · ${l.length} teklif`, ogHalka([{ad: 'Kabul / faturalandı', n: kaz, renk: 'yesil'}, {ad: 'Yanıt bekliyor', n: say('bekliyor'), renk: 'mavi'}, {ad: 'Reddedildi', n: say('red'), renk: 'kirmizi'}, {ad: 'Süresi doldu', n: say('sure'), renk: 'gri'}], '%' + ogYuzde(kaz, l.length), 'kabul'), 'teklif/r-bekleyen'));
+  }
+  if (ac('servis')) {
+    const acik = D.servisler.filter(servisAcikMi), d = Object.entries(SERVIS_DURUM).filter(([kod]) => !['tamam', 'iptal'].includes(kod)).map(([kod, [ad, renk]]) => ({ad, n: acik.filter(s => s.durum === kod).length, renk})).filter(x => x.n);
+    k.push(ogKart('Açık işlerin durumu', `${acik.length} açık iş emri`, ogYatay(d, 'Açık iş emri yok'), 'servis/r-acik'));
+    const m = {};
+    for (const s of D.servisler) if ((s.tarih || '') >= yilOnce && s.durum !== 'iptal') { const ad = servisMusteri(s); m[ad] = (m[ad] || 0) + 1; }
+    const en = Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([ad, n]) => ({ad, n, renk: 'indigo', ek: n + ' iş'}));
+    k.push(ogKart('En çok servis verilen müşteriler', 'Son 12 ay', ogYatay(en, 'Son 12 ayda servis kaydı yok'), 'servis'));
+  }
+  return k.length ? `<div class="og-izgara">${k.join('')}</div>` : '';
 }
 function panelEkrani() {
   const p = PROFILLER[D.profil], t = T(), ac = modulAcik, ay = ozetAyar(), acik = id => !ay.kapali.includes(id);
@@ -3663,10 +3789,12 @@ function panelEkrani() {
     else if (ac('veresiye')) ad.push(['cari', `İlk ${kucult(t.kisi)} kaydını açın`, 'Borç ve tahsilatları tek yerde izleyin']);
     h += `<div class="bolum">Başlarken</div><div class="grup">${ad.map(([id, b, s], i) => `<button class="hucre" data-bas="${id}"><span class="adim">${String(i + 1).padStart(2, '0')}</span><div class="ic"><b>${esc(b)}</b><small>${esc(s)}</small></div>${CHEV}</button>`).join('')}</div>`;
   }
-  // Uyarılar: acil → önemli → bilgi
+  // 2.18: sayı kutuları, uyarılar (acil → önemli → bilgi), grafikler
+  if (acik('kutular')) h += ozetKutular(ay.tutar);
   const uy = ozetUyarilar();
   ui.ozetUy = uy;
   h += `<div class="bolum">Uyarılar<a href="#" id="ozDuzenle2">Özeti düzenle</a></div><div class="uy-kap">${ozetUyariHtml(uy)}</div>`;
+  if (acik('grafik')) { const g = ozetGrafikler(ay.tutar); if (g) h += `<div class="bolum">Grafikler${ay.tutar ? '' : '<small class="soluk" style="text-transform:none;letter-spacing:0;font-weight:400"> · tutarlar Finans özetinde</small>'}</div>${g}`; }
   // Altta: önümüzdeki 15 gün ve bekleyen teklifler (seçilebilir)
   let alt = '';
   if (acik('gun15')) alt += `<section>${ozet15Gun()}</section>`;
@@ -3678,7 +3806,7 @@ function panelEkrani() {
       : `<div class="hucre"><div class="ic"><b>Bekleyen teklif yok</b><small>Yanıt beklenen teklif kalmadı</small></div></div>`}</div></section>`;
   }
   if (alt) h += `<div class="ozet-alt">${alt}</div>`;
-  h += `<p class="dipnot ozet-dip">Takvim sol menüde. Bölümleri seçmek için sağ üstteki kalem simgesine ya da Özeti düzenle'ye basın.</p>`;
+  h += `<p class="dipnot ozet-dip">Grafiğe basınca ilgili liste açılır. Bölümleri ve TL tutarlarını Özeti düzenle'den seçebilirsiniz; Takvim sol menüde.</p>`;
 
   $('#icerik').innerHTML = h;
   $('#ayarBtn').onclick = () => git('ayarlar');
