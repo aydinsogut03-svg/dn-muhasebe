@@ -3520,7 +3520,7 @@ const OZET_BOLUM = [
 const OZET_ALIS_GUN = [15, 30, 45, 60, 90];
 function ozetAyar() {
   let a; try { a = JSON.parse(localStorage.getItem(OZET_ANAHTAR)) || {}; } catch (e) { a = {}; }
-  return {kapali: Array.isArray(a.kapali) ? a.kapali : [], alisGun: OZET_ALIS_GUN.includes(+a.alisGun) ? +a.alisGun : 30, tutar: a.tutar === true};
+  return {kapali: Array.isArray(a.kapali) ? a.kapali : [], alisGun: OZET_ALIS_GUN.includes(+a.alisGun) ? +a.alisGun : 30, tutar: a.tutar !== false};
 }
 const ozetAyarYaz = a => { try { localStorage.setItem(OZET_ANAHTAR, JSON.stringify(a)); } catch (e) {} };
 const ozetGizliAnahtar = () => 'powerserv.ozet.gizli.' + H.aktif;
@@ -3685,16 +3685,16 @@ function ozetDuzenle() {
     <div class="grup"><label class="f-satir"><span>Alış faturası uyarısı</span><select id="ozAlis">${OZET_ALIS_GUN.map(g => `<option value="${g}" ${g === a.alisGun ? 'selected' : ''}>${g} gün</option>`).join('')}</select></label></div>
     <p class="dipnot">Fatura tarihinden bu yana bu süre geçen ya da vadesi geçen ödenmemiş alış faturaları Acil bölümünde gösterilir ve bildirim gelir.</p>
     ${gz ? `<div class="grup"><button class="hucre" id="ozGizliAc"><div class="ic"><b>Gizlenen ${gz} uyarıyı geri getir</b><small>Kayıt hatalarında "Bu uyarıyı gizle" ile kapattıklarınız</small></div></button></div>` : ''}
-    <div class="grup"><button class="hucre" id="ozVarsayilan"><div class="ic"><b>Varsayılana dön</b><small>Bütün bölümler açık, tutarlar gizli, alış faturası 30 gün</small></div></button></div>`,
+    <div class="grup"><button class="hucre" id="ozVarsayilan"><div class="ic"><b>Varsayılana dön</b><small>Bütün bölümler ve TL tutarları açık, alış faturası 30 gün</small></div></button></div>`,
     {kaydet: () => {
       ozetAyarYaz({kapali: $$('[data-ozb]', m).filter(c => !c.checked).map(c => c.dataset.ozb), alisGun: +$('#ozAlis', m).value, tutar: $('#ozTutar', m).checked});
       hatirlaticiPlanla(); bildir('Özet düzenlendi'); setTimeout(ciz, 10);
     }});
   if ($('#ozGizliAc', m)) $('#ozGizliAc', m).onclick = () => { ozetGizliYaz({}); bildir('Gizlenen uyarılar geri geldi'); kapat(); setTimeout(ciz, 10); };
-  $('#ozVarsayilan', m).onclick = () => { $$('[data-ozb]', m).forEach(c => { c.checked = true; }); $('#ozAlis', m).value = '30'; $('#ozTutar', m).checked = false; };
+  $('#ozVarsayilan', m).onclick = () => { $$('[data-ozb]', m).forEach(c => { c.checked = true; }); $('#ozAlis', m).value = '30'; $('#ozTutar', m).checked = true; };
 }
 /* ================= 2.18: Özet grafik paneli =================
-   Sayı kutuları ve grafikler (servis, tahsilat, teklif, alış, gelir-gider, müşteriler). Varsayılan yalnız adet ve yüzde;
+   Sayı kutuları ve grafikler (servis, tahsilat, teklif, alış, gelir-gider, müşteriler). Varsayılan TL tutarları açık (AS 06.11 seçti);
    Özeti düzenle > "TL tutarları göster" açıkken tutarlar da yazar. Grafikler div ve conic-gradient ile çizilir (SVG yok). */
 const ogYuzde = (a, b) => b ? Math.round(a / b * 100) : 0;
 const ogAyKisa = a => tarihNesne(a + '-01').toLocaleDateString('tr-TR', {month: 'short'}).replace('.', '');
