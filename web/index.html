@@ -2917,7 +2917,7 @@ const tarihAraliginda = (t, r) => (!r.bas || t >= r.bas) && (!r.son || t <= r.so
 function raporTanim(m, id) {
   const R = {
     stok: {
-      eldeki: {ad: 'Eldeki stok listesi', k: [['Parça no'], ['Ürün'], ['Marka'], ['Grup'], ['Depo / raf'], ['Miktar', 'sayi'], ['Birim'], ['Ort. maliyet', 'para'], ['Stok değeri', 'para', 1], ['Satış fiyatı', 'para'], ['Barkod']],
+      eldeki: {ad: 'Eldeki stok listesi', filtre: [['hepsi', 'Tümü'], ['var', 'Stokta olan', r => r.d[5] > 0], ['yok', 'Stokta yok', r => !(r.d[5] > 0)], ['kritik', 'Kritik seviyede', r => !!r.uyar]], k: [['Parça no'], ['Ürün'], ['Marka'], ['Grup'], ['Depo / raf'], ['Miktar', 'sayi'], ['Birim'], ['Ort. maliyet', 'para'], ['Stok değeri', 'para', 1], ['Satış fiyatı', 'para'], ['Barkod']],
         veri: () => [...D.urunler].sort((a, b) => a.ad.localeCompare(b.ad, 'tr')).map(u => { const n = urunMiktar(u.id), c = urunMaliyet(u);
           return {d: [u.kod, u.ad, u.marka, u.kategori, [u.depo, u.raf].filter(Boolean).join(' · '), n, u.birim, c, Math.max(0, n) * c, u.satis, u.barkod], yol: 'stok/' + u.id, uyar: u.kritik > 0 && n <= u.kritik}; })},
       kritik: {ad: 'Kritik stok', k: [['Parça no'], ['Ürün'], ['Miktar', 'sayi'], ['Kritik seviye', 'sayi'], ['Siparişte', 'sayi'], ['Sipariş önerisi', 'sayi'], ['Birim'], ['Tedarikçi']],
@@ -2941,7 +2941,7 @@ function raporTanim(m, id) {
           return Object.entries(g).sort((a, b) => b[1][2] - a[1][2]).map(([k, v]) => ({d: [k, ...v], yol: 'stok/r-eldeki?ara=' + encodeURIComponent(k === 'Grupsuz' ? '' : k)})); }}
     },
     veresiye: {
-      bakiye: {ad: 'Cari bakiye listesi', k: [['Cari'], ['Tür'], ['Telefon'], ['İl'], ['Borç', 'para', 1], ['Alacak', 'para', 1], ['Bakiye', 'para', 1], ['Durum']],
+      bakiye: {ad: 'Cari bakiye listesi', filtre: [['hepsi', 'Tümü'], ['musteri', 'Müşteri', r => r.d[1] !== CARI_TIP.tedarikci], ['tedarikci', 'Tedarikçi', r => r.d[1] !== CARI_TIP.musteri], ['borclu', 'Borçlu', r => r.d[6] > 0], ['alacakli', 'Alacaklı', r => r.d[6] < 0], ['kapali', 'Kapalı', r => !r.d[6]]], k: [['Cari'], ['Tür'], ['Telefon'], ['İl'], ['Borç', 'para', 1], ['Alacak', 'para', 1], ['Bakiye', 'para', 1], ['Durum']],
         veri: () => cariSatirlari(() => true)},
       borclu: {ad: 'Borçlu cariler', k: [['Cari'], ['Tür'], ['Telefon'], ['İl'], ['Borç', 'para', 1], ['Alacak', 'para', 1], ['Bakiye', 'para', 1], ['Durum']], veri: () => cariSatirlari(b => b > 0)},
       alacakli: {ad: 'Alacaklı cariler', k: [['Cari'], ['Tür'], ['Telefon'], ['İl'], ['Borç', 'para', 1], ['Alacak', 'para', 1], ['Bakiye', 'para', 1], ['Durum']], veri: () => cariSatirlari(b => b < 0)},
@@ -2953,7 +2953,7 @@ function raporTanim(m, id) {
           return {d: [fisNo('tahsilat', h, false), h.tarih, kisi(h.kisiId)?.ad, h.aciklama, i ? odemeAdi[i.odeme] || '' : '', h.tutar], yol: 'fis/' + h.id, fis: h.id}; })}
     },
     kasa: {
-      hepsi: {ad: 'Gelir ve gider hareketleri', tarihli: true, k: [['Fiş no'], ['Tarih', 'tarih'], ['Tür'], ['Kategori'], ['Açıklama'], ['Ödeme'], ['Hesap'], ['Gelir', 'para', 1], ['Gider', 'para', 1]],
+      hepsi: {ad: 'Gelir ve gider hareketleri', tarihli: true, filtre: [['hepsi', 'Tümü'], ['gelir', 'Gelir', r => r.d[2] === 'Gelir'], ['gider', 'Gider', r => r.d[2] === 'Gider']], k: [['Fiş no'], ['Tarih', 'tarih'], ['Tür'], ['Kategori'], ['Açıklama'], ['Ödeme'], ['Hesap'], ['Gelir', 'para', 1], ['Gider', 'para', 1]],
         veri: r => D.islemler.filter(i => tarihAraliginda(i.tarih, r)).sort((a, b) => b.tarih.localeCompare(a.tarih) || (b.olusturma || 0) - (a.olusturma || 0))
           .map(i => ({d: [fisNo(i.tur, i, false), i.tarih, i.tur === 'gelir' ? 'Gelir' : 'Gider', i.kategori, i.aciklama, odemeAdi[i.odeme] || '', finHesapAdi(islemHesapId(i)), i.tur === 'gelir' ? i.tutar : 0, i.tur === 'gelir' ? 0 : i.tutar], yol: 'fis/' + i.id, fis: i.id}))},
       gelir: {ad: 'Gelir listesi', tarihli: true, k: [['Fiş no'], ['Tarih', 'tarih'], ['Kategori'], ['Açıklama'], ['Ödeme'], ['Hesap'], ['KDV', 'para', 1], ['Tutar', 'para', 1]], veri: r => islemSatirlari('gelir', r)},
@@ -2963,14 +2963,14 @@ function raporTanim(m, id) {
           return Object.entries(g).sort((a, b) => a[0].localeCompare(b[0]) || b[1][1] - a[1][1]).map(([k, v]) => { const [tur, kat] = k.split('|'); return {d: [tur === 'gelir' ? 'Gelir' : 'Gider', kat, ...v], yol: `kasa/r-${tur}?ara=${encodeURIComponent(kat)}`}; }); }}
     },
     banka: {
-      bakiye: {ad: 'Hesap bakiyeleri', k: [['Hesap'], ['Tür'], ['Banka / IBAN'], ['Hareket', 'sayi', 1], ['Döviz bakiye'], ['Bakiye (TL)', 'para', 1]],
+      bakiye: {ad: 'Hesap bakiyeleri', filtre: [['hepsi', 'Tümü'], ['tl', 'TL hesaplar', r => !r.d[4]], ['doviz', 'Döviz hesaplar', r => !!r.d[4]]], k: [['Hesap'], ['Tür'], ['Banka / IBAN'], ['Hareket', 'sayi', 1], ['Döviz bakiye'], ['Bakiye (TL)', 'para', 1]],
         veri: () => D.finansHesap.map(h => ({d: [h.ad, HESAP_TUR[h.tur]?.ad, [h.banka, h.iban].filter(Boolean).join(' · '), hesapHareketleri(h).length, hDoviz(h) === 'TL' ? '' : hPara(h, hesapBakiye(h)), hesapBakiyeTL(h)], yol: 'banka/' + h.id}))},
       hareket: {ad: 'Hesap hareketleri', tarihli: true, k: [['Tarih', 'tarih'], ['Hesap'], ['Açıklama'], ['Kategori'], ['Döviz tutarı'], ['Giriş (TL)', 'para', 1], ['Çıkış (TL)', 'para', 1]],
         veri: r => D.finansHesap.flatMap(h => hesapHareketleri(h).filter(x => tarihAraliginda(x.tarih, r)).map(x => ({x, h}))).sort((a, b) => b.x.tarih.localeCompare(a.x.tarih))
           .map(({x, h}) => ({d: [x.tarih, h.ad, x.ad, x.alt, hDoviz(h) === 'TL' ? '' : hPara(h, x.tutar), x.tl > 0 ? x.tl : 0, x.tl < 0 ? -x.tl : 0], yol: x.islem ? 'fis/' + x.islem.id : 'banka/' + h.id, fis: x.islem ? x.islem.id : ''}))}
     },
     teklif: {
-      liste: {ad: 'Teklif listesi', tarihli: true, k: [['Teklif no'], ['Tarih', 'tarih'], ['Geçerlilik', 'tarih'], ['Müşteri'], ['Konu'], ['Durum'], ['Toplam (TL)', 'para', 1], ['Döviz tutarı']],
+      liste: {ad: 'Teklif listesi', tarihli: true, tumTarih: true, filtre: [['hepsi', 'Tümü'], ...Object.entries(TEKLIF_DURUM).map(([v, [ad]]) => [v, ad, r => r.d[5] === ad])], k: [['Teklif no'], ['Tarih', 'tarih'], ['Geçerlilik', 'tarih'], ['Müşteri'], ['Konu'], ['Durum'], ['Toplam (TL)', 'para', 1], ['Döviz tutarı']],
         veri: r => teklifler().filter(f => tarihAraliginda(f.tarih, r)).sort((a, b) => b.tarih.localeCompare(a.tarih)).map(f => ({d: [f.no, f.tarih, f.vade, faturaMusteri(f), teklifKonu(f), teklifDurum(f)[0], teklifTL(f), fDoviz(f) === 'TL' ? '' : dPara(f, faturaHesap(f).toplam)], yol: 'teklif/' + f.id}))},
       bekleyen: {ad: 'Yanıt bekleyen teklifler', k: [['Teklif no'], ['Tarih', 'tarih'], ['Geçerlilik', 'tarih'], ['Müşteri'], ['Konu'], ['Toplam', 'para', 1]],
         veri: () => teklifler().filter(f => ['bekliyor', 'sure'].includes(teklifDurumKod(f))).sort((a, b) => b.tarih.localeCompare(a.tarih)).map(f => ({d: [f.no, f.tarih, f.vade, faturaMusteri(f), teklifKonu(f), teklifTL(f)], yol: 'teklif/' + f.id, uyar: teklifDurumKod(f) === 'sure'}))},
@@ -2983,8 +2983,8 @@ function raporTanim(m, id) {
       // 2.23.1: PC'de Fatura modülü telefondaki gibi tüm faturalarla açılır; tür düğmeleriyle süzülür, tarih varsayılanı "Tümü"
       hepsi: {ad: 'Tüm faturalar', tarihli: true, tumTarih: true, filtre: [['hepsi', 'Tümü'], ['satis', 'Satış'], ['alis', 'Alış'], ['acik', 'Açık (ödenmemiş)'], ['taslak', 'Taslak']],
         k: [['No'], ['Tarih', 'tarih'], ['Vade', 'tarih'], ['Tür'], ['Cari'], ['Belge'], ['Durum'], ['Toplam', 'para', 1], ['Kalan', 'para', 1]], veri: r => tumFaturaSatirlari(r)},
-      satis: {ad: 'Satış faturaları', tarihli: true, k: [['No'], ['Tarih', 'tarih'], ['Vade', 'tarih'], ['Müşteri'], ['Durum'], ['Toplam', 'para', 1], ['Kalan', 'para', 1]], veri: r => faturaSatirlari('fatura', r)},
-      alis: {ad: 'Alış faturaları', tarihli: true, k: [['No'], ['Tarih', 'tarih'], ['Vade', 'tarih'], ['Satıcı'], ['Durum'], ['Toplam', 'para', 1], ['Kalan', 'para', 1]], veri: r => faturaSatirlari('alis', r)},
+      satis: {ad: 'Satış faturaları', tarihli: true, tumTarih: true, filtre: [['hepsi', 'Tümü'], ['acik', 'Ödenmemiş', r => r.d[6] > 0], ['odendi', 'Ödendi', r => faturaliDurumOdendi(r)]], k: [['No'], ['Tarih', 'tarih'], ['Vade', 'tarih'], ['Müşteri'], ['Durum'], ['Toplam', 'para', 1], ['Kalan', 'para', 1]], veri: r => faturaSatirlari('fatura', r)},
+      alis: {ad: 'Alış faturaları', tarihli: true, tumTarih: true, filtre: [['hepsi', 'Tümü'], ['acik', 'Ödenmemiş', r => r.d[6] > 0], ['odendi', 'Ödendi', r => faturaliDurumOdendi(r)]], k: [['No'], ['Tarih', 'tarih'], ['Vade', 'tarih'], ['Satıcı'], ['Durum'], ['Toplam', 'para', 1], ['Kalan', 'para', 1]], veri: r => faturaSatirlari('alis', r)},
       acik: {ad: 'Açık faturalar', k: [['No'], ['Tarih', 'tarih'], ['Vade', 'tarih'], ['Cari'], ['Tür'], ['Toplam', 'para', 1], ['Kalan', 'para', 1]], veri: () => acikFaturaSatirlari(['fatura', 'alis'])},
       tahsil: {ad: 'Tahsil edilecek faturalar', k: [['No'], ['Tarih', 'tarih'], ['Vade', 'tarih'], ['Müşteri'], ['Tür'], ['Toplam', 'para', 1], ['Kalan', 'para', 1]], veri: () => acikFaturaSatirlari(['fatura'])},
       odenecek: {ad: 'Ödenecek alış faturaları', k: [['No'], ['Tarih', 'tarih'], ['Vade', 'tarih'], ['Satıcı'], ['Tür'], ['Toplam', 'para', 1], ['Kalan', 'para', 1]], veri: () => acikFaturaSatirlari(['alis'])},
@@ -3034,7 +3034,7 @@ function raporTanim(m, id) {
       karlilik: SERVIS_KARLILIK()
     },
     personel: {
-      liste: {ad: 'Personel listesi', k: [['Ad soyad'], ['Görev'], ['Bölüm'], ['Sözleşme'], ['TC kimlik no'], ['Telefon'], ['İşe giriş', 'tarih'], ['Kıdem'], ['Ücret', 'para', 1], ['Ücret tipi'], ['Durum']],
+      liste: {ad: 'Personel listesi', filtre: [['hepsi', 'Tümü'], ['calisan', 'Çalışıyor', r => r.d[10] !== 'Ayrıldı'], ['ayrilan', 'Ayrıldı', r => r.d[10] === 'Ayrıldı']], k: [['Ad soyad'], ['Görev'], ['Bölüm'], ['Sözleşme'], ['TC kimlik no'], ['Telefon'], ['İşe giriş', 'tarih'], ['Kıdem'], ['Ücret', 'para', 1], ['Ücret tipi'], ['Durum']],
         veri: () => pSirali().map(p => ({d: [p.ad, p.gorev, p.departman, SOZLESME[p.sozlesme] || '', p.tc, p.tel, p.iseGiris, kidemYazi(p), p.maas, p.ucretTip === 'brut' ? 'Brüt' : 'Net', p.aktif === false ? 'Ayrıldı' : 'Çalışıyor'], yol: 'personel/' + p.id}))},
       iletisim: {ad: 'İletişim ve acil durum', k: [['Ad soyad'], ['Telefon'], ['E-posta'], ['Adres'], ['Acil durumda aranacak'], ['Acil telefon'], ['Kan grubu']],
         veri: () => pSirali().filter(p => p.aktif !== false).map(p => ({d: [p.ad, p.tel, p.eposta, p.adres, p.acilAd, p.acilTel, p.kan], yol: 'personel/' + p.id}))},
@@ -3077,6 +3077,7 @@ function acikFaturaSatirlari(turler) {
   return D.faturalar.filter(f => turler.includes(f.tur) && f.durum === 'gonderildi' && !f.odendi).sort((a, b) => (a.vade || '9').localeCompare(b.vade || '9') || b.tarih.localeCompare(a.tarih))
     .map(f => ({d: [f.no, f.tarih, f.vade, faturaMusteri(f), f.tur === 'alis' ? 'Alış' : 'Satış', faturaHesap(f).toplam, faturaKalan(f)], yol: 'fatura/' + f.id, uyar: !!(f.vade && f.vade < bugun())}));
 }
+const faturaliDurumOdendi = r => { const f = D.faturalar.find(x => 'fatura/' + x.id === r.yol); return !!f && faturaliMi(f) && !!f.odendi; };
 function tumFaturaSatirlari(r) {
   const fl = r.filtre || 'hepsi';
   const uygun = f => (f.tur === 'fatura' || f.tur === 'alis') && (fl === 'hepsi' || (fl === 'satis' ? f.tur === 'fatura' : fl === 'alis' ? f.tur === 'alis' : fl === 'taslak' ? f.durum === 'taslak' : faturaliMi(f) && !f.odendi));
@@ -3115,6 +3116,8 @@ function raporListe(m, id, sorgu) {
   let son = [];
   const ciz1 = () => {
     let l = R.veri(d);
+    const fx = R.filtre && R.filtre.find(([v]) => v === d.filtre);
+    if (fx && fx[2]) l = l.filter(fx[2]);
     const a = kucult(d.ara.trim());
     if (a) l = l.filter(r => kucult(r.d.map((v, i) => hucreYaz(v, R.k[i][1])).join(' ')).includes(a));
     if (d.sira !== null) { const t = R.k[d.sira][1]; l = [...l].sort((x, y) => { const p = x.d[d.sira] ?? '', q = y.d[d.sira] ?? ''; const c = t === 'para' || t === 'sayi' ? (+p || 0) - (+q || 0) : String(p).localeCompare(String(q), 'tr'); return d.ters ? -c : c; }); }
@@ -9193,6 +9196,8 @@ function erpModul(m, ilkId, sorgu = new URLSearchParams()) {
   const yaz = (v, t) => v === undefined || v === null || v === '' ? '' : t === 'para' ? tutarFmt(v) : hucreYaz(v, t);
   const ciz1 = () => {
     let l = R.veri(d);
+    const fx = R.filtre && R.filtre.find(([v]) => v === d.filtre);
+    if (fx && fx[2]) l = l.filter(fx[2]);
     const a = kucult(d.ara.trim());
     if (a) l = l.filter(r => kucult(r.d.map((v, i) => hucreYaz(v, R.k[i][1])).join(' ')).includes(a));
     if (d.sira !== null && R.k[d.sira]) { const t = R.k[d.sira][1]; l = [...l].sort((x, y) => { const p = x.d[d.sira] ?? '', q = y.d[d.sira] ?? ''; const c = sg(t) ? (+p || 0) - (+q || 0) : String(p).localeCompare(String(q), 'tr'); return d.ters ? -c : c; }); }
