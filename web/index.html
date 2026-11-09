@@ -1704,6 +1704,8 @@ fieldset.fk-sade,.fk.fk-sade{border:0;padding:0;background:none}
 .pers-liste button svg{width:12px;height:12px}
 .pers-liste button:hover{color:var(--kirmizi)}
 .pers-ekle{display:flex;gap:4px}
+.kb.secili,.kb.secili:hover:not(:disabled){background:var(--mavi);color:#fff;border-color:var(--mavi)}
+.fl-filtre{flex-wrap:wrap}
 .kb{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:25px;border:1px solid var(--erp-cizgi);background:linear-gradient(var(--kart),var(--erp-zemin));color:var(--yazi);font:inherit;font-size:12px;padding:0 10px;border-radius:2px;cursor:pointer;white-space:nowrap;flex:none}
 .kb svg{width:14px;height:14px}
 .kb:hover:not(:disabled){border-color:var(--erp-bas1);background:var(--erp-secili)}
@@ -1915,7 +1917,7 @@ p.dipnot .i{width:14px;height:14px;vertical-align:-2px}
 
 <script>
 'use strict';
-const VERSIYON = '2.23.0';
+const VERSIYON = '2.23.1';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -2646,10 +2648,11 @@ function esitleBtnBagla() {
   b.onclick = async () => {
     if (!ortakOturum()) return girisEkrani();
     b.classList.add('donuyor'); b.disabled = true;
-    await ortakEsitle();
+    await ortakEsitle(true);
     b.classList.remove('donuyor'); b.disabled = false;
     b.classList.toggle('hatali', !!ortakDurum.hata); b.title = ortakDurumMetni();
-    bildir(ortakDurum.hata ? 'Eşitlenemedi: ' + ortakDurum.hata : 'Eşitlendi · ' + new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute: '2-digit'}), !!ortakDurum.hata);
+    const t = ortakDurum.tarama, ek = t ? [t.alinan && `${t.alinan} eksik kayıt alındı`, t.gonderilecek && `${t.gonderilecek} kayıt yeniden gönderildi`].filter(Boolean).join(' · ') : '';
+    bildir(ortakDurum.hata ? 'Eşitlenemedi: ' + ortakDurum.hata : 'Eşitlendi · ' + new Date().toLocaleTimeString('tr-TR', {hour: '2-digit', minute: '2-digit'}) + (ek ? ' · ' + ek : ''), !!ortakDurum.hata);
   };
 }
 function kaydirma() { $('#ust').classList.toggle('kaydi', window.scrollY > 30); }
@@ -2872,7 +2875,7 @@ const ALT_MENU = {
   teklif: [['İşlemler', [['Teklifler', 'teklif', 'teklif'], ['Yeni teklif', 'teklif+', () => faturaFormu(null, 'teklif')]]],
     ['Raporlar', [['Teklif listesi', 'tablo', 'teklif/r-liste'], ['Yanıt bekleyenler', 'kumSaati', 'teklif/r-bekleyen'], ['Müşteri bazında', 'kisiYildiz', 'teklif/r-musteri']]]],
   fatura: [['İşlemler', [['Faturalar', 'faturaTL', 'fatura'], ['Yeni satış faturası', 'faturaTL+', () => faturaFormu(null, 'fatura')], ['Yeni alış faturası', 'faturaAl', () => faturaFormu(null, 'alis')], ['e-Arşiv / e-Fatura yükle', 'faturaYukle', () => eFaturaYukle()]]],
-    ['Raporlar', [['Satış faturaları', 'tablo', 'fatura/r-satis'], ['Alış faturaları', 'kayitlar', 'fatura/r-alis'], ['Vadesi geçenler', 'takvimX', 'fatura/r-vade']]]],
+    ['Raporlar', [['Tüm faturalar', 'dosya', 'fatura/r-hepsi'], ['Satış faturaları', 'tablo', 'fatura/r-satis'], ['Alış faturaları', 'kayitlar', 'fatura/r-alis'], ['Vadesi geçenler', 'takvimX', 'fatura/r-vade']]]],
   personel: [['İşlemler', [['Çalışanlar', 'kisiler', 'personel'], ['Yeni personel', 'kisi+', () => personelFormu()], ['Puantaj', 'puantaj', 'personel/puantaj'], ['Bordro', 'bordro', 'personel/bordro'],
       ['İzin girişi', 'semsiye', async () => { const p = await personelSec('İzin girişi'); if (p) izinFormu(p); }], ['Zimmet ver', 'anahtar', async () => { const p = await personelSec('Zimmet ver'); if (p) zimmetFormu(p); }],
       ['Maaş hesaplayıcı', 'hesapMakinesi', () => maasHesaplayici()]]],
@@ -2977,6 +2980,9 @@ function raporTanim(m, id) {
           return Object.entries(g).sort((a, b) => b[1][3] - a[1][3]).map(([a, x]) => ({d: [a, ...x], yol: 'teklif/r-liste?ara=' + encodeURIComponent(a)})); }}
     },
     fatura: {
+      // 2.23.1: PC'de Fatura modülü telefondaki gibi tüm faturalarla açılır; tür düğmeleriyle süzülür, tarih varsayılanı "Tümü"
+      hepsi: {ad: 'Tüm faturalar', tarihli: true, tumTarih: true, filtre: [['hepsi', 'Tümü'], ['satis', 'Satış'], ['alis', 'Alış'], ['acik', 'Açık (ödenmemiş)'], ['taslak', 'Taslak']],
+        k: [['No'], ['Tarih', 'tarih'], ['Vade', 'tarih'], ['Tür'], ['Cari'], ['Belge'], ['Durum'], ['Toplam', 'para', 1], ['Kalan', 'para', 1]], veri: r => tumFaturaSatirlari(r)},
       satis: {ad: 'Satış faturaları', tarihli: true, k: [['No'], ['Tarih', 'tarih'], ['Vade', 'tarih'], ['Müşteri'], ['Durum'], ['Toplam', 'para', 1], ['Kalan', 'para', 1]], veri: r => faturaSatirlari('fatura', r)},
       alis: {ad: 'Alış faturaları', tarihli: true, k: [['No'], ['Tarih', 'tarih'], ['Vade', 'tarih'], ['Satıcı'], ['Durum'], ['Toplam', 'para', 1], ['Kalan', 'para', 1]], veri: r => faturaSatirlari('alis', r)},
       acik: {ad: 'Açık faturalar', k: [['No'], ['Tarih', 'tarih'], ['Vade', 'tarih'], ['Cari'], ['Tür'], ['Toplam', 'para', 1], ['Kalan', 'para', 1]], veri: () => acikFaturaSatirlari(['fatura', 'alis'])},
@@ -3071,6 +3077,12 @@ function acikFaturaSatirlari(turler) {
   return D.faturalar.filter(f => turler.includes(f.tur) && f.durum === 'gonderildi' && !f.odendi).sort((a, b) => (a.vade || '9').localeCompare(b.vade || '9') || b.tarih.localeCompare(a.tarih))
     .map(f => ({d: [f.no, f.tarih, f.vade, faturaMusteri(f), f.tur === 'alis' ? 'Alış' : 'Satış', faturaHesap(f).toplam, faturaKalan(f)], yol: 'fatura/' + f.id, uyar: !!(f.vade && f.vade < bugun())}));
 }
+function tumFaturaSatirlari(r) {
+  const fl = r.filtre || 'hepsi';
+  const uygun = f => (f.tur === 'fatura' || f.tur === 'alis') && (fl === 'hepsi' || (fl === 'satis' ? f.tur === 'fatura' : fl === 'alis' ? f.tur === 'alis' : fl === 'taslak' ? f.durum === 'taslak' : faturaliMi(f) && !f.odendi));
+  return D.faturalar.filter(f => uygun(f) && tarihAraliginda(f.tarih, r)).sort((a, b) => (b.tarih || '').localeCompare(a.tarih || '') || (b.no || '').localeCompare(a.no || ''))
+    .map(f => ({d: [f.no, f.tarih, f.vade, f.tur === 'alis' ? 'Alış' : 'Satış', faturaMusteri(f), f.eBelge || '', faturaDurum(f)[0], faturaHesap(f).toplam, faturaliMi(f) ? faturaKalan(f) : 0], yol: 'fatura/' + f.id, uyar: faturaliMi(f) && !f.odendi && f.vade && f.vade < bugun()}));
+}
 function faturaSatirlari(tur, r) {
   return D.faturalar.filter(f => f.tur === tur && tarihAraliginda(f.tarih, r)).sort((a, b) => b.tarih.localeCompare(a.tarih) || (b.no || '').localeCompare(a.no || ''))
     .map(f => ({d: [f.no, f.tarih, f.vade, faturaMusteri(f), faturaDurum(f)[0], faturaHesap(f).toplam, faturaliMi(f) ? faturaKalan(f) : 0], yol: 'fatura/' + f.id, uyar: faturaliMi(f) && !f.odendi && f.vade && f.vade < bugun()}));
@@ -3086,13 +3098,16 @@ function raporListe(m, id, sorgu) {
   if (!R) return git(m, true);
   const anahtar = m + '/' + id;
   ui.rl ||= {};
-  const d = ui.rl[anahtar] ||= {ara: sorgu.get('ara') || '', bas: R.tarihli ? AY_BASI() : '', son: R.tarihli ? bugun() : '', sira: null, ters: false};
+  const d = ui.rl[anahtar] ||= {ara: sorgu.get('ara') || '', bas: R.tarihli && !R.tumTarih ? AY_BASI() : '', son: R.tarihli && !R.tumTarih ? bugun() : '', sira: null, ters: false};
   if (sorgu.has('ara')) d.ara = sorgu.get('ara');
+  if (R.filtre && sorgu.has('tur') && R.filtre.some(([v]) => v === sorgu.get('tur'))) d.filtre = sorgu.get('tur');
+  if (R.filtre && !R.filtre.some(([v]) => v === d.filtre)) d.filtre = R.filtre[0][0];
   let h = sayfa(R.ad, {geri: m, geriAd: modulAdi(m)});
   h += `<div class="rapor-ust">
       <div class="arama">${ikon('ara')}<input type="search" id="rlAra" placeholder="Listede ara" value="${esc(d.ara)}"></div>
       ${R.tarihli ? `<div class="rl-tarih"><input type="date" id="rlBas" value="${d.bas}" aria-label="Başlangıç"><span>–</span><input type="date" id="rlSon" value="${d.son}" aria-label="Bitiş">
         <div class="cipler">${[['ay', 'Bu ay'], ['yil', 'Bu yıl'], ['gecen', 'Geçen yıl'], ['tum', 'Tümü']].map(([v, a]) => `<button class="cip" data-donem="${v}">${a}</button>`).join('')}</div></div>` : ''}
+      ${R.filtre ? `<div class="cipler" id="rlFiltre">${R.filtre.map(([v, a]) => `<button data-filtre="${v}" class="cip ${d.filtre === v ? 'secili' : ''}">${esc(a.replace(/ \(.*\)$/, ''))}</button>`).join('')}</div>` : ''}
     </div>
     <div class="yan-arac"><button id="rlYaz" title="Yazdır / PDF">${ikon('yazici')}Yazdır</button><button id="rlCsv" title="Excel (.xlsx)">${ikon('indir')}Excel</button><button id="rlYeni" title="Yenile">${ikon('donustur')}Yenile</button></div>
     <div id="rlOzet"></div><div id="rlTablo"></div>`;
@@ -3117,6 +3132,7 @@ function raporListe(m, id, sorgu) {
   };
   ciz1();
   $('#rlAra').oninput = e => { d.ara = e.target.value; ciz1(); };
+  $$('#rlFiltre [data-filtre]').forEach(b => b.onclick = () => { d.filtre = b.dataset.filtre; $$('#rlFiltre button').forEach(x => x.classList.toggle('secili', x === b)); ciz1(); });
   if (R.tarihli) {
     $('#rlBas').onchange = e => { d.bas = e.target.value; ciz1(); };
     $('#rlSon').onchange = e => { d.son = e.target.value; ciz1(); };
@@ -9140,7 +9156,7 @@ function servisListesiErp() {
    Satıra çift tıklayınca (ya da seçip Enter) kayıt açılır. Tablolar mevcut liste raporlarından gelir. --- */
 /* PC modül pencerelerinde "Sil": satırın yolundan kayıt bulunur (ör. veresiye/<id>) */
 const ERP_SIL = {veresiye: id => cariSil(kisi(id))};
-const ERP_ANA = {veresiye: 'bakiye', stok: 'eldeki', teklif: 'liste', fatura: 'satis', banka: 'bakiye', kasa: 'hepsi', personel: 'liste'};
+const ERP_ANA = {veresiye: 'bakiye', stok: 'eldeki', teklif: 'liste', fatura: 'hepsi', banka: 'bakiye', kasa: 'hepsi', personel: 'liste'};
 const ERP_ANA_AD = {kasa: 'Tüm hareketler'};
 const simgeAdi = s => String(s || '').replace(/\+$/, '');
 function erpModul(m, ilkId, sorgu = new URLSearchParams()) {
@@ -9152,8 +9168,10 @@ function erpModul(m, ilkId, sorgu = new URLSearchParams()) {
   const R = raporTanim(m, id);
   if (!R) return git('panel', true);
   ui.rl ||= {};
-  const d = ui.rl[m + '/' + id] ||= {ara: '', bas: R.tarihli ? AY_BASI() : '', son: R.tarihli ? bugun() : '', sira: null, ters: false};
+  const d = ui.rl[m + '/' + id] ||= {ara: '', bas: R.tarihli && !R.tumTarih ? AY_BASI() : '', son: R.tarihli && !R.tumTarih ? bugun() : '', sira: null, ters: false};
   if (sorgu.has('ara')) d.ara = sorgu.get('ara');
+  if (R.filtre && sorgu.has('tur') && R.filtre.some(([v]) => v === sorgu.get('tur'))) d.filtre = sorgu.get('tur');
+  if (R.filtre && !R.filtre.some(([v]) => v === d.filtre)) d.filtre = R.filtre[0][0];
   sayfa(yol === m ? modulAdi(m) : R.ad, yol === m ? {} : {geri: m, geriAd: modulAdi(m)});
   const ro = saltOkunur(m), md = modul(m);
   $('#icerik').classList.add('erp-tam');
@@ -9164,6 +9182,7 @@ function erpModul(m, ilkId, sorgu = new URLSearchParams()) {
         <button class="fa" data-l="yaz">${ikon('yazici')}<span>Yazdır</span></button><button class="fa" data-l="csv">${ikon('indir')}<span>Excel</span></button><button class="fa" data-l="yenile">${ikon('donustur')}<span>Yenile</span></button></div></div>
     <div class="fis-sekmeler">${raporlar.filter(([r]) => r === ERP_ANA[m] || r === id || r === ilkId).map(([r, ad]) => `<button class="fs-s ${r === id ? 'aktif' : ''}" data-rs="${esc(r)}">${esc(ad)}</button>`).join('')}
       <span class="fl-ara">${ikon('ara')}<input type="search" id="emAra" placeholder="Listede ara" value="${esc(d.ara)}"></span></div>
+    ${R.filtre ? `<div class="fl-tarih fl-filtre"><label>Göster</label>${R.filtre.map(([v, a]) => `<button class="kb ${d.filtre === v ? 'secili' : ''}" data-filtre="${v}">${esc(a)}</button>`).join('')}</div>` : ''}
     ${R.tarihli ? `<div class="fl-tarih"><label>Tarih aralığı</label><input type="date" id="emBas" value="${d.bas}" aria-label="Başlangıç"><span>–</span><input type="date" id="emSon" value="${d.son}" aria-label="Bitiş">
       ${[['ay', 'Bu ay'], ['yil', 'Bu yıl'], ['gecen', 'Geçen yıl'], ['tum', 'Tümü']].map(([v, a]) => `<button class="kb" data-donem="${v}">${a}</button>`).join('')}</div>` : ''}
     <div class="fis-govde"><div class="izg-kap uzun" id="emTablo"></div></div>
@@ -9201,6 +9220,7 @@ function erpModul(m, ilkId, sorgu = new URLSearchParams()) {
   };
   ciz1();
   $('#emAra').oninput = e => { d.ara = e.target.value; ciz1(); };
+  $$('[data-filtre]').forEach(b => b.onclick = () => { d.filtre = b.dataset.filtre; $$('[data-filtre]').forEach(x => x.classList.toggle('secili', x === b)); ciz1(); });
   if (R.tarihli) {
     $('#emBas').onchange = e => { d.bas = e.target.value; ciz1(); };
     $('#emSon').onchange = e => { d.son = e.target.value; ciz1(); };
@@ -11398,21 +11418,70 @@ async function ortakCekBolum(o, bolum, alan, gorulen) {
   return n;
 }
 
+/* --- 2.23.1: Eksik kayıt taraması. Normal eşitleme yalnız son çekilen zamandan sonra değişenleri alır; bir kayıt herhangi bir
+   nedenle (yarıda kalan eşitleme, eski sürüm, aynı anda düzenleme) atlanmışsa bir daha gelmezdi. Tarama sunucudaki tüm kayıtların
+   yalnız adını ve silindi bilgisini okur (içeriği indirmez), bu cihazda olmayanları tek tek indirir; sunucuda hiç olmayan yerel
+   kayıtları yeniden gönderilecek olarak işaretler; sunucunun reddettiği kayıtları yeniden dener.
+   Açılışta bir kez ve Eşitle düğmesine basınca çalışır. --- */
+async function ortakTara() {
+  const o = ortak();
+  if (!o?.oturum) return {alinan: 0, gonderilecek: 0};
+  const bolumler = ortakRol() === 'servis' ? ['kayit'] : ['kayit', 'ozel'];
+  let alinan = 0, gonderilecek = 0;
+  for (const bolum of bolumler) {
+    const r = await ortakIstek(o, 'POST', `${FS}/v1/${firmaYol(o)}:runQuery`, {structuredQuery: {from: [{collectionId: bolum}], select: {fields: [{fieldPath: 'k'}, {fieldPath: 's'}]}}});
+    const sunucu = new Map();
+    for (const x of r || []) if (x.document) { const b = fsOku(x.document); sunucu.set(b._ad, b); }
+    let iz = izOku();
+    const uygun = (key, k) => k && k !== 'belgeler' && kayitYeri(k) === bolum && (ortakRol() !== 'servis' || SERVIS_KOLEKSIYON.includes(k)) && !ORTAK_HARIC.includes(key.startsWith('_~') ? key.slice(2) : '');
+    const eksik = [...sunucu.values()].filter(b => !b.s && uygun(b._ad, b.k) && !(b._ad in iz.ozet)).map(b => b._ad);
+    for (let i = 0; i < eksik.length; i += 100) {
+      const j = await ortakIstek(o, 'POST', `${FS}/v1/${belgeKok(o)}:batchGet`, {documents: eksik.slice(i, i + 100).map(key => firmaYol(o, '/' + bolum + '/' + key))});
+      iz = izOku();
+      for (const x of j || []) if (x.found && ortakUygula(fsOku(x.found), iz)) alinan++;
+      izYaz(iz);
+    }
+    iz = izOku();
+    for (const key of Object.keys(iz.ozet)) {
+      const k = anahtarKoleksiyon(key);
+      if (!uygun(key, k)) continue;
+      const b = sunucu.get(key);
+      if (!b) { delete iz.ozet[key]; gonderilecek++; }                       // sunucuda yok: bir sonraki gönderimde yeniden yazılır
+      else if (b.s && ortakUygula({_ad: key, s: true}, iz)) alinan++;        // başka cihazda silinmiş ama burada kalmış
+    }
+    izYaz(iz);
+  }
+  const iz = izOku();
+  if (iz.red && Object.keys(iz.red).length) { gonderilecek += Object.keys(iz.red).length; iz.red = {}; izYaz(iz); ortakDurum.red = 0; }
+  if (alinan) {
+    try { localStorage.setItem(veriAnahtari(), JSON.stringify(D)); } catch (e) {}
+    if (window.gecmisTaban) gecmisTaban();
+  }
+  return {alinan, gonderilecek};
+}
+
 /* --- Eşitleme döngüsü: kayıttan 1,5 sn sonra, 20 sn'de bir, uygulamaya dönünce ve internet gelince --- */
-let ortakMesgul = false, ortakTekrar = false, ortakZaman = 0, ortakSayac = 0, ortakCizBekle = false;
+let ortakTamBekle = false, ortakMesgul = false, ortakTekrar = false, ortakZaman = 0, ortakSayac = 0, ortakCizBekle = false;
 const ortakDurum = {zaman: 0, hata: '', gonderilen: 0, cekilen: 0};
 function ortakCizilebilir() {
   const a = document.activeElement;
   return !yigin.length && !$('#girisEkran') && !$('#ekranKilit') && !(a && a.closest && a.closest('#icerik') && a.matches('input, textarea, select'));
 }
-async function ortakEsitle() {
+let ortakTaramaYapildi = false;
+async function ortakEsitle(tam = false) {
   if (!ortakOturum()) return;
-  if (ortakMesgul) { ortakTekrar = true; return; }
+  if (ortakMesgul) { ortakTekrar = true; if (tam) ortakTamBekle = true; return; }
   ortakMesgul = true;
   try {
     const iz = izOku();
     let c = 0;
     if (!iz.son) c += await ortakCek();     // ilk eşitlemede önce buluttaki veri alınır
+    // 2.23.1: açılışta bir kez ve elle eşitlemede eksik kayıt taraması
+    ortakDurum.tarama = null;
+    if (tam || ortakTamBekle || !ortakTaramaYapildi) {
+      ortakTamBekle = false;
+      try { const t = await ortakTara(); ortakDurum.tarama = t; c += t.alinan; ortakTaramaYapildi = true; } catch (e) { if (e.ag || e.oturum) throw e; }
+    }
     // 2.9.6: gönderim hata verse de buluttaki değişiklikler yine alınır (önceden gönderim hatası çekmeyi de durduruyordu)
     let g = 0, gHata = null;
     try { g = await ortakGonder(); } catch (e) { if (e.ag || e.oturum) throw e; gHata = e; }
@@ -12457,7 +12526,7 @@ function ortakAyarBagla() {
   const b = (id, f) => { const e = $('#' + id); if (e) e.onclick = f; };
   b('ortakKur', ortakKurFormu); b('ortakKatil', ortakKatilFormu); b('ortakKod', baglantiKoduGoster); b('ortakKural', kuralGoster);
   b('ortakHesap', () => hesabaGec(ortak().hesap));
-  b('ortakSimdi', async () => { await ortakEsitle(); bildir(ortakDurum.hata ? 'Eşitlenemedi: ' + ortakDurum.hata : 'Eşitlendi', !!ortakDurum.hata); });
+  b('ortakSimdi', async () => { await ortakEsitle(true); bildir(ortakDurum.hata ? 'Eşitlenemedi: ' + ortakDurum.hata : 'Eşitlendi', !!ortakDurum.hata); });
   b('ortakKullanici', () => git('kullanicilar')); b('ortakLog', () => git('islemkaydi'));
   b('ortakCikis', async () => { if (await onay('Oturum kapatılsın mı?', 'Yeniden girmek için kullanıcı adı (ya da e-posta) ve şifre gerekir.', 'Oturumu kapat')) { await ortakEsitle(); ortakOturumKapat(''); } });
   b('ortakAyir', ortakAyir);
