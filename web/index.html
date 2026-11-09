@@ -1915,7 +1915,7 @@ p.dipnot .i{width:14px;height:14px;vertical-align:-2px}
 
 <script>
 'use strict';
-const VERSIYON = '2.22.0';
+const VERSIYON = '2.22.1';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -2837,7 +2837,7 @@ function ciz0() {
   if (s === 'personel') ui.pSekme = p1 === 'puantaj' || p1 === 'bordro' ? p1 : 'liste';
   if (s === 'personel' && ui.pSekme !== 'liste') { personelEkrani(); yanDuzen(); return kaydirma(); }
   if (!p1 && masaustuMu() && ERP_ANA[s] && raporTanim(s, ERP_ANA[s])) { erpModul(s, ERP_ANA[s]); yanDuzen(); return kaydirma(); }
-  const ekran = {panel: panelEkrani, servis: p1 ? () => masaustuMu() ? servisFisi(p1) : servisEkrani1(p1) : () => masaustuMu() ? servisListesiErp() : servisEkrani, banka: p1 ? () => finansHesapEkrani(p1) : bankaEkrani, kasa: kasaEkrani, veresiye: p1 ? () => kisiEkrani(p1) : veresiyeEkrani,
+  const ekran = {panel: panelEkrani, servis: p1 ? () => masaustuMu() ? servisFisi(p1) : servisEkrani1(p1) : () => masaustuMu() ? servisListesiErp() : servisEkrani(), banka: p1 ? () => finansHesapEkrani(p1) : bankaEkrani, kasa: kasaEkrani, veresiye: p1 ? () => kisiEkrani(p1) : veresiyeEkrani,
     stok: p1 ? () => urunEkrani(p1) : stokEkrani, teklif: p1 ? () => teklifEkrani(p1) : teklifListeEkrani,
     fatura: p1 ? () => { const tf = D.faturalar.find(x => x.id === p1)?.tur; if (tf === 'siparis') return git('stok/s-' + p1, true); if (modulAcik('teklif') && tf === 'teklif') return git('teklif/' + p1, true); faturaEkrani(p1); } : faturaListeEkrani,
     personel: p1 ? () => personelDetay(p1) : personelEkrani, butce: butceEkrani, kdv: kdvEkrani, rapor: raporEkrani}[s];
@@ -7054,21 +7054,21 @@ function bakimDurumu(e) {
   const adaylar = [];
   // Serviste elle yazılan "sonraki bakım" önceliklidir
   const elle = [...tamam].reverse().find(s => (s.sonrakiBakim || s.sonrakiBakimSaat) && s.tarih >= sonTarih);
-  if (elle?.sonrakiBakim) adaylar.push({tarih: elle.sonrakiBakim, neden: 'Serviste yazılan tarih'});
+  if (elle?.sonrakiBakim) adaylar.push({tarih: elle.sonrakiBakim, neden: `Servis ${elle.no || ''} kaydında yazılan "Sonraki bakım" tarihi`, servisId: elle.id});
   let hedefSaat = elle?.sonrakiBakimSaat ? +String(elle.sonrakiBakimSaat).replace(/\D/g, '') || 0 : 0;
   if (!hedefSaat && e.bakimSaat > 0) hedefSaat = (sonSaat || (simdi >= e.bakimSaat ? Math.floor(simdi / e.bakimSaat) * e.bakimSaat : 0)) + +e.bakimSaat;
   if (hedefSaat) {
     const kalan = hedefSaat - simdi;
     const t = new Date(tarihNesne(bugun())); if (gunluk > 0) t.setDate(t.getDate() + Math.round(kalan / gunluk));
-    adaylar.push({tarih: gunluk > 0 || kalan <= 0 ? tarihStr(t) : '', neden: `${sayiFmt(hedefSaat)} saat`});
+    adaylar.push({tarih: gunluk > 0 || kalan <= 0 ? tarihStr(t) : '', neden: elle?.sonrakiBakimSaat ? `Servis ${elle.no || ''} kaydında yazılan "Sonraki bakım saati" (${sayiFmt(hedefSaat)} saat)` : `Makine kartındaki bakım aralığı: ${sayiFmt(e.bakimSaat)} saatte bir`, servisId: elle?.sonrakiBakimSaat ? elle.id : null});
   }
-  if (e.bakimAy > 0) { const t = tarihNesne(sonTarih || e.olusturmaTarih || bugun()); t.setMonth(t.getMonth() + +e.bakimAy); adaylar.push({tarih: tarihStr(t), neden: `${e.bakimAy} ayda bir`}); }
+  if (e.bakimAy > 0) { const t = tarihNesne(sonTarih || e.olusturmaTarih || bugun()); t.setMonth(t.getMonth() + +e.bakimAy); adaylar.push({tarih: tarihStr(t), neden: `Makine kartındaki bakım aralığı: ${e.bakimAy} ayda bir`}); }
   const tarihli = adaylar.filter(a => a.tarih).sort((a, b) => a.tarih.localeCompare(b.tarih));
   const ilk = tarihli[0] || adaylar[0] || null;
   const kalanSaat = hedefSaat ? hedefSaat - simdi : null, kalanGun = ilk?.tarih ? gunFark(ilk.tarih) : null;
   const durum = !ilk ? 'tanimsiz' : (kalanGun !== null && kalanGun < 0) || (kalanSaat !== null && kalanSaat < 0) ? 'gecikti'
     : (kalanGun !== null && kalanGun <= BAKIM_UYARI_GUN) || (kalanSaat !== null && kalanSaat <= BAKIM_UYARI_SAAT) ? 'yakin' : 'normal';
-  return {e, sonBakim, sonSaat, sonTarih, simdi, gunluk, hedefSaat, kalanSaat, tarih: ilk?.tarih || '', kalanGun, neden: ilk?.neden || '', durum};
+  return {e, sonBakim, sonSaat, sonTarih, simdi, gunluk, hedefSaat, kalanSaat, tarih: ilk?.tarih || '', kalanGun, neden: ilk?.neden || '', kaynakServis: ilk?.servisId || null, elle, durum};
 }
 const BAKIM_DURUM = {gecikti: 'Gecikti', yakin: 'Yaklaşıyor', normal: 'Planlı', tanimsiz: 'Aralık tanımsız'};
 const bakimPlani = () => D.ekipmanlar.map(bakimDurumu).sort((a, b) => ({gecikti: 0, yakin: 1, normal: 2, tanimsiz: 3}[a.durum] - {gecikti: 0, yakin: 1, normal: 2, tanimsiz: 3}[b.durum]) || (a.tarih || '9').localeCompare(b.tarih || '9'));
@@ -7117,6 +7117,9 @@ function bakimEkrani(eid) {
       <div class="fo-alt"><div><small>Çalışma saati</small><b>${sayiFmt(b.simdi)}</b></div><div><small>Sonraki bakım</small><b>${b.hedefSaat ? sayiFmt(b.hedefSaat) + ' saat' : '—'}</b></div>
         <div><small>Kalan</small><b class="${b.durum === 'gecikti' ? 'gider' : ''}">${b.kalanSaat !== null ? sayiFmt(b.kalanSaat) + ' saat' : '—'}${b.kalanGun !== null ? ' · ' + b.kalanGun + ' gün' : ''}</b></div>
         <div style="text-align:right"><small>Tahmini tarih</small><b>${b.tarih ? esc(tarihYaz(b.tarih, true)) : '—'}</b></div></div></div>
+    ${b.durum !== 'tanimsiz' ? `<div class="bolum">Bu tarih nereden geliyor?</div><div class="grup">${b.kaynakServis && servis(b.kaynakServis) ? `<a class="hucre kareli" href="#/servis/${b.kaynakServis}">${kare('alet', 'mor')}<div class="ic"><b style="white-space:normal">${esc(b.neden)}</b><small style="white-space:normal">Yanlış yazıldıysa servisi açıp alanı silin ya da aşağıdaki düğmeyi kullanın</small></div>${CHEV}</a>`
+      : `<div class="hucre"><div class="ic"><b style="white-space:normal">${esc(b.neden)}</b><small style="white-space:normal">"Bakım ayarları" ile değiştirebilirsiniz</small></div></div>`}
+      <button class="hucre tehlike" id="bkKapat">Bu makinede bakım takibi yok, uyarıyı kaldır</button></div>` : ''}
     <div class="bolum">Plan</div><div class="grup">
       <div class="hucre"><div class="ic"><b>Bakım aralığı</b></div><span class="deger">${[e.bakimSaat ? sayiFmt(e.bakimSaat) + ' saat' : '', e.bakimAy ? e.bakimAy + ' ay' : ''].filter(Boolean).join(' ya da ') || 'Tanımlı değil'}</span></div>
       <div class="hucre"><div class="ic"><b>Son periyodik bakım</b></div><span class="deger">${b.sonBakim ? `${esc(tarihYaz(b.sonTarih, true))}${b.sonSaat ? ' · ' + sayiFmt(b.sonSaat) + ' saat' : ''}` : 'Kayıt yok'}</span></div>
@@ -7131,6 +7134,13 @@ function bakimEkrani(eid) {
   if (tk) $('#bkTeklif').lastChild.textContent = 'Bakım teklifini aç';
   $('#bkServis').onclick = () => yeniServis({kisiId: e.kisiId, ekipmanId: e.id, turler: ['periyodik']});
   $('#bkAyar').onclick = () => ekipmanFormu(e, e.kisiId);
+  if ($('#bkKapat')) $('#bkKapat').onclick = async () => {
+    const ls = ekipmanServisleri(e).filter(s => s.sonrakiBakim || s.sonrakiBakimSaat);
+    if (!await onay('Bakım takibi kaldırılsın mı?', `Makine kartındaki bakım aralığı${ls.length ? ` ve ${ls.length} servis kaydındaki "Sonraki bakım" tarihi/saati` : ''} silinir. Servis kayıtlarının geri kalanı değişmez.`, 'Kaldır')) return;
+    delete e.bakimSaat; delete e.bakimAy;
+    for (const s of ls) { s.sonrakiBakim = ''; s.sonrakiBakimSaat = ''; }
+    kaydet(); bildir('Bakım uyarısı kaldırıldı'); ciz();
+  };
   if ($('#bkCari')) $('#bkCari').onclick = () => git('veresiye/' + k.id);
 }
 /* Makine kartındaki bakım kiti düzenleyicisi */
