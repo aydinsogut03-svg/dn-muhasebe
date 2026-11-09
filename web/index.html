@@ -1917,7 +1917,7 @@ p.dipnot .i{width:14px;height:14px;vertical-align:-2px}
 
 <script>
 'use strict';
-const VERSIYON = '2.23.1';
+const VERSIYON = '2.23.2';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -2679,7 +2679,9 @@ const grafikGenislik = (en = 330) => Math.round(Math.min(1100, Math.max(en, (($(
 /* 2.14.1: sol menü tek seviyelidir. Başlığa dokununca altında işlemler açılır (en fazla 1 alt menü), bir başlık açıkken diğeri kapanır.
    Raporlar modül menülerinde yer almaz; yalnız "Raporlar" başlığından açılır. */
 const MENU_AGAC = [
-  {id: 'satis', ad: 'Satış', simge: 'etiket', renk: 'indigo', moduller: ['teklif', 'fatura']},
+  // 2.23.2: Fatura Satış'tan çıkarıldı, kendi başlığı var (Satış = teklifler)
+  {id: 'satis', ad: 'Satış', simge: 'etiket', renk: 'indigo', moduller: ['teklif']},
+  {id: 'fatura', ad: 'Fatura', simge: 'faturaTL', renk: 'indigo', moduller: ['fatura']},
   {id: 'servis', ad: 'Servis', simge: 'alet', renk: 'mor', moduller: ['servis']},
   {id: 'stok', ad: 'Stok', simge: 'depo', renk: 'kahve', moduller: ['stok']},
   {id: 'cari', ad: 'Cari hesaplar', simge: 'cariKart', renk: 'turuncu', moduller: ['veresiye']},
@@ -2724,8 +2726,9 @@ function grupModulu() {
 }
 /* Etkin ekrana karşılık gelen öğe: tam yol eşleşmesi, yoksa modülün listesi (kayıt detayında) */
 function ogeSecili(g, l) {
-  const yol = aktifYol().split('?')[0], s = rota()[0];
-  let i = l.findIndex(o => typeof o.hedef === 'string' && o.hedef === yol);
+  const tam = aktifYol(), yol = tam.split('?')[0], s = rota()[0];
+  let i = l.findIndex(o => typeof o.hedef === 'string' && o.hedef === tam);
+  if (i < 0) i = l.findIndex(o => typeof o.hedef === 'string' && o.hedef === yol);
   if (i < 0 && g.raporlar && raporYolu(yol) && s !== 'raporlar') i = l.findIndex(o => o.m === s);
   if (i < 0 && !g.raporlar && !raporYolu(yol)) i = l.findIndex(o => o.hedef === s);
   return i;
@@ -2854,6 +2857,14 @@ function yanDuzen() { $('#icerik').classList.toggle('yanli', !!$('#icerik > .btn
 /* ================= Alt menüler, liste raporları ve fişler (2.4) =================
    Her modülün kenar menüde açılan alt menüsü vardır: işlemler ve raporlar. Raporlar tablo olarak listelenir,
    satıra tıklayınca kaydın detayı açılır; yazdırılır (PDF) ve Excel'e (CSV) aktarılır. */
+/* 2.23.2: Fatura menüsünden yalnız satış ya da yalnız alış faturalarıyla liste (telefon: segment, PC: Tüm faturalar penceresinin süzgeci) */
+function faturaListesiAc(tur) {
+  ui.faturaFiltre = tur;
+  ui.rl ||= {}; ui.erpSekme ||= {};
+  ui.rl['fatura/hepsi'] = {ara: '', bas: '', son: '', sira: null, ters: false, ...(ui.rl['fatura/hepsi'] || {}), filtre: tur};
+  ui.erpSekme['fatura'] = 'hepsi';
+  git('fatura', true); ciz();
+}
 const ALT_MENU = {
   servis: [['İşlemler', [['Servis kayıtları', 'pano', 'servis'], ['Yeni servis / iş emri', 'pano+', () => yeniServis()], ['Bakım teklifleri oluştur', 'teklif+', () => bakimTeklifleriOlustur()]]],
     ['Raporlar', [['Servis listesi', 'tablo', 'servis/r-servisler'], ['Açık iş emirleri', 'panoSaat', 'servis/r-acik'], ['Tekne ve makineler', 'tekne', 'servis/r-ekipman'],
@@ -2874,7 +2885,8 @@ const ALT_MENU = {
       ['Seri no takibi', 'etiket', 'stok/r-seri'], ['Stok hareketleri', 'hareket', 'stok/r-hareket'], ['Grup bazında stok değeri', 'paralar', 'stok/r-deger']]]],
   teklif: [['İşlemler', [['Teklifler', 'teklif', 'teklif'], ['Yeni teklif', 'teklif+', () => faturaFormu(null, 'teklif')]]],
     ['Raporlar', [['Teklif listesi', 'tablo', 'teklif/r-liste'], ['Yanıt bekleyenler', 'kumSaati', 'teklif/r-bekleyen'], ['Müşteri bazında', 'kisiYildiz', 'teklif/r-musteri']]]],
-  fatura: [['İşlemler', [['Faturalar', 'faturaTL', 'fatura'], ['Yeni satış faturası', 'faturaTL+', () => faturaFormu(null, 'fatura')], ['Yeni alış faturası', 'faturaAl', () => faturaFormu(null, 'alis')], ['e-Arşiv / e-Fatura yükle', 'faturaYukle', () => eFaturaYukle()]]],
+  fatura: [['İşlemler', [['Faturalar', 'faturaTL', 'fatura'], ['Yeni satış faturası', 'faturaTL+', () => faturaFormu(null, 'fatura')], ['Yeni alış faturası', 'faturaAl', () => faturaFormu(null, 'alis')],
+      ['Satış faturaları', 'tablo', () => faturaListesiAc('satis')], ['Alış faturaları', 'kayitlar', () => faturaListesiAc('alis')], ['e-Arşiv / e-Fatura yükle', 'faturaYukle', () => eFaturaYukle()]]],
     ['Raporlar', [['Tüm faturalar', 'dosya', 'fatura/r-hepsi'], ['Satış faturaları', 'tablo', 'fatura/r-satis'], ['Alış faturaları', 'kayitlar', 'fatura/r-alis'], ['Vadesi geçenler', 'takvimX', 'fatura/r-vade']]]],
   personel: [['İşlemler', [['Çalışanlar', 'kisiler', 'personel'], ['Yeni personel', 'kisi+', () => personelFormu()], ['Puantaj', 'puantaj', 'personel/puantaj'], ['Bordro', 'bordro', 'personel/bordro'],
       ['İzin girişi', 'semsiye', async () => { const p = await personelSec('İzin girişi'); if (p) izinFormu(p); }], ['Zimmet ver', 'anahtar', async () => { const p = await personelSec('Zimmet ver'); if (p) zimmetFormu(p); }],
@@ -4340,7 +4352,8 @@ function ekBagla(m, x, onceden = []) {
   $('#ekDosya', m).onclick = () => ekle(false);
   ciz1();
   return {
-    kaydedildi() { kayitli = true; for (const id of kaldirilan) ilk.has(id) ? belgeSil(id) : sil1(id); }
+    kaydedildi() { kayitli = true; for (const id of kaldirilan) ilk.has(id) ? belgeSil(id) : sil1(id); },
+    ekle(ek) { if (!ek || x.ekler.some(y => y.ad === ek.ad && y.tip === ek.tip)) return; x.ekler.push(ek); yeni.push(ek.id); ciz1(); }
   };
 }
 /* Kayıt silinince ekleri de silinir */
@@ -5926,7 +5939,7 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
     <div class="grup tek-sutun">
       ${ver ? `<button class="hucre" id="mSec"><div class="ic"><b id="mAd">${esc(x.kisiId ? kisi(x.kisiId)?.ad : alisF ? 'Kayıtlı cari seç' : 'Kayıtlı müşteri seç')}</b></div>${CHEV}</button>` : ''}
       <label class="f-satir sol ${x.kisiId ? 'gizli' : ''}" id="mSerbest"><input type="text" id="mMusteri" value="${esc(x.musteriAd)}" placeholder="${alisF ? (ver ? 'veya satıcı adı yazın' : 'Satıcı adı') : ver ? 'veya müşteri adı yazın' : 'Müşteri adı'}"></label>
-    </div></div><div class="ff-b">
+    </div>${!teklif ? `<div class="btn-grup ff-xml"><button type="button" class="btn renkli" id="fXml">${ikon('faturaYukle')} e-Fatura XML / PDF yükle</button></div>` : ''}</div><div class="ff-b">
     <div class="bolum erp-yalniz">Belge bilgileri</div>
     <div class="grup">
       <label class="f-satir"><span>${teklif ? 'Teklif no' : 'Fatura no'}</span><input type="text" id="fNo" value="${esc(x.no)}" placeholder="${alisF ? 'Satıcının fatura no' : ''}"></label>
@@ -6079,6 +6092,48 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
     $('#mSerbest', m).classList.toggle('gizli', !!k);
     cariGoster();
   });
+  // 2.23.2: e-Fatura / e-Arşiv XML, ZIP ya da PDF seçilince form doldurulur (satıcı/müşteri, no, tarih, kalemler, KDV, tevkifat, döviz); dosyalar faturaya eklenir
+  if ($('#fXml', m)) $('#fXml', m).onclick = async () => {
+    const dosyalar = await new Promise(coz => { const inp = document.createElement('input'); inp.type = 'file'; inp.multiple = true; inp.accept = '.xml,.zip,.pdf,.html,application/xml,text/xml,application/zip,application/pdf'; inp.onchange = () => coz([...inp.files]); inp.click(); });
+    if (!dosyalar.length) return;
+    bildir('Dosya okunuyor…');
+    let liste;
+    try { liste = await eFaturaDosyalari(dosyalar); } catch (e) { return bildir('Dosya okunamadı', true); }
+    const s1 = liste.find(y => y.u);
+    if (!s1) { const y = liste[0] || {}; return bildir(y.okunamadi ? `PDF okunamadı (${y.okunamadi}). Bilgileri elle girin; PDF'i "Dosya ekle" ile ekleyebilirsiniz.` : y.hata || 'Dosyada fatura bilgisi bulunamadı', true); }
+    const u = s1.u, taraf = alisF ? u.satici : u.alici;
+    const ayni = D.faturalar.find(f2 => f2.id !== x.id && f2.tur !== 'teklif' && ((u.ettn && f2.ettn === u.ettn) || (u.no && f2.no === u.no && f2.tur === x.tur)));
+    // Cari VKN/TCKN ile bulunur; yoksa adı yazılır, kaydedince cari kartı açılır
+    const k = taraf.vkn && D.kisiler.find(y => vknTemiz(y.vno) === vknTemiz(taraf.vkn));
+    if (k) { x.kisiId = k.id; m._efTaraf = null; }
+    else if (taraf.ad || taraf.vkn) { x.kisiId = null; x.musteriAd = taraf.ad || (vknTemiz(taraf.vkn).length === 11 ? 'TCKN ' : 'VKN ') + taraf.vkn; m._efTaraf = {...taraf, ad: x.musteriAd}; }
+    if ($('#mAd', m)) $('#mAd', m).textContent = x.kisiId ? kisi(x.kisiId).ad : alisF ? 'Kayıtlı cari seç' : 'Kayıtlı müşteri seç';
+    $('#mSerbest', m).classList.toggle('gizli', !!x.kisiId); $('#mMusteri', m).value = x.kisiId ? '' : x.musteriAd || '';
+    cariGoster(); sartEnGoster();
+    if (u.no) $('#fNo', m).value = u.no;
+    if (u.tarih) $('#fTarih', m).value = u.tarih;
+    if (u.vade) $('#fVade', m).value = u.vade;
+    else if (x.kisiId && kisi(x.kisiId)?.vadeGun && !$('#fVade', m).value) { const d = tarihNesne($('#fTarih', m).value || bugun()); d.setDate(d.getDate() + kisi(x.kisiId).vadeGun); $('#fVade', m).value = tarihStr(d); }
+    if (u.ettn) x.ettn = u.ettn;
+    x.eBelge = efTur(u);
+    const dv = {TRY: 'TL', TL: 'TL', USD: 'USD', EUR: 'EUR', GBP: 'GBP'}[u.doviz] || 'TL', belgeKur = u.kur > 1 ? u.kur : 0;
+    const kl = (u.kalemler || []).map(y => ({...y, fiyat: dv !== 'TL' && belgeKur ? Math.round((y.fiyat || 0) / belgeKur) : y.fiyat || 0}));
+    if (kl.length) x.kalemler = kl;
+    if ($('#fDoviz', m)) {
+      if (dv !== 'TL' && DOVIZLER.includes(dv)) { x.doviz = dv; x.kur = belgeKur || kurAl(dv) || 0; if (!x.kur) bildir(`${dv} kuru bulunamadı; kuru elle yazın`, true); }
+      else { delete x.doviz; delete x.kur; }
+      $('#fDoviz', m).value = fDoviz(x); $('#fKurSatir', m).classList.toggle('gizli', fDoviz(x) === 'TL'); $('#fKur', m).value = fDoviz(x) === 'TL' ? '' : kurYaz(x.kur);
+    }
+    x.tevkifat = u.tevkifat || 0; if (!x.tevkifat) delete x.tevkifat;
+    if ($('#fTevkif', m)) $('#fTevkif', m).value = String(x.tevkifat || 0);
+    const notlar = [u.not, u.tip === 'IADE' && 'İade faturası', s1.pdfden && !s1.xml && u.pdfOkuma === 'toplam' && "PDF'den okundu. Kalem tablosu okunamadığı için kalemler KDV oranına göre toplam tutardan yazıldı."].filter(Boolean).join('\n');
+    if (notlar && !$('#fNot', m).value.includes(notlar)) $('#fNot', m).value = [$('#fNot', m).value.trim(), notlar].filter(Boolean).join('\n');
+    if (u.odenecek > 0 && u.pdfOkuma !== 'toplam') { x.belgeToplam = u.odenecek; if (dv !== 'TL') x.belgeDoviz = dv; else delete x.belgeDoviz; }
+    kalemCiz();
+    if (ekler) for (const ek of await Promise.all([eFaturaBelge(s1.pdf, 'pdf', 'application/pdf'), eFaturaBelge(s1.xml, 'xml', 'application/xml'), eFaturaBelge(s1.html, 'html', 'text/html')])) ekler.ekle(ek);
+    const yonUyari = !!vknTemiz(firmaAlan('vno')) && alisF !== (eFaturaYon(u) === 'alis');
+    bildir(ayni ? `Dikkat: bu fatura zaten kayıtlı (${ayni.no}). Bilgiler forma yazıldı.` : yonUyari ? `Bilgiler yazıldı. Dikkat: bu belge ${alisF ? 'satış' : 'alış'} faturası görünüyor, kontrol edin.` : `Fatura bilgileri yazıldı (${kl.length} kalem). Kontrol edip ${yeni ? 'Oluştur' : 'Kaydet'}'e basın.`, !!(ayni || yonUyari));
+  };
   function kaydetF() {
     x.kalemler = x.kalemler.filter(k => k.ad.trim() || k.fiyat);
     if (!x.kalemler.length) { bildir('En az bir kalem girin', true); x.kalemler.push(yeniKalem()); kalemCiz(); return false; }
@@ -6115,6 +6170,13 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
       for (const k of x.kalemler) k.fiyat = Math.round((k.fiyat || 0) * kur);
       x.dovizBilgi = {doviz: d, kur, toplam: top, fiyatlar};
       delete x.doviz; delete x.kur;
+    }
+    // 2.23.2: XML'den gelen ve kayıtlı olmayan cari kaydedilirken açılır
+    const et = m._efTaraf;
+    if (et && ver && !x.kisiId && x.musteriAd && x.musteriAd === et.ad) {
+      const k = {id: kimlik(), olusturma: Date.now(), ad: et.ad, vno: et.vkn, vd: et.vd, adres: et.adres, il: et.il, tel: et.tel, eposta: et.eposta, tip: alisF ? 'tedarikci' : 'musteri', yetkililer: []};
+      for (const a of Object.keys(k)) if (k[a] === '' || k[a] === undefined) delete k[a];
+      D.kisiler.push(k); x.kisiId = k.id; x.musteriAd = '';
     }
     const sp = yeni && alisF && m._siparis && D.faturalar.find(y => y.id === m._siparis);
     if (yeni) { x.id = kimlik(); x.olusturma = Date.now(); D.faturalar.push(x); }

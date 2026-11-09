@@ -280,8 +280,19 @@ public class MainActivity extends Activity {
     @SuppressWarnings("deprecation")
     public void onBackPressed() {
         web.evaluateJavascript("window.geriTusu ? window.geriTusu() : false", sonuc -> {
-            if (!"true".equals(sonuc)) finish();
+            if (!"true".equals(sonuc)) cikisSor();
         });
+    }
+
+    // 2.23.2: geri tuşuyla uygulamadan çıkmadan önce onay sorulur
+    private void cikisSor() {
+        if (isFinishing()) return;
+        new android.app.AlertDialog.Builder(this)
+            .setTitle("PowerServ+")
+            .setMessage("Çıkmak istiyor musunuz?")
+            .setPositiveButton("Evet, çık", (d, w) -> finish())
+            .setNegativeButton("Hayır", null)
+            .show();
     }
 
     private void disariAc(Uri u) {

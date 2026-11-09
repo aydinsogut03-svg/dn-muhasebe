@@ -1,6 +1,6 @@
 // PowerServ+ Windows uygulaması: web/index.html'i kendi penceresinde açar.
 // Veriler bu bilgisayarda saklanır; ortak veritabanına (Firebase) e-posta ve şifreyle girilince diğer cihazlarla eşitlenir.
-const {app, BrowserWindow, shell, Menu, ipcMain} = require('electron');
+const {app, BrowserWindow, shell, Menu, ipcMain, dialog} = require('electron');
 const path = require('path');
 
 if (!app.requestSingleInstanceLock()) app.quit();
@@ -16,6 +16,12 @@ function ac() {
   });
   Menu.setApplicationMenu(null);
   pencere.once('ready-to-show', () => { pencere.maximize(); pencere.show(); });
+  // 2.23.2: pencere kapatılırken çıkış onayı sorulur
+  pencere.on('close', e => {
+    const c = dialog.showMessageBoxSync(pencere, {type: 'question', buttons: ['Evet, çık', 'Hayır'], defaultId: 1, cancelId: 1, noLink: true,
+      title: 'PowerServ+', message: 'Çıkmak istiyor musunuz?', detail: 'Kaydedilmemiş bir form varsa içindeki bilgiler kaybolur.'});
+    if (c !== 0) e.preventDefault();
+  });
   // Dış bağlantılar (web sitesi, e-posta, harita) varsayılan tarayıcıda açılır.
   const disari = url => { if (/^(https?|mailto|tel):/i.test(url)) shell.openExternal(url); };
   pencere.webContents.setWindowOpenHandler(({url}) => {
