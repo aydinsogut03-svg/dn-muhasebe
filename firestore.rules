@@ -1,5 +1,5 @@
 rules_version = '2';
-// PowerServ+ ortak veritabanı güvenlik kuralları (2.24). Firebase konsolu > Firestore Database > Kurallar sekmesine yapıştırın.
+// PowerServ+ ortak veritabanı güvenlik kuralları (2.25; 2.24 değişikliklerini de içerir). Firebase konsolu > Firestore Database > Kurallar sekmesine yapıştırın.
 service cloud.firestore {
   match /databases/{db}/documents {
     // Yeni firma açılışı kapalı: kimse API anahtarıyla kendine yeni firma kurup veritabanını kullanamaz.
@@ -18,6 +18,51 @@ service cloud.firestore {
     // başkasının (muhasebe, yönetici) yazdığı faturayı ve cari hareketi değiştiremez, silemez.
     function servisSiniri(f) {
       return rol(f) != 'servis' || !(request.resource.data.k in ['faturalar', 'hareketler']) || resource == null || resource.data.u == request.auth.uid;
+    }
+    // 2.25: Kullanıcıya verilen modül erişimi (uye.yetki, örn. "stok=gor;fatura=duzenle") sunucuda da uygulanır.
+    // Yönetici ve firma sahibi kısıtsızdır. "Kapalı" ve "Görüntüle" yazamaz; "Ekle ve düzenle" silemez; "Tam" her şeyi yapar.
+    function serbest(f) { return rol(f) == 'yonetici' || request.auth.uid == sahip(f); }
+    function yetkiMetni(f) { return get(uyeYol(f)).data.get('yetki', ''); }
+    function seviyeAlti(f, m, l) { return m != '' && yetkiMetni(f).matches('(.*;)?' + m + '=(' + l + ')(;.*)?'); }
+    function modulu(k) {
+      return k in ['servisler', 'ekipmanlar', 'sfoto'] ? 'servis'
+        : k == 'faturalar' ? 'fatura'
+        : k in ['kisiler', 'hareketler'] ? 'veresiye'
+        : k in ['urunler', 'stokHareket'] ? 'stok'
+        : k == 'islemler' ? 'kasa'
+        : k in ['finansHesap', 'virmanlar', 'ekstreler', '_finansAyar'] ? 'banka'
+        : k in ['personeller', 'personelOdeme', '_puantaj', '_bordroAyar'] ? 'personel'
+        : k == '_vergiAyar' ? 'kdv' : '';
+    }
+    // Silinen kayıtta (j boş) içerik sunucudaki eski hâlden okunur.
+    function icerik() { return request.resource.data.j != '' ? request.resource.data.j : (resource == null ? '' : resource.data.j); }
+    function kaynakModulu(j) {
+      return j.matches('.*"kaynak":[{]"tip":"fatura".*') ? 'fatura'
+        : j.matches('.*"kaynak":[{]"tip":"servis".*') ? 'servis'
+        : j.matches('.*"kaynak":[{]"tip":"personel".*') ? 'personel'
+        : j.matches('.*"kaynak":[{]"tip":"stok".*') ? 'stok' : '';
+    }
+    function teklifMi() {
+      return request.resource.data.k == 'faturalar' && icerik().matches('.*"tur":"teklif".*')
+        && (resource == null || resource.data.j == '' || resource.data.j.matches('.*"tur":"teklif".*'));
+    }
+    function moduldeIzinli(f, m) {
+      return request.resource.data.s == true ? !seviyeAlti(f, m, 'yok|gor|duzenle') : !seviyeAlti(f, m, 'yok|gor');
+    }
+    // Fatura teklife çevrilirse (sonra teklif yetkisiyle silinebilir) bu, fatura silmek sayılır: fatura modülünde Tam gerekir.
+    function teklifeDonusum() {
+      return request.resource.data.k == 'faturalar' && resource != null && resource.data.j != '' && !resource.data.j.matches('.*"tur":"teklif".*')
+        && request.resource.data.j.matches('.*"tur":"teklif".*');
+    }
+    function modulIzni(f) {
+      let k = request.resource.data.k;
+      let km = kaynakModulu(icerik());
+      return serbest(f) || ((!teklifeDonusum() || !seviyeAlti(f, 'fatura', 'yok|gor|duzenle'))
+        && (moduldeIzinli(f, modulu(k)) || (teklifMi() && moduldeIzinli(f, 'teklif')) || (km != '' && moduldeIzinli(f, km))));
+    }
+    // 2.25: İzleyici gizli finans verilerini (gelir/gider, banka, personel, bordro, vergi) ancak yönetici izin verdiyse görür.
+    function gizliOkur(f) {
+      return rol(f) in ['yonetici', 'muhasebe'] || (rol(f) == 'izleyici' && yetkiMetni(f).matches('(.*;)?gizli=gor(;.*)?'));
     }
     function genel(k) { return servisIzni(k) || k in ['_firma', '_ad', '_profil', '_servisAyar', '_modulAyar']; }
     // Her kayıt: yalnız bilinen alanlar, yazan kişi oturumdaki kişi, zaman sunucu saati, boyut sınırlı.
@@ -56,14 +101,14 @@ service cloud.firestore {
       // Servisin görebildiği kayıtlar. Gizli koleksiyonlar burada yalnızca boşaltılmış (eski sürümden kalan) olarak bulunabilir.
       match /kayit/{key} {
         allow read: if uye(f);
-        allow create, update: if yazar(f) && kayitGecerli(key) && servisSiniri(f) && (
+        allow create, update: if yazar(f) && kayitGecerli(key) && servisSiniri(f) && modulIzni(f) && (
           (genel(request.resource.data.k) && (rol(f) != 'servis' || servisIzni(request.resource.data.k)))
           || (finans(f) && !genel(request.resource.data.k) && request.resource.data.s == true && request.resource.data.j == ''));
       }
       // Gelir/gider, banka/kasa, personel, bordro, vergi...: servis rolü okuyamaz, yalnızca yönetici ve muhasebe yazar.
       match /ozel/{key} {
-        allow read: if uye(f) && rol(f) in ['yonetici', 'muhasebe', 'izleyici'];
-        allow create, update: if finans(f) && kayitGecerli(key) && !genel(request.resource.data.k);
+        allow read: if uye(f) && gizliOkur(f);
+        allow create, update: if finans(f) && kayitGecerli(key) && !genel(request.resource.data.k) && modulIzni(f);
       }
       // 2.15: Şifreli evrak arşivi. Yalnız firma sahibi okur ve yazar. İçerik cihazda şifrelenip gelir; sunucuda yalnız şifreli metin durur.
       match /kasa/{key} {
