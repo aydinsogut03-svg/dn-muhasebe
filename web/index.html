@@ -1928,7 +1928,7 @@ p.dipnot .i{width:14px;height:14px;vertical-align:-2px}
 
 <script>
 'use strict';
-const VERSIYON = '2.23.3';
+const VERSIYON = '2.24.0';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -2114,6 +2114,73 @@ const yeniDurum = () => ({
   personeller:[], personelOdeme:[], puantaj:{}, bordroAyar:{tesvik:2}, vergiAyar:{tur:''},
   sonYedek:null
 });
+/* 2.24: Büyük veriler (hesap verisi, eşitleme izi, işlem geçmişi) IndexedDB'de tutulur. localStorage ~5 MB ile sınırlıydı:
+   kayıtlar arttıkça "Depolama dolu" olur, değişiklik kaydedilmezdi. Okuma bellekteki kopyadan anında yapılır, yazma hemen arka planda
+   diske gider. İlk açılışta eski localStorage verisi taşınır, doğrulanınca oradan silinir. IndexedDB açılamazsa eski yol kullanılır. */
+const VS = (() => {
+  const bellek = new Map(), bekleyen = new Map();
+  let db = null, zaman = 0, hataBildirildi = false, aktif = null;
+  const tasinir = k => !!k && (k.startsWith('dnmuhasebe.v1.') || k === 'powerserv.ortak.iz' || k.startsWith('powerserv.gecmis.'));
+  const ac = () => new Promise(coz => {
+    try {
+      const r = indexedDB.open('powerserv-veri', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('v');
+      r.onsuccess = () => coz(r.result); r.onerror = () => coz(null); r.onblocked = () => coz(null);
+    } catch (e) { coz(null); }
+  });
+  const hepsiniOku = () => new Promise(coz => {
+    try {
+      const m = new Map(), r = db.transaction('v').objectStore('v').openCursor();
+      r.onsuccess = () => { const c = r.result; if (c) { m.set(c.key, c.value); c.continue(); } else coz(m); };
+      r.onerror = () => coz(null);
+    } catch (e) { coz(null); }
+  });
+  const diskeYaz = l => new Promise(coz => {
+    try {
+      const t = db.transaction('v', 'readwrite', {durability: 'strict'}), st = t.objectStore('v');   // diske inmeden tamam sayılmaz
+      for (const [k, v] of l) v == null ? st.delete(k) : st.put(v, k);
+      t.oncomplete = () => coz(true); t.onerror = t.onabort = () => coz(false);
+    } catch (e) { coz(false); }
+  });
+  async function bosalt() {
+    zaman = 0;
+    if (!bekleyen.size) return;
+    const l = [...bekleyen]; bekleyen.clear();
+    aktif = diskeYaz(l);
+    const tamam = await aktif; aktif = null;
+    if (tamam) { hataBildirildi = false; return; }
+    for (const [k, v] of l) if (!bekleyen.has(k)) bekleyen.set(k, v);   // sonra yeniden denenir
+    if (!hataBildirildi) { hataBildirildi = true; try { bildir('Kaydedilemedi: cihaz depolaması dolu ya da erişilemiyor. Yer açıp yeniden deneyin.', true); } catch (e) {} }
+    zaman = setTimeout(bosalt, 5000);
+  }
+  const planla = () => { if (!zaman) zaman = setTimeout(bosalt, 0); };
+  return {
+    async hazirla() {
+      if (typeof indexedDB === 'undefined') return;
+      db = await ac();
+      const m = db && await hepsiniOku();
+      if (!m) { db = null; return; }
+      for (const [k, v] of m) bellek.set(k, v);
+      // localStorage'da kalan veri her zaman daha yenidir (taşınınca oradan silinir; varsa eski sürümle yazılmıştır).
+      const tasi = [];
+      for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (tasinir(k)) tasi.push(k); }
+      const l = tasi.map(k => [k, localStorage.getItem(k)]).filter(([, v]) => v != null);
+      if (!l.length) return;
+      for (const [k, v] of l) bellek.set(k, v);
+      if (await diskeYaz(l)) for (const [k] of l) localStorage.removeItem(k);
+    },
+    al: k => db ? (bellek.has(k) ? bellek.get(k) : null) : localStorage.getItem(k),
+    yaz(k, v) { v = String(v); if (!db) return localStorage.setItem(k, v); bellek.set(k, v); bekleyen.set(k, v); planla(); },
+    sil(k) { if (!db) return localStorage.removeItem(k); bellek.delete(k); bekleyen.set(k, null); planla(); },
+    bekleyenVar: () => bekleyen.size > 0 || !!aktif || !!zaman,
+    /* Bekleyen ve yazılmakta olan her şey diske inince biter */
+    async bitti() { for (let i = 0; i < 400 && (bekleyen.size || aktif || zaman); i++) { if (aktif) await aktif; else await new Promise(r => setTimeout(r, 25)); } },
+    bosalt,
+    get idb() { return !!db; }
+  };
+})();
+addEventListener('pagehide', () => VS.bosalt());
+document.addEventListener('visibilitychange', () => { if (document.hidden) VS.bosalt(); });
 /* Hesaplar: her hesabın (örn. kişisel, şirket) verisi ayrı anahtarda tutulur, birbirine karışmaz. */
 const HESAP_ANAHTAR = 'dnmuhasebe.hesaplar';
 let H;
@@ -2125,7 +2192,7 @@ function hesaplariYukle() {
     // Örnek veri özelliği kaldırıldı (2.5): daha önce açılmış örnek hesaplar silinir, gerçek hesaplara dokunulmaz.
     const ornek = H.liste.filter(h => h.ornek);
     if (ornek.length) {
-      for (const h of ornek) localStorage.removeItem(ANAHTAR + '.' + h.id);
+      for (const h of ornek) VS.sil(ANAHTAR + '.' + h.id);
       H.liste = H.liste.filter(h => !h.ornek);
       if (!H.liste.length) { const id = 'h' + kimlik(); H.liste = [{id, ad: '', profil: null}]; H.aktif = id; }
       hesapKaydet();
@@ -2136,12 +2203,12 @@ function hesaplariYukle() {
   // İlk açılış ya da eski sürüm: eski tek veri ilk hesap olur (eski kayıt silinmez).
   const id = 'h' + kimlik(), eski = localStorage.getItem(ANAHTAR);
   H = {aktif: id, liste: [{id, ad: '', profil: null}]};
-  if (eski) { try { localStorage.setItem(ANAHTAR + '.' + id, eski); const d = JSON.parse(eski); Object.assign(H.liste[0], {ad: d.ad || '', profil: d.profil}); } catch (e) {} }
+  if (eski) { try { VS.yaz(ANAHTAR + '.' + id, eski); const d = JSON.parse(eski); Object.assign(H.liste[0], {ad: d.ad || '', profil: d.profil}); } catch (e) {} }
   hesapKaydet();
 }
 const veriAnahtari = (id = H.aktif) => ANAHTAR + '.' + id;
 function yukle() {
-  try { const h = localStorage.getItem(veriAnahtari()); if (h) return duzelt(JSON.parse(h)); } catch (e) {}
+  try { const h = VS.al(veriAnahtari()); if (h) return duzelt(JSON.parse(h)); } catch (e) {}
   return yeniDurum();
 }
 const ampersandsiz = t => typeof t === 'string' ? t.replace(/D\s*&\s*N/gi, m => m[0] + m[m.length - 1]).replace(/\s*&\s*/g, ' ve ') : t;
@@ -2172,7 +2239,7 @@ function kaydet() {
   if (silmeEngeli()) { bildir(`${modulAdi(silmeEngeli())} modülünde silme yetkiniz yok. Değişiklik geri alındı.`, true); D = yukle(); setTimeout(ciz, 0); return; }
   const h = H.liste.find(x => x.id === H.aktif);
   if (h && (h.ad !== D.ad || h.profil !== D.profil)) { h.ad = D.ad; h.profil = D.profil; hesapKaydet(); }
-  try { localStorage.setItem(veriAnahtari(), JSON.stringify(D)); }
+  try { VS.yaz(veriAnahtari(), JSON.stringify(D)); }
   catch (e) { bildir('Kaydedilemedi. Depolama dolu olabilir.', true); }
   if (window.gecmisTaban) { try { gecmisYaz(); } catch (e) {} }
   if (window.gunlukPlanla) gunlukPlanla();
@@ -2438,7 +2505,55 @@ const BORDRO = {
     ucret: [[19000000, 15], [40000000, 20], [150000000, 27], [530000000, 35], [Infinity, 40]],
     diger: [[19000000, 15], [40000000, 20], [100000000, 27], [530000000, 35], [Infinity, 40]]}
 };
-const bordroParam = yil => { const y = Object.keys(BORDRO).map(Number).filter(x => x <= yil); return BORDRO[y.length ? Math.max(...y) : 2025]; };
+/* 2.24: Yeni yılın asgari ücreti ve vergi dilimleri Personel > Bordro > Parametreler'den girilir (programı güncellemeden).
+   Girilen değerler programdakilerin üzerine yazılır. Yılın değerleri yoksa en son yılınkiler kullanılır ve uyarı gösterilir. */
+const bordroOzel = () => (typeof D !== 'undefined' && D && D.bordroAyar && D.bordroAyar.param) || {};
+function bordroParam(yil) {
+  const oz = bordroOzel(), yillar = [...new Set([...Object.keys(BORDRO), ...Object.keys(oz)].map(Number))].filter(x => x <= yil);
+  const y = yillar.length ? Math.max(...yillar) : 2025;
+  const taban = BORDRO[Math.max(...Object.keys(BORDRO).map(Number).filter(x => x <= y), 2025)];
+  const o = oz[y] ? {...oz[y], ucret: (oz[y].ucret || []).map(([u, r]) => [u == null ? Infinity : u, r]), diger: (oz[y].diger || []).map(([u, r]) => [u == null ? Infinity : u, r])} : {};
+  return {...taban, ...o, yil: y};
+}
+const bordroEksik = yil => bordroParam(yil).yil !== yil;
+function bordroParamFormu(yil) {
+  const P = bordroParam(yil), ozel = !!bordroOzel()[yil];
+  const tl = k => k === Infinity ? '' : (k / 100).toLocaleString('tr-TR', {maximumFractionDigits: 2}), yz = v => String(v).replace('.', ',');
+  const sinir = (ad, l) => l.slice(0, 4).map(([u], i) => `<label class="f-satir"><span>${ad} dilim ${i + 1} (TL)</span><input data-${ad === 'Ücret' ? 'u' : 'd'}="${i}" inputmode="decimal" value="${tl(u)}"></label>`).join('');
+  const m = modal(`${yil} bordro parametreleri`, `
+    ${P.yil !== yil ? `<div class="kilit-uyari">${ikon('uyari')}<div><b>${yil} değerleri girilmemiş</b><small>Şu an ${P.yil} değerleri kullanılıyor. Resmî Gazete'de yayımlanan ${yil} değerlerini girip kaydedin.</small></div></div>` : ''}
+    <div class="bolum">Asgari ücret ve SGK</div>
+    <div class="grup">
+      <label class="f-satir"><span>Asgari ücret, brüt (TL)</span><input id="bpAsgari" inputmode="decimal" value="${tl(P.asgari)}"></label>
+      <label class="f-satir"><span>SGK tavan katı</span><input id="bpTavan" inputmode="decimal" value="${yz(P.tavanKat)}"></label>
+      <label class="f-satir"><span>SGK işçi payı (%)</span><input id="bpSgkI" inputmode="decimal" value="${yz(P.sgkIsci)}"></label>
+      <label class="f-satir"><span>İşsizlik işçi (%)</span><input id="bpIssI" inputmode="decimal" value="${yz(P.issizIsci)}"></label>
+      <label class="f-satir"><span>SGK işveren (%)</span><input id="bpSgkV" inputmode="decimal" value="${yz(P.sgkIsv)}"></label>
+      <label class="f-satir"><span>İşsizlik işveren (%)</span><input id="bpIssV" inputmode="decimal" value="${yz(P.issizIsv)}"></label>
+      <label class="f-satir"><span>Damga vergisi (%)</span><input id="bpDamga" inputmode="decimal" value="${yz(P.damga)}"></label>
+    </div>
+    <div class="bolum">Gelir vergisi dilimleri</div>
+    <div class="grup">${P.ucret.map(([, o], i) => `<label class="f-satir"><span>${i + 1}. dilim oranı (%)</span><input data-o="${i}" inputmode="decimal" value="${yz(o)}"></label>`).join('')}</div>
+    <div class="grup">${sinir('Ücret', P.ucret)}</div>
+    <div class="grup">${sinir('Diğer', P.diger)}</div>
+    <p class="dipnot">Dilim tutarları her dilimin üst sınırıdır; son dilimin sınırı yoktur. Ücret dilimleri bordroda, "Diğer" dilimleri ücret dışı gelirlerin vergi hesabında kullanılır. SGK tavan katı: tavan, asgari ücretin bu katıdır. SGK işveren payı teşviksiz yazılır; teşvik Bordro ekranında seçilir.</p>
+    ${ozel ? `<div class="btn-grup"><button type="button" class="btn renkli" id="bpSifirla">${ikon('donustur')} Programdaki değerlere dön</button></div>` : ''}`,
+    {kaydet: () => {
+      const sayi = id => sayiOku($(id, m).value), t = id => tutarOku($(id, m).value);
+      const y = {asgari: t('#bpAsgari'), tavanKat: sayi('#bpTavan'), sgkIsci: sayi('#bpSgkI'), issizIsci: sayi('#bpIssI'), sgkIsv: sayi('#bpSgkV'), issizIsv: sayi('#bpIssV'), damga: sayi('#bpDamga')};
+      const oran = $$('[data-o]', m).map(i => sayiOku(i.value)), us = $$('[data-u]', m).map(i => tutarOku(i.value)), ds = $$('[data-d]', m).map(i => tutarOku(i.value));
+      const hepsi = [...Object.values(y), ...oran, ...us, ...ds];
+      if (hepsi.some(v => !(v >= 0)) || !(y.asgari > 0)) { bildir('Tüm alanlara geçerli bir sayı girin', true); return false; }
+      const artan = l => l.every((v, i) => !i || v > l[i - 1]);
+      if (!artan(us) || !artan(ds)) { bildir('Dilim sınırları küçükten büyüğe sıralı olmalı', true); return false; }
+      // Son dilimin sınırı yok: JSON'da Infinity yazılamadığı için null saklanır, okurken Infinity olur.
+      y.ucret = [...us.map((u, i) => [u, oran[i]]), [null, oran[4]]];
+      y.diger = [...ds.map((u, i) => [u, oran[i]]), [null, oran[4]]];
+      D.bordroAyar.param = {...bordroOzel(), [yil]: y};
+      kaydet(); bildir(`${yil} bordro parametreleri kaydedildi`); setTimeout(ciz, 10);
+    }});
+  if ($('#bpSifirla', m)) $('#bpSifirla', m).onclick = () => { const o = {...bordroOzel()}; delete o[yil]; D.bordroAyar.param = o; kaydet(); kapat(); bildir('Programdaki değerlere dönüldü'); setTimeout(ciz, 10); };
+}
 function vergiDilim(matrah, dilimler) {
   let v = 0, alt = 0;
   for (const [ust, oran] of dilimler) {
@@ -2825,7 +2940,7 @@ function ayBagla(alan, yeniden) {
 
 let sonRota = '';
 /* 2.10: her çizimden sonra masaüstünde üstteki pencere sekmeleri yenilenir */
-function ciz() { ciz0(); erpSonrasi(); }
+function ciz() { if (!D) return; ciz0(); erpSonrasi(); }
 function ciz0() {
   while (yigin.length) yigin.pop().remove();
   if (window.ucKapat && $('#ucMenu')) ucKapat();
@@ -3354,7 +3469,7 @@ function profilEkrani(ilk) {
   cekmeceKapat();
   const hx = H.liste.find(x => x.id === H.aktif), geriDon = hx?.onceki && H.liste.some(x => x.id === hx.onceki);
   sayfa('', geriDon ? {geri: 'panel', geriAd: 'Vazgeç'} : {});
-  if (geriDon) $('#geriBtn').onclick = () => { H.liste = H.liste.filter(x => x.id !== hx.id); localStorage.removeItem(veriAnahtari(hx.id)); hesabaGec(hx.onceki); };
+  if (geriDon) $('#geriBtn').onclick = () => { H.liste = H.liste.filter(x => x.id !== hx.id); VS.sil(veriAnahtari(hx.id)); hesabaGec(hx.onceki); };
   $('#icerik').innerHTML = `<div class="karsilama"><div class="logo">P+</div><h2>${H.liste.length > 1 ? 'Yeni firma hesabı' : 'PowerServ+'}</h2><p>Servis, cari, stok, fatura, banka ve finans yönetimi tek yerde.</p></div>
     <div class="grup"><label class="f-satir sol"><input type="text" id="adGiris" value="${esc(D.ad || (H.liste.length > 1 ? '' : FIRMA_VARSAYILAN.ad))}" placeholder="Firma unvanı"></label></div>
     <button class="btn" id="basla">Başla</button>
@@ -3404,14 +3519,14 @@ function hesaplarEkrani() {
       const m = modal('Hesap adı', `<div class="grup"><label class="f-satir sol"><input type="text" id="hAd" value="${esc(x.ad)}" placeholder="Hesap adı"></label></div>`, {kaydet: () => {
         const ad = $('#hAd', m).value.trim();
         if (x.id === H.aktif) { D.ad = ad; kaydet(); }
-        else { x.ad = ad; try { const d = JSON.parse(localStorage.getItem(veriAnahtari(x.id))); d.ad = ad; localStorage.setItem(veriAnahtari(x.id), JSON.stringify(d)); } catch (e) {} hesapKaydet(); }
+        else { x.ad = ad; try { const d = JSON.parse(VS.al(veriAnahtari(x.id))); d.ad = ad; VS.yaz(veriAnahtari(x.id), JSON.stringify(d)); } catch (e) {} hesapKaydet(); }
         setTimeout(ciz, 10);
       }});
       setTimeout(() => $('#hAd', m).focus(), 320);
     } else if (s === 'sil') {
       if (!await onay(`${hesapAdi(x)} silinsin mi?`, 'Bu hesabın tüm kayıtları kalıcı olarak silinir. Önce yedek almanız önerilir.', 'Hesabı sil')) return;
-      localStorage.removeItem(veriAnahtari(x.id));
-      if (ortak()?.hesap === x.id) { ortakYaz(null); localStorage.removeItem(IZ_ANAHTAR); $('#girisEkran')?.remove(); }
+      VS.sil(veriAnahtari(x.id));
+      if (ortak()?.hesap === x.id) { ortakYaz(null); VS.sil(IZ_ANAHTAR); $('#girisEkran')?.remove(); }
       H.liste = H.liste.filter(y => y.id !== x.id);
       if (x.id === H.aktif) return hesabaGec(H.liste[0].id);
       hesapKaydet(); bildir('Hesap silindi'); ciz();
@@ -3424,7 +3539,7 @@ async function kayitTasi() {
   const hedefId = await eylemSayfa('Hangi hesaba taşınsın?', `Kaynak: ${hesapAdi(H.liste.find(x => x.id === H.aktif))}`, H.liste.filter(x => x.id !== H.aktif).map(x => ({ad: hesapAdi(x), deger: x.id})));
   if (!hedefId) return;
   let hedef;
-  try { hedef = duzelt(JSON.parse(localStorage.getItem(veriAnahtari(hedefId)) || 'null') || yeniDurum()); } catch (e) { hedef = yeniDurum(); }
+  try { hedef = duzelt(JSON.parse(VS.al(veriAnahtari(hedefId)) || 'null') || yeniDurum()); } catch (e) { hedef = yeniDurum(); }
   const serbest = D.islemler.filter(i => !i.kaynak && !i.hareketId).sort(islemSirala);
   const bolumler = [
     ['islem', 'Gelir / gider kayıtları', serbest.map(i => ({id: i.id, ad: i.aciklama || i.kategori, alt: `${tarihYaz(i.tarih, true)} · ${i.kategori}`, sag: (i.tur === 'gelir' ? '+' : '−') + para(i.tutar), simge: i.tur === 'gelir' ? 'giris' : 'cikis', renk: i.tur === 'gelir' ? 'yesil' : 'kirmizi'}))],
@@ -3442,7 +3557,7 @@ async function kayitTasi() {
       const sec = tip => $$(`input[data-tip=${tip}]:checked`, m).map(c => c.value);
       const n = tasi(hedef, {islem: sec('islem'), kisi: sec('kisi'), fatura: sec('fatura'), personel: sec('personel'), urun: sec('urun')});
       if (!n) { bildir('Kayıt seçin', true); return false; }
-      localStorage.setItem(veriAnahtari(hedefId), JSON.stringify(hedef));
+      VS.yaz(veriAnahtari(hedefId), JSON.stringify(hedef));
       kaydet(); bildir(`${n} kayıt taşındı`); setTimeout(ciz, 10);
     }, kaydetAd: 'Taşı', tam: true});
   $$('[data-hepsi]', m).forEach(b => b.onclick = () => { const l = $$(`input[data-tip=${b.dataset.hepsi}]`, m); const hepsi = l.every(c => c.checked); l.forEach(c => c.checked = !hepsi); });
@@ -4274,7 +4389,7 @@ const belgeYaz = b => belgeIslem('readwrite', s => s ? s.put(b) : void belgeBell
 const belgeOku = async id => (await belgeIslem('readonly', s => s ? s.get(id) : null)) ?? belgeBellek.get(id) ?? null;
 async function belgeHepsi() { const l = await belgeIslem('readonly', s => s ? s.getAll() : null); return l || [...belgeBellek.values()]; }
 /* Kayıttan çıkarılan ek: sunucuya silindi bilgisi gidene kadar işaretli kalır */
-async function belgeSil(id) { const b = await belgeOku(id); if (b) await belgeYaz({id, hesap: b.hesap, silindi: true, gonderildi: false}); }
+async function belgeSil(id) { const b = await belgeOku(id); if (b) await belgeYaz({id, hesap: b.hesap, silindi: true, gonderildi: false, ...(b.yer ? {yer: b.yer} : {})}); }
 
 function dosyaSec(accept, kamera) {
   return new Promise(coz => {
@@ -4376,13 +4491,24 @@ const ekListesiHtml = x => x.ekler?.length ? `<div class="bolum">Ekler</div><div
 function ekListesiBagla(x) { $$('#ekGoster [data-ek]').forEach(el => el.onclick = () => belgeGoster(x.ekler.find(y => y.id === el.dataset.ek))); }
 
 /* --- Ortak veritabanı: bekleyen ekleri gönderir, gelenleri cihaza yazar --- */
+/* 2.24: Servis fotoğrafları "kayit" altında (sfoto~id) durur: servis rolündeki teknisyen de gönderir ve görür.
+   Diğer ekler (fatura, gider, fiş) "ozel" altında kalır; onları yalnız yönetici ve muhasebe gönderir. */
+const SFOTO = 'sfoto';
 async function belgeGonder(o, s) {
-  if (!['yonetici', 'muhasebe'].includes(ortakRol())) return 0;
-  const l = (await belgeHepsi()).filter(b => b.hesap === H.aktif && !b.gonderildi);
+  const rol = ortakRol(), finans = ['yonetici', 'muhasebe'].includes(rol);
+  if (!finans && rol !== 'servis') return 0;
+  const hepsi = (await belgeHepsi()).filter(b => b.hesap === H.aktif);
+  // Önceki sürümlerde ofisten eklenen servis fotoğrafları "ozel"e gitmişti; teknisyen göremiyordu. Bir kez "kayit"e de gönderilir.
+  if (finans) {
+    const sf = new Set(D.servisler.flatMap(x => (x.fotolar || []).map(f => f.id)));
+    for (const b of hepsi) if (sf.has(b.id) && !b.silindi && b.yer !== 'kayit') { b.yer = 'kayit'; b.gonderildi = false; delete b.red; await belgeYaz(b); }
+  }
+  const l = hepsi.filter(b => !b.gonderildi && (finans || b.yer === 'kayit'));
   for (const b of l) {
     if (b.red) continue;
+    const kayitta = b.yer === 'kayit', k = kayitta ? SFOTO : 'belgeler';
     const j = b.silindi ? '' : JSON.stringify({id: b.id, ad: b.ad, tip: b.tip, boyut: b.boyut, veri: b.veri});
-    try { await ortakIstek(o, 'POST', `${FS}/v1/${belgeKok(o)}:commit`, {writes: [{update: {name: firmaYol(o, '/ozel/belgeler~' + idTemiz(b.id)), fields: fsAlanlar({k: 'belgeler', j, s: !!b.silindi, u: s.uid})}, updateTransforms: [zYaz()]}]}); }
+    try { await ortakIstek(o, 'POST', `${FS}/v1/${belgeKok(o)}:commit`, {writes: [{update: {name: firmaYol(o, (kayitta ? '/kayit/' : '/ozel/') + k + '~' + idTemiz(b.id)), fields: fsAlanlar({k, j, s: !!b.silindi, u: s.uid})}, updateTransforms: [zYaz()]}]}); }
     catch (e) { if (e.ag || e.oturum || (e.durum !== 403 && e.durum !== 400)) throw e; await belgeYaz({...b, red: true}); continue; }   // 2.9.6: sunucunun kabul etmediği ek eşitlemeyi durdurmaz
     if (b.silindi) await belgeIslem('readwrite', st => st ? st.delete(b.id) : void belgeBellek.delete(b.id));
     else await belgeYaz({...b, gonderildi: true});
@@ -4394,9 +4520,9 @@ async function belgeGonder(o, s) {
 const BELGE_DESEN = {pdf: /^data:[\w.+\/-]*;base64,[A-Za-z0-9+/=]*$/, xml: /^data:(application|text)\/xml;base64,[A-Za-z0-9+/=]*$/, html: /^data:text\/html;base64,[A-Za-z0-9+/=]*$/, resim: /^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]*$/};
 const belgeVeriGecerli = b => !!b && typeof b.veri === 'string' && (BELGE_DESEN[b.tip] || BELGE_DESEN.resim).test(b.veri);
 async function belgeAl(b) {
-  const id = b._ad.slice('belgeler~'.length);
+  const id = b._ad.slice(b._ad.indexOf('~') + 1), yer = b.k === SFOTO ? 'kayit' : undefined;
   if (b.s) { const y = await belgeOku(id); if (y && y.gonderildi !== false) await belgeIslem('readwrite', st => st ? st.delete(id) : void belgeBellek.delete(id)); return; }
-  try { const v = JSON.parse(b.j); if (!belgeVeriGecerli(v) || idTemiz(v.id) !== id) return; v.ad = String(v.ad || '').slice(0, 200); const y = await belgeOku(v.id); if (y && !y.gonderildi) return; await belgeYaz({...v, hesap: H.aktif, tarih: Date.now(), gonderildi: true}); } catch (e) {}
+  try { const v = JSON.parse(b.j); if (!belgeVeriGecerli(v) || idTemiz(v.id) !== id) return; v.ad = String(v.ad || '').slice(0, 200); const y = await belgeOku(v.id); if (y && !y.gonderildi) return; await belgeYaz({...v, hesap: H.aktif, tarih: Date.now(), gonderildi: true, ...(yer || y?.yer ? {yer: yer || y.yer} : {})}); } catch (e) {}
 }
 
 /* ================= e-Arşiv / e-Fatura yükleme =================
@@ -8057,7 +8183,7 @@ function siparisEkrani(id) {
    Ortak veritabanında ayrıca buluttaki değiştirilemez işlem kaydı tutulur. */
 const GECMIS_SINIR = 3000;
 const gecmisAnahtar = () => 'powerserv.gecmis.' + H.aktif;
-const gecmisOku = () => { try { return JSON.parse(localStorage.getItem(gecmisAnahtar())) || []; } catch (e) { return []; } };
+const gecmisOku = () => { try { return JSON.parse(VS.al(gecmisAnahtar())) || []; } catch (e) { return []; } };
 const gecmisKullanici = () => { const s = ortakOturum(); return s ? (s.ad || s.eposta || 'Kullanıcı') : (window.PowerServ ? 'Bu bilgisayar' : window.Android ? 'Bu telefon' : 'Bu cihaz'); };
 const ALAN_AD = {ad: 'ad', tutar: 'tutar', tarih: 'tarih', vade: 'vade', durum: 'durum', kalemler: 'kalemler', not: 'not', aciklama: 'açıklama', kisiId: 'cari', musteriAd: 'müşteri',
   odemeler: 'ödemeler', no: 'numara', fiyat: 'fiyat', miktar: 'miktar', satis: 'satış fiyatı', alis: 'alış fiyatı', kritik: 'kritik seviye', kod: 'parça no', tel: 'telefon', eposta: 'e-posta',
@@ -8095,7 +8221,7 @@ function gecmisYaz() {
   if (!l.length) return;
   const g = gecmisOku();
   if (l.length > 50) g.push({z, a, i: 'toplu', k: '', d: `${l.length} kayıt birlikte değişti (geri yükleme / toplu işlem)`}); else g.push(...l);
-  try { localStorage.setItem(gecmisAnahtar(), JSON.stringify(g.slice(-GECMIS_SINIR))); } catch (e) {}
+  try { VS.yaz(gecmisAnahtar(), JSON.stringify(g.slice(-GECMIS_SINIR))); } catch (e) {}
 }
 
 /* Günlük otomatik yedek: günde bir kez tüm hesaplar tek dosyaya yazılır.
@@ -9419,7 +9545,7 @@ async function servisFotoSec(kamera) {
     let veri;
     try { veri = await resimKucult(await dataUrlOku(f)); } catch (e) { bildir('Fotoğraf okunamadı', true); continue; }
     const ek = {id: kimlik(), ad: (f.name || '').trim() || 'servis-' + bugun() + '.jpg', tip: 'resim', boyut: Math.round(veri.length * .75)};
-    try { await belgeYaz({...ek, hesap: H.aktif, veri, tarih: Date.now(), gonderildi: false}); } catch (e) { bildir('Kaydedilemedi. Cihaz depolaması dolu olabilir.', true); break; }
+    try { await belgeYaz({...ek, hesap: H.aktif, veri, tarih: Date.now(), gonderildi: false, yer: 'kayit'}); } catch (e) { bildir('Kaydedilemedi. Cihaz depolaması dolu olabilir.', true); break; }
     sonuc.push(ek);
   }
   return sonuc;
@@ -9619,6 +9745,7 @@ function personelEkrani() {
   $$('[data-pu]').forEach(b => b.onclick = () => puantajFormu(personel(b.dataset.pu), ay));
   $$('[data-bo]').forEach(b => b.onclick = () => bordroDetay(personel(b.dataset.bo), ay));
   $$('#tesvik button').forEach(b => b.onclick = () => { D.bordroAyar.tesvik = +b.dataset.t; kaydet(); personelEkrani(); });
+  if ($('#bParam')) $('#bParam').onclick = () => bordroParamFormu(+ay.slice(0, 4));
   if ($('#topluOde')) $('#topluOde').onclick = async () => {
     const bekleyen = aktifPersonel(ay).filter(p => p.aktif !== false && !maasOdendiMi(p.id, ay) && p.maas > 0);
     const odenecek = p => Math.max(0, bordro(p, ay).net - avansToplam(p.id, ay));
@@ -9775,6 +9902,8 @@ function bordroListe(ay) {
       return `<button class="hucre avatarli" data-bo="${p.id}">${avatar(p.ad)}<div class="ic"><b>${esc(p.ad)}</b><small>Brüt ${para(b.brut)} · ${b.gun} gün</small></div>
         <div style="text-align:right"><span class="tutar">${para(b.net)}</span><small class="soluk" style="display:block;font-size:12px">maliyet ${kisaPara(b.maliyet)}</small></div>${CHEV}</button>`; }).join('')}</div>
     <button class="btn renkli" id="bYaz" style="margin-bottom:12px">${ikon('yazici')} Bordro icmalini yazdır / PDF</button>
+    ${bordroEksik(+ay.slice(0, 4)) ? `<div class="kilit-uyari">${ikon('uyari')}<div><b>${esc(ay.slice(0, 4))} bordro parametreleri girilmemiş</b><small>Bordro ${bordroParam(+ay.slice(0, 4)).yil} asgari ücreti ve vergi dilimleriyle hesaplanıyor.</small></div></div>` : ''}
+    <button class="btn renkli" id="bParam" style="margin-bottom:12px">${ikon('ayar')} ${esc(ay.slice(0, 4))} bordro parametreleri</button>
     <p class="dipnot">${esc(ay.slice(0, 4))} parametreleri: asgari ücret ${para(bordroParam(+ay.slice(0, 4)).asgari)} brüt, SGK işçi %15, işveren %${String(bordroParam(+ay.slice(0, 4)).sgkIsv - D.bordroAyar.tesvik).replace('.', ',')} + işsizlik %2, damga binde 7,59, asgari ücret vergi istisnası uygulanır. Hesap bilgi amaçlıdır; resmi bordro için mali müşavirinize danışın.</p>`;
 }
 const bordroSatirlari = b => [
@@ -10752,7 +10881,7 @@ $('#dosya').onchange = async e => {
 function ornekHesapAc(profil) {
   const id = 'h' + kimlik();
   H.liste.push({id, ad: 'Örnek firma', profil, ornek: true});
-  localStorage.setItem(veriAnahtari(id), JSON.stringify({...yeniDurum(), profil, ad: 'Örnek firma'}));
+  VS.yaz(veriAnahtari(id), JSON.stringify({...yeniDurum(), profil, ad: 'Örnek firma'}));
   H.aktif = id; hesapKaydet();
   D = yukle(); ui = uiBaslangic();
   ornekDoldur();
@@ -10936,7 +11065,7 @@ const bulutDurum = () => { try { return JSON.parse(localStorage.getItem(BULUT_AN
 const bulutKonum = () => { try { const k = bulutVar() && Android.yedekBilgi(); return k ? JSON.parse(k) : null; } catch (e) { return null; } };
 function tumYedek() {
   const veriler = {};
-  for (const h of H.liste) { const v = h.id === H.aktif ? JSON.stringify(D) : localStorage.getItem(veriAnahtari(h.id)); if (v) veriler[h.id] = JSON.parse(v); }
+  for (const h of H.liste) { const v = h.id === H.aktif ? JSON.stringify(D) : VS.al(veriAnahtari(h.id)); if (v) veriler[h.id] = JSON.parse(v); }
   return {uygulama: 'dn-muhasebe', tur: 'tum', surum: VERSIYON, tarih: new Date().toISOString(), hesaplar: H, veriler};
 }
 let bulutZamanlayici = 0, bulutKirli = false;
@@ -10965,8 +11094,8 @@ async function tumYedektenYukle(j) {
   if (ortak()) return bildir('Ortak veritabanı kullanılırken tüm hesapları geri yükleme kapalı. Önce bu cihazı ayırın.', true);
   const n = Object.keys(j.veriler || {}).length;
   if (!await onay('Tüm hesaplar geri yüklensin mi?', `Yedekte ${n} hesap var (${tarihYaz(String(j.tarih).slice(0, 10), true)}). Bu telefondaki tüm hesapların yerine geçer.`, 'Geri yükle')) return;
-  for (const h of H.liste) localStorage.removeItem(veriAnahtari(h.id));
-  for (const [id, v] of Object.entries(j.veriler)) localStorage.setItem(veriAnahtari(id), JSON.stringify(v));
+  for (const h of H.liste) VS.sil(veriAnahtari(h.id));
+  for (const [id, v] of Object.entries(j.veriler)) VS.yaz(veriAnahtari(id), JSON.stringify(v));
   H = j.hesaplar; if (!H.liste.some(h => h.id === H.aktif)) H.aktif = H.liste[0].id; hesapKaydet();
   bildir('Yedek geri yüklendi'); setTimeout(() => location.reload(), 600);
 }
@@ -10983,7 +11112,7 @@ function hatirlaticilar() {
   const asil = D;
   try {
     for (const h of H.liste) {
-      const v = h.id === H.aktif ? asil : (() => { try { return duzelt(JSON.parse(localStorage.getItem(veriAnahtari(h.id)))); } catch (e) { return null; } })();
+      const v = h.id === H.aktif ? asil : (() => { try { return duzelt(JSON.parse(VS.al(veriAnahtari(h.id)))); } catch (e) { return null; } })();
       if (!v || !v.profil) continue;
       D = v;
       const hesap = H.liste.length > 1 ? ` · ${hesapAdi(h)}` : '';
@@ -11119,7 +11248,7 @@ const KOLEKSIYON_AD = {islemler: 'Gelir/gider', kisiler: 'Cari', hareketler: 'Ca
   _bordroAyar: 'Bordro ayarları', _vergiAyar: 'Vergi ayarları', _fisNo: 'Fiş numaraları', _profil: 'Profil'};
 const ISLEM_AD = {ekle: 'Ekledi', duzenle: 'Değiştirdi', sil: 'Sildi', toplu: 'Toplu gönderim', kurulum: 'Kurulum', giris: 'Giriş', kullanici: 'Kullanıcı'};
 const KURALLAR = `rules_version = '2';
-// PowerServ+ ortak veritabanı güvenlik kuralları (2.15). Firebase konsolu > Firestore Database > Kurallar sekmesine yapıştırın.
+// PowerServ+ ortak veritabanı güvenlik kuralları (2.24). Firebase konsolu > Firestore Database > Kurallar sekmesine yapıştırın.
 service cloud.firestore {
   match /databases/{db}/documents {
     // Yeni firma açılışı kapalı: kimse API anahtarıyla kendine yeni firma kurup veritabanını kullanamaz.
@@ -11132,7 +11261,13 @@ service cloud.firestore {
     function finans(f) { return uye(f) && rol(f) in ['yonetici', 'muhasebe']; }
     function sahip(f) { return get(/databases/$(db)/documents/firmalar/$(f)).data.sahip; }
     function anahtarUyar(key, k) { return k is string && (key.split('~')[0] == k || (key.split('~')[0] == '_' && k == '_' + key.split('~')[1])); }
-    function servisIzni(k) { return k in ['servisler', 'ekipmanlar', 'urunler', 'stokHareket', 'kisiler', 'hareketler', 'faturalar']; }
+    // 2.24: 'sfoto' = servis fotoğrafları (teknisyen de gönderir ve görür).
+    function servisIzni(k) { return k in ['servisler', 'ekipmanlar', 'urunler', 'stokHareket', 'kisiler', 'hareketler', 'faturalar', 'sfoto']; }
+    // 2.24: Servis rolü fatura ve cari hareketi yeni açabilir ya da en son kendi yazdığını değiştirebilir;
+    // başkasının (muhasebe, yönetici) yazdığı faturayı ve cari hareketi değiştiremez, silemez.
+    function servisSiniri(f) {
+      return rol(f) != 'servis' || !(request.resource.data.k in ['faturalar', 'hareketler']) || resource == null || resource.data.u == request.auth.uid;
+    }
     function genel(k) { return servisIzni(k) || k in ['_firma', '_ad', '_profil', '_servisAyar', '_modulAyar']; }
     // Her kayıt: yalnız bilinen alanlar, yazan kişi oturumdaki kişi, zaman sunucu saati, boyut sınırlı.
     function kayitGecerli(key) {
@@ -11170,7 +11305,7 @@ service cloud.firestore {
       // Servisin görebildiği kayıtlar. Gizli koleksiyonlar burada yalnızca boşaltılmış (eski sürümden kalan) olarak bulunabilir.
       match /kayit/{key} {
         allow read: if uye(f);
-        allow create, update: if yazar(f) && kayitGecerli(key) && (
+        allow create, update: if yazar(f) && kayitGecerli(key) && servisSiniri(f) && (
           (genel(request.resource.data.k) && (rol(f) != 'servis' || servisIzni(request.resource.data.k)))
           || (finans(f) && !genel(request.resource.data.k) && request.resource.data.s == true && request.resource.data.j == ''));
       }
@@ -11209,8 +11344,8 @@ service cloud.firestore {
 
 const ortak = () => { try { return JSON.parse(localStorage.getItem(ORTAK_ANAHTAR)) || null; } catch (e) { return null; } };
 function ortakYaz(o) { try { o ? localStorage.setItem(ORTAK_ANAHTAR, JSON.stringify(o)) : localStorage.removeItem(ORTAK_ANAHTAR); } catch (e) {} }
-const izOku = () => { let i; try { i = JSON.parse(localStorage.getItem(IZ_ANAHTAR)); } catch (e) {} i ||= {}; i.ozet ||= {}; i.ad ||= {}; i.son ||= ''; return i; };
-const izYaz = i => { try { localStorage.setItem(IZ_ANAHTAR, JSON.stringify(i)); } catch (e) {} };
+const izOku = () => { let i; try { i = JSON.parse(VS.al(IZ_ANAHTAR)); } catch (e) {} i ||= {}; i.ozet ||= {}; i.ad ||= {}; i.son ||= ''; return i; };
+const izYaz = i => { try { VS.yaz(IZ_ANAHTAR, JSON.stringify(i)); } catch (e) {} };
 function ortakBagli() { const o = ortak(); return !!(o && o.hesap && o.hesap === H.aktif && !o.kurulum); }
 function ortakOturum() { const o = ortak(); return o && o.hesap === H.aktif && !o.kurulum && o.oturum ? o.oturum : null; }
 function ortakRol() { const s = ortakOturum(); return s ? s.rol || 'izleyici' : null; }
@@ -11241,7 +11376,7 @@ function rolModulIzin(id) { return !ortakOturum() || modulSeviye(id) !== 'yok'; 
 function silmeEngeli() {
   const s = ortakOturum(), m = rotaModul();
   if (!s || !s.yetki || !MODUL_KOLEKSIYON[m] || modulSeviye(m) === 'tam') return null;
-  let eski; try { eski = JSON.parse(localStorage.getItem(veriAnahtari())); } catch (e) { return null; }
+  let eski; try { eski = JSON.parse(VS.al(veriAnahtari())); } catch (e) { return null; }
   const ks = m === 'teklif' ? ['faturalar'] : MODUL_KOLEKSIYON[m];
   for (const k of ks) { const yeni = new Set((D[k] || []).map(x => x && x.id)); if ((eski?.[k] || []).some(x => x && x.id != null && !yeni.has(x.id))) return m; }
   return null;
@@ -11348,9 +11483,9 @@ function kayitEtiket(k, x) {
 /* --- Gönder: son eşitlemeden beri değişen ve silinen kayıtlar tek seferde (en çok 200'lük paketler) yazılır --- */
 function ortakFarklar(iz) {
   const m = ortakKayitlar(D), f = [], rol = ortakRol();
-  const red = iz.red || {};
-  for (const [key, r] of m) { const h = ozet(r.j); if (iz.ozet[key] !== h && red[key] !== h) f.push({key, k: r.k, j: r.j, h, x: r.x, yeni: !(key in iz.ozet)}); }
-  for (const key of Object.keys(iz.ozet)) if (!m.has(key)) f.push({key, k: anahtarKoleksiyon(key), j: '', h: null, sil: true});
+  const red = iz.red || {}, cak = iz.cakisma || {};
+  for (const [key, r] of m) { const h = ozet(r.j); if (iz.ozet[key] !== h && red[key] !== h && !(key in cak)) f.push({key, k: r.k, j: r.j, h, x: r.x, yeni: !(key in iz.ozet)}); }
+  for (const key of Object.keys(iz.ozet)) if (!m.has(key) && !(key in cak)) f.push({key, k: anahtarKoleksiyon(key), j: '', h: null, sil: true});
   return rol === 'servis' ? f.filter(r => SERVIS_KOLEKSIYON.includes(r.k)) : f;
 }
 async function ortakGonder() {
@@ -11444,7 +11579,15 @@ function ortakUygula(b, iz) {
     let simdi;
     if (ad) simdi = D[ad] === undefined ? undefined : ozet(JSON.stringify(D[ad]));
     else { const y = yerelBul(key); simdi = y.l && y.i >= 0 ? ozet(JSON.stringify(y.l[y.i])) : undefined; }
-    if (simdi !== undefined && simdi !== iz.ozet[key]) return false;
+    if (simdi !== undefined && simdi !== iz.ozet[key]) {
+      // 2.24: aynı kayıt hem burada hem başka cihazda değişmiş. Önceden yerel hâl sessizce kazanır, diğer kullanıcının
+      // değişikliği kaybolurdu. Artık kayıt gönderilmeden bekletilir ve kullanıcıya hangisinin kalacağı sorulur.
+      // "Benim hâlim kalsın" denmiş sürüm yeniden gelirse (çekme aynı zamanı tekrar okur) yeniden sorulmaz.
+      if (iz.goruldu?.[key] && zNorm(b.z) <= iz.goruldu[key]) return false;
+      if (b.s || simdi !== h) { iz.cakisma ||= {}; iz.cakisma[key] = {j: b.s ? '' : b.j, s: !!b.s, z: zNorm(b.z), u: b.u || ''}; }
+      else iz.ozet[key] = h;   // iki taraf aynı sonuca varmış
+      return false;
+    }
   }
   if (ad) {
     if (ORTAK_HARIC.includes(ad)) return false;
@@ -11473,7 +11616,7 @@ async function ortakCek() {
   let n = await ortakCekBolum(o, 'kayit', 'son');
   if (ortakRol() !== 'servis') n += await ortakCekBolum(o, 'ozel', 'sonOzel');
   if (n) {
-    try { localStorage.setItem(veriAnahtari(), JSON.stringify(D)); } catch (e) {}
+    try { VS.yaz(veriAnahtari(), JSON.stringify(D)); } catch (e) {}
     if (window.gecmisTaban) gecmisTaban();
     const hx = H.liste.find(x => x.id === H.aktif);
     if (hx && (hx.ad !== D.ad || hx.profil !== D.profil)) { hx.ad = D.ad; hx.profil = D.profil; hesapKaydet(); }
@@ -11490,7 +11633,7 @@ async function ortakCekBolum(o, bolum, alan, gorulen) {
     iz = izOku();   // gönderim arada izi güncellemiş olabilir
     let son = iz[alan] || '';
     // Gizli kayıtlar yalnızca "ozel"den alınır; "kayit"teki eski kopyaları ve boşaltma işaretleri yok sayılır.
-    for (const b of l) { if (gorulen && !b.s) gorulen.add(b._ad); if (b.k === 'belgeler') { if (bolum === 'ozel') await belgeAl(b); } else if ((bolum === 'ozel') === ozelMi(b.k) && ortakUygula(b, iz)) n++; const z = zNorm(b.z); if (z > son) son = z; }
+    for (const b of l) { if (gorulen && !b.s) gorulen.add(b._ad); if (b.k === 'belgeler' || b.k === SFOTO) { if ((bolum === 'ozel') === (b.k === 'belgeler')) await belgeAl(b); } else if ((bolum === 'ozel') === ozelMi(b.k) && ortakUygula(b, iz)) n++; const z = zNorm(b.z); if (z > son) son = z; }
     const ilerledi = son !== (iz[alan] || '');
     iz[alan] = son; izYaz(iz);
     if (l.length < 500 || !ilerledi) break;
@@ -11513,7 +11656,7 @@ async function ortakTara() {
     const sunucu = new Map();
     for (const x of r || []) if (x.document) { const b = fsOku(x.document); sunucu.set(b._ad, b); }
     let iz = izOku();
-    const uygun = (key, k) => k && k !== 'belgeler' && kayitYeri(k) === bolum && (ortakRol() !== 'servis' || SERVIS_KOLEKSIYON.includes(k)) && !ORTAK_HARIC.includes(key.startsWith('_~') ? key.slice(2) : '');
+    const uygun = (key, k) => k && k !== 'belgeler' && k !== SFOTO && kayitYeri(k) === bolum && (ortakRol() !== 'servis' || SERVIS_KOLEKSIYON.includes(k)) && !ORTAK_HARIC.includes(key.startsWith('_~') ? key.slice(2) : '');
     const eksik = [...sunucu.values()].filter(b => !b.s && uygun(b._ad, b.k) && !(b._ad in iz.ozet)).map(b => b._ad);
     for (let i = 0; i < eksik.length; i += 100) {
       const j = await ortakIstek(o, 'POST', `${FS}/v1/${belgeKok(o)}:batchGet`, {documents: eksik.slice(i, i + 100).map(key => firmaYol(o, '/' + bolum + '/' + key))});
@@ -11534,7 +11677,7 @@ async function ortakTara() {
   const iz = izOku();
   if (iz.red && Object.keys(iz.red).length) { gonderilecek += Object.keys(iz.red).length; iz.red = {}; izYaz(iz); ortakDurum.red = 0; }
   if (alinan) {
-    try { localStorage.setItem(veriAnahtari(), JSON.stringify(D)); } catch (e) {}
+    try { VS.yaz(veriAnahtari(), JSON.stringify(D)); } catch (e) {}
     if (window.gecmisTaban) gecmisTaban();
   }
   return {alinan, gonderilecek};
@@ -11563,6 +11706,10 @@ async function ortakEsitle(tam = false) {
       try { const t = await ortakTara(); ortakDurum.tarama = t; c += t.alinan; ortakTaramaYapildi = true; } catch (e) { if (e.ag || e.oturum) throw e; }
     }
     // 2.9.6: gönderim hata verse de buluttaki değişiklikler yine alınır (önceden gönderim hatası çekmeyi de durduruyordu)
+    // 2.24: göndermeden önce buluttaki son değişiklikler alınır; böylece başkasının yeni değişikliği bu cihazdaki
+    // eski hâlle ezilmez (çakışma varsa sorulur) ve yeni numaralar diğer cihazların numaralarını görerek verilir.
+    if (iz.son) c += await ortakCek();
+    if (numaraCakismaCoz()) c++;
     let g = 0, gHata = null;
     try { g = await ortakGonder(); } catch (e) { if (e.ag || e.oturum) throw e; gHata = e; }
     c += await ortakCek();
@@ -11580,7 +11727,79 @@ async function ortakEsitle(tam = false) {
     if (ortakCizBekle && ortakCizilebilir()) { ortakCizBekle = false; ciz(); }
     ortakDurumCiz();
     if (ortakTekrar) { ortakTekrar = false; setTimeout(ortakEsitle, 300); }
+    cakismaSor();
   }
+}
+/* 2.24: Numara çakışması. Fatura, teklif, sipariş ve servis numarası cihazdaki en büyük numaraya göre verilir; iki cihaz aynı anda
+   (özellikle internetsizken) kayıt açarsa aynı numara iki kayda verilebilirdi. Buluttan veri gelince aynı numaralı kayıtlar bulunur:
+   ilk açılan (oluşturma zamanı, sonra kimlik) numarasını korur, sonrakine sıradaki boş numara verilir. Kural her cihazda aynı
+   sonucu verir. GİB numaralı (ETTN'li, e-Belge) faturalar ve alış faturaları (numarası satıcının) hiç değiştirilmez. */
+function siradakiBosNo(liste, alan, no) {
+  const m = /^(.*?)(\d+)$/.exec(no || '');
+  if (!m) return null;
+  const on = m[1], max = liste.reduce((a, x) => { const v = x[alan]; return typeof v === 'string' && v.startsWith(on) && /^\d+$/.test(v.slice(on.length)) ? Math.max(a, +v.slice(on.length)) : a; }, 0);
+  return on + String(max + 1).padStart(m[2].length, '0');
+}
+function numaraCakismaBul(liste, alan, grup, korunur) {
+  const g = new Map(), l = [];
+  for (const x of liste) { const v = x && x[alan]; if (typeof v !== 'string' || !v.trim()) continue; const a = grup(x) + '|' + v.trim(); g.has(a) ? g.get(a).push(x) : g.set(a, [x]); }
+  for (const xs of g.values()) {
+    if (xs.length < 2) continue;
+    xs.sort((a, b) => (korunur(b) - korunur(a)) || ((a.olusturma || 0) - (b.olusturma || 0)) || String(a.id).localeCompare(String(b.id)));
+    l.push(...xs.slice(1).filter(x => !korunur(x)));
+  }
+  return l;
+}
+function numaraCakismaCoz() {
+  if (!D || !D.profil || saltOkunur() || ortakRol() === 'izleyici') return false;
+  const degisen = [];
+  if (ortakRol() !== 'servis') {
+    const fl = D.faturalar.filter(x => x && ['fatura', 'teklif', 'siparis'].includes(x.tur));
+    for (const x of numaraCakismaBul(fl, 'no', x => x.tur, x => +!!(x.ettn || x.eBelge))) {
+      const y = siradakiBosNo(D.faturalar.filter(z => z.tur === x.tur), 'no', x.no);
+      if (y) { degisen.push(`${x.no} → ${y}`); x.no = y; }
+    }
+  }
+  for (const alan of ['no', 'isEmriNo'])
+    for (const x of numaraCakismaBul(D.servisler, alan, () => '', () => 0)) {
+      const y = siradakiBosNo(D.servisler, alan, x[alan]);
+      if (y) { degisen.push(`${x[alan]} → ${y}`); x[alan] = y; }
+    }
+  if (!degisen.length) return false;
+  kaydet();
+  setTimeout(() => bildir(`Aynı numara iki kayda verilmişti, düzeltildi: ${degisen.slice(0, 3).join(', ')}${degisen.length > 3 ? ` ve ${degisen.length - 3} kayıt daha` : ''}`, true), 600);
+  return true;
+}
+/* 2.24: Çakışan kayıtlar için karar. Form ya da başka pencere açıkken sorulmaz (yazılan bozulmasın); sonraki eşitlemede yeniden denenir. */
+let cakismaSoruluyor = false;
+async function cakismaSor() {
+  if (cakismaSoruluyor || document.querySelector('.perde')) return;
+  const iz0 = izOku(), anahtarlar = Object.keys(iz0.cakisma || {});
+  if (!anahtarlar.length) return;
+  cakismaSoruluyor = true;
+  try {
+    for (const key of anahtarlar) {
+      let iz = izOku();
+      const c = iz.cakisma?.[key];
+      if (!c) continue;
+      const y = key.startsWith('_~') ? null : yerelBul(key), yer = y && y.l && y.i >= 0 ? y.l[y.i] : null;
+      const etiket = (y ? kayitEtiket(y.k, yer) : '') || iz.ad[key] || 'Kayıt';
+      const v = await eylemSayfa('Aynı kayıt iki yerde değiştirildi', `${etiket}: bu kaydı siz bu cihazda değiştirdiniz, başka bir kullanıcı da ${c.s ? 'sildi' : 'değiştirdi'}. Hangisi kalsın?`,
+        [{ad: c.s ? 'Silinsin (diğer kullanıcının kararı)' : 'Diğer kullanıcının hâli kalsın', deger: 'uzak'}, {ad: 'Benim hâlim kalsın', deger: 'yerel'}]);
+      if (!v) break;   // Vazgeç: kayıt bekletilir, sonra yeniden sorulur
+      iz = izOku();
+      if (!iz.cakisma?.[key]) continue;
+      if (v === 'uzak') {
+        const simdi = key.startsWith('_~') ? (D[key.slice(2)] === undefined ? undefined : ozet(JSON.stringify(D[key.slice(2)]))) : (yer ? ozet(JSON.stringify(yer)) : undefined);
+        if (simdi !== undefined) iz.ozet[key] = simdi;   // yerel değişiklik yok sayılır, buluttaki hâl uygulanır
+        ortakUygula({_ad: key, j: c.j, s: c.s, z: c.z}, iz);
+        delete iz.cakisma[key]; izYaz(iz);
+        try { VS.yaz(veriAnahtari(), JSON.stringify(D)); } catch (e) {}
+        if (window.gecmisTaban) gecmisTaban();
+        if (ortakCizilebilir()) ciz();
+      } else { iz.goruldu ||= {}; iz.goruldu[key] = c.z; delete iz.cakisma[key]; izYaz(iz); ortakPlanla(); }
+    }
+  } finally { cakismaSoruluyor = false; }
 }
 window.ortakPlanla = () => { if (!ortakOturum()) return; clearTimeout(ortakZaman); ortakZaman = setTimeout(ortakEsitle, 1500); };
 setInterval(() => { if (!document.hidden) ortakEsitle(); }, 20000);
@@ -11593,7 +11812,8 @@ function ortakDurumMetni() {
   if (ortakDurum.hata) return 'Eşitlenemedi: ' + ortakDurum.hata;
   const iz = izOku(), b = ortakFarklar(iz).length;
   if (!ortakDurum.zaman) return 'Eşitleniyor…';
-  const red = Object.keys(iz.red || {}).length;
+  const red = Object.keys(iz.red || {}).length, cak = Object.keys(iz.cakisma || {}).length;
+  if (cak) return `${cak} kayıt hem burada hem başka cihazda değişti · karar bekliyor (Eşitle'ye basın)`;
   return `Eşitlendi ${new Date(ortakDurum.zaman).toLocaleTimeString('tr-TR', {hour: '2-digit', minute: '2-digit'})}${b ? ` · ${b} kayıt bekliyor` : ''}${red ? ` · ${red} kayıt sunucu tarafından reddedildi` : ''}`;
 }
 function ortakDurumCiz() {
@@ -11629,7 +11849,7 @@ async function ortakAyir() {
   const o = ortak();
   if (!o) return;
   if (!await onay('Bu cihaz ortak veritabanından ayrılsın mı?', 'Bu cihazdaki veriler silinmez ama artık diğer cihazlarla eşitlenmez. Gönderilmemiş değişiklikler buluta gitmez.', 'Ayır')) return;
-  ortakYaz(null); localStorage.removeItem(IZ_ANAHTAR); jsonYaz(SIFRE_OZ_ANAHTAR, null); ekranAyarYaz({kilitli: false, yanlis: 0});
+  ortakYaz(null); VS.sil(IZ_ANAHTAR); jsonYaz(SIFRE_OZ_ANAHTAR, null); ekranAyarYaz({kilitli: false, yanlis: 0});
   $('#girisEkran')?.remove(); $('#ekranKilit')?.remove();
   bildir('Cihaz ortak veritabanından ayrıldı'); ciz();
 }
@@ -12558,21 +12778,21 @@ function ortakKatilFormu() {
       girisBasarili(); await sifreOzetiKaydet(ot.uid, s); ekranAyarYaz({kilitli: false, yanlis: 0}); ekranEtkinlik();
       yeniId = 'h' + kimlik();
       H.liste.push({id: yeniId, ad: c.firmaAd, profil: 'sirket'});
-      localStorage.setItem(veriAnahtari(yeniId), JSON.stringify({...yeniDurum(), profil: 'sirket', ad: c.firmaAd}));
+      VS.yaz(veriAnahtari(yeniId), JSON.stringify({...yeniDurum(), profil: 'sirket', ad: c.firmaAd}));
       H.aktif = yeniId; hesapKaydet();
       D = yukle(); ui = uiBaslangic();
       ortakYaz({...c, hesap: yeniId, oturum: {...ot, rol: u.rol, ad: u.ad || '', yetki: u.yetki || ''}, sonEposta: ot.eposta});
       izYaz({ozet: {}, ad: {}, son: '', goc27: true});
       b.textContent = 'Veriler indiriliyor…';
       await ortakCek();
-      D = duzelt(D); localStorage.setItem(veriAnahtari(), JSON.stringify(D));
+      D = duzelt(D); VS.yaz(veriAnahtari(), JSON.stringify(D));
       const o2 = ortak(); await ortakIstek(o2, 'POST', `${FS}/v1/${belgeKok(o2)}:commit`, {writes: [logYazimi(o2, o2.oturum, 'giris', '', 'Yeni cihaz bağlandı')]}).catch(() => {});
-      if (bosHesap) { H.liste = H.liste.filter(h => h.id !== eskiAktif); localStorage.removeItem(veriAnahtari(eskiAktif)); hesapKaydet(); }
+      if (bosHesap) { H.liste = H.liste.filter(h => h.id !== eskiAktif); VS.sil(veriAnahtari(eskiAktif)); hesapKaydet(); }
       kapat(); bildir((c.firmaAd || 'Firma') + ' verileri indirildi');
       ortakEsitle();
       git('panel', true); ciz();
     } catch (x) {
-      if (yeniId) { H.liste = H.liste.filter(h => h.id !== yeniId); localStorage.removeItem(veriAnahtari(yeniId)); H.aktif = eskiAktif; hesapKaydet(); D = yukle(); ui = uiBaslangic(); ortakYaz(null); localStorage.removeItem(IZ_ANAHTAR); }
+      if (yeniId) { H.liste = H.liste.filter(h => h.id !== yeniId); VS.sil(veriAnahtari(yeniId)); H.aktif = eskiAktif; hesapKaydet(); D = yukle(); ui = uiBaslangic(); ortakYaz(null); VS.sil(IZ_ANAHTAR); }
       hata(x.message); calisiyor = false; b.disabled = false; b.textContent = 'Bağlan';
     }
   }
@@ -12846,14 +13066,17 @@ if (window.Android) {
     try { Android.titret && Android.titret(); } catch (x) {}
   }, {capture: true, passive: true});
 }
+const buAy = bugun().slice(0, 7);
+const uiBaslangic = () => ({ay: buAy, pAy: buAy, pSekme: 'liste', vSekme: 'ozet', bAy: buAy, kAy: buAy, rDonem: 'bu-ay', rSekme: 'genel', kasaTur: 'hepsi', kasaAra: '', kisiAra: '', cariTip: 'hepsi', urunAra: '', stokFiltre: 'hepsi', stokKat: '', faturaAra: '', faturaFiltre: 'hepsi', servisFiltre: 'acik', servisAra: ''});
 /* ================= Başlat ================= */
+// 2.24: veriler IndexedDB'den belleğe alındıktan sonra program başlar.
+(async () => {
+await VS.hazirla();
 hesaplariYukle();
 /* 2.9.6: program ortak veritabanına bağlı hesapla açılır. Cihazda başka (bağlı olmayan) bir hesap açık kaldıysa
    ekranda başka veri görünüyor ve eşitleme yapılmıyordu. */
 { const o = ortak(); if (o && o.hesap && !o.kurulum && o.hesap !== H.aktif && H.liste.some(h => h.id === o.hesap)) { H.aktif = o.hesap; hesapKaydet(); } }
 D = yukle();
-const buAy = bugun().slice(0, 7);
-const uiBaslangic = () => ({ay: buAy, pAy: buAy, pSekme: 'liste', vSekme: 'ozet', bAy: buAy, kAy: buAy, rDonem: 'bu-ay', rSekme: 'genel', kasaTur: 'hepsi', kasaAra: '', kisiAra: '', cariTip: 'hepsi', urunAra: '', stokFiltre: 'hepsi', stokKat: '', faturaAra: '', faturaFiltre: 'hepsi', servisFiltre: 'acik', servisAra: ''});
 ui = uiBaslangic();
 if (!location.hash) history.replaceState(null, '', '#/panel');
 ciz();
@@ -12864,6 +13087,7 @@ setTimeout(masaustuBildirimleri, 20000); setInterval(masaustuBildirimleri, 30 * 
 kilitle();
 hatirlaticiPlanla();
 ortakBaslat();
+})();
 </script>
 </body>
 </html>

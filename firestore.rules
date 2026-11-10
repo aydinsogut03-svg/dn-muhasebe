@@ -1,5 +1,5 @@
 rules_version = '2';
-// PowerServ+ ortak veritabanı güvenlik kuralları (2.15). Firebase konsolu > Firestore Database > Kurallar sekmesine yapıştırın.
+// PowerServ+ ortak veritabanı güvenlik kuralları (2.24). Firebase konsolu > Firestore Database > Kurallar sekmesine yapıştırın.
 service cloud.firestore {
   match /databases/{db}/documents {
     // Yeni firma açılışı kapalı: kimse API anahtarıyla kendine yeni firma kurup veritabanını kullanamaz.
@@ -12,7 +12,13 @@ service cloud.firestore {
     function finans(f) { return uye(f) && rol(f) in ['yonetici', 'muhasebe']; }
     function sahip(f) { return get(/databases/$(db)/documents/firmalar/$(f)).data.sahip; }
     function anahtarUyar(key, k) { return k is string && (key.split('~')[0] == k || (key.split('~')[0] == '_' && k == '_' + key.split('~')[1])); }
-    function servisIzni(k) { return k in ['servisler', 'ekipmanlar', 'urunler', 'stokHareket', 'kisiler', 'hareketler', 'faturalar']; }
+    // 2.24: 'sfoto' = servis fotoğrafları (teknisyen de gönderir ve görür).
+    function servisIzni(k) { return k in ['servisler', 'ekipmanlar', 'urunler', 'stokHareket', 'kisiler', 'hareketler', 'faturalar', 'sfoto']; }
+    // 2.24: Servis rolü fatura ve cari hareketi yeni açabilir ya da en son kendi yazdığını değiştirebilir;
+    // başkasının (muhasebe, yönetici) yazdığı faturayı ve cari hareketi değiştiremez, silemez.
+    function servisSiniri(f) {
+      return rol(f) != 'servis' || !(request.resource.data.k in ['faturalar', 'hareketler']) || resource == null || resource.data.u == request.auth.uid;
+    }
     function genel(k) { return servisIzni(k) || k in ['_firma', '_ad', '_profil', '_servisAyar', '_modulAyar']; }
     // Her kayıt: yalnız bilinen alanlar, yazan kişi oturumdaki kişi, zaman sunucu saati, boyut sınırlı.
     function kayitGecerli(key) {
@@ -50,7 +56,7 @@ service cloud.firestore {
       // Servisin görebildiği kayıtlar. Gizli koleksiyonlar burada yalnızca boşaltılmış (eski sürümden kalan) olarak bulunabilir.
       match /kayit/{key} {
         allow read: if uye(f);
-        allow create, update: if yazar(f) && kayitGecerli(key) && (
+        allow create, update: if yazar(f) && kayitGecerli(key) && servisSiniri(f) && (
           (genel(request.resource.data.k) && (rol(f) != 'servis' || servisIzni(request.resource.data.k)))
           || (finans(f) && !genel(request.resource.data.k) && request.resource.data.s == true && request.resource.data.j == ''));
       }
