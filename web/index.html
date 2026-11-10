@@ -1928,7 +1928,7 @@ p.dipnot .i{width:14px;height:14px;vertical-align:-2px}
 
 <script>
 'use strict';
-const VERSIYON = '2.25.0';
+const VERSIYON = '2.26.0';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -2331,6 +2331,58 @@ function bildir(metin, hata) {
   b.className = 'bildirim goster' + (hata ? ' hata' : '');
   clearTimeout(bildirimZaman);
   bildirimZaman = setTimeout(() => b.className = 'bildirim', 2400);
+}
+/* 2.26: Yeni sürüm bildirimi. Ana dala birleşen her sürüm GitHub'da "son-surum" yayınına konur (APK ve Windows dosyaları).
+   Program birkaç saatte bir oraya bakar; yenisi varsa Özet'te uyarı gösterir, dokununca dosya indirilir. Veri gönderilmez. */
+const GUNCEL_API = 'https://api.github.com/repos/aydinsogut03-svg/dn-muhasebe/releases/tags/son-surum';
+const GUNCEL_KOK = 'https://github.com/aydinsogut03-svg/dn-muhasebe/releases/download/';
+const GUNCEL_ANAHTAR = 'powerserv.guncel';
+function surumBuyuk(a, b) {
+  const x = String(a).split('.').map(n => parseInt(n, 10) || 0), y = String(b).split('.').map(n => parseInt(n, 10) || 0);
+  for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0);
+  return false;
+}
+const guncelPlatform = () => window.Android ? 'apk' : window.PowerServ ? 'pc' : '';
+function guncelOku() { try { return JSON.parse(localStorage.getItem(GUNCEL_ANAHTAR) || 'null'); } catch (e) { return null; } }
+function guncelBilgi() { const g = guncelOku(); return g && guncelPlatform() && surumBuyuk(g.surum, VERSIYON) && (g[guncelPlatform()] || '') ? g : null; }
+let guncelSuruyor = false;
+async function guncelKontrol(zorla) {
+  if (!guncelPlatform() || guncelSuruyor || (!zorla && navigator.onLine === false)) return null;
+  const once = guncelOku();
+  if (!zorla && once && Date.now() - (once.zaman || 0) < 6 * 3600e3) return once;
+  guncelSuruyor = true;
+  try {
+    const r = await fetch(GUNCEL_API, {headers: {accept: 'application/vnd.github+json'}, cache: 'no-store'});
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json(), surum = (String(j.name || '').match(/\d+\.\d+\.\d+/) || [])[0];
+    if (!surum) throw new Error('sürüm yok');
+    const dosya = re => { const a = (j.assets || []).find(x => re.test(x.name || '')); const u = a ? String(a.browser_download_url || '') : ''; return u.startsWith(GUNCEL_KOK) ? u : ''; };
+    const g = {zaman: Date.now(), surum, apk: dosya(/^PowerServ-[\d.]+\.apk$/i), pc: dosya(/^PowerServ-Kurulum-[\d.]+\.exe$/i), tasinabilir: dosya(/^PowerServ-Tasinabilir-[\d.]+\.exe$/i)};
+    try { localStorage.setItem(GUNCEL_ANAHTAR, JSON.stringify(g)); } catch (e) {}
+    if (!zorla && guncelBilgi() && (!once || once.surum !== surum)) { bildir(`PowerServ+ ${surum} çıktı. Özet ekranından indirebilirsiniz`); if ((rota()[0] || 'panel') === 'panel') ciz(); }
+    return g;
+  } catch (e) { return zorla ? {hata: e.message || 'bağlantı yok'} : null; }
+  finally { guncelSuruyor = false; }
+}
+async function guncelIndir() {
+  const g = guncelBilgi(); if (!g) return;
+  if (guncelPlatform() === 'apk') {
+    disariAc(g.apk);
+    return bildir('İndirme bitince dosyayı açın ve Güncelle\'ye basın. Verileriniz silinmez');
+  }
+  const sec = g.tasinabilir ? await eylemSayfa(`PowerServ+ ${g.surum}`, `Bu bilgisayarda ${VERSIYON} kurulu. Program kurulumla açıldıysa Kurulum dosyasını seçin.`,
+    [{ad: 'Kurulum dosyasını indir', deger: 'pc'}, {ad: 'Kurulumsuz (taşınabilir) dosyayı indir', deger: 'tasinabilir'}]) : 'pc';
+  if (!sec) return;
+  disariAc(g[sec]);
+  bildir(sec === 'pc' ? 'İndirilen dosyayı çalıştırıp kurulumu tamamlayın. Verileriniz silinmez' : 'İndirilen dosyayı eski dosyanın yerine koyun');
+}
+function guncelAyarHucre() {
+  if (!guncelPlatform()) return '';
+  const g = guncelBilgi(), o = guncelOku();
+  return `<div class="bolum">Güncelleme</div>
+    <div class="grup">${g ? `<button class="hucre kareli" id="guncelIndir">${kare('indir', 'mavi')}<div class="ic"><b>PowerServ+ ${esc(g.surum)} çıktı</b><small>Bu cihazda ${VERSIYON} · indirmek için dokunun</small></div><span class="deger">İndir</span>${CHEV}</button>` : ''}
+      <button class="hucre kareli" id="guncelDenetle">${kare('donustur', 'gri')}<div class="ic"><b>Güncellemeleri denetle</b><small>Bu cihazda ${VERSIYON}${o && o.zaman ? ' · son bakış ' + esc(new Date(o.zaman).toLocaleString('tr-TR', {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'})) : ''}</small></div>${CHEV}</button></div>
+    <p class="dipnot">Program yeni sürümü birkaç saatte bir kendisi denetler ve Özet ekranında haber verir.</p>`;
 }
 function disariAc(url) {
   if (window.Android && Android.ac) Android.ac(url);
@@ -3902,6 +3954,8 @@ function kayitHatalari() {
 function ozetUyarilar() {
   const ay = ozetAyar(), acik = id => !ay.kapali.includes(id), ac = modulAcik, l = [], bas = bugun();
   const u = o => l.push(o);
+  const gb = guncelBilgi();
+  if (gb) u({s: 1, b: 'guncel', simge: 'indir', renk: 'mavi', ad: `Yeni sürüm: PowerServ+ ${gb.surum}`, alt: `Bu cihazda ${VERSIYON} · indirmek için dokunun`, sag: 'İndir', g: '0', guncel: true});
   if (acik('evrak')) for (const x of evrakYaklasan()) {
     const n = gunFark(x.b);
     u({s: n <= 0 ? 0 : n <= 7 ? 1 : 2, b: 'evrak', simge: 'kilit', renk: n <= 0 ? 'kirmizi' : 'turuncu', ad: n < 0 ? 'Evrakın süresi doldu' : n === 0 ? 'Evrakın süresi bugün doluyor' : 'Evrakın süresi doluyor',
@@ -4170,6 +4224,7 @@ function panelEkrani() {
   });
   const uyBagla = kok => $$('[data-uy]', kok).forEach(b => b.onclick = async () => {
     const x = uy[+b.dataset.uy]; if (!x) return;
+    if (x.guncel) return guncelIndir();
     if (x.tkg) { ui.takvimAy = x.tkg.slice(0, 7); ui.takvimGun = x.tkg; }
     if (!x.hata) return git(x.yol);
     const s = await eylemSayfa(x.ad, x.alt, [{ad: 'Kaydı aç', deger: 'ac'}, {ad: 'Bu uyarıyı gizle', deger: 'gizle'}]);
@@ -10803,6 +10858,7 @@ function ayarlarEkrani() {
         : `<div class="grup"><button class="hucre kareli" id="bulutKur">${kare('bulut', 'nane')}<div class="ic"><b>Google Drive'a otomatik yedek</b><small>Telefon kaybolsa da verileriniz kaybolmaz</small></div>${CHEV}</button></div>
         <p class="dipnot">Açılan pencerede sol üstteki menüden <b>Drive</b>'ı seçin, bir klasör seçip <b>Kaydet</b>'e basın. Bir kez yapılır.</p>`; })()
       : '<p class="dipnot">Bulut yedeği Android uygulamasında çalışır.</p>'}
+    ${guncelAyarHucre()}
     <div class="bolum">Bildirimler</div>
     <div class="grup"><label class="hucre kareli">${kare('zil', 'turuncu')}<div class="ic"><b>Hatırlatmalar</b><small>Vade, vergi, kritik stok, bekleyen iş, bakım ve teklif · ${window.PowerServ ? 'Windows bildirimi' : 'her sabah 09.00'}</small></div><span class="anahtar"><input type="checkbox" id="bildirimAnahtar" ${bildirimAcik() ? 'checked' : ''}><span></span></span></label>
       ${window.PowerServ && 'Notification' in window ? `<button class="hucre kareli" id="bildirimDenePc">${kare('zil', 'gri')}<div class="ic"><b>Deneme bildirimi gönder</b><small>${hatirlaticilar().filter(h => h.gun <= bugun()).length} bugünkü hatırlatma</small></div>${CHEV}</button>` : ''}
@@ -10820,6 +10876,14 @@ function ayarlarEkrani() {
     <p class="soluk" style="text-align:center;font-size:13px;margin:8px 0 0">PowerServ+ ${VERSIYON}<br>DN Marine Makine ve Güç Sistemleri Ltd.Şti.</p>`;
   $('#icerik').innerHTML = h;
   yuzenEtiket($('#icerik'));
+  if ($('#guncelIndir')) $('#guncelIndir').onclick = guncelIndir;
+  if ($('#guncelDenetle')) $('#guncelDenetle').onclick = async () => {
+    const b = $('#guncelDenetle'); b.disabled = true;
+    const g = await guncelKontrol(true); b.disabled = false;
+    if (!g || g.hata) return bildir('Güncelleme denetlenemedi. İnternet bağlantısını kontrol edin', true);
+    bildir(guncelBilgi() ? `PowerServ+ ${g.surum} indirilebilir` : `En son sürümü kullanıyorsunuz (${VERSIYON})`);
+    ciz();
+  };
   $('#profilDegis').onclick = () => git('hesaplar');
   ortakAyarBagla();
   $$('#temaSec button').forEach(b => b.onclick = () => { try { localStorage.setItem(TEMA_ANAHTAR, b.dataset.v); } catch (e) {} temaUygula(); ayarlarEkrani(); });
@@ -11248,7 +11312,7 @@ const KOLEKSIYON_AD = {islemler: 'Gelir/gider', kisiler: 'Cari', hareketler: 'Ca
   _bordroAyar: 'Bordro ayarları', _vergiAyar: 'Vergi ayarları', _fisNo: 'Fiş numaraları', _profil: 'Profil'};
 const ISLEM_AD = {ekle: 'Ekledi', duzenle: 'Değiştirdi', sil: 'Sildi', toplu: 'Toplu gönderim', kurulum: 'Kurulum', giris: 'Giriş', kullanici: 'Kullanıcı'};
 const KURALLAR = `rules_version = '2';
-// PowerServ+ ortak veritabanı güvenlik kuralları (2.25; 2.24 değişikliklerini de içerir). Firebase konsolu > Firestore Database > Kurallar sekmesine yapıştırın.
+// PowerServ+ ortak veritabanı güvenlik kuralları (2.26; 2.24 ve 2.25 değişikliklerini de içerir). Firebase konsolu > Firestore Database > Kurallar sekmesine yapıştırın.
 service cloud.firestore {
   match /databases/{db}/documents {
     // Yeni firma açılışı kapalı: kimse API anahtarıyla kendine yeni firma kurup veritabanını kullanamaz.
@@ -11313,6 +11377,14 @@ service cloud.firestore {
     function gizliOkur(f) {
       return rol(f) in ['yonetici', 'muhasebe'] || (rol(f) == 'izleyici' && yetkiMetni(f).matches('(.*;)?gizli=gor(;.*)?'));
     }
+    // 2.26: "Kapalı" modülün kayıtları okunamaz (servis, fatura, cari, stok). Fatura koleksiyonu teklifleri de taşır:
+    // ancak fatura ve teklif ikisi de kapalıysa kapanır. Böyle bir kısıtı olan kullanıcı sorgusunu koleksiyon süzgeciyle yapar.
+    function okumaKapali(f, k) {
+      return k == 'faturalar' ? seviyeAlti(f, 'fatura', 'yok') && seviyeAlti(f, 'teklif', 'yok') : seviyeAlti(f, modulu(k), 'yok');
+    }
+    function kayitOkur(f) {
+      return serbest(f) || !yetkiMetni(f).matches('(.*;)?(servis|fatura|veresiye|stok)=yok(;.*)?') || !okumaKapali(f, resource.data.k);
+    }
     function genel(k) { return servisIzni(k) || k in ['_firma', '_ad', '_profil', '_servisAyar', '_modulAyar']; }
     // Her kayıt: yalnız bilinen alanlar, yazan kişi oturumdaki kişi, zaman sunucu saati, boyut sınırlı.
     function kayitGecerli(key) {
@@ -11349,7 +11421,7 @@ service cloud.firestore {
       }
       // Servisin görebildiği kayıtlar. Gizli koleksiyonlar burada yalnızca boşaltılmış (eski sürümden kalan) olarak bulunabilir.
       match /kayit/{key} {
-        allow read: if uye(f);
+        allow read: if uye(f) && kayitOkur(f);
         allow create, update: if yazar(f) && kayitGecerli(key) && servisSiniri(f) && modulIzni(f) && (
           (genel(request.resource.data.k) && (rol(f) != 'servis' || servisIzni(request.resource.data.k)))
           || (finans(f) && !genel(request.resource.data.k) && request.resource.data.s == true && request.resource.data.j == ''));
@@ -11665,10 +11737,43 @@ function ortakUygula(b, iz) {
   iz.ozet[key] = h; iz.ad[key] = kayitEtiket(y.k, v);
   return true;
 }
+/* 2.26: "Kapalı" modülün kayıtları cihaza inmez. Kullanıcının yetkisinde servis, fatura (teklif de kapalıysa), cari ya da stok
+   "yok" ise eşitleme yalnız açık koleksiyonları ister; sunucu kuralı da kapalı koleksiyonu okutmaz. Yönetici kısıtlanmaz. */
+const OKUMA_KOLEKSIYON = {servis: ['servisler', 'ekipmanlar', SFOTO], fatura: ['faturalar'], veresiye: ['kisiler', 'hareketler'], stok: ['urunler', 'stokHareket']};
+const OKUMA_KISIT = /(^|;)(servis|fatura|veresiye|stok)=yok(;|$)/;
+function okumaKisitli(s = ortakOturum()) { return !!s && (s.rol || 'izleyici') !== 'yonetici' && OKUMA_KISIT.test(String(s.yetki || '')); }
+function kapaliKoleksiyonlar(s = ortakOturum()) {
+  if (!okumaKisitli(s)) return [];
+  const y = yetkiCoz(s.yetki), l = [];
+  for (const [m, ks] of Object.entries(OKUMA_KOLEKSIYON)) if (y[m] === 'yok' && (m !== 'fatura' || y.teklif === 'yok')) l.push(...ks);
+  return l;
+}
+// Kısıtlı kullanıcıda "kayit" sorgusuna eklenecek koleksiyon süzgeci (sunucu bu süzgeç olmadan sorguyu reddeder)
+function kayitSuzgec(s = ortakOturum()) {
+  if (!okumaKisitli(s)) return null;
+  const kapali = kapaliKoleksiyonlar(s);
+  return {fieldFilter: {field: {fieldPath: 'k'}, op: 'IN', value: {arrayValue: {values: [...GENEL_KAYIT, SFOTO].filter(k => !kapali.includes(k)).map(k => ({stringValue: k}))}}}};
+}
+// Yetki değişince: yeni kapanan koleksiyonlar bu cihazdan silinir; yeniden açılanlar tarama ile geri indirilir.
+function kapaliTemizle(onceki) {
+  const once = kapaliKoleksiyonlar(onceki), simdi = kapaliKoleksiyonlar();
+  if (once.some(k => !simdi.includes(k))) ortakTaramaYapildi = false;
+  const yeni = simdi.filter(k => !once.includes(k));
+  if (!yeni.length || !D) return;
+  let n = 0;
+  for (const k of yeni) if (Array.isArray(D[k]) && D[k].length) { D[k] = []; n++; }
+  const iz = izOku();
+  for (const key of Object.keys(iz.ozet)) if (yeni.includes(anahtarKoleksiyon(key))) { delete iz.ozet[key]; delete iz.ad[key]; }
+  izYaz(iz);
+  if (n) { try { VS.yaz(veriAnahtari(), JSON.stringify(D)); } catch (e) {} if (window.gecmisTaban) gecmisTaban(); ortakCizBekle = true; }
+}
 async function ortakCek() {
-  const o = ortak();
+  let o = ortak();
   if (!o?.oturum) return 0;
-  let n = await ortakCekBolum(o, 'kayit', 'son');
+  let n;
+  // Yetki sunucuda değişmiş olabilir (yeni kapanan modül): önce üyelik bilgisi yenilenir, sonra yeniden denenir.
+  try { n = await ortakCekBolum(o, 'kayit', 'son'); }
+  catch (e) { if (e.durum !== 403) throw e; await ortakUyelikKontrol(); o = ortak(); if (!o?.oturum) return 0; n = await ortakCekBolum(o, 'kayit', 'son'); }
   if (ozelOkur()) n += await ortakCekBolum(o, 'ozel', 'sonOzel');
   if (n) {
     try { VS.yaz(veriAnahtari(), JSON.stringify(D)); } catch (e) {}
@@ -11682,7 +11787,10 @@ async function ortakCekBolum(o, bolum, alan, gorulen) {
   let iz = izOku(), n = 0;
   for (let tur = 0; tur < 200; tur++) {
     const q = {structuredQuery: {from: [{collectionId: bolum}], orderBy: [{field: {fieldPath: 'z'}, direction: 'ASCENDING'}], limit: 500}};
-    if (iz[alan]) q.structuredQuery.where = {fieldFilter: {field: {fieldPath: 'z'}, op: 'GREATER_THAN_OR_EQUAL', value: {timestampValue: iz[alan]}}};
+    const zf = iz[alan] ? {fieldFilter: {field: {fieldPath: 'z'}, op: 'GREATER_THAN_OR_EQUAL', value: {timestampValue: iz[alan]}}} : null;
+    const kf = bolum === 'kayit' ? kayitSuzgec() : null;
+    const sz = [zf, kf].filter(Boolean);
+    if (sz.length) q.structuredQuery.where = sz.length === 1 ? sz[0] : {compositeFilter: {op: 'AND', filters: sz}};
     const r = await ortakIstek(o, 'POST', `${FS}/v1/${firmaYol(o)}:runQuery`, q);
     const l = (r || []).filter(x => x.document).map(x => fsOku(x.document));
     iz = izOku();   // gönderim arada izi güncellemiş olabilir
@@ -11707,11 +11815,12 @@ async function ortakTara() {
   const bolumler = ozelOkur() ? ['kayit', 'ozel'] : ['kayit'];
   let alinan = 0, gonderilecek = 0;
   for (const bolum of bolumler) {
-    const r = await ortakIstek(o, 'POST', `${FS}/v1/${firmaYol(o)}:runQuery`, {structuredQuery: {from: [{collectionId: bolum}], select: {fields: [{fieldPath: 'k'}, {fieldPath: 's'}]}}});
+    const kf = bolum === 'kayit' ? kayitSuzgec() : null, kapali = kapaliKoleksiyonlar();
+    const r = await ortakIstek(o, 'POST', `${FS}/v1/${firmaYol(o)}:runQuery`, {structuredQuery: {from: [{collectionId: bolum}], select: {fields: [{fieldPath: 'k'}, {fieldPath: 's'}]}, ...(kf ? {where: kf} : {})}});
     const sunucu = new Map();
     for (const x of r || []) if (x.document) { const b = fsOku(x.document); sunucu.set(b._ad, b); }
     let iz = izOku();
-    const uygun = (key, k) => k && k !== 'belgeler' && k !== SFOTO && kayitYeri(k) === bolum && (ortakRol() !== 'servis' || SERVIS_KOLEKSIYON.includes(k)) && !ORTAK_HARIC.includes(key.startsWith('_~') ? key.slice(2) : '');
+    const uygun = (key, k) => k && k !== 'belgeler' && k !== SFOTO && kayitYeri(k) === bolum && !kapali.includes(k) && (ortakRol() !== 'servis' || SERVIS_KOLEKSIYON.includes(k)) && !ORTAK_HARIC.includes(key.startsWith('_~') ? key.slice(2) : '');
     const eksik = [...sunucu.values()].filter(b => !b.s && uygun(b._ad, b.k) && !(b._ad in iz.ozet)).map(b => b._ad);
     for (let i = 0; i < eksik.length; i += 100) {
       const j = await ortakIstek(o, 'POST', `${FS}/v1/${belgeKok(o)}:batchGet`, {documents: eksik.slice(i, i + 100).map(key => firmaYol(o, '/' + bolum + '/' + key))});
@@ -11858,6 +11967,8 @@ async function cakismaSor() {
 }
 window.ortakPlanla = () => { if (!ortakOturum()) return; clearTimeout(ortakZaman); ortakZaman = setTimeout(ortakEsitle, 1500); };
 setInterval(() => { if (!document.hidden) ortakEsitle(); }, 20000);
+setTimeout(() => guncelKontrol(), 8000);
+setInterval(() => { if (!document.hidden) guncelKontrol(); }, 3600e3);
 window.addEventListener('online', () => ortakEsitle());
 window.addEventListener('offline', () => { if (!ortakOturum()) return; ortakDurum.cevrimdisi = true; ortakDurum.hata = 'İnternet bağlantısı yok'; ortakDurumCiz(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) ortakEsitle(); else setTimeout(ortakEsitle, 400); });
@@ -11885,8 +11996,8 @@ async function ortakUyelikKontrol() {
   if (!u || u.aktif === false) return ortakOturumKapat('Bu kullanıcının firmaya erişimi kapatıldı.');
   await firmaSahipOku();
   if (u.rol !== s.rol || (u.ad || '') !== (s.ad || '') || (u.yetki || '') !== (s.yetki || '')) {
-    const g = ortak(); g.oturum = {...g.oturum, rol: u.rol, ad: u.ad || '', yetki: u.yetki || ''}; ortakYaz(g);
-    gizliTemizle();
+    const g = ortak(), onceki = {...g.oturum}; g.oturum = {...g.oturum, rol: u.rol, ad: u.ad || '', yetki: u.yetki || ''}; ortakYaz(g);
+    gizliTemizle(); kapaliTemizle(onceki);
     bildir('Yetkiniz güncellendi: ' + (ROLLER[u.rol]?.ad || u.rol));
     ortakCizBekle = true;
   }

@@ -1,0 +1,13 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "kayit",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "k", "order": "ASCENDING"},
+        {"fieldPath": "z", "order": "ASCENDING"}
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

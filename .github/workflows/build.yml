@@ -32,20 +32,6 @@ jobs:
           name: powerserv-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
 
-      - name: APK'yı "Son sürüm" sayfasına koy
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          SURUM=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
-          cp app/build/outputs/apk/debug/app-debug.apk powerserv.apk
-          cp app/build/outputs/apk/debug/app-debug.apk "powerserv-$SURUM.apk"
-          gh release delete son-surum --cleanup-tag --yes || true
-          gh release create son-surum powerserv.apk "powerserv-$SURUM.apk" web/index.html \
-            --title "PowerServ+ $SURUM (debug)" \
-            --notes "Sürüm $SURUM, main dalı ${GITHUB_SHA::7}. Telefona kurmak için powerserv-$SURUM.apk dosyasını indir (adında sürüm olduğu için telefon eski indirmeyi kullanmaz). index.html tarayıcıda da açılır." \
-            --prerelease --target "$GITHUB_SHA"
-
       - name: APK'yı "apk" dalına koy (proje dosyalarına aktarmak için)
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         env:
@@ -103,3 +89,33 @@ jobs:
           git add .
           git -c user.name="APK derle" -c user.email="actions@users.noreply.github.com" commit -qm "PowerServ+ Windows kurulum dosyası"
           git push -fq "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" pc
+
+  yayin:
+    # 2.26: Ana dala birleşen sürüm "son-surum" yayınına konur (APK + Windows kurulum + taşınabilir).
+    # Program yeni sürüm bildirimini bu yayının adından ("PowerServ+ <sürüm>") ve dosyalarından okur.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [build, pc]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dosyalar
+
+      - name: Son sürüm yayınını yenile
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          SURUM=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          mkdir yayin
+          cp dosyalar/powerserv-debug-apk/app-debug.apk "yayin/PowerServ-$SURUM.apk"
+          cp dosyalar/powerserv-windows/*.exe yayin/
+          ls -la yayin
+          gh release delete son-surum --cleanup-tag --yes || true
+          gh release create son-surum yayin/* \
+            --title "PowerServ+ $SURUM" \
+            --notes "Sürüm $SURUM, main dalı ${GITHUB_SHA::7}. Telefona PowerServ-$SURUM.apk, bilgisayara PowerServ-Kurulum-$SURUM.exe (ya da kurulumsuz PowerServ-Tasinabilir-$SURUM.exe). Program yeni sürümü bu sayfadan denetler." \
+            --target "$GITHUB_SHA"

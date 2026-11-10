@@ -1,5 +1,5 @@
 rules_version = '2';
-// PowerServ+ ortak veritabanı güvenlik kuralları (2.25; 2.24 değişikliklerini de içerir). Firebase konsolu > Firestore Database > Kurallar sekmesine yapıştırın.
+// PowerServ+ ortak veritabanı güvenlik kuralları (2.26; 2.24 ve 2.25 değişikliklerini de içerir). Firebase konsolu > Firestore Database > Kurallar sekmesine yapıştırın.
 service cloud.firestore {
   match /databases/{db}/documents {
     // Yeni firma açılışı kapalı: kimse API anahtarıyla kendine yeni firma kurup veritabanını kullanamaz.
@@ -64,6 +64,14 @@ service cloud.firestore {
     function gizliOkur(f) {
       return rol(f) in ['yonetici', 'muhasebe'] || (rol(f) == 'izleyici' && yetkiMetni(f).matches('(.*;)?gizli=gor(;.*)?'));
     }
+    // 2.26: "Kapalı" modülün kayıtları okunamaz (servis, fatura, cari, stok). Fatura koleksiyonu teklifleri de taşır:
+    // ancak fatura ve teklif ikisi de kapalıysa kapanır. Böyle bir kısıtı olan kullanıcı sorgusunu koleksiyon süzgeciyle yapar.
+    function okumaKapali(f, k) {
+      return k == 'faturalar' ? seviyeAlti(f, 'fatura', 'yok') && seviyeAlti(f, 'teklif', 'yok') : seviyeAlti(f, modulu(k), 'yok');
+    }
+    function kayitOkur(f) {
+      return serbest(f) || !yetkiMetni(f).matches('(.*;)?(servis|fatura|veresiye|stok)=yok(;.*)?') || !okumaKapali(f, resource.data.k);
+    }
     function genel(k) { return servisIzni(k) || k in ['_firma', '_ad', '_profil', '_servisAyar', '_modulAyar']; }
     // Her kayıt: yalnız bilinen alanlar, yazan kişi oturumdaki kişi, zaman sunucu saati, boyut sınırlı.
     function kayitGecerli(key) {
@@ -100,7 +108,7 @@ service cloud.firestore {
       }
       // Servisin görebildiği kayıtlar. Gizli koleksiyonlar burada yalnızca boşaltılmış (eski sürümden kalan) olarak bulunabilir.
       match /kayit/{key} {
-        allow read: if uye(f);
+        allow read: if uye(f) && kayitOkur(f);
         allow create, update: if yazar(f) && kayitGecerli(key) && servisSiniri(f) && modulIzni(f) && (
           (genel(request.resource.data.k) && (rol(f) != 'servis' || servisIzni(request.resource.data.k)))
           || (finans(f) && !genel(request.resource.data.k) && request.resource.data.s == true && request.resource.data.j == ''));
