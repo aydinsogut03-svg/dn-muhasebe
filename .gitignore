@@ -10,3 +10,7 @@
 .cxx/
 *.apk
 *.aab
+undefined/
+masaustu/node_modules/
+masaustu/dist/
+masaustu/app/

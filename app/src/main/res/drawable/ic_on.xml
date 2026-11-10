@@ -1,17 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Defter simgesi: 108dp tuval, güvenli alan ortadaki 66dp -->
+<!-- PowerServ+ simgesi (2.14.3): beyaz zeminde koyu altın ve siyah iki keskin kavis. 512 tuval, adaptif simgenin güvenli alanına ölçeklenir. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M38,32h30a4,4 0,0 1,4 4v36a4,4 0,0 1,-4 4h-30a4,4 0,0 1,-4 -4v-36a4,4 0,0 1,4 -4z" />
-    <path
-        android:fillColor="#0E9F8E"
-        android:pathData="M34,36a4,4 0,0 1,4 -4h4v44h-4a4,4 0,0 1,-4 -4z" />
-    <path
-        android:fillColor="#0F2A44"
-        android:pathData="M48,42h18v4h-18zM48,51h18v4h-18zM48,60h12v4h-12z" />
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <group android:pivotX="256" android:pivotY="256" android:scaleX="0.8" android:scaleY="0.8">
+        <group android:translateX="-28" android:translateY="-14">
+            <path android:pathData="M150,140 C260,142 352,160 374,214 C392,262 330,330 236,392 C286,320 316,262 296,230 C272,192 214,162 150,140 Z">
+                <aapt:attr name="android:fillColor">
+                    <gradient android:type="linear" android:startX="150" android:startY="140" android:endX="390" android:endY="392">
+                        <item android:offset="0" android:color="#FFF3D488" />
+                        <item android:offset="0.55" android:color="#FFD9AD4F" />
+                        <item android:offset="1" android:color="#FFB98A34" />
+                    </gradient>
+                </aapt:attr>
+            </path>
+            <path android:fillColor="#141414"
+                android:pathData="M318,156 C372,170 414,196 418,240 C420,284 372,344 300,400 C352,336 386,284 382,244 C378,206 352,178 318,156 Z" />
+        </group>
+    </group>
 </vector>

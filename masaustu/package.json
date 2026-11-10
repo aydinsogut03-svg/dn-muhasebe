@@ -1,0 +1,61 @@
+{
+  "name": "powerserv",
+  "productName": "PowerServ+",
+  "version": "2.8.1",
+  "description": "PowerServ+ işletme programı (DN Marine)",
+  "author": "DN Marine Makine ve Güç Sistemleri Ltd.Şti.",
+  "main": "main.js",
+  "private": true,
+  "devDependencies": {
+    "electron": "33.2.1",
+    "electron-builder": "25.1.8"
+  },
+  "build": {
+    "appId": "com.dnmarine.powerserv",
+    "productName": "PowerServ+",
+    "copyright": "DN Marine Makine ve Güç Sistemleri Ltd.Şti.",
+    "compression": "maximum",
+    "files": [
+      "main.js",
+      "preload.js",
+      "app/**"
+    ],
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "PowerServ-Kurulum-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "PowerServ+",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "language": "1055"
+    },
+    "portable": {
+      "artifactName": "PowerServ-Tasinabilir-${version}.${ext}",
+      "requestExecutionLevel": "user"
+    }
+  }
+}

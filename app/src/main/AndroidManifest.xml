@@ -1,14 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Ortak veritabanı (Firebase) eşitlemesi için -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:dataExtractionRules="@xml/yedek_disi"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher"
-        android:label="DN Muhasebe"
+        android:label="PowerServ+"
         android:theme="@style/Tema">
 
         <activity
@@ -22,6 +26,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- 2.15: şifreli evrak arşivinden açılan PDF'ler uygulamanın geçici klasöründen, yalnız okuma izniyle verilir -->
+        <provider
+            android:name=".GeciciDosya"
+            android:authorities="com.dnmarine.muhasebe.gecici"
+            android:exported="false"
+            android:grantUriPermissions="true" />
 
         <!-- Günlük vade ve vergi hatırlatmaları; telefon yeniden başlayınca alarm yeniden kurulur -->
         <receiver android:name=".Hatirlatici" android:exported="false">

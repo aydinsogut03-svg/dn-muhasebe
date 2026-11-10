@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Mürekkep üst çubuk ve menü; durum çubuğu da bu renkte -->
-    <color name="marka">#1C2A48</color>
-    <color name="vurgu">#A8823D</color>
-    <color name="zemin">#F4F0E8</color>
+    <!-- Açık, yumuşak tema: durum çubuğu zeminle aynı renkte, simgeleri koyu -->
+    <color name="marka">#FFFFFF</color>
+    <color name="vurgu">#0A6CFF</color>
+    <color name="zemin">#FFFFFF</color>
 </resources>

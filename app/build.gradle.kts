@@ -10,8 +10,8 @@ android {
         applicationId = "com.dnmarine.muhasebe"
         minSdk = 26
         targetSdk = 35
-        versionCode = 13
-        versionName = "1.0.1"
+        versionCode = 81
+        versionName = "2.25.0"
     }
 
     // Sabit debug anahtarı: her CI derlemesi aynı imzayı taşır, yeni APK eskisinin üzerine kurulur (veriler korunur).
@@ -21,6 +21,13 @@ android {
             storePassword = "android"
             keyAlias = "androiddebugkey"
             keyPassword = "android"
+        }
+    }
+
+    // Debug imzalı olsa da APK hata ayıklanabilir değildir: USB ile bağlanan biri uygulama verisini (oturum jetonu, kayıtlar) okuyamaz.
+    buildTypes {
+        getByName("debug") {
+            isDebuggable = false
         }
     }
 
