@@ -1321,7 +1321,6 @@ select.secim{height:38px;border:1px solid var(--kenar);border-radius:var(--r,6px
 /* 2.9.7: Excel gibi kalem tablosu (teklif ve fatura) */
 .kt{background:var(--kart);border:1px solid var(--kenar);border-radius:6px;overflow:hidden;margin-bottom:10px;font-size:13.5px}
 .kt-bas,.kt-satir{display:grid;grid-template-columns:28px minmax(80px,.8fr) minmax(140px,2.4fr) 70px 82px 104px 62px 64px 104px 30px;align-items:stretch}
-.kt.kt-teklif .kt-bas,.kt.kt-teklif .kt-satir{grid-template-columns:28px minmax(80px,.8fr) minmax(140px,2.4fr) 70px 82px 110px 64px 110px 30px}
 .kt-bas{background:color-mix(in srgb,var(--mavi) 9%,var(--kart));font-size:11.5px;font-weight:650;color:var(--ikincil);border-bottom:1px solid var(--kenar)}
 .kt-bas span{padding:6px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kt-bas .sg,.kt .sg{text-align:right}
@@ -1357,7 +1356,6 @@ select.secim{height:38px;border:1px solid var(--kenar);border-radius:var(--r,6px
 @media (max-width:760px){
   .kt{overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;font-size:14px}
   .kt-bas,.kt-satir{grid-template-columns:30px 96px 200px 64px 78px 96px 56px 64px 96px 34px;width:max-content;min-width:100%}
-  .kt.kt-teklif .kt-bas,.kt.kt-teklif .kt-satir{grid-template-columns:30px 96px 200px 64px 78px 104px 64px 104px 34px}
   .kt-satir{overflow:visible!important}
   .kt-no{position:sticky;left:0;z-index:2;background:var(--kart);box-shadow:1px 0 0 var(--ayirici)}
   .kt-bas .kt-no{background:color-mix(in srgb,var(--mavi) 9%,var(--kart))}
@@ -1942,7 +1940,7 @@ p.dipnot .i{width:14px;height:14px;vertical-align:-2px}
 
 <script>
 'use strict';
-const VERSIYON = '2.25.4';
+const VERSIYON = '2.25.5';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -6421,14 +6419,14 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
   const kalemCiz = () => {
     doldur();
     /* 2.9.7: Excel gibi kalem tablosu. Her kalem tek satır (telefonda iki satır); Enter bir sonraki hücreye, son hücrede yeni satıra geçer. */
-    $('#kalemler', m).innerHTML = `<div class="kt${teklif ? ' kt-teklif' : ''}"><div class="kt-bas"><span class="kt-no">#</span><span class="kt-kod">Parça no</span><span class="kt-ad">Açıklama</span><span class="kt-mik sg">Miktar</span><span class="kt-birim">Birim</span><span class="kt-fiyat sg">Fiyat ${DOVIZ_SIMGE[fDoviz(x)]}</span>${teklif ? '' : '<span class="kt-isk sg">İsk.%</span>'}<span class="kt-kdv">KDV</span><span class="kt-tutar sg">Tutar</span><span class="kt-sil"></span></div>`
+    $('#kalemler', m).innerHTML = `<div class="kt${teklif ? ' kt-teklif' : ''}"><div class="kt-bas"><span class="kt-no">#</span><span class="kt-kod">Parça no</span><span class="kt-ad">Açıklama</span><span class="kt-mik sg">Miktar</span><span class="kt-birim">Birim</span><span class="kt-fiyat sg">Fiyat ${DOVIZ_SIMGE[fDoviz(x)]}</span><span class="kt-isk sg">İsk.%</span><span class="kt-kdv">KDV</span><span class="kt-tutar sg">Tutar</span><span class="kt-sil"></span></div>`
       + x.kalemler.map((k, i) => `<div class="kalem kt-satir" data-k="${i}"><span class="kt-no"><b>${i + 1}</b><i>. kalem</i></span>
         <label class="kt-c kt-kod"><span class="kt-et">Parça no</span><input type="text" data-a="kod" value="${esc(k.kod || (k.urunId && urun(k.urunId)?.kod) || '')}" placeholder="Parça no"></label>
         <label class="kt-c kt-ad"><span class="kt-et">Açıklama</span><input type="text" data-a="ad" value="${esc(k.ad)}" placeholder="Ürün / hizmet açıklaması"></label>
         <label class="kt-c kt-mik"><span class="kt-et">Miktar</span><input type="text" data-a="miktar" class="sg" inputmode="decimal" value="${k.miktar && !(kalemBos(k) && m.classList.contains('erp-form')) ? sayiFmt(k.miktar) : ''}" placeholder="Miktar"></label>
         <label class="kt-c kt-birim"><span class="kt-et">Birim</span><select data-a="birim" aria-label="Birim">${birimSecenek(k.birim || 'adet')}</select></label>
         <label class="kt-c kt-fiyat"><span class="kt-et">Birim fiyat ${DOVIZ_SIMGE[fDoviz(x)]}</span><input type="text" data-a="fiyat" class="sg" inputmode="decimal" value="${tutarYaz(k.fiyat)}" placeholder="0,00"></label>
-        ${teklif ? '' : `<label class="kt-c kt-isk"><span class="kt-et">İskonto %</span><input type="text" data-a="iskonto" class="sg" inputmode="decimal" value="${k.iskonto ? sayiFmt(k.iskonto) : ''}" placeholder="İsk.%" aria-label="İskonto yüzdesi"></label>`}
+        <label class="kt-c kt-isk"><span class="kt-et">İskonto %</span><input type="text" data-a="iskonto" class="sg" inputmode="decimal" value="${k.iskonto ? sayiFmt(k.iskonto) : ''}" placeholder="İsk.%" aria-label="İskonto yüzdesi"></label>
         <label class="kt-c kt-kdv"><span class="kt-et">KDV</span><select data-a="kdv" aria-label="KDV">${KDV_ORAN.map(o => `<option value="${o}" ${(k.kdv || 0) === o ? 'selected' : ''}>%${o}</option>`).join('')}</select></label>
         <div class="kt-c kt-tutar"><span class="kt-et">Tutar</span><span class="sayi" data-tutar>${kalemBos(k) && m.classList.contains('erp-form') ? '' : dPara(x, kalemNet(k))}</span></div>
         <button type="button" class="kt-sil" data-sil aria-label="Satırı sil" ${x.kalemler.length > 1 ? '' : 'disabled'}>${ikon('kapat')}<span class="kt-et">Sil</span></button></div>`).join('') + '</div>';
@@ -6828,6 +6826,8 @@ function teklifKagit(f) {
   const oranlar = Object.keys(t.oranlar);
   const oran = oranlar.length === 1 ? '%' + oranlar[0] : oranlar.length ? oranlar.map(o => '%' + o).join(' / ') : '%0';
   const sartlar = teklifSartlar(f, dil);
+  // 2.25.5: kalem iskontosu varsa BİRİM FİYAT ile TOPLAM arasına İSK. % sütunu, toplamlara brüt toplam ve iskonto satırı gelir; yoksa form eskisi gibi
+  const isk = t.iskonto > 0, eksi = v => `<span class="tf-tl">${DOVIZ_SIMGE[fDoviz(f)]}</span><span>−${tutarFmt(v)}</span>`;
   return `<div class="kagit teklif-kagit"${dil === 'en' ? ' lang="en"' : ''}>
     <div class="tf-ust">
       <div class="tf-firma"><b>${unvan}</b><table>${F.map(([a, v]) => `<tr><td>${esc(a)}${a === 'ADRES' ? '' : ':'}</td><td>${v}</td></tr>`).join('')}</table></div>
@@ -6836,14 +6836,16 @@ function teklifKagit(f) {
     </div>
     <div class="tf-bar tf-firma-bar">${L('FİRMA BİLGİLERİ', 'CUSTOMER INFORMATION')}</div>
     <div class="tf-musteri"><b>${esc(faturaMusteri(f))}</b>${musteri.map(x => `<div>${esc(x)}</div>`).join('')}</div>
-    <table class="tf-tablo"><colgroup><col style="width:8.5%"><col style="width:8.5%"><col><col style="width:8.3%"><col style="width:11.1%"><col style="width:14.2%"></colgroup>
-      <thead><tr><th>${L('PARÇA NO', 'PART NO')}</th><th>${L('BİRİM', 'UNIT')}</th><th class="sol">${L('AÇIKLAMA', 'DESCRIPTION')}</th><th>${L('ADET', 'QTY')}</th><th>${L('BİRİM FİYAT', 'UNIT PRICE')}</th><th>${L('TOPLAM', 'TOTAL')}</th></tr></thead>
-      <tbody>${kalem.map(x => x ? `<tr><td>${esc(kod(x))}</td><td class="orta">${esc(birimD(x.birim, dil))}</td><td>${esc(x.ad)}</td><td class="orta">${sayiFmt(x.miktar)}</td><td class="sag">${dPara(f, x.fiyat)}</td><td class="tf-top">${tl(Math.round(x.miktar * x.fiyat))}</td></tr>`
-        : '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td class="tf-top">' + tl(0) + '</td></tr>').join('')}</tbody></table>
+    <table class="tf-tablo"><colgroup><col style="width:8.5%"><col style="width:8.5%"><col><col style="width:8.3%"><col style="width:11.1%">${isk ? '<col style="width:7.5%">' : ''}<col style="width:14.2%"></colgroup>
+      <thead><tr><th>${L('PARÇA NO', 'PART NO')}</th><th>${L('BİRİM', 'UNIT')}</th><th class="sol">${L('AÇIKLAMA', 'DESCRIPTION')}</th><th>${L('ADET', 'QTY')}</th><th>${L('BİRİM FİYAT', 'UNIT PRICE')}</th>${isk ? `<th class="tf-isk">${L('İSK. %', 'DISC. %')}</th>` : ''}<th>${L('TOPLAM', 'TOTAL')}</th></tr></thead>
+      <tbody>${kalem.map(x => x ? `<tr><td>${esc(kod(x))}</td><td class="orta">${esc(birimD(x.birim, dil))}</td><td>${esc(x.ad)}</td><td class="orta">${sayiFmt(x.miktar)}</td><td class="sag">${dPara(f, x.fiyat)}</td>${isk ? `<td class="orta">${x.iskonto ? '%' + sayiFmt(x.iskonto) : ''}</td>` : ''}<td class="tf-top">${tl(kalemNet(x))}</td></tr>`
+        : `<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td>${isk ? '<td></td>' : ''}<td class="tf-top">${tl(0)}</td></tr>`).join('')}</tbody></table>
     <div class="tf-alt">
       <div class="tf-sartlar"><div class="tf-bar">${L('TEKLİF ŞARTLARI VE GEREKLİ AÇIKLAMALAR', 'TERMS AND CONDITIONS')}</div>
         <ol>${sartlar.map(x => `<li>${esc(x)}</li>`).join('')}</ol>${f.not ? `<div class="tf-not">${esc(f.not).replace(/\n/g, '<br>')}</div>` : ''}</div>
       <div class="tf-toplam">
+        ${isk ? `<div class="tf-ts"><span>${L('BRÜT TOPLAM', 'GROSS TOTAL')}</span><div class="tf-tut">${tl(t.brut)}</div></div>
+        <div class="tf-ts tf-iskonto"><span>${L('İSKONTO', 'DISCOUNT')}</span><div class="tf-tut">${eksi(t.iskonto)}</div></div>` : ''}
         <div class="tf-ts"><span>${L('ARA TOPLAM', 'SUBTOTAL')}</span><div class="tf-tut">${tl(t.ara)}</div></div>
         <div class="tf-ts"><span>${L('KDV ORANI', 'VAT RATE')}</span><div class="tf-tut tf-oran">${oran}</div></div>
         <div class="tf-ts"><span>${L('KDV', 'VAT')}</span><div class="tf-tut">${tl(t.kdv)}</div></div>
@@ -6880,11 +6882,12 @@ function zipYap(dosyalar) {
 const dataUrlBayt = u => { const b = atob(u.slice(u.indexOf(',') + 1)); const o = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) o[i] = b.charCodeAt(i); return o; };
 const resimBoyut = u => new Promise(ok => { const i = new Image(); i.onload = () => ok([i.naturalWidth || 1, i.naturalHeight || 1]); i.onerror = () => ok([1, 1]); i.src = u; });
 const xmlEsc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
-/* Hücreye değer yazar; hücrenin şablondaki biçimi (s) korunur. Hücre yoksa satırın başına eklenir (yalnız B sütunu için). */
-function xlHucre(xml, ref, deger, formul) {
+/* Hücreye değer yazar; hücrenin şablondaki biçimi (s) korunur (stil verilirse o kullanılır). Hücre yoksa satırda sütun sırasına göre eklenir. */
+const xlSutun = r => [...r.replace(/\d+$/, '')].reduce((n, c) => n * 26 + c.charCodeAt(0) - 64, 0);
+function xlHucre(xml, ref, deger, formul, stil) {
   const re = new RegExp(`<c r="${ref}"( s="\\d+")?[^>]*?(/>|>.*?</c>)`);
   const m = xml.match(re);
-  const s = m && m[1] || '';
+  const s = stil != null ? ` s="${stil}"` : m && m[1] || '';
   let c;
   if (formul) c = `<c r="${ref}"${s}><f>${formul}</f><v>${+deger || 0}</v></c>`;
   else if (typeof deger === 'number') c = `<c r="${ref}"${s}><v>${deger}</v></c>`;
@@ -6893,7 +6896,13 @@ function xlHucre(xml, ref, deger, formul) {
   if (m) return xml.replace(re, () => c);
   const satir = ref.replace(/^[A-Z]+/, ''), rr = new RegExp(`(<row r="${satir}"[^>]*?)(/?)>`);
   if (!rr.test(xml)) return xml;
-  return xml.replace(rr, (_, a, kapali) => kapali ? `${a}>${c}</row>` : `${a}>${c}`);
+  const ri = xml.search(rr), ac = xml.indexOf('>', ri) + 1;
+  if (xml[ac - 2] === '/') return xml.replace(rr, (_, a) => `${a}>${c}</row>`);
+  // Excel hücrelerin satırda soldan sağa sıralı olmasını ister: kendinden sonraki ilk hücrenin önüne koy
+  const kap = xml.indexOf('</row>', ac), govde = xml.slice(ac, kap), sut = xlSutun(ref);
+  let yer = govde.length;
+  for (const h of govde.matchAll(/<c r="([A-Z]+)\d+"/g)) if (xlSutun(h[1]) > sut) { yer = h.index; break; }
+  return xml.slice(0, ac + yer) + c + xml.slice(ac + yer);
 }
 async function teklifExcel(f) {
   try {
@@ -6902,10 +6911,12 @@ async function teklifExcel(f) {
     const kay = r => r >= 40 ? r + d : r;  // kalemlerden sonraki satırlar aşağı kayar
     const kaydir = x => x.replace(/(\b[A-Z]{1,2})(\d+)\b/g, (_, c, r) => c + kay(+r));
     const kod = x => x.kod || (x.urunId && urun(x.urunId)?.kod) || '';
+    // 2.25.5: kalem iskontosu varsa açıklama D:G'ye daralır, H sütunu İSK. % olur; toplamlara brüt toplam ve iskonto satırı eklenir
+    const isk = kalem.some(y => kalemIsk(y));
     let satirlar = '';
-    for (let i = 0; i < n; i++) satirlar += (i === 0 ? S.ilk : i === n - 1 ? S.son : S.orta).replace(/\{R\}/g, 24 + i);
+    for (let i = 0; i < n; i++) satirlar += (i === 0 ? S.ilk : i === n - 1 ? S.son.replace('s="{R}"', 's="39"') : S.orta).replace(/\{R\}/g, 24 + i);
     let kuyruk = S.kuyruk.replace(/<row r="(\d+)"/g, (_, r) => `<row r="${kay(+r)}"`).replace(/ r="([A-Z]+)(\d+)"/g, (_, c, r) => ` r="${c}${kay(+r)}"`).replace(/<f>[^<]*<\/f>/g, x => kaydir(x));
-    const birlesik = [...S.birlesik.map(kaydir), ...Array.from({length: n}, (_, i) => `D${24 + i}:H${24 + i}`)];
+    const birlesik = [...S.birlesik.map(kaydir).map(b => isk && b === 'D23:H23' ? 'D23:G23' : b), ...Array.from({length: n}, (_, i) => `D${24 + i}:${isk ? 'G' : 'H'}${24 + i}`)];
     let x = S.bas + satirlar + kuyruk + S.geri.replace('{BIRLESIK}', `<mergeCells count="${birlesik.length}">${birlesik.map(b => `<mergeCell ref="${b}"/>`).join('')}</mergeCells>`);
     x = x.replace('{SON}', 64 + d);
     // Firma
@@ -6927,7 +6938,10 @@ async function teklifExcel(f) {
     x = xlHucre(x, 'B17', faturaMusteri(f));
     musteri.slice(0, 4).forEach((m, i) => { x = xlHucre(x, 'B' + (18 + i), m); });
     // Kalemler (tutarlar TL; kuruş / 100)
-    const isk = kalem.some(y => kalemIsk(y));
+    if (isk) {
+      x = xlHucre(x, 'H23', L('İSK. %', 'DISC. %'), null, 23);
+      for (let i = 0; i < n; i++) { const y = kalem[i]; x = xlHucre(x, 'H' + (24 + i), y && y.iskonto ? '%' + sayiFmt(y.iskonto) : '', null, i === 0 ? 27 : i === n - 1 ? 38 : 32); }
+    }
     kalem.forEach((y, i) => {
       const r = 24 + i;
       x = xlHucre(x, 'B' + r, kod(y)); x = xlHucre(x, 'C' + r, birimD(y.birim, dil)); x = xlHucre(x, 'D' + r, y.ad || '');
@@ -6937,15 +6951,24 @@ async function teklifExcel(f) {
     for (let i = kalem.length; i < n; i++) x = xlHucre(x, 'K' + (24 + i), 0, `J${24 + i}*I${24 + i}`);
     // Toplamlar
     const R = r => r + d, oranlar = Object.keys(t.oranlar);
-    x = xlHucre(x, 'K' + R(40), t.ara / 100, `SUM(K24:K${23 + n})`);
-    if (oranlar.length <= 1) {
-      x = xlHucre(x, 'K' + R(41), (+oranlar[0] || 0) / 100);
-      x = xlHucre(x, 'K' + R(42), t.kdv / 100, `ROUND(K${R(41)}*K${R(40)},2)`);
-    } else {
-      x = xlHucre(x, 'K' + R(41), oranlar.map(o => '%' + o).join(' / '));
-      x = xlHucre(x, 'K' + R(42), t.kdv / 100);
+    // İskonto yoksa: 40 ara toplam, 41 KDV oranı, 42 KDV. Varsa: 40 brüt, 41 iskonto, 42 ara toplam, 43 KDV oranı, 44 KDV.
+    const kay2 = isk ? 2 : 0, rAra = R(40 + kay2), rOran = R(41 + kay2), rKdv = R(42 + kay2);
+    if (isk) {
+      x = xlHucre(x, 'J' + R(40), L('BRÜT TOPLAM', 'GROSS TOTAL'), null, 42); x = xlHucre(x, 'K' + R(40), t.brut / 100, null, 43);
+      x = xlHucre(x, 'J' + R(41), L('İSKONTO', 'DISCOUNT'), null, 42); x = xlHucre(x, 'K' + R(41), -t.iskonto / 100, null, 52);
+      x = xlHucre(x, 'J' + rAra, L('ARA TOPLAM', 'SUBTOTAL'), null, 42);
+      x = xlHucre(x, 'J' + rOran, L('KDV ORANI', 'VAT RATE'), null, 42);
+      x = xlHucre(x, 'J' + rKdv, L('KDV', 'VAT'), null, 42);
     }
-    x = xlHucre(x, 'K' + R(50), t.toplam / 100, `K${R(40)}+K${R(42)}`);
+    x = xlHucre(x, 'K' + rAra, t.ara / 100, `SUM(K24:K${23 + n})`, isk ? 43 : null);
+    if (oranlar.length <= 1) {
+      x = xlHucre(x, 'K' + rOran, (+oranlar[0] || 0) / 100, null, isk ? 48 : null);
+      x = xlHucre(x, 'K' + rKdv, t.kdv / 100, `ROUND(K${rOran}*K${rAra},2)`, isk ? 52 : null);
+    } else {
+      x = xlHucre(x, 'K' + rOran, oranlar.map(o => '%' + o).join(' / '), null, isk ? 48 : null);
+      x = xlHucre(x, 'K' + rKdv, t.kdv / 100, null, isk ? 52 : null);
+    }
+    x = xlHucre(x, 'K' + R(50), t.toplam / 100, `K${rAra}+K${rKdv}`);
     const sart = teklifSartlar(f, dil).map((s, i) => `${i + 1}. ${s}`);
     for (let i = 0; i < 7; i++) x = xlHucre(x, 'B' + R(42 + i), i < 6 ? sart[i] || '' : sart.slice(6).join('  '));
     if (f.not) x = xlHucre(x, 'B' + R(51), L('Not: ', 'Note: ') + f.not.replace(/\s*\n\s*/g, ' · '));
@@ -7133,16 +7156,17 @@ function teklifEkrani(id) {
   if (kod === 'bekliyor' || kod === 'sure') b.push(`<button id="tKabul">${ikon('tamam')}Kabul edildi</button>`, `<button id="tRed">${ikon('kapat')}Reddedildi</button>`);
   if (!f.donustu && f.durum !== 'iptal') b.push(`<button id="tFatura">${ikon('donustur')}Faturala</button>`);
   b.push(dilDugmeHtml('tDil', belgeDili(f, k)), `<button id="tDiger">${ikon('dahafazla')}Diğer</button>`);
-  const kalemler = f.kalemler.filter(x => x.ad || x.fiyat);
+  const kalemler = f.kalemler.filter(x => x.ad || x.fiyat), tsut = t.iskonto ? 6 : 5;
   h += `<div class="btn-izgara">${b.join('')}</div>
     <div class="kart teklif-ozet"><div class="to-ust"><div style="min-width:0;flex:1"><small>Teklif ${esc(f.no)}</small><b class="to-musteri">${esc(faturaMusteri(f))}</b>
         <div class="soluk">${esc([k?.yetkili || k?.yetkililer?.[0]?.ad, k?.tel, k?.eposta].filter(Boolean).join(' · '))}</div></div><span class="hap ${r}">${d}</span></div>
       <div class="to-bilgi"><div><small>Tarih</small><b>${esc(tarihYaz(f.tarih, true))}</b></div><div><small>Geçerlilik</small><b>${f.vade ? esc(tarihYaz(f.vade, true)) : '—'}</b></div>
         <div><small>Kalem</small><b>${kalemler.length}</b></div><div><small>Genel toplam</small><b class="to-toplam">${dPara(f, t.toplam)}</b></div></div></div>
     <div class="bilgi-baslik">Teklif kalemleri</div>
-    ${genisEkran() ? `<div class="p-tablo-kap"><table class="p-tablo teklif-kalem"><thead><tr><th>#</th><th>Açıklama</th><th class="sg">Miktar</th><th class="sg">Birim fiyat</th><th class="sg">KDV</th><th class="sg">Tutar</th></tr></thead><tbody>
-      ${kalemler.map((x, i) => `<tr><td>${i + 1}</td><td class="sar">${esc(x.ad)}${x.kod || (x.urunId && urun(x.urunId)?.kod) ? `<small class="soluk"> · ${esc(x.kod || urun(x.urunId).kod)}</small>` : ''}</td><td class="sg">${sayiFmt(x.miktar)} ${esc(x.birim || '')}</td><td class="sg">${dPara(f, x.fiyat)}</td><td class="sg">%${x.kdv || 0}</td><td class="sg"><b>${dPara(f, Math.round(x.miktar * x.fiyat))}</b></td></tr>`).join('')}</tbody>
-      <tfoot><tr><td colspan="5" class="sg">Ara toplam</td><td class="sg">${dPara(f, t.ara)}</td></tr><tr><td colspan="5" class="sg">KDV</td><td class="sg">${dPara(f, t.kdv)}</td></tr><tr class="to-genel"><td colspan="5" class="sg">Genel toplam</td><td class="sg">${dPara(f, t.toplam)}</td></tr></tfoot></table></div>` : `<div class="grup">${kalemler.map((x, i) => `<div class="hucre"><div class="ic"><b style="white-space:normal">${i + 1}. ${esc(x.ad)}</b><small>${sayiFmt(x.miktar)} ${esc(x.birim || '')} × ${dPara(f, x.fiyat)} · KDV %${x.kdv || 0}</small></div><span class="tutar">${dPara(f, Math.round(x.miktar * x.fiyat))}</span></div>`).join('')}
+    ${genisEkran() ? `<div class="p-tablo-kap"><table class="p-tablo teklif-kalem"><thead><tr><th>#</th><th>Açıklama</th><th class="sg">Miktar</th><th class="sg">Birim fiyat</th>${t.iskonto ? '<th class="sg">İsk.</th>' : ''}<th class="sg">KDV</th><th class="sg">Tutar</th></tr></thead><tbody>
+      ${kalemler.map((x, i) => `<tr><td>${i + 1}</td><td class="sar">${esc(x.ad)}${x.kod || (x.urunId && urun(x.urunId)?.kod) ? `<small class="soluk"> · ${esc(x.kod || urun(x.urunId).kod)}</small>` : ''}</td><td class="sg">${sayiFmt(x.miktar)} ${esc(x.birim || '')}</td><td class="sg">${dPara(f, x.fiyat)}</td>${t.iskonto ? `<td class="sg">${x.iskonto ? '%' + sayiFmt(x.iskonto) : ''}</td>` : ''}<td class="sg">%${x.kdv || 0}</td><td class="sg"><b>${dPara(f, kalemNet(x))}</b></td></tr>`).join('')}</tbody>
+      <tfoot>${t.iskonto ? `<tr><td colspan="${tsut}" class="sg">Brüt toplam</td><td class="sg">${dPara(f, t.brut)}</td></tr><tr><td colspan="${tsut}" class="sg">İskonto</td><td class="sg">−${dPara(f, t.iskonto)}</td></tr>` : ''}<tr><td colspan="${tsut}" class="sg">Ara toplam</td><td class="sg">${dPara(f, t.ara)}</td></tr><tr><td colspan="${tsut}" class="sg">KDV</td><td class="sg">${dPara(f, t.kdv)}</td></tr><tr class="to-genel"><td colspan="${tsut}" class="sg">Genel toplam</td><td class="sg">${dPara(f, t.toplam)}</td></tr></tfoot></table></div>` : `<div class="grup">${kalemler.map((x, i) => `<div class="hucre"><div class="ic"><b style="white-space:normal">${i + 1}. ${esc(x.ad)}</b><small>${sayiFmt(x.miktar)} ${esc(x.birim || '')} × ${dPara(f, x.fiyat)}${x.iskonto ? ' · İsk. %' + sayiFmt(x.iskonto) : ''} · KDV %${x.kdv || 0}</small></div><span class="tutar">${dPara(f, kalemNet(x))}</span></div>`).join('')}
+      ${t.iskonto ? `<div class="hucre"><div class="ic"><small>Brüt toplam</small></div><span class="tutar">${dPara(f, t.brut)}</span></div><div class="hucre"><div class="ic"><small>İskonto</small></div><span class="tutar">−${dPara(f, t.iskonto)}</span></div>` : ''}
       <div class="hucre"><div class="ic"><small>Ara toplam</small></div><span class="tutar">${dPara(f, t.ara)}</span></div><div class="hucre"><div class="ic"><small>KDV</small></div><span class="tutar">${dPara(f, t.kdv)}</span></div>
       <div class="hucre"><div class="ic"><b>Genel toplam</b></div><span class="tutar"><b>${dPara(f, t.toplam)}</b></span></div></div>`}
     ${f.not ? `<div class="bilgi-baslik">Not</div><div class="kart" style="white-space:pre-wrap">${esc(f.not)}</div>` : ''}
@@ -7158,8 +7182,8 @@ function teklifEkrani(id) {
   $('#tPdfIndir').onclick = () => kagitPdf(`Teklif-${f.no}.pdf`, teklifKagit(f));
   $('#tExcel').onclick = () => teklifExcel(f);
   $('#tWa').onclick = () => {
-    const metin = `${D.ad ? D.ad + '\n' : ''}Teklif ${f.no} · ${tarihYaz(f.tarih, true)}\n\n` + kalemler.map(x => `• ${x.ad}: ${sayiFmt(x.miktar)} ${x.birim || ''} × ${dPara(f, x.fiyat)}`).join('\n') +
-      `\n\nAra toplam: ${dPara(f, t.ara)}\nKDV: ${dPara(f, t.kdv)}\nGenel toplam: ${dPara(f, t.toplam)}` + (f.vade ? `\nGeçerlilik: ${tarihYaz(f.vade, true)}` : '');
+    const metin = `${D.ad ? D.ad + '\n' : ''}Teklif ${f.no} · ${tarihYaz(f.tarih, true)}\n\n` + kalemler.map(x => `• ${x.ad}: ${sayiFmt(x.miktar)} ${x.birim || ''} × ${dPara(f, x.fiyat)}${x.iskonto ? ` − %${sayiFmt(x.iskonto)} = ${dPara(f, kalemNet(x))}` : ''}`).join('\n') +
+      (t.iskonto ? `\n\nBrüt toplam: ${dPara(f, t.brut)}\nİskonto: −${dPara(f, t.iskonto)}` : '') + `\n\nAra toplam: ${dPara(f, t.ara)}\nKDV: ${dPara(f, t.kdv)}\nGenel toplam: ${dPara(f, t.toplam)}` + (f.vade ? `\nGeçerlilik: ${tarihYaz(f.vade, true)}` : '');
     disariAc(`https://wa.me/${k?.tel ? telefonWa(k.tel) : ''}?text=${encodeURIComponent(metin)}`);
   };
   if ($('#tKabul')) $('#tKabul').onclick = () => { f.teklifDurum = 'kabul'; f.yanitTarihi = bugun(); yenile(); bildir('Teklif kabul edildi olarak işaretlendi'); };
