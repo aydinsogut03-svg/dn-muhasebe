@@ -6095,7 +6095,7 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
     </div></div></div>
     <div class="ff-kalem"><div class="bolum">Kalemler<span class="erp-yalniz ff-ipucu">Enter: sonraki hücre · son hücrede yeni satır · boş satırlar kaydedilmez</span></div>
     <div id="kalemler"></div>
-    <div class="btn-grup">${stok && D.urunler.length ? `<button class="btn renkli" id="stoktanEkle">${ikon('kutu')} Stoktan</button>` : ''}<button class="btn renkli" id="kalemEkle">${ikon('arti')} Kalem ekle</button>${teklif ? `<button type="button" class="btn renkli" id="kalemAktar">${ikon('faturaYukle')} PDF / Excel'den aktar</button>` : ''}</div></div>
+    <div class="btn-grup">${stok && D.urunler.length ? `<button class="btn renkli" id="stoktanEkle">${ikon('kutu')} Stoktan</button>` : ''}<button class="btn renkli" id="kalemEkle">${ikon('arti')} Kalem ekle</button>${teklif ? `<button type="button" class="btn renkli" id="kalemAktar">${ikon('faturaYukle')} PDF / Excel'den aktar</button>` : ''}${teklif && stok ? `<button type="button" class="btn renkli" id="stogaKaydet">${ikon('kutu')} Parça kodu ver</button>` : ''}</div></div>
     <div class="ff-alt"><div class="ff-sag">
     ${!teklif ? `<div class="grup"><label class="f-satir"><span>KDV tevkifatı</span><select id="fTevkif">${TEVKIFAT.map(o => `<option value="${o}" ${(x.tevkifat || 0) === o ? 'selected' : ''}>${o ? o + '/10' : 'Yok'}</option>`).join('')}</select></label></div>` : ''}
     <div class="grup tek-sutun" id="toplamlar"></div></div><div class="ff-sol">
@@ -6163,6 +6163,13 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
         // Boş satıra yazılınca varsayılan miktar (1) görünür olsun; adetsiz kalem gözden kaçmasın
         const mi = $('[data-a=miktar]', el); if (a !== 'miktar' && mi && !mi.value && k.miktar && !kalemBos(k)) mi.value = sayiFmt(k.miktar);
         toplamCiz();
+      });
+      // 2.25.1: açıklama stoktaki bir ürün adıyla aynıysa parça no ve ürün bağı kendiliğinden gelir
+      const adInp = $('[data-a=ad]', el);
+      if (adInp) adInp.addEventListener('change', () => {
+        if (k.kod || k.urunId || !k.ad.trim()) return;
+        const u = D.urunler.find(y => y.kod && kucult(y.ad.trim()) === kucult(k.ad.trim()));
+        if (u) { k.urunId = u.id; k.kod = u.kod; const ki = $('[data-a=kod]', el); if (ki) ki.value = u.kod; }
       });
       $('[data-a=birim]', el).onchange = e => { k.birim = e.target.value; };
       $('[data-a=kdv]', el).onchange = e => { k.kdv = +e.target.value; toplamCiz(); };
@@ -6262,6 +6269,42 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
     const hepsi = $('#kaHepsi', am);
     if (hepsi) hepsi.onchange = () => $$('[data-ka]', am).forEach(c => c.checked = hepsi.checked);
   };
+  // 2.25.1: AS kararı "kodu program versin": stokta kayıtlı olmayan teklif kalemlerine sıradaki parça kodu (DN-0001…) verilir ve ürün kartı açılır.
+  // Kalemde parça no yazılıysa o kod kullanılır (stokta varsa o karta bağlanır). Teklif kaydedilirken kendiliğinden, istenirse önceden "Parça kodu ver" ile.
+  const kurS = () => teklifKur(x) || 1;
+  const kodsuzlar = () => x.kalemler.filter(k => (k.ad || '').trim() && !(k.urunId && urun(k.urunId)));
+  const sonDnNo = () => Math.max(0, ...D.urunler.map(u => +((/^DN-(\d+)$/i.exec(u.kod || '') || [])[1] || 0)));
+  const kodOner = (l) => { let no = sonDnNo(); const kull = new Set(D.urunler.map(u => kucult(u.kod)).filter(Boolean)); return l.map(o => { if (o.kod) return o.kod; let kod; do kod = 'DN-' + String(++no).padStart(4, '0'); while (kull.has(kucult(kod))); kull.add(kucult(kod)); return kod; }); };
+  const kodVer = (l) => {
+    let yeniU = 0, bag = 0;
+    for (const o of l) {
+      const varU = D.urunler.find(u => u.kod && kucult(u.kod) === kucult(o.kod));
+      if (varU) { o.k.urunId = varU.id; o.k.kod = varU.kod; bag++; continue; }
+      const u = {ad: o.k.ad.trim(), kod: o.kod, birim: o.k.birim || 'adet', alis: 0, satis: Math.round((o.k.fiyat || 0) * kurS()), kdvOran: KDV_ORAN.includes(o.k.kdv) ? o.k.kdv : 20, kritik: 0, marka: '', kategori: '', muadil: '', raf: '', barkod: '', uyumlu: '', tedarikciId: null, siparisMiktar: 0, not: '', depo: '', id: kimlik(), olusturma: Date.now()};
+      D.urunler.push(u); o.k.urunId = u.id; o.k.kod = o.kod; yeniU++;
+    }
+    return {yeniU, bag};
+  };
+  m._kodVer = () => { const l = kodsuzlar().map(k => ({k, kod: (k.kod || '').trim()})); const kodlar = kodOner(l); l.forEach((o, j) => o.kod = kodlar[j]); return kodVer(l); };
+  if ($('#stogaKaydet', m)) $('#stogaKaydet', m).onclick = () => {
+    const l = kodsuzlar().map(k => ({k, kod: (k.kod || '').trim()}));
+    if (!l.length) return bildir('Tüm kalemlerin parça kodu ve stok kartı var');
+    const oneri = kodOner(l);
+    const km = modal('Parça kodu ver', `
+      <p class="dipnot">Stokta kayıtlı olmayan ${l.length} kalem. Program sıradaki kodları verdi; isterseniz değiştirin, istemediğiniz kalemin işaretini kaldırın. Kaydedince her kalem için ürün kartı açılır; sonraki tekliflerde parça kodunu ya da açıklamayı yazınca kendiliğinden dolar. Bu düğmeye basmazsanız kodlar teklif kaydedilirken de verilir.</p>
+      <div class="grup tek-sutun">${l.map(({k}, j) => `<div class="hucre ef-satir pk-satir"><input type="checkbox" data-pk="${j}" checked aria-label="Seç"><div class="ic"><b>${esc(k.ad)}</b><small>${esc(sayiFmt(k.miktar || 1) + ' ' + (k.birim || 'adet'))}${k.fiyat ? ' · satış ' + esc(para(Math.round(k.fiyat * kurS()))) : ''}</small><input type="text" data-pkk="${j}" value="${esc(oneri[j])}" aria-label="Parça kodu" style="margin-top:6px;width:100%"></div></div>`).join('')}</div>`,
+      {kaydetAd: 'Kodları ver', kaydet: () => {
+        const sec = l.map((o, j) => ({...o, kod: $(`[data-pkk="${j}"]`, km).value.trim(), on: $(`[data-pk="${j}"]`, km).checked})).filter(o => o.on);
+        if (!sec.length) { bildir('Kalem seçin', true); return false; }
+        const yazili = sec.filter(o => o.kod).map(o => kucult(o.kod)), cift = sec.find(o => o.kod && yazili.filter(c => c === kucult(o.kod)).length > 1);
+        if (cift) { bildir(`${cift.kod} kodu iki kez yazılmış`, true); return false; }
+        const bos = sec.filter(o => !o.kod), ek = kodOner(bos.map(() => ({kod: ''}))).filter(c => !yazili.includes(kucult(c)));
+        bos.forEach((o, j) => o.kod = ek[j] || 'DN-' + kimlik().slice(0, 6));
+        const {yeniU, bag} = kodVer(sec);
+        kaydet(); kalemCiz();
+        bildir(`${yeniU} kaleme parça kodu verildi, ürün kartı açıldı${bag ? `; ${bag} kalem mevcut karta bağlandı` : ''}.`);
+      }});
+  };
   if ($('#mSec', m)) $('#mSec', m).onclick = () => kisiSec(k => {
     x.kisiId = k ? k.id : null; sartEnGoster();
     $('#mAd', m).textContent = k ? k.ad : alisF ? 'Kayıtlı cari seç' : 'Kayıtlı müşteri seç';
@@ -6340,6 +6383,8 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
       if (x.durum !== 'iptal') x.durum = $('#fTaslak', m).checked ? 'taslak' : 'gonderildi';
     }
     if (yeni && teklif && m._bakimEkipman) { x.ekipmanId = m._bakimEkipman; x.bakimTeklif = true; }
+    // 2.25.1: teklifte stokta kayıtlı olmayan kalemlere parça kodu verilir, ürün kartı açılır
+    if (teklif && m._kodVer && modulAcik('stok') && !saltOkunur('stok')) { const r = m._kodVer(); if (r.yeniU) setTimeout(() => bildir(`${r.yeniU} kaleme parça kodu verildi, stokta ürün kartı açıldı`), 1300); }
     if (fDoviz(x) !== 'TL' && !(x.kur > 0)) { bildir('Döviz kuru yazın', true); return false; }
     if (fDoviz(x) === 'TL') { delete x.doviz; delete x.kur; if (!teklif) delete x.dovizBilgi; }
     else if (!teklif) {
