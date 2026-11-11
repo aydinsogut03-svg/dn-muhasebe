@@ -1928,7 +1928,7 @@ p.dipnot .i{width:14px;height:14px;vertical-align:-2px}
 
 <script>
 'use strict';
-const VERSIYON = '2.25.1';
+const VERSIYON = '2.25.2';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -4558,7 +4558,7 @@ const ublIlk = (el, ...yol) => { let x = el; for (const a of yol) { x = ublCocuk
 const ublMetin = (el, ...yol) => (ublIlk(el, ...yol)?.textContent || '').trim();
 const ublSayi = (el, ...yol) => parseFloat(ublMetin(el, ...yol)) || 0;
 const kurus = tl => Math.round(tl * 100);
-const UBL_BIRIM = {C62: 'adet', NIU: 'adet', HUR: 'saat', DAY: 'gün', MON: 'ay', KGM: 'kg', GRM: 'g', LTR: 'lt', MTR: 'm', MTK: 'm²', MTQ: 'm³', KMT: 'km', SET: 'set', PR: 'çift', BX: 'kutu', PA: 'paket', TNE: 'ton'};
+const UBL_BIRIM = {C62: 'adet', NIU: 'adet', HUR: 'saat', DAY: 'gün', MON: 'ay', KGM: 'kg', GRM: 'gr', LTR: 'lt', MLT: 'ml', CMT: 'cm', PK: 'paket', CT: 'koli', KT: 'set', MTR: 'm', MTK: 'm²', MTQ: 'm³', KMT: 'km', SET: 'set', PR: 'çift', BX: 'kutu', PA: 'paket', TNE: 'ton'};
 function ublTaraf(p) {
   const party = ublIlk(p, 'Party');
   if (!party) return {};
@@ -4586,7 +4586,10 @@ function ublOku(xmlMetin) {
     const isk = ublCocuk(l, 'AllowanceCharge').filter(a => ublMetin(a, 'ChargeIndicator') === 'false').reduce((s, a) => s + ublSayi(a, 'Amount'), 0);
     const brut = mik * fiyat;
     const k = {ad: ublMetin(l, 'Item', 'Name') || ublMetin(l, 'Item', 'Description') || 'Kalem', miktar: mik, birim: UBL_BIRIM[ublIlk(l, 'InvoicedQuantity')?.getAttribute('unitCode')] || 'adet', fiyat: para1(fiyat), kdv: Math.round(kdv)};
-    const kod = ublMetin(l, 'Item', 'SellersItemIdentification', 'ID'); if (kod) k.kod = kod;
+    // 2.25.2: parça no satıcı kodundan, yoksa üretici ya da alıcı kodundan; marka ve model de alınır
+    const kod = ublMetin(l, 'Item', 'SellersItemIdentification', 'ID') || ublMetin(l, 'Item', 'ManufacturersItemIdentification', 'ID') || ublMetin(l, 'Item', 'BuyersItemIdentification', 'ID'); if (kod) k.kod = kod;
+    const marka = ublMetin(l, 'Item', 'BrandName'), model = ublMetin(l, 'Item', 'ModelName');
+    if (marka) k.marka = marka; if (model) k.model = model;
     if (isk && brut) k.iskonto = Math.round(isk / brut * 10000) / 100;
     return k;
   });
@@ -5005,6 +5008,7 @@ function pdfFaturaCoz(satirlar) {
       const mh = malHizmet ? tl(malHizmet.k) - (iskToplam ? tl(iskToplam.k) : 0) : 0, oran = mh > 0 ? Math.round((hedef / mh - 1) * 100) : 0;
       l = KDV_ORAN.includes(oran) && oran ? [{ad: ad0, miktar: 1, birim: 'adet', kdv: oran, fiyat: mh}] : [{ad: ad0, miktar: 1, birim: 'adet', kdv: 0, fiyat: hedef}];
     }
+    l.forEach(x => x.toplamdan = true);
     son = l;
   }
   if (!son.length && !toplamK) return null;
@@ -5180,7 +5184,7 @@ async function eFaturaAktar(s) {
   const f = {id: kimlik(), olusturma: Date.now(), tur, no: u.no, ettn: u.ettn, eBelge: efTur(u), tarih: u.tarih || bugun(), vade: u.vade || '',
     kisiId: k ? k.id : null, musteriAd: k ? '' : taraf.ad || '', kalemler: u.kalemler.length ? u.kalemler : [yeniKalem()],
     not: u.not || '',
-    durum: 'gonderildi', odendi: false, odemeler: [], cariyeIsle: !!k, stokDus: false};
+    durum: 'gonderildi', odendi: false, odemeler: [], cariyeIsle: !!k, stokDus: tur === 'alis' && modulAcik('stok')};
   // 2.14.11: dövizli fatura: kalemler TL'ye çevrilmiş geldiyse (belgedeki kur) döviz fiyatları geri bulunur; kur yoksa TCMB kuru
   const dv = {TRY: 'TL', TL: 'TL', USD: 'USD', EUR: 'EUR', GBP: 'GBP'}[u.doviz] || 'TL';
   if (dv !== 'TL' && DOVIZLER.includes(dv)) {
@@ -5200,9 +5204,61 @@ async function eFaturaAktar(s) {
   if (u.tip === 'IADE') f.not = ['İade faturası', f.not].filter(Boolean).join('\n');
   if (s.pdfden) f.not = [f.not, s.xml ? "PDF'teki e-Fatura XML'inden okundu" : u.pdfOkuma === 'toplam' ? "PDF'den okundu. Kalem tablosu okunamadığı için kalemler KDV oranına göre toplam tutardan yazıldı." : "PDF'den okundu"].filter(Boolean).join('\n');
   D.faturalar.push(f);
+  s.stokSonuc = alisStokKartlari(f);
   faturaTuret(f);
   return f;
 }
+/* 2.25.2: alış faturası stoğa işlenirken her kalem bir stok kartına bağlanır.
+   Kart parça no (muadiller, barkod dahil) ya da parça no yoksa adla bulunur; bulunamazsa açılır (parça no yoksa DN-0001…).
+   Kartın alış fiyatı (iskonto düşülmüş, TL), KDV oranı, birimi, markası ve tedarikçisi faturadan güncellenir.
+   Nakliye, işçilik gibi hizmet kalemleri ve toplamdan yazılmış kalemler stoğa alınmaz. Dönüş: {yeni, guncel} */
+const HIZMET_BIRIM = ['saat', 'gün', 'ay', 'sefer'];
+const HIZMET_AD = /nakliye|kargo|navlun|ta[şs][ıi]ma\s*(bedeli|ücreti|ucreti)|ambar|i[şs][çc]ilik|montaj|hizmet|servis\s*(bedeli|ücreti|ucreti)|yol\s*(gideri|ücreti|ucreti)|konaklama|kur\s*fark|vade\s*fark|komisyon|dan[ıi][şs]manl[ıi]k|kira\b|abonelik|lisans/i;
+const hizmetKalemi = k => !!(k.toplamdan || HIZMET_BIRIM.includes(k.birim) || HIZMET_AD.test(k.ad || ''));
+function kalemStokKarti(k) {
+  if (k.urunId && urun(k.urunId)) return urun(k.urunId);
+  const kn = kodNorm(k.kod);
+  if (kn) return D.urunler.find(u => u.kod && kodNorm(u.kod) === kn) || D.urunler.find(u => u.muadil && u.muadil.split(/[,;]/).some(m => kodNorm(m) && kodNorm(m) === kn)) || D.urunler.find(u => u.barkod && kodNorm(u.barkod) === kn) || null;
+  const ad = kucult((k.ad || '').trim());
+  return ad ? D.urunler.find(u => kucult(u.ad) === ad) || null : null;
+}
+function alisStokKartlari(f) {
+  const r = {yeni: 0, guncel: 0};
+  if (!f || f.tur !== 'alis' || !f.stokDus || !modulAcik('stok') || !faturaliMi(f)) return r;
+  for (const k of f.kalemler) {
+    const ad = (k.ad || '').trim();
+    if ((!ad && !k.kod) || (!k.urunId && hizmetKalemi(k))) continue;
+    const birimFiyat = k.miktar ? Math.round(kalemNet(k) / k.miktar) : k.fiyat || 0;
+    const kdv = KDV_ORAN.includes(k.kdv) ? k.kdv : null;
+    let u = kalemStokKarti(k);
+    if (!u) {
+      let kod = (k.kod || '').trim();
+      if (!kod || D.urunler.some(y => kucult(y.kod) === kucult(kod))) kod = sonrakiParcaKodu();
+      u = {id: kimlik(), olusturma: Date.now(), ad: ad || kod, kod, birim: k.birim || 'adet', alis: birimFiyat, satis: 0, kdvOran: kdv ?? 20, kritik: 0,
+        marka: k.marka || '', kategori: '', muadil: '', raf: '', barkod: '', uyumlu: k.model || '', tedarikciId: f.kisiId || null, siparisMiktar: 0,
+        not: `${f.no ? f.no + ' no.lu ' : ''}alış faturasından açıldı`, depo: '', sonAlisTarih: f.tarih};
+      D.urunler.push(u); r.yeni++;
+    } else {
+      // Daha yeni tarihli bir alış varsa kartın fiyatı ezilmez
+      if (!u.sonAlisTarih || (f.tarih || '') >= u.sonAlisTarih) {
+        if (birimFiyat > 0) u.alis = birimFiyat;
+        if (kdv !== null) u.kdvOran = kdv;
+        if (f.kisiId) u.tedarikciId = f.kisiId;
+        u.sonAlisTarih = f.tarih || bugun();
+      }
+      if (!u.birim && k.birim) u.birim = k.birim;
+      if (!u.marka && k.marka) u.marka = k.marka;
+      if (!u.uyumlu && k.model) u.uyumlu = k.model;
+      if (!u.tedarikciId && f.kisiId) u.tedarikciId = f.kisiId;
+      if (k.kod && u.kod && kodNorm(k.kod) !== kodNorm(u.kod) && kodNorm(k.kod) !== kodNorm(u.barkod) && !(u.muadil || '').split(/[,;]/).some(m => kodNorm(m) === kodNorm(k.kod))) u.muadil = [u.muadil, k.kod].filter(Boolean).join(', ');
+      r.guncel++;
+    }
+    k.urunId = u.id;
+    if (!k.kod) k.kod = u.kod;
+  }
+  return r;
+}
+const alisStokBildir = r => r.yeni || r.guncel ? ` · ${[r.yeni && r.yeni + ' yeni stok kartı açıldı', r.guncel && r.guncel + ' stok kartı güncellendi'].filter(Boolean).join(', ')}` : '';
 async function eFaturaYukle() {
   const dosyalar = await new Promise(coz => { const inp = document.createElement('input'); inp.type = 'file'; inp.multiple = true; inp.accept = '.xml,.zip,.pdf,.html,application/xml,text/xml,application/zip,application/pdf'; inp.onchange = () => coz([...inp.files]); inp.click(); });
   if (!dosyalar.length) return;
@@ -5215,7 +5271,8 @@ async function eFaturaYukle() {
     if (!eFaturaDurum(s).aktar) continue;
     try { sonF = await eFaturaAktar(s); s.kaydedildi = sonF; kaydedilen++; } catch (e) { s.hata = 'Kaydedilemedi'; }
   }
-  if (kaydedilen) { kaydet(); bildir(`${kaydedilen} fatura kaydedildi`); }
+  const stokTop = () => liste.reduce((t, s) => ({yeni: t.yeni + (s.stokSonuc?.yeni || 0), guncel: t.guncel + (s.stokSonuc?.guncel || 0)}), {yeni: 0, guncel: 0});
+  if (kaydedilen) { kaydet(); bildir(`${kaydedilen} fatura kaydedildi${alisStokBildir(stokTop())}`); }
   const git1 = () => setTimeout(() => { ui.faturaFiltre = 'hepsi'; if (kaydedilen === 1) git('fatura/' + sonF.id); else { git('fatura', true); ciz(); } }, 30);
   if (kaydedilen && liste.every(s => s.kaydedildi)) return git1();
   const sec = new Set();
@@ -5245,7 +5302,7 @@ async function eFaturaYukle() {
     if (!sec.size) { kapat(); if (kaydedilen) git1(); return; }
     const l = [...sec].map(i => liste[i]); let n = 0;
     for (const s of l) { try { await eFaturaAktar(s); n++; } catch (e) { bildir(`${s.ad} kaydedilemedi`, true); } }
-    kaydet(); kapat(); bildir(`${n} fatura kaydedildi`);
+    kaydet(); kapat(); bildir(`${n} fatura kaydedildi${alisStokBildir(stokTop())}`);
     setTimeout(() => { ui.faturaFiltre = 'hepsi'; git('fatura', true); ciz(); }, 30);
   }
 }
@@ -6117,7 +6174,7 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
       ${ver ? `<label class="f-satir" id="cariSatir"><span style="flex:1">${alisF ? 'Cari hesaba alacak yaz' : 'Cari hesaba borç yaz'}</span>${anahtar('fCari', x.cariyeIsle)}</label>` : ''}
       ${stok ? `<label class="f-satir"><span style="flex:1">${alisF ? 'Stoğa ekle' : 'Stoktan düş'}</span>${anahtar('fStok', x.stokDus)}</label>` : ''}
       <label class="f-satir"><span style="flex:1">Taslak olarak sakla</span>${anahtar('fTaslak', x.durum === 'taslak')}</label>
-    </div><p class="dipnot">Taslak faturalar cariye, stoğa ve KDV hesabına yansımaz.</p>` : ''}</div></div>`,
+    </div><p class="dipnot">Taslak faturalar cariye, stoğa ve KDV hesabına yansımaz.${alisF && stok ? ' Stoğa eklenirken her kalem stok kartına işlenir: kartı yoksa açılır (parça no, ad, birim, alış fiyatı, KDV, tedarikçi faturadan), varsa alış fiyatı ve tedarikçisi güncellenir. Nakliye, işçilik gibi hizmet kalemleri stoğa alınmaz.' : ''}</p>` : ''}</div></div>`,
     {kaydet: kaydetF, kaydetAd: yeni ? 'Oluştur' : 'Kaydet', tam: true});
   const cariGoster = () => { const c = $('#cariSatir', m); if (c) c.classList.toggle('gizli', !x.kisiId); };
   cariGoster();
@@ -6303,6 +6360,9 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
     x.eBelge = efTur(u);
     const dv = {TRY: 'TL', TL: 'TL', USD: 'USD', EUR: 'EUR', GBP: 'GBP'}[u.doviz] || 'TL', belgeKur = u.kur > 1 ? u.kur : 0;
     const kl = (u.kalemler || []).map(y => ({...y, fiyat: dv !== 'TL' && belgeKur ? Math.round((y.fiyat || 0) / belgeKur) : y.fiyat || 0}));
+    // 2.25.2: parça no'su (ya da adı) stokta olan kalemler karta bağlanır
+    if (stok) for (const y of kl) { const su = !y.toplamdan && kalemStokKarti(y); if (su) { y.urunId = su.id; if (!y.kod) y.kod = su.kod; } }
+    const klSay = kl.length, stoktaSay = kl.filter(y => y.urunId).length;
     if (kl.length) x.kalemler = kl;
     if ($('#fDoviz', m)) {
       if (dv !== 'TL' && DOVIZLER.includes(dv)) { x.doviz = dv; x.kur = belgeKur || kurAl(dv) || 0; if (!x.kur) bildir(`${dv} kuru bulunamadı; kuru elle yazın`, true); }
@@ -6317,7 +6377,7 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
     kalemCiz();
     if (ekler) for (const ek of await Promise.all([eFaturaBelge(s1.pdf, 'pdf', 'application/pdf'), eFaturaBelge(s1.xml, 'xml', 'application/xml'), eFaturaBelge(s1.html, 'html', 'text/html')])) ekler.ekle(ek);
     const yonUyari = !!vknTemiz(firmaAlan('vno')) && alisF !== (eFaturaYon(u) === 'alis');
-    bildir(ayni ? `Dikkat: bu fatura zaten kayıtlı (${ayni.no}). Bilgiler forma yazıldı.` : yonUyari ? `Bilgiler yazıldı. Dikkat: bu belge ${alisF ? 'satış' : 'alış'} faturası görünüyor, kontrol edin.` : `Fatura bilgileri yazıldı (${kl.length} kalem). Kontrol edip ${yeni ? 'Oluştur' : 'Kaydet'}'e basın.`, !!(ayni || yonUyari));
+    bildir(ayni ? `Dikkat: bu fatura zaten kayıtlı (${ayni.no}). Bilgiler forma yazıldı.` : yonUyari ? `Bilgiler yazıldı. Dikkat: bu belge ${alisF ? 'satış' : 'alış'} faturası görünüyor, kontrol edin.` : `Fatura bilgileri yazıldı (${klSay} kalem${alisF && stoktaSay ? ', ' + stoktaSay + ' tanesi stokta kayıtlı' : ''}). Kontrol edip ${yeni ? 'Oluştur' : 'Kaydet'}'e basın.`, !!(ayni || yonUyari));
   };
   function kaydetF() {
     x.kalemler = x.kalemler.filter(k => k.ad.trim() || k.fiyat);
@@ -6367,10 +6427,11 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
     if (yeni) { x.id = kimlik(); x.olusturma = Date.now(); D.faturalar.push(x); }
     else D.faturalar[D.faturalar.findIndex(y => y.id === x.id)] = x;
     if (sp) { sp.siparisDurum = 'teslim'; sp.donustu = x.id; x.siparisId = sp.id; }
+    const stokR = alisF ? alisStokKartlari(x) : null;
     faturaTuret(x);
     if (ekler) ekler.kaydedildi();
     if (!x.ekler?.length) delete x.ekler;
-    kaydet(); bildir(yeni ? (teklif ? 'Teklif oluşturuldu' : alisF ? 'Alış faturası kaydedildi' : 'Fatura oluşturuldu') : 'Kaydedildi');
+    kaydet(); bildir((yeni ? (teklif ? 'Teklif oluşturuldu' : alisF ? 'Alış faturası kaydedildi' : 'Fatura oluşturuldu') : 'Kaydedildi') + (stokR ? alisStokBildir(stokR) : ''));
     setTimeout(() => git('fatura/' + x.id, !yeni), 10);
     setTimeout(() => riskUyari(x), 2600);
   }
@@ -6705,6 +6766,8 @@ function faturaEkrani(id) {
   const odenen = faturaOdenen(f), kalan = faturaKalan(f), alis = f.tur === 'alis';
   if (faturaliMi(f) && kalan > 0) b.push(`<button id="fOdeme">${ikon(alis ? 'cikis' : 'para')}${alis ? 'Ödeme yap' : 'Tahsil et'}</button>`);
   if (f.tur !== 'teklif' && f.durum === 'taslak') b.push(`<button id="fKes">${ikon('tamam')}${f.tur === 'alis' ? 'İşle' : 'Kes'}</button>`);
+  const stokBekleyen = alis && modulAcik('stok') && faturaliMi(f) ? f.kalemler.filter(k => ((k.ad || '').trim() || k.kod) && !(k.urunId && urun(k.urunId)) && !hizmetKalemi(k)).length : 0;
+  if (alis && modulAcik('stok') && faturaliMi(f) && (stokBekleyen || !f.stokDus) && f.kalemler.some(k => k.urunId ? urun(k.urunId) : !hizmetKalemi(k))) b.push(`<button id="fStokKaydet">${ikon('kutu')}Stoğa kaydet</button>`);
   if (f.tur === 'teklif' && !f.donustu && f.durum !== 'iptal') b.push(`<button id="fCevir">${ikon('donustur')}Faturala</button>`);
   b.push(`<button id="fYazdir">${ikon('yazici')}PDF</button>`);
   if (f.tur !== 'alis') b.push(`<button id="fPaylas">${ikon('mesaj')}WhatsApp</button>`);
@@ -6739,7 +6802,9 @@ function faturaEkrani(id) {
     if (s !== 'sil') return;
     f.odemeler = f.odemeler.filter(x => x !== o); yenile(); bildir('Ödeme silindi; cari ve kasa kaydı da kaldırıldı');
   });
-  if ($('#fKes')) $('#fKes').onclick = () => { f.durum = 'gonderildi'; yenile(); bildir(f.tur === 'alis' ? 'Alış faturası işlendi' : 'Fatura kesildi'); };
+  if ($('#fKes')) $('#fKes').onclick = () => { f.durum = 'gonderildi'; const r = alisStokKartlari(f); yenile(); bildir(f.tur === 'alis' ? 'Alış faturası işlendi' + alisStokBildir(r) : 'Fatura kesildi'); };
+  // 2.25.2: daha önce stoğa işlenmemiş alış faturası (ör. eski sürümde yüklenen e-Fatura) tek dokunuşla stoğa kaydedilir
+  if ($('#fStokKaydet')) $('#fStokKaydet').onclick = () => { f.stokDus = true; const r = alisStokKartlari(f); yenile(); bildir('Stoğa kaydedildi' + alisStokBildir(r)); };
   if ($('#fCevir')) $('#fCevir').onclick = () => {
     const y = {...JSON.parse(JSON.stringify(f)), id: kimlik(), tur: 'fatura', no: sonrakiNo('fatura'), tarih: bugun(), vade: '', durum: 'gonderildi', odendi: false, odemeler: [], cariyeIsle: true, stokDus: true, tekliften: f.id, olusturma: Date.now()};
     delete y.donustu;
