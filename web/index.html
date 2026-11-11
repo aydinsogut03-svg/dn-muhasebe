@@ -1942,7 +1942,7 @@ p.dipnot .i{width:14px;height:14px;vertical-align:-2px}
 
 <script>
 'use strict';
-const VERSIYON = '2.25.3';
+const VERSIYON = '2.25.4';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -3174,7 +3174,7 @@ const ALT_MENU = {
   veresiye: [['İşlemler', [['Cari kartlar', 'cariKart', 'veresiye'], ['Yeni cari', 'cariKart+', () => kisiFormu()], ['Tahsilat fişi', 'banknot', () => kisiSec(k => k && tahsilatFisiAc(k), false)]]],
     ['Raporlar', [['Cari bakiye listesi', 'terazi', 'veresiye/r-bakiye'], ['Borçlu cariler', 'kisiCikis', 'veresiye/r-borclu'], ['Alacaklı cariler', 'kisiGiris', 'veresiye/r-alacakli'],
       ['Cari hareketler', 'hareket', 'veresiye/r-hareket'], ['Tahsilat listesi', 'tablo', 'veresiye/r-tahsilat']]]],
-  stok: [['İşlemler', [['Ürün kartları', 'kutu', 'stok'], ['Yeni ürün', 'kutu+', () => urunFormu()], ['Stok sayımı', 'panoTik', () => stokSayimFormu()], ['Satın alma siparişi oluştur', 'sepet', () => siparisleriOlustur()],
+  stok: [['İşlemler', [['Ürün kartları', 'kutu', 'stok'], ['Yeni ürün', 'kutu+', () => urunFormu()], ['Alış faturasından ekle', 'faturaYukle', () => faturadanStokEkle()], ['Stok sayımı', 'panoTik', () => stokSayimFormu()], ['Satın alma siparişi oluştur', 'sepet', () => siparisleriOlustur()],
       ...('BarcodeDetector' in window ? [['Barkod okut', 'kamera', () => barkodOkut()]] : [])]],
     ['Raporlar', [['Eldeki stok listesi', 'depo', 'stok/r-eldeki'], ['Kritik stok', 'depoUyari', 'stok/r-kritik'], ['Satın alma siparişleri', 'sepet', 'stok/r-siparis'], ['Depo bazında stok', 'depo', 'stok/r-depo'],
       ['Seri no takibi', 'etiket', 'stok/r-seri'], ['Stok hareketleri', 'hareket', 'stok/r-hareket'], ['Grup bazında stok değeri', 'paralar', 'stok/r-deger']]]],
@@ -5391,12 +5391,13 @@ function kalemStokKarti(k) {
   const ad = kucult((k.ad || '').trim());
   return ad ? D.urunler.find(u => kucult(u.ad) === ad) || null : null;
 }
-function alisStokKartlari(f) {
+function alisStokKartlari(f, secili = null) {
   const r = {yeni: 0, guncel: 0};
   if (!f || f.tur !== 'alis' || !f.stokDus || !modulAcik('stok') || !faturaliMi(f)) return r;
   for (const k of f.kalemler) {
     const ad = (k.ad || '').trim();
-    if ((!ad && !k.kod) || (!k.urunId && hizmetKalemi(k))) continue;
+    // secili verilirse (Faturadan stoğa ekle ekranı) yalnız işaretlenen kalemler işlenir; hizmet kalemi de seçilebilir
+    if ((!ad && !k.kod) || (secili ? !secili.has(k) && !k.urunId : !k.urunId && hizmetKalemi(k))) continue;
     const birimFiyat = k.miktar ? Math.round(kalemNet(k) / k.miktar) : k.fiyat || 0;
     const kdv = KDV_ORAN.includes(k.kdv) ? k.kdv : null;
     let u = kalemStokKarti(k);
@@ -5426,6 +5427,51 @@ function alisStokKartlari(f) {
     if (!k.kod) k.kod = u.kod;
   }
   return r;
+}
+/* 2.25.4: Stok > Yeni ürün ve Stok menüsünden: alış faturası seçilir (ya da e-Fatura XML/PDF yüklenir), kalemleri işaretlenip stok kartı olarak eklenir */
+function faturadanStokEkle(tedarikciId = null) {
+  if (!modulAcik('stok')) return;
+  const tum = D.faturalar.filter(f => f.tur === 'alis' && f.durum !== 'iptal').sort((a, b) => (b.tarih || '').localeCompare(a.tarih || '') || (b.olusturma || 0) - (a.olusturma || 0));
+  let yalnizTed = !!(tedarikciId && tum.some(f => f.kisiId === tedarikciId));
+  const bekleyen = f => f.kalemler.filter(k => ((k.ad || '').trim() || k.kod) && !(k.urunId && urun(k.urunId)) && !hizmetKalemi(k)).length;
+  const m = modal('Alış faturasından stoğa ekle', `
+    <p class="dipnot" style="margin-top:0">Faturayı seçin, kalemleri işaretleyip stoğa ekleyin. Parça no, ad, birim, alış fiyatı, KDV, miktar ve tedarikçi faturadan gelir. Faturanız programda yoksa önce dosyasını yükleyin.</p>
+    <div class="btn-grup"><button type="button" class="btn renkli" id="fsYukle">${ikon('faturaYukle')} e-Fatura XML / PDF yükle</button><button type="button" class="btn renkli" id="fsElle">${ikon('arti')} Yeni alış faturası gir</button></div>
+    ${tedarikciId && kisi(tedarikciId) ? `<div class="grup"><label class="f-satir"><span style="flex:1">Yalnız ${esc(kisi(tedarikciId).ad)}</span>${anahtar('fsTed', yalnizTed)}</label></div>` : ''}
+    <div id="fsListe"></div>`);
+  const liste = () => {
+    const l = yalnizTed ? tum.filter(f => f.kisiId === tedarikciId) : tum;
+    $('#fsListe', m).innerHTML = l.length ? `<div class="grup tek-sutun">${l.slice(0, 200).map(f => { const n = bekleyen(f), top = f.kalemler.some(k => k.toplamdan);
+      return `<button type="button" class="hucre kareli" data-fs="${f.id}">${kare('kutu', n ? 'turuncu' : 'gri')}<div class="ic"><b>${esc(faturaMusteri(f))}</b><small>${esc([f.no, tarihYaz(f.tarih, true), f.durum === 'taslak' ? 'taslak' : ''].filter(Boolean).join(' · '))}</small><small class="${top || n ? 'gider' : 'soluk'}">${top ? 'Kalemler okunamamış' : n ? n + ' kalem stokta yok' : 'Kalemler stokta'}</small></div><span class="tutar">${para(faturaHesap(f).toplam)}</span>${CHEV}</button>`; }).join('')}</div>`
+      : `<p class="soluk" style="text-align:center">${yalnizTed ? 'Bu tedarikçinin alış faturası yok.' : 'Henüz alış faturası yok.'} Yukarıdan dosya yükleyin ya da yeni alış faturası girin.</p>`;
+    $$('[data-fs]', m).forEach(b => b.onclick = () => { const f = D.faturalar.find(x => x.id === b.dataset.fs); kapat(); setTimeout(() => faturaKalemStok(f), 320); });
+  };
+  liste();
+  if ($('#fsTed', m)) $('#fsTed', m).onchange = e => { yalnizTed = e.target.checked; liste(); };
+  $('#fsYukle', m).onclick = () => { kapat(); setTimeout(eFaturaYukle, 320); };
+  $('#fsElle', m).onclick = () => { kapat(); setTimeout(() => faturaFormu(null, 'alis', tedarikciId || null), 320); };
+}
+function faturaKalemStok(f) {
+  if (!f) return;
+  const top = f.kalemler.some(k => k.toplamdan);
+  const kl = f.kalemler.filter(k => (k.ad || '').trim() || k.kod);
+  const m = modal('Stoğa ekle', `
+    <p class="dipnot" style="margin-top:0"><b>${esc(faturaMusteri(f))}</b> · ${esc(f.no || '')} · ${esc(tarihYaz(f.tarih, true))}</p>
+    ${top ? `<p class="dipnot gider">Bu faturanın kalem tablosu PDF'ten okunamamış, kalemler toplam tutardan yazılmış. Parçaları stoğa almak için faturayı düzenleyip kalemleri (parça no, ad, miktar, fiyat) yazın.</p><div class="btn-grup"><button type="button" class="btn renkli" id="fkDuzenle">${ikon('kalem')} Faturayı düzenle</button></div>` : ''}
+    ${f.durum === 'taslak' ? '<p class="dipnot">Fatura taslak; stoğa eklenince işlenmiş olur (cari ve KDV hesabına da yansır).</p>' : ''}
+    <div class="grup tek-sutun">${kl.map((k, i) => { const su = k.urunId && urun(k.urunId), var1 = !su && !k.toplamdan && kalemStokKarti(k);
+      return `<label class="hucre ef-satir"><input type="checkbox" data-fk="${i}" ${su ? 'checked disabled' : !k.toplamdan && !hizmetKalemi(k) ? 'checked' : ''}><div class="ic"><b>${esc(k.ad || k.kod)}</b><small>${esc([k.kod && 'Parça no ' + k.kod, sayiFmt(k.miktar) + ' ' + (k.birim || ''), para(k.miktar ? Math.round(kalemNet(k) / k.miktar) : k.fiyat || 0), '%' + (k.kdv ?? 20) + ' KDV', su ? 'stokta (' + (su.kod || su.ad) + ')' : var1 ? 'stoktaki karta eklenecek: ' + (var1.kod || var1.ad) : hizmetKalemi(k) ? 'hizmet kalemi' : 'yeni kart açılacak'].filter(Boolean).join(' · '))}</small></div></label>`; }).join('')}</div>`,
+    {kaydetAd: 'Stoğa ekle', kaydet: () => {
+      const sec = new Set($$('[data-fk]', m).filter(c => c.checked && !c.disabled).map(c => kl[+c.dataset.fk]));
+      if (!sec.size && f.stokDus && faturaliMi(f)) { bildir('Stoğa eklenecek kalem seçin', true); return false; }
+      if (f.durum === 'taslak') f.durum = 'gonderildi';
+      f.stokDus = true;
+      const r = alisStokKartlari(f, sec);
+      faturaTuret(f); kaydet();
+      bildir('Stoğa eklendi' + alisStokBildir(r));
+      setTimeout(() => { const id = f.kalemler.find(k => sec.has(k))?.urunId; if (sec.size === 1 && id) git('stok/' + id); else { git('stok', true); ciz(); } }, 10);
+    }});
+  if ($('#fkDuzenle', m)) $('#fkDuzenle', m).onclick = () => { kapat(); setTimeout(() => faturaFormu(f), 320); };
 }
 const alisStokBildir = r => r.yeni || r.guncel ? ` · ${[r.yeni && r.yeni + ' yeni stok kartı açıldı', r.guncel && r.guncel + ' stok kartı güncellendi'].filter(Boolean).join(', ')}` : '';
 async function eFaturaYukle() {
@@ -6028,6 +6074,7 @@ function urunFormu(u, on) {
   if (yeni && !x.kod) x.kod = sonrakiParcaKodu();
   const ver = modulAcik('veresiye');
   const m = modal(yeni ? 'Yeni ürün' : 'Ürünü düzenle', `
+    ${yeni && modulAcik('fatura') ? `<div class="grup"><button type="button" class="hucre kareli" id="uFaturadan">${kare('faturaYukle', 'turuncu')}<div class="ic"><b>Alış faturasından ekle</b><small>Faturadaki parçalar parça no, fiyat, KDV, miktar ve tedarikçiyle stoğa girer</small></div>${CHEV}</button></div>` : ''}
     <div class="grup">
       <label class="f-satir sol"><input type="text" id="uAd" value="${esc(x.ad)}" placeholder="Ürün / parça adı" autocomplete="off"></label>
       <label class="f-satir sol"><input type="text" id="uKod" value="${esc(x.kod)}" placeholder="Parça no (boşsa program verir)"></label>
@@ -6079,6 +6126,7 @@ function urunFormu(u, on) {
       setTimeout(() => { if (yeni) git('stok/' + kayit.id); else ciz(); }, 10);
     }, kaydetAd: yeni ? 'Ekle' : 'Kaydet'});
   if (yeni) setTimeout(() => $('#uAd', m).focus(), 320);
+  if ($('#uFaturadan', m)) $('#uFaturadan', m).onclick = () => { const t = x.tedarikciId; kapat(); setTimeout(() => faturadanStokEkle(t), 320); };
   if ($('#uTedSec', m)) $('#uTedSec', m).onclick = () => kisiSec(k => { x.tedarikciId = k ? k.id : null; $('#uTedAd', m).textContent = k ? k.ad : 'Seç'; });
   if ($('#uBarkodOku', m)) $('#uBarkodOku', m).onclick = () => barkodOkut((u2, kod) => { $('#uBarkod', m).value = kod; });
   if (!yeni) $('#uSil', m).onclick = async () => {
