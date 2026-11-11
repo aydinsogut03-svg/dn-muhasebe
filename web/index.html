@@ -1296,6 +1296,20 @@ button.bag{background:none;border:0;padding:0;color:var(--mavi);font:inherit;fon
 .kilit-uyari{display:flex;gap:10px;align-items:flex-start;background:rgba(240,140,0,.1);border:1px solid rgba(240,140,0,.35);border-radius:var(--r,6px);padding:10px 12px;margin:0 0 14px}
 .kilit-uyari .i{width:20px;height:20px;flex:none;color:var(--turuncu);margin-top:1px}
 .kilit-uyari b{display:block;font-size:14.5px}.kilit-uyari small{color:var(--ikincil);font-size:13px}
+/* 2.25.3: yarım kalan formlar */
+.taslak-uyari{display:flex;gap:10px;align-items:center;background:rgba(0,122,255,.08);border:1px solid rgba(0,122,255,.3);border-radius:var(--r,6px);padding:10px 12px;margin:0 0 14px}
+.taslak-uyari>.i{width:20px;height:20px;flex:none;color:var(--mavi,#007aff)}
+.taslak-uyari>div{flex:1;min-width:0}.taslak-uyari b{display:block;font-size:14.5px}.taslak-uyari small{display:block;color:var(--ikincil);font-size:13px}
+.taslak-uyari .bag{display:inline-block;margin-top:4px;font-size:13.5px;padding:2px 0}
+.yarim-formlar{background:rgba(240,140,0,.08);border:1px solid rgba(240,140,0,.4);border-radius:var(--r,6px);padding:8px 10px;margin:0 0 12px}
+.yf-bas{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px}.yf-bas .i{width:18px;height:18px;color:var(--turuncu)}
+.yf-bas b{font-size:14px}.yf-bas small{color:var(--ikincil);font-size:12.5px}
+.yf-satir{display:flex;gap:8px;align-items:center;border-top:1px solid rgba(240,140,0,.25);padding:6px 0 2px}
+.yf-ac{flex:1;min-width:0;text-align:left;background:none;border:0;padding:4px 0;color:inherit;font:inherit;cursor:pointer}
+.yf-ac b{display:block;font-size:14px}.yf-ac small{display:block;color:var(--ikincil);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.yf-satir .btn{flex:none;width:auto;padding:7px 14px;margin:0;font-size:13.5px}
+.yf-sil{flex:none;background:none;border:0;padding:8px;color:var(--ikincil);cursor:pointer}.yf-sil .i{width:18px;height:18px}
+#icerik.yanli>.yarim-formlar{grid-column:1/-1}
 .modal.salt-okunur .modal-govde input,.modal.salt-okunur .modal-govde select,.modal.salt-okunur .modal-govde textarea{opacity:.75}
 .kod-alan{width:100%;box-sizing:border-box;border:0;background:transparent;color:var(--yazi);font:12.5px/1.45 ui-monospace,Menlo,Consolas,monospace;padding:12px;resize:vertical;word-break:break-all}
 select.secim{height:38px;border:1px solid var(--kenar);border-radius:var(--r,6px);background:var(--kart);color:var(--yazi);padding:0 10px;font:inherit;font-size:14px}
@@ -1928,7 +1942,7 @@ p.dipnot .i{width:14px;height:14px;vertical-align:-2px}
 
 <script>
 'use strict';
-const VERSIYON = '2.25.2';
+const VERSIYON = '2.25.3';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
@@ -2645,6 +2659,7 @@ function perdeAc(icHtml, sinif = '') {
 function kapat() {
   const el = yigin.pop();
   if (!el) return false;
+  { const m = $('.modal', el); if (m && m._af) formTaslakKaydet(m); }
   el.classList.remove('acik');
   if (el._kapaninca) el._kapaninca();
   setTimeout(() => el.remove(), 300);
@@ -2660,8 +2675,14 @@ function modal(baslik, govde, {kaydet: kaydetFn, kaydetAd = 'Kaydet', tam = fals
   const m = $('.modal', el);
   // 2.10.1: PC'de giriş ekranları ERP formu gibi: tam sayfa, sık, çizgili, her alan tek bakışta
   if (masaustuMu()) m.classList.add('erp-form');
-  $('[data-sol]', m).onclick = () => kapat();
-  if (kaydetFn) $('[data-sag]', m).onclick = () => { if (kaydetFn(m) !== false) kapat(); };
+  // 2.25.3: kayıt formları yarım kalırsa taslak olarak saklanır (taslakliForm)
+  const af = acilanForm;
+  if (af && !af.m && kaydetFn && !saltOkunur()) { af.m = m; m._af = af; m._baslik = baslik; }
+  $('[data-sol]', m).onclick = async () => {
+    if (formKirli(m)) { if (!await onay('Kaydedilmemiş bilgiler var', 'Formu kapatırsanız girdiğiniz bilgiler silinir.', 'Kaydetmeden kapat')) return; }
+    formTaslakSil(m); kapat();
+  };
+  if (kaydetFn) $('[data-sag]', m).onclick = () => { if (kaydetFn(m) !== false) { formTaslakSil(m); kapat(); } };
   if (kaydetFn && saltOkunur()) { $('.modal-govde', m).insertAdjacentHTML('afterbegin', `<div class="kilit-uyari">${ikon('kilit')}<div><b>Yalnızca görüntüleme</b><small>${ortakRol() === 'izleyici' ? 'Yetkiniz İzleyici' : 'Bu modülde yalnızca görüntüleme yetkiniz var'}; değişiklik yapamazsınız.</small></div></div>`); formuKilitle(m); }
   anahtarBagla(m);
   yuzenEtiket(m); ciftDuzen(m);
@@ -2715,6 +2736,152 @@ function anahtarBagla(kok) {
   });
 }
 
+/* ================= 2.25.3: Yarım kalan formlar =================
+   Form açıkken başka menüye geçilir, uygulama kapanır ya da arka plana alınırsa girilen bilgiler bu cihazda taslak olarak saklanır.
+   Aynı form yeniden açılınca bilgiler kaldığı yerden geri gelir; ekranların üstünde "Yarım kalan form" şeridi çıkar.
+   Taslak yalnız Kaydet/Oluştur ile ya da "Kaydetmeden kapat" onayıyla silinir. Formun iç durumu (kalemler, parçalar…) m._durum ile saklanır. */
+const FORM_ACICI = {};
+let acilanForm = null;
+const formTaslakAnahtar = () => 'powerserv.formTaslak.' + (H && H.aktif);
+function formTaslaklari() { try { return JSON.parse(localStorage.getItem(formTaslakAnahtar())) || {}; } catch (e) { return {}; } }
+function formTaslakYaz(l) {
+  // Sığmazsa en eski taslaklar atılır
+  const k = Object.keys(l).sort((a, b) => (l[a].zaman || 0) - (l[b].zaman || 0));
+  while (k.length > 20) delete l[k.shift()];
+  for (;;) {
+    try { localStorage.setItem(formTaslakAnahtar(), JSON.stringify(l)); return true; }
+    catch (e) { if (k.length < 2) return false; delete l[k.shift()]; }
+  }
+}
+// Kayıt düzenleniyorsa anahtar kaydın kimliği, yeni kayıtsa formun türü (teklif, fatura…)
+function formAnahtar(ad, args) {
+  const r = args.find(a => a && typeof a === 'object' && a.id), s = args.find(a => typeof a === 'string');
+  return ad + '|' + (r ? 'id:' + r.id : 'yeni' + (s ? ':' + s : ''));
+}
+function taslakliForm(ad, fn) {
+  const sar = function (...args) {
+    const af = {ad, anahtar: formAnahtar(ad, args), args, m: null};
+    const onceki = acilanForm; acilanForm = af;
+    let r;
+    try { r = fn.apply(this, args); } finally { acilanForm = onceki; }
+    if (af.m) formTaslakBasla(af.m, af);
+    return r;
+  };
+  FORM_ACICI[ad] = sar;
+  return sar;
+}
+function formAnlik(m) {
+  const a = {};
+  $$('input[id], select[id], textarea[id]', m).forEach(e => {
+    if (e.type === 'file' || e.type === 'password' || e.type === 'search' || e.closest('.kilit-uyari, .taslak-uyari')) return;
+    a[e.id] = e.type === 'checkbox' || e.type === 'radio' ? e.checked : e.value;
+  });
+  let d = null;
+  if (m._durum) { d = {}; for (const k of m._durumAlan || Object.keys(m._durum)) if (m._durum[k] !== undefined) d[k] = m._durum[k]; d = JSON.parse(JSON.stringify(d)); }
+  return {a, d};
+}
+const formKirli = m => !!m._af && !m._bitti && JSON.stringify(formAnlik(m)) !== m._ilk;
+function formOzet(m) {
+  if (m._ozet) try { return m._ozet(); } catch (e) {}
+  return $$('input[type=text][id], textarea[id]', m).map(e => e.value.trim()).filter(Boolean).slice(0, 2).join(' · ').slice(0, 80);
+}
+function formTaslakKaydet(m) {
+  const af = m && m._af;
+  if (!af || m._bitti || !H) return;
+  const l = formTaslaklari();
+  if (!formKirli(m)) { if (l[af.anahtar] && !m._geriYuklendi) { delete l[af.anahtar]; formTaslakYaz(l); } return; }
+  // Kayıtlar kimlikle saklanır (yeniden açılınca güncel hâli alınır); büyük ek dosyalar taslağa yazılmaz
+  const args = af.args.map(x => typeof x === 'function' ? null : x && typeof x === 'object' && x.id && formKayitBul(x.id) ? {__kayit: x.id} : x);
+  let argJ;
+  try { argJ = JSON.parse(JSON.stringify(args, (k, v) => typeof v === 'string' && v.length > 20000 ? undefined : v)); } catch (e) { argJ = []; }
+  l[af.anahtar] = {ad: af.ad, args: argJ, baslik: m._baslik || '', ozet: formOzet(m), zaman: Date.now(), anlik: formAnlik(m)};
+  formTaslakYaz(l);
+}
+function formTaslakSil(m) {
+  if (!m || !m._af) return;
+  m._bitti = true;
+  const l = formTaslaklari();
+  if (l[m._af.anahtar]) { delete l[m._af.anahtar]; formTaslakYaz(l); }
+}
+function formKayitBul(id) {
+  if (!D) return null;
+  for (const v of Object.values(D)) if (Array.isArray(v)) { const r = v.find(y => y && y.id === id); if (r) return r; }
+  return null;
+}
+// Ekran değişmeden (menüye geçiş, giriş ekranı) önce açık formların hepsi saklanır
+function formTaslakHepsiniKaydet() { for (const el of yigin) { const m = $('.modal', el); if (m && m._af) formTaslakKaydet(m); } }
+function formTaslakBasla(m, af) {
+  m._ilk = JSON.stringify(formAnlik(m));
+  const t = formTaslaklari()[af.anahtar];
+  if (t && t.anlik) formTaslakUygula(m, t);
+  let z = 0;
+  const yaz = () => { clearTimeout(z); z = setTimeout(() => formTaslakKaydet(m), 400); };
+  m.addEventListener('input', yaz, true); m.addEventListener('change', yaz, true); m.addEventListener('click', yaz, true);
+}
+function formTaslakUygula(m, t) {
+  const {a = {}, d} = t.anlik;
+  if (d && m._durum) Object.assign(m._durum, JSON.parse(JSON.stringify(d)));
+  for (const [id, v] of Object.entries(a)) {
+    const e = m.querySelector('#' + CSS.escape(id));
+    if (!e || e.type === 'file') continue;
+    if (e.type === 'checkbox' || e.type === 'radio') { if (e.checked === !!v) continue; e.checked = !!v; e.dispatchEvent(new Event('change', {bubbles: true})); }
+    else {
+      if (e.value === v) continue;
+      e.value = v;
+      // İç durumu olan formlarda alanların olayları tetiklenmez (fiyatlar yeniden çevrilmesin); diğerlerinde görünürlük güncellensin
+      if (!m._durum) e.dispatchEvent(new Event(e.tagName === 'SELECT' ? 'change' : 'input', {bubbles: true}));
+    }
+  }
+  if (d && m._durum && m._yenidenCiz) m._yenidenCiz();
+  m._geriYuklendi = true;
+  const g = $('.modal-govde', m);
+  if (!g) return;
+  g.insertAdjacentHTML('afterbegin', `<div class="taslak-uyari">${ikon('saat')}<div><b>Yarım kalan bilgiler geri yüklendi</b><small>${esc(zamanEtiket(t.zaman))} kaldığınız yerden devam ediyorsunuz.</small><button type="button" class="bag" data-bastan>Baştan başla (boş form)</button></div></div>`);
+  $('[data-bastan]', g).onclick = async () => {
+    if (!await onay('Yarım kalan bilgiler silinsin mi?', 'Form boş olarak yeniden açılır.', 'Baştan başla')) return;
+    const af = m._af; formTaslakSil(m); kapat();
+    setTimeout(() => FORM_ACICI[af.ad] && FORM_ACICI[af.ad](...af.args), 320);
+  };
+}
+function zamanEtiket(z) {
+  const t = new Date(z || Date.now()), s = `${iki(t.getHours())}:${iki(t.getMinutes())}`;
+  return tarihStr(t) === bugun() ? 'Bugün ' + s : `${iki(t.getDate())}.${iki(t.getMonth() + 1)}.${t.getFullYear()} ${s}`;
+}
+// Yarım kalan formu açar; düzenlenen kayıt silinmişse taslak atılır
+function formTaslakAc(anahtar) {
+  const l = formTaslaklari(), t = l[anahtar], ac = t && FORM_ACICI[t.ad];
+  if (!ac) { delete l[anahtar]; formTaslakYaz(l); return ciz(); }
+  const args = (t.args || []).map(x => x && typeof x === 'object' && x.__kayit ? formKayitBul(x.__kayit) || {__yok: true} : x);
+  if (args.some(x => x && x.__yok)) { delete l[anahtar]; formTaslakYaz(l); bildir('Bu formun kaydı silinmiş; yarım kalan bilgiler atıldı', true); return ciz(); }
+  ac(...args);
+}
+// Ekranların üstünde yarım kalan formlar şeridi
+function yarimFormSeridi() {
+  const ic = $('#icerik');
+  if (!ic || !D || !D.profil || $('#yarimFormlar')) return;
+  const l = formTaslaklari(), k = Object.keys(l).filter(a => FORM_ACICI[l[a].ad]).sort((a, b) => l[b].zaman - l[a].zaman);
+  if (!k.length) return;
+  const h = `<div class="yarim-formlar" id="yarimFormlar"><div class="yf-bas">${ikon('saat')}<b>Yarım kalan ${k.length > 1 ? k.length + ' form' : 'form'}</b><small>Kaydedilmedi; bu cihazda saklanıyor</small></div>
+    ${k.map(a => `<div class="yf-satir" data-yf="${esc(a)}"><button type="button" class="yf-ac" data-yfac><b>${esc(l[a].baslik || 'Form')}</b><small>${esc([l[a].ozet, zamanEtiket(l[a].zaman)].filter(Boolean).join(' · '))}</small></button><button type="button" class="btn renkli" data-yfac>Devam et</button><button type="button" class="yf-sil" data-yfsil title="Yarım kalan bilgileri sil" aria-label="Sil">${ikon('kapat')}</button></div>`).join('')}</div>`;
+  const p = $('#pencereler', ic);
+  if (p) p.insertAdjacentHTML('afterend', h); else ic.insertAdjacentHTML('afterbegin', h);
+  $$('#yarimFormlar [data-yf]').forEach(s => {
+    const a = s.dataset.yf;
+    $$('[data-yfac]', s).forEach(b => b.onclick = () => formTaslakAc(a));
+    $('[data-yfsil]', s).onclick = async () => {
+      if (!await onay('Yarım kalan bilgiler silinsin mi?', 'Bu formda kaydedilmemiş bilgiler kalıcı olarak silinir.', 'Sil')) return;
+      const l2 = formTaslaklari(); delete l2[a]; formTaslakYaz(l2); $('#yarimFormlar')?.remove(); yarimFormSeridi();
+    };
+  });
+}
+// Uygulama arka plana alınırken ya da kapanırken açık formlar hemen saklanır
+window.addEventListener('pagehide', formTaslakHepsiniKaydet);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') formTaslakHepsiniKaydet(); });
+
+// Yarım kalınca taslağı saklanan kayıt formları
+for (const ad of ['faturaFormu', 'servisFormu', 'kisiFormu', 'urunFormu', 'islemFormu', 'hareketFormu', 'stokHareketFormu', 'odemeFormu', 'finansHesapFormu', 'virmanFormu', 'ekipmanFormu', 'personelFormu', 'izinFormu', 'zimmetFormu', 'personelOdemeFormu', 'ajandaFormu', 'butceFormu', 'hedefFormu'])
+  if (typeof window[ad] === 'function') window[ad] = taslakliForm(ad, window[ad]);
+
 /* ================= Yönlendirme ================= */
 const rota = () => location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
 function git(yol, degistir) {
@@ -2729,6 +2896,7 @@ const DETAYLI = ['banka', 'servis', 'veresiye', 'stok', 'fatura', 'personel'];
 window.geriTusu = function () {
   const ke = $('#kilitEkran');
   if (ke) { if (kilitli) return false; $('[data-x=iptal]', ke).click(); return true; }
+  { const ust = yigin[yigin.length - 1], um = ust && $('.modal', ust); if (um && um._af && !um._bitti) { $('[data-sol]', um).click(); return true; } }
   if (kapat() || cekmeceKapat()) return true;
   const [s = 'panel', p1] = rota();
   if (!D.profil) return false;
@@ -2940,8 +3108,9 @@ function ayBagla(alan, yeniden) {
 
 let sonRota = '';
 /* 2.10: her çizimden sonra masaüstünde üstteki pencere sekmeleri yenilenir */
-function ciz() { if (!D) return; ciz0(); erpSonrasi(); }
+function ciz() { if (!D) return; ciz0(); erpSonrasi(); if (!yigin.length) yarimFormSeridi(); }
 function ciz0() {
+  formTaslakHepsiniKaydet();
   while (yigin.length) yigin.pop().remove();
   if (window.ucKapat && $('#ucMenu')) ucKapat();
   if (ortakBagli() && !ortakOturum()) girisEkrani();
@@ -6263,6 +6432,15 @@ function faturaFormu(f, tur = 'fatura', kisiId = null, ilkKalemler = null, ilkEk
     toplamCiz();
   };
   kalemCiz();
+  // 2.25.3: yarım kalan teklif/fatura taslağı için iç durum
+  m._durum = x; m._durumAlan = ['kisiId', 'musteriAd', 'kalemler', 'doviz', 'kur', 'tevkifat', 'ettn', 'eBelge', 'belgeToplam', 'belgeDoviz'];
+  m._ozet = () => { const n = x.kalemler.filter(k => !kalemBos(k)).length, ad = x.kisiId ? kisi(x.kisiId)?.ad : $('#mMusteri', m).value.trim(); return [ad, n ? n + ' kalem · ' + dPara(x, faturaHesap(x).toplam) : ''].filter(Boolean).join(' · '); };
+  m._yenidenCiz = () => {
+    if ($('#mAd', m)) $('#mAd', m).textContent = x.kisiId ? kisi(x.kisiId)?.ad || '' : alisF ? 'Kayıtlı cari seç' : 'Kayıtlı müşteri seç';
+    $('#mSerbest', m).classList.toggle('gizli', !!x.kisiId);
+    if ($('#fDoviz', m)) { $('#fDoviz', m).value = fDoviz(x); $('#fKurSatir', m).classList.toggle('gizli', fDoviz(x) === 'TL'); }
+    cariGoster(); sartEnGoster(); kalemCiz();
+  };
   if (ilkEk) x.ekler = [ilkEk];
   const ekler = teklif ? null : ekBagla(m, x, ilkEk ? [ilkEk.id] : []);
   if ($('#fTevkif', m)) $('#fTevkif', m).onchange = e => { x.tevkifat = +e.target.value; if (!x.tevkifat) delete x.tevkifat; toplamCiz(); };
@@ -8643,6 +8821,18 @@ function servisFormu(s, on = {}) {
     });
   };
   parcaCiz(); iscilikCiz();
+  // 2.25.3: yarım kalan servis formu taslağı için iç durum
+  m._durum = x; m._durumAlan = ['kisiId', 'ekipmanId', 'parcalar', 'iscilik', 'turler', 'testler'];
+  m._ozet = () => [x.kisiId ? kisi(x.kisiId)?.ad : $('#sMusteri', m).value.trim(), $('#sTekne', m).value.trim()].filter(Boolean).join(' · ');
+  m._yenidenCiz = () => {
+    if ($('#sMAd', m)) $('#sMAd', m).textContent = x.kisiId ? kisi(x.kisiId)?.ad || '' : 'Kayıtlı müşteri seç';
+    if ($('#sSerbest', m)) $('#sSerbest', m).classList.toggle('gizli', !!x.kisiId);
+    const e = ekipman(x.ekipmanId);
+    if (e) { $('#sEAd', m).textContent = ekipmanAd(e) || e.tekne || 'Makine'; $('#sEAlt', m).textContent = [e.seriNo && 'SN ' + e.seriNo, e.motorNo && 'Motor ' + e.motorNo].filter(Boolean).join(' · '); }
+    $$('[data-tur]', m).forEach(b => b.classList.toggle('secili', (x.turler || []).includes(b.dataset.tur)));
+    $$('[data-test]', m).forEach(b => b.classList.toggle('secili', (x.testler || []).includes(b.dataset.test)));
+    parcaCiz(); iscilikCiz();
+  };
   servisFotoAlani($('#sFotolar', m), x, () => {}, saltOkunur());
   ceviriBagla(m);
   $('#sParcaEkle', m).onclick = () => { x.parcalar.push({ad: '', parcaNo: '', birim: 'adet', adet: 1, durum: 'yeni'}); parcaCiz(); $$('[data-p] input[data-a=ad]', m).pop().focus(); };
@@ -12895,6 +13085,7 @@ function girisEkrani(neden) {
   const o = ortak();
   if (!o || $('#girisEkran')) return;
   cekmeceKapat();
+  formTaslakHepsiniKaydet();
   while (yigin.length) yigin.pop().remove();
   const el = document.createElement('div'); el.id = 'girisEkran';
   el.innerHTML = `<div class="giris-kutu">
