@@ -44,6 +44,8 @@ public class MainActivity extends Activity {
     private static final int DOSYA_SEC = 1;
     private static final int YEDEK_SEC = 2;
     private static final int BILDIRIM_IZNI = 3;
+    /** Titan Mail Android uygulamasının paket adı (Google Play: email.titan.app) */
+    private static final String TITAN = "email.titan.app";
 
     private WebView web;
     private ValueCallback<Uri[]> dosyaGeriDonus;
@@ -588,6 +590,76 @@ public class MainActivity extends Activity {
             }
         }
 
+        /** 2.25.6: teklifi e-postayla gönderir. Ekleri (PDF, isteğe bağlı Excel) uygulamanın geçici klasörüne yazar ve
+         *  alıcısı, konusu ve mesajı dolu e-posta taslağını Titan Mail'de açar; Titan yoksa telefondaki posta uygulamalarından biri seçilir.
+         *  Gönder düğmesine kullanıcı posta uygulamasında basar; şifre ya da hesap bilgisi bu uygulamaya hiç girmez.
+         *  json: {kime:[], bilgi:[], konu, metin, ekler:[{ad, tur, b64}]}. "titan", "diger" ya da hata için "" döner. */
+        @JavascriptInterface
+        public String epostaTaslak(String json) {
+            try {
+                JSONObject j = new JSONObject(json);
+                org.json.JSONArray ekler = j.optJSONArray("ekler");
+                GeciciDosya.temizle(MainActivity.this, 0);
+                String klasorAd = GeciciDosya.EPOSTA_ON + Long.toString(System.currentTimeMillis(), 36) + Integer.toString(new java.security.SecureRandom().nextInt(1 << 30), 36);
+                java.io.File k = new java.io.File(GeciciDosya.klasor(MainActivity.this), klasorAd);
+                if (!k.mkdirs()) return "";
+                final java.util.ArrayList<Uri> uriler = new java.util.ArrayList<>();
+                long toplam = 0;
+                for (int i = 0; ekler != null && i < ekler.length() && i < 5; i++) {
+                    JSONObject e = ekler.getJSONObject(i);
+                    String ad = e.optString("ad", "").replaceAll("[\\\\/:*?\"<>|\\x00-\\x1f]", "_").trim();
+                    if (ad.isEmpty() || ad.startsWith(".")) ad = "ek-" + (i + 1) + ".pdf";
+                    byte[] veri = android.util.Base64.decode(e.optString("b64", ""), android.util.Base64.DEFAULT);
+                    toplam += veri.length;
+                    if (toplam > 25L * 1024 * 1024) return "";
+                    try (java.io.FileOutputStream o = new java.io.FileOutputStream(new java.io.File(k, ad))) { o.write(veri); }
+                    uriler.add(new Uri.Builder().scheme("content").authority(GeciciDosya.YETKI).appendPath(klasorAd).appendPath(ad).build());
+                }
+                final String[] kime = diziOku(j.optJSONArray("kime")), bilgi = diziOku(j.optJSONArray("bilgi"));
+                final String konu = j.optString("konu", ""), metin = j.optString("metin", "");
+                final String[] sonuc = {""};
+                final java.util.concurrent.CountDownLatch bitti = new java.util.concurrent.CountDownLatch(1);
+                runOnUiThread(() -> {
+                    try {
+                        Intent p = new Intent(uriler.size() > 1 ? Intent.ACTION_SEND_MULTIPLE : Intent.ACTION_SEND);
+                        p.setType(uriler.size() == 1 ? "application/pdf" : uriler.isEmpty() ? "text/plain" : "*/*");
+                        if (kime.length > 0) p.putExtra(Intent.EXTRA_EMAIL, kime);
+                        if (bilgi.length > 0) p.putExtra(Intent.EXTRA_CC, bilgi);
+                        p.putExtra(Intent.EXTRA_SUBJECT, konu);
+                        p.putExtra(Intent.EXTRA_TEXT, metin);
+                        if (uriler.size() == 1) p.putExtra(Intent.EXTRA_STREAM, uriler.get(0));
+                        else if (uriler.size() > 1) p.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uriler);
+                        if (!uriler.isEmpty()) {
+                            ClipData c = ClipData.newRawUri("ek", uriler.get(0));
+                            for (int i = 1; i < uriler.size(); i++) c.addItem(new ClipData.Item(uriler.get(i)));
+                            p.setClipData(c);
+                            p.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        }
+                        // Önce Titan Mail (email.titan.app); yüklü değilse ya da bu tür taslağı açmıyorsa yalnız posta uygulamaları listelenir.
+                        Intent titan = new Intent(p).setPackage(TITAN);
+                        if (titan.resolveActivity(getPackageManager()) != null) {
+                            try { startActivity(titan); sonuc[0] = "titan"; return; } catch (Exception e) { /* aşağıdakine geç */ }
+                        }
+                        p.setSelector(new Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:")));
+                        try { startActivity(p); sonuc[0] = "diger"; }
+                        catch (Exception e) {
+                            p.setSelector(null);
+                            startActivity(Intent.createChooser(p, konu));
+                            sonuc[0] = "diger";
+                        }
+                    } catch (Exception e) {
+                        Toast.makeText(MainActivity.this, "E-posta uygulaması bulunamadı", Toast.LENGTH_LONG).show();
+                    } finally {
+                        bitti.countDown();
+                    }
+                });
+                bitti.await(5, java.util.concurrent.TimeUnit.SECONDS);
+                return sonuc[0];
+            } catch (Exception e) {
+                return "";
+            }
+        }
+
         /** Dosyayı İndirilenler/PowerServ+ klasörüne yazar; başarılıysa konumu, değilse boş metin döner. */
         @JavascriptInterface
         public String dosyaKaydet(String ad, String icerik, String tur) {
@@ -603,6 +675,13 @@ public class MainActivity extends Activity {
             }
             return indirilenlereYaz(ad, icerik, tur) != null ? "İndirilenler/PowerServ+" : "";
         }
+    }
+
+    private static String[] diziOku(org.json.JSONArray a) {
+        if (a == null) return new String[0];
+        java.util.ArrayList<String> l = new java.util.ArrayList<>();
+        for (int i = 0; i < a.length() && i < 50; i++) { String s = a.optString(i, "").trim(); if (!s.isEmpty()) l.add(s); }
+        return l.toArray(new String[0]);
     }
 
     /** Android 10+ : yedek dosyasını adına göre bulur (yoksa oluşturur) ve içeriğini baştan yazar. */

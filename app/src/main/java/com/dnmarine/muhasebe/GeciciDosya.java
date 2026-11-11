@@ -22,6 +22,9 @@ import java.util.Locale;
  */
 public class GeciciDosya extends ContentProvider {
     static final String YETKI = "com.dnmarine.muhasebe.gecici";
+    /** 2.25.6: e-posta ekleri bu önekli klasörde durur. Posta uygulaması eki gönderirken okuyabilsin diye bir gün tutulur. */
+    static final String EPOSTA_ON = "e-";
+    private static final long EPOSTA_SURE = 24L * 60 * 60 * 1000;
 
     static File klasor(Context c) {
         File k = new File(c.getCacheDir(), "evrak");
@@ -34,7 +37,7 @@ public class GeciciDosya extends ContentProvider {
         File[] l = klasor(c).listFiles();
         if (l == null) return;
         long simdi = System.currentTimeMillis();
-        for (File d : l) if (simdi - d.lastModified() >= yasMs) sil(d);
+        for (File d : l) if (simdi - d.lastModified() >= (d.getName().startsWith(EPOSTA_ON) ? Math.max(yasMs, EPOSTA_SURE) : yasMs)) sil(d);
     }
 
     static void sil(File f) {
@@ -73,6 +76,7 @@ public class GeciciDosya extends ContentProvider {
         n = n == null ? "" : n.toLowerCase(Locale.ROOT);
         if (n.endsWith(".pdf")) return "application/pdf";
         if (n.endsWith(".jpg") || n.endsWith(".jpeg")) return "image/jpeg";
+        if (n.endsWith(".xlsx")) return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
         return "application/octet-stream";
     }
 
