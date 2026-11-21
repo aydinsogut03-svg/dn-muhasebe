@@ -429,6 +429,9 @@ a.kart:active{opacity:.7}
   #yazdirAlani .teklif-kagit .tf-imza-img{max-height:120px}
 }
 @media print{html,body{background:#fff!important}#yazdirAlani .kagit{border-radius:0;box-shadow:none!important;border:0}}
+/* 2.25.7: Basılı/PDF kâğıtta kaydırma kutusu olmaz. Ekrandaki .kagit{overflow-x:auto} baskıda da geçerliydi; Windows'ta klasik kaydırma çubuğu
+   PDF'e basılıp sağ kenarı (tarih, TOPLAM sütunu, KDV oranı) örtüyordu. */
+@media print{html,body{overflow:visible!important}#yazdirAlani,#yazdirAlani .kagit{overflow:visible!important;max-width:100%;scrollbar-width:none}#yazdirAlani .kagit::-webkit-scrollbar{display:none}#yazdirAlani .teklif-kagit .tf-firma td+td{white-space:normal}}
 #yazdirAlani{display:none}
 @media print{
   body>*:not(#yazdirAlani){display:none!important}
@@ -1940,7 +1943,7 @@ p.dipnot .i{width:14px;height:14px;vertical-align:-2px}
 
 <script>
 'use strict';
-const VERSIYON = '2.25.6';
+const VERSIYON = '2.25.7';
 const ANAHTAR = 'dnmuhasebe.v1';
 
 /* ================= Simgeler ================= */
